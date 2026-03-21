@@ -1,0 +1,60 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Logs
+logs/
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Build output
+dist/
+build/
+
+# IDE settings
+.vscode/
+.idea/
+*.iml
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Additional ignores for frontend and Node.js projects
+
+# Frontend build artifacts
+.next/
+.nuxt/
+.svelte-kit/
+.vite/
+.eslintcache
+
+# Testing
+coverage/
+.nyc_output/
+
+# Dependency directories
+jspm_packages/
+
+# Miscellaneous
+*.tsbuildinfo
+*.rpt2_cache/
+*.eslintcache
+*.prettiercache
+
+# Storybook
+.storybook-out/
+
+# Yarn PnP
+.pnp.cjs
+.pnp.loader.mjs
+
+# Local environment overrides
+.env.development.local
+.env.production.local

@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "skills": {
+    "context7": {
+      "source": "netresearch/context7-skill",
+      "sourceType": "github",
+      "computedHash": "d6fb0879cbf9f526f55d88d092b4a46a706fbe695d363602e451d4dc9f4261aa"
+    },
+    "frontend-design": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "computedHash": "063a0e6448123cd359ad0044cc46b0e490cc7964d45ef4bb9fd842bd2ffbca67"
+    },
+    "playwright-best-practices": {
+      "source": "currents-dev/playwright-best-practices-skill",
+      "sourceType": "github",
+      "computedHash": "a3a25fef9f51c15bb6c7c302ffb009a9040532bf51d999c648fcceaa9ab08841"
+    },
+    "playwright-cli": {
+      "source": "microsoft/playwright-cli",
+      "sourceType": "github",
+      "computedHash": "7075ab30f588019197a2f1518bb4c9d33d69d33352af079b5f9c60303ad3886e"
+    },
+    "shadcn-design-system": {
+      "source": "sonth87/design-system",
+      "sourceType": "github",
+      "computedHash": "995e024e8ab3906a2fce0b22bdfec9b12c90dfed88c49bc6157bf9ab79cbfd94"
+    },
+    "tailwind-css-patterns": {
+      "source": "giuseppe-trisciuoglio/developer-kit",
+      "sourceType": "github",
+      "computedHash": "a9d14dbb31901e53f37a33cf4d7495da95c66781dc67fe62b3e70a944bd050e0"
+    },
+    "tanstack-query": {
+      "source": "tanstack-skills/tanstack-skills",
+      "sourceType": "github",
+      "computedHash": "b8a0477cd4d7bf8fa54d27f8e64d82388402f0d502591db50a357df5b9995c75"
+    }
+  }
+}
