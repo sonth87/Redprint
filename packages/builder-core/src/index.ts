@@ -1,0 +1,150 @@
+/**
+ * @ui-builder/builder-core — public API
+ *
+ * Framework-agnostic core engine for the UI Builder Library.
+ * Zero React/DOM dependencies.
+ *
+ * @example
+ * import { createBuilder, EventBus, ComponentRegistry } from '@ui-builder/builder-core';
+ * const builder = createBuilder({ document: { name: 'My Page' } });
+ */
+
+// ── Factory ────────────────────────────────────────────────────────────────
+export { createBuilder } from "./createBuilder";
+export type { BuilderConfig, BuilderAPI, BuilderPermissions } from "./BuilderAPI";
+
+// ── Document model ─────────────────────────────────────────────────────────
+export type {
+  BuilderDocument,
+  BuilderNode,
+  StyleConfig,
+  CanvasConfig,
+  NodeMetadata,
+  DocumentMetadata,
+  VariableDefinition,
+  PluginReference,
+} from "./document/types";
+export type {
+  InteractionConfig,
+  InteractionTrigger,
+  InteractionAction,
+  Condition,
+} from "./document/interactions";
+export type {
+  Asset,
+  AssetManifest,
+  AssetProvider,
+  AssetQuery,
+  AssetListResult,
+  AssetType,
+} from "./document/assets";
+export { CURRENT_SCHEMA_VERSION } from "./document/constants";
+
+// ── Responsive ─────────────────────────────────────────────────────────────
+export type { Breakpoint, BreakpointConfig } from "./responsive/types";
+export { DEFAULT_BREAKPOINTS } from "./responsive/constants";
+export { resolveStyle } from "./responsive/resolver";
+
+// ── Events ─────────────────────────────────────────────────────────────────
+export { EventBus } from "./events/EventBus";
+export type {
+  BuilderEventMap,
+  BuilderEventType,
+  BuilderEvent,
+  EventHandler,
+  Unsubscribe,
+} from "./events/types";
+
+// ── Registry ───────────────────────────────────────────────────────────────
+export { ComponentRegistry } from "./registry/ComponentRegistry";
+export type {
+  ComponentDefinition,
+  PropSchema,
+  ComponentCapabilities,
+  ContainerConfig,
+  SlotConfig,
+  ComponentLifecycle,
+  ComponentContext,
+  ComponentRenderer,
+  ComponentA11yConfig,
+  ComponentEditorConfig,
+  QuickAction,
+  SelectOption,
+  ComponentFilter,
+} from "./registry/types";
+
+// ── Commands ───────────────────────────────────────────────────────────────
+export { CommandEngine } from "./commands/CommandEngine";
+export type {
+  Command,
+  ReversibleCommand,
+  CommandResult,
+  CommandHandler,
+} from "./commands/types";
+export {
+  CMD_ADD_NODE,
+  CMD_REMOVE_NODE,
+  CMD_MOVE_NODE,
+  CMD_REORDER_NODE,
+  CMD_DUPLICATE_NODE,
+  CMD_UPDATE_PROPS,
+  CMD_UPDATE_STYLE,
+  CMD_UPDATE_RESPONSIVE_STYLE,
+  CMD_UPDATE_INTERACTIONS,
+  CMD_RENAME_NODE,
+  CMD_LOCK_NODE,
+  CMD_UNLOCK_NODE,
+  CMD_HIDE_NODE,
+  CMD_SHOW_NODE,
+  CMD_GROUP_NODES,
+  CMD_UNGROUP_NODES,
+  CMD_SET_VARIABLE,
+  CMD_UPDATE_CANVAS_CONFIG,
+  CMD_LOAD_COMPONENT,
+} from "./commands/built-in";
+export type {
+  AddNodePayload,
+  RemoveNodePayload,
+  MoveNodePayload,
+  UpdatePropsPayload,
+  UpdateStylePayload,
+  UpdateResponsiveStylePayload,
+  UpdateInteractionsPayload,
+  RenameNodePayload,
+  GroupNodesPayload,
+  SetVariablePayload,
+  UpdateCanvasConfigPayload,
+} from "./commands/built-in";
+
+// ── History ────────────────────────────────────────────────────────────────
+export { HistoryStack } from "./history/HistoryStack";
+export type { HistoryEntry, HistoryState } from "./history/types";
+
+// ── State ──────────────────────────────────────────────────────────────────
+export type {
+  BuilderState,
+  EditorState,
+  InteractionState,
+  UIState,
+  DragOperation,
+  DragSource,
+  DropTarget,
+  DropPosition,
+  ResizeOperation,
+  ClipboardData,
+  PanelState,
+  EditorTool,
+} from "./state/types";
+
+// ── Plugins ────────────────────────────────────────────────────────────────
+export { PluginEngine } from "./plugins/PluginEngine";
+export type { BuilderPlugin, PluginAPI } from "./plugins/types";
+
+// ── Validation ─────────────────────────────────────────────────────────────
+export { DocumentValidator } from "./validation/DocumentValidator";
+export { validateDocument, validatePropSchema } from "./validation/validators";
+export type { DropValidationResult, DropValidator } from "./validation/types";
+
+// ── Migration ──────────────────────────────────────────────────────────────
+export { MigrationEngine } from "./migration/MigrationEngine";
+export type { SchemaMigration } from "./migration/types";

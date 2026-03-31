@@ -16,6 +16,12 @@ Thumbs.db
 dist/
 build/
 
+# Turbo
+.turbo
+
+# pnpm
+.pnpm-store/
+
 # IDE settings
 .vscode/
 .idea/

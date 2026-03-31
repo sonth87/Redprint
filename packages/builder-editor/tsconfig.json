@@ -1,0 +1,16 @@
+{
+  "extends": "../../packages/config/tsconfig.react.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "paths": {
+      "@ui-builder/builder-core": ["../builder-core/src/index.ts"],
+      "@ui-builder/builder-react": ["../builder-react/src/index.ts"],
+      "@ui-builder/shared": ["../shared/src/index.ts"],
+      "@ui-builder/ui": ["../ui/src/index.ts"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "tests"]
+}
