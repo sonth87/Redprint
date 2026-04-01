@@ -38,6 +38,23 @@ export class HistoryStack {
   }
 
   /**
+   * Coalesce a continuous gesture into a single history entry.
+   *
+   * If the top of `past` already has the given `groupId`, updates its `command`
+   * to `newCommand` (so redo replays the final state) while keeping the
+   * original `inverseCommand` (so undo restores the pre-gesture state).
+   *
+   * Returns `true` if coalesced, `false` if the entry must be pushed normally.
+   */
+  coalesce(groupId: string, newCommand: import("../commands/types").Command): boolean {
+    if (this.past.length === 0) return false;
+    const top = this.past[this.past.length - 1]!;
+    if (top.groupId !== groupId) return false;
+    this.past[this.past.length - 1] = { ...top, command: newCommand };
+    return true;
+  }
+
+  /**
    * Undo the most recent entry (or group).
    * Returns the entries to reverse-apply, ordered last-in-first-out.
    *

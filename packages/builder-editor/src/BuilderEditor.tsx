@@ -17,6 +17,7 @@ import {
 import type { BuilderAPI, BuilderConfig, ComponentDefinition, BuilderNode } from "@ui-builder/builder-core";
 import type { EditorTool, SnapGuide, ResizeHandleType } from "./types";
 import type { Point, Rect } from "@ui-builder/shared";
+import { snapToGrid } from "@ui-builder/shared";
 import { CanvasRoot } from "./canvas/CanvasRoot";
 import {
   SelectionOverlay,
@@ -60,6 +61,7 @@ function EditorInner() {
     nodeId: string;
     startPoint: Point;
     startRect: Rect;
+    gestureGroupId: string;
   } | null>(null);
 
   const [rubberBanding, setRubberBanding] = useState<{
@@ -72,6 +74,7 @@ function EditorInner() {
     startPoint: Point;
     startLeft: number;
     startTop: number;
+    gestureGroupId: string;
   } | null>(null);
 
   const [rotating, setRotating] = useState<{
@@ -80,6 +83,7 @@ function EditorInner() {
     centerY: number;
     startAngle: number;
     initialRotation: number;
+    gestureGroupId: string;
   } | null>(null);
 
   // Derive selected node and definition
@@ -98,11 +102,11 @@ function EditorInner() {
       new SnapEngine({
         gridSize: document.canvasConfig.gridSize,
         snapEnabled,
-        snapToGrid: document.canvasConfig.snapToGrid,
+        snapToGrid: showGrid, // Automatically enable grid snapping when grid is shown
         snapToComponents: document.canvasConfig.snapToComponents,
         threshold: document.canvasConfig.snapThreshold,
       }),
-    [document.canvasConfig, snapEnabled],
+    [document.canvasConfig, snapEnabled, showGrid],
   );
 
   // ── Property change handlers ────────────────────────────────────────────
@@ -149,7 +153,7 @@ function EditorInner() {
           const style = document.nodes[id]?.style || {};
           const left = parseFloat(String(style.left ?? "0")) || 0;
           const top = parseFloat(String(style.top ?? "0")) || 0;
-          setMoving({ nodeId: id, startPoint: { x: e.clientX, y: e.clientY }, startLeft: left, startTop: top });
+          setMoving({ nodeId: id, startPoint: { x: e.clientX, y: e.clientY }, startLeft: left, startTop: top, gestureGroupId: uuidv4() });
           return;
         }
       }
@@ -190,6 +194,7 @@ function EditorInner() {
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
+      e.stopPropagation(); // prevent the event from firing on both inner canvas AND outer container
       let componentType = "";
       try {
         const data = JSON.parse(e.dataTransfer?.getData("text/plain") || "{}");
@@ -214,8 +219,8 @@ function EditorInner() {
     [document.rootNodeId, dispatch, zoom],
   );
 
-  const handleDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; }, []);
-  const handleDragEnter = useCallback((e: React.DragEvent) => { e.preventDefault(); }, []);
+  const handleDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); e.dataTransfer.dropEffect = "copy"; }, []);
+  const handleDragEnter = useCallback((e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); }, []);
 
   // ── Layer tree handlers ──────────────────────────────────────────────────
   const handleToggleHidden = useCallback(
@@ -238,17 +243,31 @@ function EditorInner() {
 
   // ── Selection rect from DOM ──────────────────────────────────────────────
   useEffect(() => {
-    if (selectedNodeIds.length === 0 || !canvasFrameRef.current) { setSelectionRect(null); return; }
+    if (selectedNodeIds.length === 0 || !canvasFrameRef.current) {
+      setSelectionRect(null); return;
+    }
     const id = selectedNodeIds[0]!;
-    const el = canvasFrameRef.current.querySelector(`[data-node-id="${id}"]`) as HTMLElement;
+    const el = canvasFrameRef.current.querySelector(
+      `[data-node-id="${id}"]`
+    ) as HTMLElement;
     if (!el) { setSelectionRect(null); return; }
+
     const frameRect = canvasFrameRef.current.getBoundingClientRect();
     const elRect = el.getBoundingClientRect();
+
+    // Center trong viewport (ổn định bất kể rotation)
+    const cxViewport = (elRect.left + elRect.right) / 2;
+    const cyViewport = (elRect.top + elRect.bottom) / 2;
+    // Chuyển về canvas space
+    const cxCanvas = (cxViewport - frameRect.left) / zoom;
+    const cyCanvas = (cyViewport - frameRect.top) / zoom;
+
+    // offsetWidth/offsetHeight là pre-rotation CSS dimensions
     setSelectionRect({
-      x: (elRect.left - frameRect.left) / zoom,
-      y: (elRect.top - frameRect.top) / zoom,
-      width: elRect.width / zoom,
-      height: elRect.height / zoom,
+      x: cxCanvas - el.offsetWidth / 2,
+      y: cyCanvas - el.offsetHeight / 2,
+      width: el.offsetWidth,
+      height: el.offsetHeight,
     });
   }, [selectedNodeIds, zoom, panOffset, document.nodes]);
 
@@ -280,13 +299,20 @@ function EditorInner() {
       if (resizing.handle.includes("n")) height -= dy;
       width = Math.max(10, Math.round(width));
       height = Math.max(10, Math.round(height));
-      dispatch({ type: "UPDATE_STYLE", payload: { nodeId: resizing.nodeId, style: { width: `${width}px`, height: `${height}px` }, breakpoint }, description: "Resize" });
+      
+      // Apply grid snapping to width and height when grid snapping is enabled
+      if (showGrid) {
+        width = snapToGrid(width, document.canvasConfig.gridSize);
+        height = snapToGrid(height, document.canvasConfig.gridSize);
+      }
+      
+      dispatch({ type: "UPDATE_STYLE", payload: { nodeId: resizing.nodeId, style: { width: `${width}px`, height: `${height}px` }, breakpoint }, groupId: resizing.gestureGroupId, description: "Resize" });
     };
     const handleGlobalMouseUp = () => { setResizing(null); setSnapGuides([]); };
     window.addEventListener("mousemove", handleGlobalMouseMove);
     window.addEventListener("mouseup", handleGlobalMouseUp);
     return () => { window.removeEventListener("mousemove", handleGlobalMouseMove); window.removeEventListener("mouseup", handleGlobalMouseUp); };
-  }, [resizing, zoom, breakpoint, dispatch]);
+  }, [resizing, zoom, breakpoint, dispatch, showGrid, document.canvasConfig.gridSize]);
 
   // ── Rubber band ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -344,7 +370,7 @@ function EditorInner() {
       }
 
       setSnapGuides(guides);
-      dispatch({ type: "UPDATE_STYLE", payload: { nodeId: moving.nodeId, style: { position: "absolute", left: `${finalLeft}px`, top: `${finalTop}px` }, breakpoint }, description: "Move" });
+      dispatch({ type: "UPDATE_STYLE", payload: { nodeId: moving.nodeId, style: { position: "absolute", left: `${finalLeft}px`, top: `${finalTop}px` }, breakpoint }, groupId: moving.gestureGroupId, description: "Move" });
     };
     const handleGlobalMouseUp = () => { setMoving(null); setSnapGuides([]); };
     window.addEventListener("mousemove", handleGlobalMouseMove);
@@ -360,7 +386,7 @@ function EditorInner() {
       const dy = e.clientY - rotating.centerY;
       const currentAngle = (Math.atan2(dy, dx) * 180) / Math.PI;
       const rotation = Math.round(rotating.initialRotation + (currentAngle - rotating.startAngle));
-      dispatch({ type: "UPDATE_STYLE", payload: { nodeId: rotating.nodeId, style: { transform: `rotate(${rotation}deg)` }, breakpoint }, description: "Rotate" });
+      dispatch({ type: "UPDATE_STYLE", payload: { nodeId: rotating.nodeId, style: { transform: `rotate(${rotation}deg)` }, breakpoint }, groupId: rotating.gestureGroupId, description: "Rotate" });
     };
     const handleGlobalMouseUp = () => setRotating(null);
     window.addEventListener("mousemove", handleGlobalMouseMove);
@@ -396,7 +422,7 @@ function EditorInner() {
       }
       if (ctrl && e.key === "d" && selectedNodeId) {
         e.preventDefault();
-        dispatch({ type: "DUPLICATE_NODE", payload: { nodeId: selectedNodeId, offset: { x: 20, y: 20 } }, description: "Duplicate" });
+        dispatch({ type: "DUPLICATE_NODE", payload: { nodeId: selectedNodeId, offset: { x: 20, y: 20 }, newNodeId: uuidv4() }, description: "Duplicate" });
         return;
       }
 
@@ -506,14 +532,14 @@ function EditorInner() {
             rotation={currentRotation}
             onResizeStart={(handle, e) => {
               if (!selectionRect || !selectedNodeId) return;
-              setResizing({ handle, nodeId: selectedNodeId, startPoint: { x: e.clientX, y: e.clientY }, startRect: { ...selectionRect } });
+              setResizing({ handle, nodeId: selectedNodeId, startPoint: { x: e.clientX, y: e.clientY }, startRect: { ...selectionRect }, gestureGroupId: uuidv4() });
             }}
             onRotateStart={(e) => {
               if (!selectionRect || !selectedNodeId) return;
               const cx = (selectionRect.x + selectionRect.width / 2) * zoom;
               const cy = (selectionRect.y + selectionRect.height / 2) * zoom;
               const startAngle = (Math.atan2(e.clientY - cy, e.clientX - cx) * 180) / Math.PI;
-              setRotating({ nodeId: selectedNodeId, centerX: cx, centerY: cy, startAngle, initialRotation: currentRotation });
+              setRotating({ nodeId: selectedNodeId, centerX: cx, centerY: cy, startAngle, initialRotation: currentRotation, gestureGroupId: uuidv4() });
             }}
           />
 
@@ -528,7 +554,7 @@ function EditorInner() {
             zoom={zoom}
             panOffset={panOffset}
             onDelete={() => dispatch({ type: "REMOVE_NODE", payload: { nodeId: selectedNodeId }, description: "Delete" })}
-            onDuplicate={() => dispatch({ type: "DUPLICATE_NODE", payload: { nodeId: selectedNodeId, offset: { x: 20, y: 20 } }, description: "Duplicate" })}
+            onDuplicate={() => dispatch({ type: "DUPLICATE_NODE", payload: { nodeId: selectedNodeId, offset: { x: 20, y: 20 }, newNodeId: uuidv4() }, description: "Duplicate" })}
             onMoveUp={() => { const n = document.nodes[selectedNodeId]; if (n) dispatch({ type: "REORDER_NODE", payload: { nodeId: selectedNodeId, insertIndex: Math.max(0, n.order - 1) }, description: "Move up" }); }}
             onMoveDown={() => { const n = document.nodes[selectedNodeId]; if (n) dispatch({ type: "REORDER_NODE", payload: { nodeId: selectedNodeId, insertIndex: n.order + 1 }, description: "Move down" }); }}
           />

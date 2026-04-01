@@ -20,12 +20,14 @@ export class CommandEngine {
   private readonly handlers = new Map<string, CommandHandler>();
   private readonly inverseHandlers = new Map<
     string,
-    (state: BuilderState, payload: unknown) => Command
+    (state: BuilderState, payload: unknown) => Command | undefined
   >();
   private state: BuilderState;
   private readonly eventBus: EventBus;
   private readonly historyStack: HistoryStack;
   private readonly restrictedCommands: Set<string>;
+  /** Prevents dispatch() from pushing to history during undo/redo replay */
+  private isUndoRedoing = false;
 
   constructor(
     initialState: BuilderState,
@@ -49,11 +51,11 @@ export class CommandEngine {
   registerHandler<T = unknown>(
     type: string,
     handler: CommandHandler<T>,
-    inverseHandler?: (state: BuilderState, payload: T) => Command,
+    inverseHandler?: (state: BuilderState, payload: T) => Command | undefined,
   ): void {
     this.handlers.set(type, handler as CommandHandler);
     if (inverseHandler) {
-      this.inverseHandlers.set(type, inverseHandler as (s: BuilderState, p: unknown) => Command);
+      this.inverseHandlers.set(type, inverseHandler as (s: BuilderState, p: unknown) => Command | undefined);
     }
   }
 
@@ -103,18 +105,30 @@ export class CommandEngine {
       // Apply the handler
       nextState = handler(this.state, command.payload);
 
-      // Push to history if we have an inverse
-      if (inverseCommand) {
-        const entry: HistoryEntry = {
-          id: uuidv4(),
-          command,
-          inverseCommand,
-          timestamp: command.timestamp ?? Date.now(),
-          groupId: command.groupId,
-          description: command.description ?? command.type,
-        };
-        this.historyStack.push(entry);
+      // Push to history if we have an inverse — skip during undo/redo replay
+      if (inverseCommand && !this.isUndoRedoing) {
+        // If a groupId is set, try to coalesce with the top entry of the same group.
+        // This converts a rapid stream of commands (e.g. mousemove during drag) into a
+        // single history entry: inverse = pre-gesture state, command = latest final state.
+        const coalesced = command.groupId
+          ? this.historyStack.coalesce(command.groupId, command)
+          : false;
+
+        if (!coalesced) {
+          const entry: HistoryEntry = {
+            id: uuidv4(),
+            command,
+            inverseCommand,
+            timestamp: command.timestamp ?? Date.now(),
+            groupId: command.groupId,
+            description: command.description ?? command.type,
+          };
+          this.historyStack.push(entry);
+        }
       }
+
+      // Capture whether the document changed before committing state
+      const documentChanged = nextState.document !== this.state.document;
 
       // Commit state
       this.state = nextState;
@@ -122,8 +136,8 @@ export class CommandEngine {
       const result: CommandResult = { success: true };
       this.eventBus.emit("command:executed", { command, result });
 
-      // Emit document:changed if the document changed
-      if (nextState.document !== this.state.document || nextState.document !== undefined) {
+      // Emit document:changed only when the document reference actually changed
+      if (documentChanged) {
         this.eventBus.emit("document:changed", nextState.document);
       }
 
@@ -138,6 +152,7 @@ export class CommandEngine {
 
   /**
    * Undo the last command (or group).
+   * Sets isUndoRedoing so dispatch() skips history tracking during replay.
    */
   undo(): CommandResult {
     const entries = this.historyStack.undo();
@@ -145,12 +160,17 @@ export class CommandEngine {
       return { success: false, error: "Nothing to undo" };
     }
 
-    for (const entry of entries) {
-      const result = this.dispatch(entry.inverseCommand);
-      if (!result.success) {
-        return result;
+    this.isUndoRedoing = true;
+    try {
+      for (const entry of entries) {
+        const result = this.dispatch(entry.inverseCommand);
+        if (!result.success) {
+          return result;
+        }
+        this.eventBus.emit("history:undo", { entry });
       }
-      this.eventBus.emit("history:undo", { entry });
+    } finally {
+      this.isUndoRedoing = false;
     }
 
     return { success: true };
@@ -158,6 +178,7 @@ export class CommandEngine {
 
   /**
    * Redo the last undone command (or group).
+   * Sets isUndoRedoing so dispatch() skips history tracking during replay.
    */
   redo(): CommandResult {
     const entries = this.historyStack.redo();
@@ -165,12 +186,17 @@ export class CommandEngine {
       return { success: false, error: "Nothing to redo" };
     }
 
-    for (const entry of entries) {
-      const result = this.dispatch(entry.command);
-      if (!result.success) {
-        return result;
+    this.isUndoRedoing = true;
+    try {
+      for (const entry of entries) {
+        const result = this.dispatch(entry.command);
+        if (!result.success) {
+          return result;
+        }
+        this.eventBus.emit("history:redo", { entry });
       }
-      this.eventBus.emit("history:redo", { entry });
+    } finally {
+      this.isUndoRedoing = false;
     }
 
     return { success: true };

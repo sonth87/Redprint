@@ -68,6 +68,8 @@ export interface ReorderNodePayload {
 export interface DuplicateNodePayload {
   nodeId: string;
   offset?: Point;
+  /** Pre-generated ID for the duplicate root — enables undo */
+  newNodeId?: string;
 }
 
 export interface UpdatePropsPayload {
@@ -104,6 +106,8 @@ export interface LockUnlockNodePayload {
 export interface GroupNodesPayload {
   nodeIds: string[];
   containerType?: string;
+  /** Pre-generated group container ID — enables undo */
+  groupId?: string;
 }
 
 export interface UngroupNodesPayload {

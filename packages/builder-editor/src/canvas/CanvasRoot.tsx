@@ -43,6 +43,22 @@ export function CanvasRoot({
   const MAX_ZOOM = 4;
   const ZOOM_SENSITIVITY = 0.001;
 
+  // ── Force repaint on zoom change to prevent blur ──────────────────────────
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    // Trigger a repaint by temporarily modifying a style property
+    const canvasDiv = el.querySelector("[style*='transform']") as HTMLElement | null;
+    if (canvasDiv) {
+      const originalFilter = canvasDiv.style.filter;
+      canvasDiv.style.filter = "none";
+      // Force repaint
+      void canvasDiv.offsetHeight;
+      canvasDiv.style.filter = originalFilter;
+    }
+  }, [zoom]);
+
   // ── Wheel → Zoom or Pan ──────────────────────────────────────────────────
   useEffect(() => {
     const el = containerRef.current;
@@ -129,7 +145,7 @@ export function CanvasRoot({
         <path
           d={`M ${canvasConfig.gridSize * zoom} 0 L 0 0 0 ${canvasConfig.gridSize * zoom}`}
           fill="none"
-          stroke="hsl(var(--border))"
+          stroke="hsl(var(--muted-foreground) / 0.4)"
           strokeWidth="0.5"
         />
       </pattern>
@@ -166,6 +182,13 @@ export function CanvasRoot({
           transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoom})`,
           transformOrigin: "0 0",
           willChange: "transform",
+          WebkitFontSmoothing: "subpixel-antialiased",
+          MozOsxFontSmoothing: "grayscale",
+          textRendering: "geometricPrecision",
+          backfaceVisibility: "hidden",
+          imageRendering: "crisp-edges",
+          shapeRendering: "crispEdges",
+          contain: "layout style", // contain: "layout style paint", bỏ paint vì không hiển thị khi component bên ngoài
         }}
       >
         {children}

@@ -175,10 +175,12 @@ export const PageSettings = memo(function PageSettings({
             </div>
             <div className="flex items-center justify-between">
               <Label className="text-xs">Snap to Grid</Label>
-              <Switch
-                checked={config.snapToGrid}
-                onCheckedChange={(v) => onCanvasConfigChange("snapToGrid", v)}
-              />
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-muted-foreground">
+                  {config.showGrid ? "ON" : "OFF"}
+                </span>
+                <span className="text-[10px] text-muted-foreground opacity-60">(Auto)</span>
+              </div>
             </div>
             <div className="flex items-center justify-between">
               <Label className="text-xs">Snap to Components</Label>

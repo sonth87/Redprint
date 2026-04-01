@@ -85,7 +85,7 @@ export const SelectionOverlay = memo(function SelectionOverlay({
           top: y,
           width,
           height,
-          outline: `${borderWidth}px solid hsl(var(--selection-color, 221.2 83.2% 53.3%))`,
+          outline: `${borderWidth}px dashed hsl(var(--selection-color, 221.2 83.2% 53.3%))`,
           transform: rotation ? `rotate(${rotation}deg)` : undefined,
           transformOrigin: "center",
           zIndex: 40,

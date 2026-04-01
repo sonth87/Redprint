@@ -100,6 +100,7 @@ function cloneSubtree(
   rootNodeId: string,
   nodes: Record<string, BuilderNode>,
   offset: { x: number; y: number } = { x: 20, y: 20 },
+  overrideRootId?: string,
 ): { newNodes: Record<string, BuilderNode>; newRootId: string } {
   const now = new Date().toISOString();
   const idMap = new Map<string, string>();
@@ -107,7 +108,7 @@ function cloneSubtree(
   // Collect all nodes in order (BFS)
   const allIds = [rootNodeId, ...collectDescendants(rootNodeId, nodes)];
   for (const id of allIds) {
-    idMap.set(id, uuidv4());
+    idMap.set(id, id === rootNodeId && overrideRootId ? overrideRootId : uuidv4());
   }
 
   const newNodes: Record<string, BuilderNode> = {};
@@ -207,12 +208,9 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
         editor: { ...state.editor, selectedNodeIds: [nodeId] },
       };
     },
-    // Inverse: only if nodeId is known (pre-supplied in payload)
+    // Inverse: remove the added node — returns undefined if nodeId was not pre-supplied
     (state, payload) => {
-      if (!payload.nodeId) {
-        // Can't compute inverse without knowing the nodeId — return no-op
-        return { type: CMD_CLEAR_SELECTION, payload: null };
-      }
+      if (!payload.nodeId) return undefined;
       return { type: CMD_REMOVE_NODE, payload: { nodeId: payload.nodeId } };
     },
   );
@@ -278,10 +276,10 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
   engine.registerHandler<DuplicateNodePayload>(
     CMD_DUPLICATE_NODE,
     (state, payload) => {
-      const { nodeId, offset = { x: 20, y: 20 } } = payload;
+      const { nodeId, offset = { x: 20, y: 20 }, newNodeId } = payload;
       if (!state.document.nodes[nodeId]) return state;
 
-      const { newNodes, newRootId } = cloneSubtree(nodeId, state.document.nodes, offset);
+      const { newNodes, newRootId } = cloneSubtree(nodeId, state.document.nodes, offset, newNodeId);
 
       return {
         ...state,
@@ -293,9 +291,11 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
         editor: { ...state.editor, selectedNodeIds: [newRootId] },
       };
     },
-    // Inverse: remove the duplicated node (captured by newRootId)
-    // We can't easily know newRootId before the handler runs.
-    // Skip inverse for now (duplicate is not undoable via this simple approach).
+    // Inverse: remove the duplicated subtree by its pre-generated root ID
+    (_state, payload) => {
+      if (!payload.newNodeId) return undefined;
+      return { type: CMD_REMOVE_NODE, payload: { nodeId: payload.newNodeId } };
+    },
   );
 
   // ── REORDER_NODE ────────────────────────────────────────────────────────
@@ -642,7 +642,8 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
       const firstNode = state.document.nodes[nodeIds[0]!];
       if (!firstNode) return state;
 
-      const groupId = uuidv4();
+      // Use pre-generated groupId from payload for deterministic undo support
+      const groupId = payload.groupId ?? uuidv4();
       const timestamp = now();
       const def = registry.getComponent(containerType);
 
@@ -678,6 +679,38 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
           nodes: newNodes,
         },
         editor: { ...state.editor, selectedNodeIds: [groupId] },
+      };
+    },
+    // Inverse: restore child nodes to pre-group state and remove the group container
+    (state, payload) => {
+      if (!payload.groupId) return undefined;
+      const snapshot: Record<string, BuilderNode> = {};
+      for (const nodeId of payload.nodeIds) {
+        if (state.document.nodes[nodeId]) {
+          snapshot[nodeId] = state.document.nodes[nodeId]!;
+        }
+      }
+      return {
+        type: "UNGROUP_RESTORE",
+        payload: { snapshot, groupId: payload.groupId, selectNodeIds: payload.nodeIds },
+      };
+    },
+  );
+
+  // ── UNGROUP_RESTORE (internal inverse of GROUP_NODES) ───────────────────
+  engine.registerHandler<{ snapshot: Record<string, BuilderNode>; groupId: string; selectNodeIds: string[] }>(
+    "UNGROUP_RESTORE",
+    (state, payload) => {
+      const newNodes = { ...state.document.nodes };
+      delete newNodes[payload.groupId];
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: now(),
+          nodes: { ...newNodes, ...payload.snapshot },
+        },
+        editor: { ...state.editor, selectedNodeIds: payload.selectNodeIds },
       };
     },
   );
