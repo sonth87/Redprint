@@ -9,11 +9,13 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
   id: "fixture-doc-01",
   name: "Sample Landing Page",
   schemaVersion: CURRENT_SCHEMA_VERSION,
+  createdAt: "2026-03-31T00:00:00.000Z",
+  updatedAt: "2026-03-31T00:00:00.000Z",
   rootNodeId: "root",
   breakpoints: [
-    { id: "desktop", name: "Desktop", minWidth: 1280, maxWidth: undefined, icon: "monitor" },
-    { id: "tablet", name: "Tablet", minWidth: 768, maxWidth: 1279, icon: "tablet" },
-    { id: "mobile", name: "Mobile", minWidth: 0, maxWidth: 767, icon: "smartphone" },
+    { breakpoint: "desktop", label: "Desktop", minWidth: 1280, icon: "monitor" },
+    { breakpoint: "tablet", label: "Tablet", minWidth: 768, maxWidth: 1279, icon: "tablet" },
+    { breakpoint: "mobile", label: "Mobile", minWidth: 0, maxWidth: 767, icon: "smartphone" },
   ],
   nodes: {
     root: {
@@ -439,6 +441,7 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
 
   variables: {},
   assets: { version: "1.0", assets: [] },
+  plugins: [],
   canvasConfig: {
     width: 1280,
     height: 800,
@@ -449,15 +452,10 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
     snapToGrid: true,
     snapToComponents: true,
     snapThreshold: 6,
-    zoom: 1,
-    panOffset: { x: 0, y: 0 },
     rulerEnabled: true,
-    rulerSize: 24,
     showHelperLines: true,
   },
   metadata: {
-    createdAt: "2026-03-31T00:00:00.000Z",
-    updatedAt: "2026-03-31T00:00:00.000Z",
     author: "Playground",
     pluginData: {},
   },

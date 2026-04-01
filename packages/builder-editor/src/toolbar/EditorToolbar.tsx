@@ -1,19 +1,21 @@
 import React, { memo, useCallback } from "react";
 import { Button, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider, Toggle } from "@ui-builder/ui";
 import type { Breakpoint } from "@ui-builder/builder-core";
-import { Monitor, Tablet, Smartphone, Undo2, Redo2, ZoomIn, ZoomOut, Grid, MousePointer2, Hand } from "lucide-react";
+import { Monitor, Tablet, Smartphone, Undo2, Redo2, ZoomIn, ZoomOut, Grid, MousePointer2, Hand, Magnet } from "lucide-react";
 import type { EditorTool } from "../types";
 
 export interface EditorToolbarProps {
   breakpoint: Breakpoint;
   zoom: number;
   showGrid: boolean;
+  snapEnabled: boolean;
   canUndo: boolean;
   canRedo: boolean;
   activeTool: EditorTool;
   onBreakpointChange: (bp: Breakpoint) => void;
   onZoomChange: (zoom: number) => void;
   onGridToggle: () => void;
+  onSnapToggle: () => void;
   onUndo: () => void;
   onRedo: () => void;
   onToolChange: (tool: EditorTool) => void;
@@ -34,12 +36,14 @@ export const EditorToolbar = memo(function EditorToolbar({
   breakpoint,
   zoom,
   showGrid,
+  snapEnabled,
   canUndo,
   canRedo,
   activeTool,
   onBreakpointChange,
   onZoomChange,
   onGridToggle,
+  onSnapToggle,
   onUndo,
   onRedo,
   onToolChange,
@@ -171,7 +175,22 @@ export const EditorToolbar = memo(function EditorToolbar({
               <Grid className="h-4 w-4" />
             </Toggle>
           </TooltipTrigger>
-          <TooltipContent side="bottom">Toggle Grid (⌘\)</TooltipContent>
+          <TooltipContent side="bottom">Toggle Grid</TooltipContent>
+        </Tooltip>
+
+        {/* Snap toggle */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Toggle
+              size="sm"
+              pressed={snapEnabled}
+              onPressedChange={onSnapToggle}
+              aria-label="Toggle snap"
+            >
+              <Magnet className="h-4 w-4" />
+            </Toggle>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Snap to grid</TooltipContent>
         </Tooltip>
 
       </div>

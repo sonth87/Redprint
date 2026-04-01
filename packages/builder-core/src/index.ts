@@ -148,3 +148,21 @@ export type { DropValidationResult, DropValidator } from "./validation/types";
 // ── Migration ──────────────────────────────────────────────────────────────
 export { MigrationEngine } from "./migration/MigrationEngine";
 export type { SchemaMigration } from "./migration/types";
+
+// ── Properties (shared descriptor system) ──────────────────────────────────
+export {
+  createStyleProperty,
+  createPropProperty,
+  STYLE_PROPERTIES,
+  PROP_PROPERTIES,
+} from "./properties/PropertyDescriptor";
+export type {
+  PropertyDescriptor,
+  PropertyCategory,
+} from "./properties/PropertyDescriptor";
+// ── Presets ────────────────────────────────────────────────────────────────
+export { PresetRegistry } from "./presets/PresetRegistry";
+export type {
+  ComponentPreset,
+  PresetChildNode,
+} from "./presets/types";

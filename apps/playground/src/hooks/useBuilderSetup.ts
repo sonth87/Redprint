@@ -15,14 +15,10 @@ export function useBuilderSetup(): BuilderAPI {
       permissions: {
         canEdit: true,
         canDelete: true,
-        canAdd: true,
-        canMove: true,
-        canResize: true,
-        canGroup: true,
-        canUngroup: true,
-        canLock: true,
-        canHide: true,
+        canAddComponents: true,
+        canLoadRemoteComponents: false,
         canExport: true,
+        canImport: true,
       },
     });
 

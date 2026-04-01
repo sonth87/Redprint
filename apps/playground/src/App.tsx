@@ -125,7 +125,7 @@ export function App() {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  navigator.clipboard.writeText(docJson);
+                  void navigator.clipboard?.writeText(docJson);
                 }}
                 className="text-xs h-7"
               >

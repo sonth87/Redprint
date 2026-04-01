@@ -51,7 +51,7 @@ export const TextComponent: ComponentDefinition = {
   defaultProps: { text: "Hello World", tag: "p" },
   defaultStyle: { fontSize: "16px", color: "#111827", lineHeight: "1.6" },
   editorRenderer: ({ node, style }) => {
-    const Tag = (node.props.tag ?? "p") as keyof JSX.IntrinsicElements;
+    const Tag = (node.props.tag ?? "p") as keyof React.JSX.IntrinsicElements;
     return (
       <Tag
         data-node-id={node.id}
@@ -63,7 +63,7 @@ export const TextComponent: ComponentDefinition = {
     );
   },
   runtimeRenderer: ({ node, style }) => {
-    const Tag = (node.props.tag ?? "p") as keyof JSX.IntrinsicElements;
+    const Tag = (node.props.tag ?? "p") as keyof React.JSX.IntrinsicElements;
     return (
       <Tag style={style as React.CSSProperties}>
         {String(node.props.text ?? "Text")}
@@ -233,7 +233,7 @@ export const ContainerComponent: ComponentDefinition = {
         minHeight: "40px",
       }}
     >
-      {children ?? (
+      {(children as React.ReactNode) ?? (
         <div className="flex items-center justify-center h-10 text-xs text-muted-foreground border-2 border-dashed border-border rounded">
           Drop components here
         </div>
@@ -250,7 +250,7 @@ export const ContainerComponent: ComponentDefinition = {
         padding: `${node.props.padding ?? 16}px`,
       }}
     >
-      {children}
+      {children as React.ReactNode}
     </div>
   ),
 };
@@ -273,7 +273,7 @@ export const ImageComponent: ComponentDefinition = {
     canBeLocked: true,
   },
   propSchema: [
-    { key: "src", label: "Image URL", type: "image", required: true, accept: "image/*" },
+    { key: "src", label: "Image URL", type: "image", required: true, accept: ["image/*"] },
     { key: "alt", label: "Alt text", type: "string", default: "" },
     {
       key: "objectFit",

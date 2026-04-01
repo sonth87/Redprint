@@ -40,12 +40,15 @@ export interface AssetListResult {
   pageSize: number;
 }
 
+/** Portable file-like type — avoids DOM dependency in builder-core. Compatible with browser File. */
+export type Uploadable = { readonly name: string; readonly size: number; readonly type: string };
+
 export interface AssetProvider {
   id: string;
   name: string;
   icon?: string;
   supportedTypes: AssetType[];
   listAssets(query: AssetQuery): Promise<AssetListResult>;
-  upload?(file: File): Promise<Asset>;
+  upload?(file: Uploadable): Promise<Asset>;
   delete?(assetId: string): Promise<void>;
 }

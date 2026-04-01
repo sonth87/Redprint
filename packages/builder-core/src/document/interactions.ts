@@ -35,7 +35,7 @@ export type InteractionAction =
   | { type: "removeClass"; targetId: string; className: string }
   | { type: "showModal"; targetId: string }
   | { type: "hideModal"; targetId: string }
-  | { type: "scrollTo"; targetId: string; behavior?: ScrollBehavior }
+  | { type: "scrollTo"; targetId: string; behavior?: "auto" | "smooth" | "instant" }
   | { type: "emit"; event: string; payload?: unknown }
   | { type: "custom"; handler: string; params?: unknown };
 

@@ -19,7 +19,7 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
   defaultExpanded = true,
 }) => {
   const [position, setPosition] = useState({ x: 0, y: defaultPosition.y });
-  
+
   useEffect(() => {
     // initialize position after mount
     if (defaultPosition.right !== undefined) {
@@ -28,52 +28,44 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
       setPosition({ x: defaultPosition.x || 16, y: defaultPosition.y });
     }
   }, [defaultPosition.right, defaultPosition.x, defaultPosition.y, width]);
+
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [isDragging, setIsDragging] = useState(false);
-  const dragStartInfo = useRef<{ startX: number; startY: number; initialPanelX: number; initialPanelY: number } | null>(null);
+  // Store position in a ref so the listeners always have the latest value
+  const positionRef = useRef(position);
+  positionRef.current = position;
 
-  const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    (e.target as HTMLElement).releasePointerCapture(e.pointerId); // let child events flow but allow drag
-    setIsDragging(true);
-    dragStartInfo.current = {
-      startX: e.clientX,
-      startY: e.clientY,
-      initialPanelX: position.x,
-      initialPanelY: position.y,
-    };
-  }, [position]);
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      e.stopPropagation();
 
-  useEffect(() => {
-    if (!isDragging) return;
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const initialX = positionRef.current.x;
+      const initialY = positionRef.current.y;
 
-    const handlePointerMove = (e: PointerEvent) => {
-      if (!dragStartInfo.current) return;
-      const dx = e.clientX - dragStartInfo.current.startX;
-      const dy = e.clientY - dragStartInfo.current.startY;
-      
-      let newX = dragStartInfo.current.initialPanelX + dx;
-      let newY = dragStartInfo.current.initialPanelY + dy;
+      setIsDragging(true);
 
-      // Ensure panel doesn't go off screen (rough boundaries)
-      newX = Math.max(0, Math.min(window.innerWidth - width, newX));
-      newY = Math.max(0, Math.min(window.innerHeight - 40, newY));
+      const onMove = (ev: PointerEvent) => {
+        const newX = Math.max(0, Math.min(window.innerWidth - width, initialX + ev.clientX - startX));
+        const newY = Math.max(0, Math.min(window.innerHeight - 40, initialY + ev.clientY - startY));
+        setPosition({ x: newX, y: newY });
+      };
 
-      setPosition({ x: newX, y: newY });
-    };
+      const onUp = () => {
+        setIsDragging(false);
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onUp);
+      };
 
-    const handlePointerUp = () => {
-      setIsDragging(false);
-      dragStartInfo.current = null;
-    };
-
-    window.addEventListener("pointermove", handlePointerMove);
-    window.addEventListener("pointerup", handlePointerUp);
-
-    return () => {
-      window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("pointerup", handlePointerUp);
-    };
-  }, [isDragging, width]);
+      // Register listeners synchronously — no render-cycle gap
+      window.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup", onUp);
+    },
+    [width],
+  );
 
   return (
     <div

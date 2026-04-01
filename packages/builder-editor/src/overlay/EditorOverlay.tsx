@@ -33,7 +33,8 @@ const ResizeHandle = memo(({ handle, bounds, zoom, onMouseDown }: ResizeHandlePr
   const size = Math.max(6, 8 / zoom);
   return (
     <div
-      className="absolute z-50 rounded-sm bg-white border-2 border-blue-500"
+      data-resize-handle
+      className="absolute z-50 rounded-sm bg-white border-2 border-blue-500 pointer-events-auto"
       style={{
         top: pos.top,
         left: pos.left,
@@ -53,7 +54,9 @@ const ResizeHandle = memo(({ handle, bounds, zoom, onMouseDown }: ResizeHandlePr
 export interface SelectionOverlayProps {
   selection: SelectionState;
   zoom: number;
+  rotation?: number;
   onResizeStart: (handle: ResizeHandleType, e: React.MouseEvent) => void;
+  onRotateStart: (e: React.MouseEvent) => void;
 }
 
 /**
@@ -63,7 +66,9 @@ export interface SelectionOverlayProps {
 export const SelectionOverlay = memo(function SelectionOverlay({
   selection,
   zoom,
+  rotation = 0,
   onResizeStart,
+  onRotateStart,
 }: SelectionOverlayProps) {
   if (!selection.boundingBox || selection.selectedIds.length === 0) return null;
 
@@ -81,6 +86,8 @@ export const SelectionOverlay = memo(function SelectionOverlay({
           width,
           height,
           outline: `${borderWidth}px solid hsl(var(--selection-color, 221.2 83.2% 53.3%))`,
+          transform: rotation ? `rotate(${rotation}deg)` : undefined,
+          transformOrigin: "center",
           zIndex: 40,
         }}
       >
@@ -95,6 +102,26 @@ export const SelectionOverlay = memo(function SelectionOverlay({
               onMouseDown={onResizeStart}
             />
           ))
+        )}
+
+        {/* Rotation handle */}
+        {selection.selectedIds.length === 1 && (
+          <div
+            data-rotation-handle
+            className="absolute pointer-events-auto cursor-crosshair"
+            style={{
+              left: "50%",
+              top: "100%",
+              transform: "translate(-50%, 10px)",
+              width: 12,
+              height: 12,
+              borderRadius: "50%",
+              backgroundColor: "white",
+              border: "2px solid hsl(221.2 83.2% 53.3%)",
+              zIndex: 50,
+            }}
+            onMouseDown={(e) => { e.stopPropagation(); onRotateStart(e); }}
+          />
         )}
       </div>
 

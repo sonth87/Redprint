@@ -1,9 +1,28 @@
-import React, { useCallback, useState, useEffect, useMemo, useRef } from "react";
-import { BuilderProvider, useBuilder, useSelection, useDocument, useBreakpoint, useHistory, NodeRenderer } from "@ui-builder/builder-react";
-import type { BuilderAPI, BuilderConfig, ComponentDefinition, EditorTool } from "@ui-builder/builder-core";
+import React, {
+  useCallback,
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+} from "react";
+import {
+  BuilderProvider,
+  useBuilder,
+  useSelection,
+  useDocument,
+  useBreakpoint,
+  useHistory,
+  NodeRenderer,
+} from "@ui-builder/builder-react";
+import type { BuilderAPI, BuilderConfig, ComponentDefinition } from "@ui-builder/builder-core";
+import type { EditorTool, SnapGuide, ResizeHandleType } from "./types";
 import type { Point, Rect } from "@ui-builder/shared";
 import { CanvasRoot } from "./canvas/CanvasRoot";
-import { SelectionOverlay, SnapGuides, HoverOutline } from "./overlay/EditorOverlay";
+import {
+  SelectionOverlay,
+  SnapGuides,
+  HoverOutline,
+} from "./overlay/EditorOverlay";
 import { EditorToolbar } from "./toolbar/EditorToolbar";
 import { ComponentPalette } from "./panels/left/ComponentPalette";
 import { LayerTree } from "./panels/bottom/LayerTree";
@@ -11,6 +30,8 @@ import { PropertyPanel } from "./panels/right/PropertyPanel";
 import { cn } from "@ui-builder/ui";
 import { FloatingPanel } from "./panels/FloatingPanel";
 import { ContextualToolbar } from "./toolbar/ContextualToolbar";
+import { SnapEngine } from "./snap/SnapEngine";
+import { v4 as uuidv4 } from "uuid";
 
 // ── Inner editor (must be inside BuilderProvider) ─────────────────────────
 
@@ -19,26 +40,33 @@ function EditorInner() {
   const { selectedNodeIds, select, clearSelection } = useSelection();
   const { document } = useDocument();
   const { breakpoint, setBreakpoint } = useBreakpoint();
-  const { undo, redo } = useHistory();
+  const { undo, redo, canUndo, canRedo } = useHistory();
 
   const [zoom, setZoom] = useState(1);
   const [panOffset, setPanOffset] = useState<Point>({ x: 32, y: 32 });
   const [activeTool, setActiveTool] = useState<EditorTool>("select");
   const [showGrid, setShowGrid] = useState(true);
+  const [snapEnabled, setSnapEnabled] = useState(true);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [hoverRect, setHoverRect] = useState<Rect | null>(null);
   const [selectionRect, setSelectionRect] = useState<Rect | null>(null);
+  const [snapGuides, setSnapGuides] = useState<SnapGuide[]>([]);
+
   const canvasFrameRef = useRef<HTMLDivElement>(null);
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
+
   const [resizing, setResizing] = useState<{
-    handle: string;
+    handle: ResizeHandleType;
     nodeId: string;
     startPoint: Point;
     startRect: Rect;
   } | null>(null);
+
   const [rubberBanding, setRubberBanding] = useState<{
     startPoint: Point;
     currentPoint: Point;
   } | null>(null);
+
   const [moving, setMoving] = useState<{
     nodeId: string;
     startPoint: Point;
@@ -46,25 +74,42 @@ function EditorInner() {
     startTop: number;
   } | null>(null);
 
+  const [rotating, setRotating] = useState<{
+    nodeId: string;
+    centerX: number;
+    centerY: number;
+    startAngle: number;
+    initialRotation: number;
+  } | null>(null);
+
   // Derive selected node and definition
   const selectedNodeId = selectedNodeIds[0] ?? null;
   const selectedNode = selectedNodeId ? (document.nodes[selectedNodeId] ?? null) : null;
   const registry = builder?.registry;
-  const selectedDefinition = selectedNode && registry
-    ? (registry.getComponent(selectedNode.type) ?? null)
-    : null;
+  const selectedDefinition = selectedNode && registry ? (registry.getComponent(selectedNode.type) ?? null) : null;
   const allComponents: ComponentDefinition[] = registry ? registry.listComponents() : [];
 
   const toggleGrid = useCallback(() => setShowGrid((v) => !v), []);
+  const toggleSnap = useCallback(() => setSnapEnabled((v) => !v), []);
 
+  // ── Snap engine ─────────────────────────────────────────────────────────
+  const snapEngine = useMemo(
+    () =>
+      new SnapEngine({
+        gridSize: document.canvasConfig.gridSize,
+        snapEnabled,
+        snapToGrid: document.canvasConfig.snapToGrid,
+        snapToComponents: document.canvasConfig.snapToComponents,
+        threshold: document.canvasConfig.snapThreshold,
+      }),
+    [document.canvasConfig, snapEnabled],
+  );
+
+  // ── Property change handlers ────────────────────────────────────────────
   const handlePropChange = useCallback(
     (key: string, value: unknown) => {
       if (!selectedNodeId) return;
-      dispatch({
-        type: "UPDATE_PROPS",
-        payload: { nodeId: selectedNodeId, props: { [key]: value } },
-        description: `Set ${key}`,
-      });
+      dispatch({ type: "UPDATE_PROPS", payload: { nodeId: selectedNodeId, props: { [key]: value } }, description: `Set ${key}` });
     },
     [selectedNodeId, dispatch],
   );
@@ -72,115 +117,112 @@ function EditorInner() {
   const handleStyleChange = useCallback(
     (key: string, value: unknown) => {
       if (!selectedNodeId) return;
-      dispatch({
-        type: "UPDATE_STYLE",
-        payload: { nodeId: selectedNodeId, style: { [key]: value }, breakpoint },
-        description: `Set style.${key}`,
-      });
+      dispatch({ type: "UPDATE_STYLE", payload: { nodeId: selectedNodeId, style: { [key]: value } as never, breakpoint }, description: `Set style.${key}` });
     },
     [selectedNodeId, breakpoint, dispatch],
   );
 
+  // ── Drag from palette ────────────────────────────────────────────────────
   const handleDragStart = useCallback((componentType: string, e: React.DragEvent) => {
     e.dataTransfer?.setData("application/builder-component-type", componentType);
   }, []);
 
-  const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    // Attempt selection
-    const target = e.target as HTMLElement;
-    const nodeEl = target.closest("[data-node-id]");
-    if (nodeEl) {
-      const id = nodeEl.getAttribute("data-node-id");
-      if (id) {
-        if (id === selectedNodeIds[0]) {
-          // Clicked on already selected node, start moving
-          const style = document.nodes[id]?.style || {};
-          const left = parseInt(String(style.left || 0)) || 0;
-          const top = parseInt(String(style.top || 0)) || 0;
-          setMoving({
-            nodeId: id,
-            startPoint: { x: e.clientX / zoom, y: e.clientY / zoom },
-            startLeft: left,
-            startTop: top,
-          });
-        } else {
-          // @ts-expect-error type override
-          select([id]);
-        }
-        return;
-      }
-    }
-    // Background click -> Start rubber band
-    clearSelection();
-    if (canvasFrameRef.current) {
-      const rect = canvasFrameRef.current.getBoundingClientRect();
-      const pt = { x: (e.clientX - rect.left) / zoom, y: (e.clientY - rect.top) / zoom };
-      setRubberBanding({ startPoint: pt, currentPoint: pt });
-    }
-  }, [select, clearSelection, zoom, document.nodes, selectedNodeIds]);
+  // ── Selection + move ────────────────────────────────────────────────────
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      if (activeTool === "pan") return;
+      const target = e.target as HTMLElement;
+      if (target.closest("[data-resize-handle]") || target.closest("[data-rotation-handle]")) return;
 
-  const handleMouseOver = useCallback((e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    const nodeEl = target.closest("[data-node-id]");
-    if (nodeEl) {
-      const id = nodeEl.getAttribute("data-node-id");
-      if (id && id !== selectedNodeIds[0]) {
-        setHoveredNodeId(id);
-        return;
+      const nodeEl = target.closest("[data-node-id]");
+      if (nodeEl) {
+        const id = nodeEl.getAttribute("data-node-id");
+        if (id && id !== document.rootNodeId) {
+          const node = document.nodes[id];
+          if (node?.locked) return;
+
+          if (id !== selectedNodeIds[0]) {
+            dispatch({ type: "SELECT_NODE", payload: { nodeId: id, addToSelection: e.shiftKey }, description: "Select" });
+          } else {
+            // Already selected → start moving
+            const style = document.nodes[id]?.style || {};
+            const left = parseFloat(String(style.left ?? "0")) || 0;
+            const top = parseFloat(String(style.top ?? "0")) || 0;
+            setMoving({ nodeId: id, startPoint: { x: e.clientX, y: e.clientY }, startLeft: left, startTop: top });
+          }
+          return;
+        }
       }
-    }
-    setHoveredNodeId(null);
-  }, [selectedNodeIds]);
+      // Background click → clear selection + rubber band
+      clearSelection();
+      if (canvasFrameRef.current) {
+        const rect = canvasFrameRef.current.getBoundingClientRect();
+        const pt = { x: (e.clientX - rect.left) / zoom, y: (e.clientY - rect.top) / zoom };
+        setRubberBanding({ startPoint: pt, currentPoint: pt });
+      }
+    },
+    [activeTool, dispatch, clearSelection, zoom, document.nodes, document.rootNodeId, selectedNodeIds],
+  );
+
+  // ── Hover ────────────────────────────────────────────────────────────────
+  const handleMouseOver = useCallback(
+    (e: React.MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const nodeEl = target.closest("[data-node-id]");
+      if (nodeEl) {
+        const id = nodeEl.getAttribute("data-node-id");
+        if (id && id !== selectedNodeIds[0] && id !== document.rootNodeId) {
+          setHoveredNodeId(id);
+          return;
+        }
+      }
+      setHoveredNodeId(null);
+    },
+    [selectedNodeIds, document.rootNodeId],
+  );
 
   const handleMouseOut = useCallback((e: React.MouseEvent) => {
-    // If we leave the canvas completely
     const target = e.relatedTarget as HTMLElement;
-    if (!target?.closest("[data-node-id]")) {
-      setHoveredNodeId(null);
-    }
+    if (!target?.closest("[data-node-id]")) setHoveredNodeId(null);
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    let componentType = "";
-    try {
-      const data = JSON.parse(e.dataTransfer?.getData("text/plain") || "{}");
-      componentType = data.type;
-    } catch {
-      componentType = e.dataTransfer?.getData("application/builder-component-type") || "";
-    }
-    
-    if (!componentType) return;
+  // ── Drop from palette ────────────────────────────────────────────────────
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      let componentType = "";
+      try {
+        const data = JSON.parse(e.dataTransfer?.getData("text/plain") || "{}");
+        componentType = data.type;
+      } catch {
+        componentType = e.dataTransfer?.getData("application/builder-component-type") || "";
+      }
+      if (!componentType) return;
 
-    // Find closest exact target or fallback to root
-    const targetEl = (e.target as HTMLElement).closest("[data-node-id]");
-    const parentId = targetEl?.getAttribute("data-node-id") ?? document.rootNodeId;
+      const targetEl = (e.target as HTMLElement).closest("[data-node-id]");
+      const parentId = targetEl?.getAttribute("data-node-id") ?? document.rootNodeId;
 
-    dispatch({
-      type: "ADD_NODE",
-      payload: { parentId, componentType },
-      description: `Add ${componentType}`,
-    });
-  }, [document.rootNodeId, dispatch]);
+      let position: Point | undefined;
+      if (canvasFrameRef.current) {
+        const frameRect = canvasFrameRef.current.getBoundingClientRect();
+        position = { x: Math.round((e.clientX - frameRect.left) / zoom), y: Math.round((e.clientY - frameRect.top) / zoom) };
+      }
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "copy";
-  }, []);
+      const nodeId = uuidv4();
+      dispatch({ type: "ADD_NODE", payload: { nodeId, parentId, componentType, position }, description: `Add ${componentType}` });
+    },
+    [document.rootNodeId, dispatch, zoom],
+  );
 
-  const handleDragEnter = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-  }, []);
+  const handleDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; }, []);
+  const handleDragEnter = useCallback((e: React.DragEvent) => { e.preventDefault(); }, []);
 
+  // ── Layer tree handlers ──────────────────────────────────────────────────
   const handleToggleHidden = useCallback(
     (nodeId: string) => {
       const node = document.nodes[nodeId];
       if (!node) return;
-      dispatch({
-        type: node.hidden ? "SHOW_NODE" : "HIDE_NODE",
-        payload: { nodeId },
-        description: node.hidden ? "Show node" : "Hide node",
-      });
+      dispatch({ type: node.hidden ? "SHOW_NODE" : "HIDE_NODE", payload: { nodeId }, description: node.hidden ? "Show" : "Hide" });
     },
     [document, dispatch],
   );
@@ -189,227 +231,260 @@ function EditorInner() {
     (nodeId: string) => {
       const node = document.nodes[nodeId];
       if (!node) return;
-      dispatch({
-        type: node.locked ? "UNLOCK_NODE" : "LOCK_NODE",
-        payload: { nodeId },
-        description: node.locked ? "Unlock node" : "Lock node",
-      });
+      dispatch({ type: node.locked ? "UNLOCK_NODE" : "LOCK_NODE", payload: { nodeId }, description: node.locked ? "Unlock" : "Lock" });
     },
     [document, dispatch],
   );
 
+  // ── Selection rect from DOM ──────────────────────────────────────────────
   useEffect(() => {
-    if (selectedNodeIds.length === 0 || !canvasFrameRef.current) {
-      setSelectionRect(null);
-      return;
-    }
-    const id = selectedNodeIds[0];
+    if (selectedNodeIds.length === 0 || !canvasFrameRef.current) { setSelectionRect(null); return; }
+    const id = selectedNodeIds[0]!;
     const el = canvasFrameRef.current.querySelector(`[data-node-id="${id}"]`) as HTMLElement;
-    if (!el) {
-      setSelectionRect(null);
-      return;
-    }
+    if (!el) { setSelectionRect(null); return; }
     const frameRect = canvasFrameRef.current.getBoundingClientRect();
     const elRect = el.getBoundingClientRect();
-
     setSelectionRect({
       x: (elRect.left - frameRect.left) / zoom,
       y: (elRect.top - frameRect.top) / zoom,
       width: elRect.width / zoom,
       height: elRect.height / zoom,
     });
-  }, [selectedNodeIds, zoom, panOffset, document]);
+  }, [selectedNodeIds, zoom, panOffset, document.nodes]);
 
+  // ── Hover rect from DOM ─────────────────────────────────────────────────
   useEffect(() => {
-    if (!hoveredNodeId || !canvasFrameRef.current) {
-      setHoverRect(null);
-      return;
-    }
+    if (!hoveredNodeId || !canvasFrameRef.current) { setHoverRect(null); return; }
     const el = canvasFrameRef.current.querySelector(`[data-node-id="${hoveredNodeId}"]`) as HTMLElement;
-    if (!el) {
-      setHoverRect(null);
-      return;
-    }
+    if (!el) { setHoverRect(null); return; }
     const frameRect = canvasFrameRef.current.getBoundingClientRect();
     const elRect = el.getBoundingClientRect();
-
     setHoverRect({
       x: (elRect.left - frameRect.left) / zoom,
       y: (elRect.top - frameRect.top) / zoom,
       width: elRect.width / zoom,
       height: elRect.height / zoom,
     });
-  }, [hoveredNodeId, zoom, panOffset, document]);
+  }, [hoveredNodeId, zoom, panOffset, document.nodes]);
 
+  // ── Resize ───────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!resizing) return;
-    
     const handleGlobalMouseMove = (e: MouseEvent) => {
       const dx = (e.clientX - resizing.startPoint.x) / zoom;
       const dy = (e.clientY - resizing.startPoint.y) / zoom;
       let { width, height } = resizing.startRect;
-      
       if (resizing.handle.includes("e")) width += dx;
       if (resizing.handle.includes("w")) width -= dx;
       if (resizing.handle.includes("s")) height += dy;
       if (resizing.handle.includes("n")) height -= dy;
-
       width = Math.max(10, Math.round(width));
       height = Math.max(10, Math.round(height));
-      
-      dispatch({
-        type: "UPDATE_STYLE",
-        payload: { nodeId: resizing.nodeId, style: { width: `${width}px`, height: `${height}px` }, breakpoint },
-        description: "Resize node",
-      });
+      dispatch({ type: "UPDATE_STYLE", payload: { nodeId: resizing.nodeId, style: { width: `${width}px`, height: `${height}px` }, breakpoint }, description: "Resize" });
     };
-    const handleGlobalMouseUp = () => setResizing(null);
-    
+    const handleGlobalMouseUp = () => { setResizing(null); setSnapGuides([]); };
     window.addEventListener("mousemove", handleGlobalMouseMove);
     window.addEventListener("mouseup", handleGlobalMouseUp);
-    return () => {
-      window.removeEventListener("mousemove", handleGlobalMouseMove);
-      window.removeEventListener("mouseup", handleGlobalMouseUp);
-    };
+    return () => { window.removeEventListener("mousemove", handleGlobalMouseMove); window.removeEventListener("mouseup", handleGlobalMouseUp); };
   }, [resizing, zoom, breakpoint, dispatch]);
 
-  // Handle Rubber Banding updates
+  // ── Rubber band ──────────────────────────────────────────────────────────
   useEffect(() => {
     if (!rubberBanding) return;
-
     const handleGlobalMouseMove = (e: MouseEvent) => {
-      if (canvasFrameRef.current) {
-        const rect = canvasFrameRef.current.getBoundingClientRect();
-        const pt = { x: (e.clientX - rect.left) / zoom, y: (e.clientY - rect.top) / zoom };
-        setRubberBanding((prev) => prev ? { ...prev, currentPoint: pt } : null);
-      }
+      if (!canvasFrameRef.current) return;
+      const rect = canvasFrameRef.current.getBoundingClientRect();
+      const pt = { x: (e.clientX - rect.left) / zoom, y: (e.clientY - rect.top) / zoom };
+      setRubberBanding((prev) => prev ? { ...prev, currentPoint: pt } : null);
     };
-
-    const handleGlobalMouseUp = () => {
-      setRubberBanding(null);
-      // NOTE: In a full impl, we would loop over all DOM nodes and select those that intersect rubberBanding rect.
-    };
-    
+    const handleGlobalMouseUp = () => setRubberBanding(null);
     window.addEventListener("mousemove", handleGlobalMouseMove);
     window.addEventListener("mouseup", handleGlobalMouseUp);
-    return () => {
-      window.removeEventListener("mousemove", handleGlobalMouseMove);
-      window.removeEventListener("mouseup", handleGlobalMouseUp);
-    };
+    return () => { window.removeEventListener("mousemove", handleGlobalMouseMove); window.removeEventListener("mouseup", handleGlobalMouseUp); };
   }, [rubberBanding, zoom]);
 
-  // Handle Note Moving updates
+  // ── Move with snap ───────────────────────────────────────────────────────
   useEffect(() => {
     if (!moving) return;
-
     const handleGlobalMouseMove = (e: MouseEvent) => {
-      const dx = (e.clientX / zoom) - moving.startPoint.x;
-      const dy = (e.clientY / zoom) - moving.startPoint.y;
-      
-      const newLeft = Math.round(moving.startLeft + dx);
-      const newTop = Math.round(moving.startTop + dy);
-      
-      dispatch({
-        type: "UPDATE_STYLE",
-        payload: { 
-          nodeId: moving.nodeId, 
-          style: { 
-            position: "absolute",
-            left: `${newLeft}px`, 
-            top: `${newTop}px` 
-          }, 
-          breakpoint 
-        },
-        description: "Move node",
-      });
-    };
+      const dx = e.clientX - moving.startPoint.x;
+      const dy = e.clientY - moving.startPoint.y;
+      const rawLeft = moving.startLeft + dx / zoom;
+      const rawTop = moving.startTop + dy / zoom;
 
-    const handleGlobalMouseUp = () => setMoving(null);
-    
+      let finalLeft = Math.round(rawLeft);
+      let finalTop = Math.round(rawTop);
+      let guides: SnapGuide[] = [];
+
+      if (snapEnabled && canvasFrameRef.current) {
+        const nodeEl = canvasFrameRef.current.querySelector(`[data-node-id="${moving.nodeId}"]`) as HTMLElement;
+        if (nodeEl) {
+          const w = nodeEl.offsetWidth;
+          const h = nodeEl.offsetHeight;
+          const movingRect: Rect = { x: rawLeft, y: rawTop, width: w, height: h };
+          const siblings: Rect[] = [];
+          const node = document.nodes[moving.nodeId];
+          if (node?.parentId && canvasFrameRef.current) {
+            for (const n of Object.values(document.nodes)) {
+              if (n.parentId === node.parentId && n.id !== moving.nodeId) {
+                const el = canvasFrameRef.current.querySelector(`[data-node-id="${n.id}"]`) as HTMLElement;
+                if (el) {
+                  const fr = canvasFrameRef.current.getBoundingClientRect();
+                  const er = el.getBoundingClientRect();
+                  siblings.push({ x: (er.left - fr.left) / zoom, y: (er.top - fr.top) / zoom, width: er.width / zoom, height: er.height / zoom });
+                }
+              }
+            }
+          }
+          const result = snapEngine.snap(movingRect, siblings);
+          guides = result.guides;
+          finalLeft = Math.round(result.snappedPoint.x);
+          finalTop = Math.round(result.snappedPoint.y);
+        }
+      }
+
+      setSnapGuides(guides);
+      dispatch({ type: "UPDATE_STYLE", payload: { nodeId: moving.nodeId, style: { position: "absolute", left: `${finalLeft}px`, top: `${finalTop}px` }, breakpoint }, description: "Move" });
+    };
+    const handleGlobalMouseUp = () => { setMoving(null); setSnapGuides([]); };
     window.addEventListener("mousemove", handleGlobalMouseMove);
     window.addEventListener("mouseup", handleGlobalMouseUp);
-    return () => {
-      window.removeEventListener("mousemove", handleGlobalMouseMove);
-      window.removeEventListener("mouseup", handleGlobalMouseUp);
-    };
-  }, [moving, zoom, breakpoint, dispatch]);
+    return () => { window.removeEventListener("mousemove", handleGlobalMouseMove); window.removeEventListener("mouseup", handleGlobalMouseUp); };
+  }, [moving, zoom, breakpoint, dispatch, snapEnabled, snapEngine, document.nodes]);
 
-  const canvasConfigParams = useMemo(() => ({
-    ...document.canvasConfig,
-    showGrid,
-  }), [document.canvasConfig, showGrid]);
+  // ── Rotate ───────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!rotating) return;
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      const dx = e.clientX - rotating.centerX;
+      const dy = e.clientY - rotating.centerY;
+      const currentAngle = (Math.atan2(dy, dx) * 180) / Math.PI;
+      const rotation = Math.round(rotating.initialRotation + (currentAngle - rotating.startAngle));
+      dispatch({ type: "UPDATE_STYLE", payload: { nodeId: rotating.nodeId, style: { transform: `rotate(${rotation}deg)` }, breakpoint }, description: "Rotate" });
+    };
+    const handleGlobalMouseUp = () => setRotating(null);
+    window.addEventListener("mousemove", handleGlobalMouseMove);
+    window.addEventListener("mouseup", handleGlobalMouseUp);
+    return () => { window.removeEventListener("mousemove", handleGlobalMouseMove); window.removeEventListener("mouseup", handleGlobalMouseUp); };
+  }, [rotating, dispatch, breakpoint]);
+
+  // ── Keyboard shortcuts (canvas-focused) ───────────────────────────────────
+  useEffect(() => {
+    const container = canvasContainerRef.current;
+    if (!container) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const ctrl = e.ctrlKey || e.metaKey;
+      if (ctrl && e.key === "z" && !e.shiftKey) { e.preventDefault(); undo(); return; }
+      if (ctrl && (e.key === "y" || (e.key === "z" && e.shiftKey))) { e.preventDefault(); redo(); return; }
+
+      if (ctrl && e.key === "c" && selectedNodeId) {
+        e.preventDefault();
+        const snapshot = collectSubtree(selectedNodeId, document.nodes);
+        dispatch({ type: "SET_CLIPBOARD", payload: { data: { nodeIds: [selectedNodeId], operation: "copy", snapshot } }, description: "Copy" });
+        return;
+      }
+      if (ctrl && e.key === "v") {
+        e.preventDefault();
+        const clipboard = state.editor.clipboard;
+        if (!clipboard) return;
+        for (const nodeId of clipboard.nodeIds) {
+          const src = clipboard.snapshot[nodeId];
+          if (!src) continue;
+          dispatch({ type: "ADD_NODE", payload: { nodeId: uuidv4(), parentId: src.parentId ?? document.rootNodeId, componentType: src.type, props: src.props, style: src.style }, description: "Paste" });
+        }
+        return;
+      }
+      if (ctrl && e.key === "d" && selectedNodeId) {
+        e.preventDefault();
+        dispatch({ type: "DUPLICATE_NODE", payload: { nodeId: selectedNodeId, offset: { x: 20, y: 20 } }, description: "Duplicate" });
+        return;
+      }
+
+      if ((e.key === "Delete" || e.key === "Backspace") && selectedNodeId && selectedNodeId !== document.rootNodeId) {
+        const active = globalThis.document?.activeElement;
+        if (active?.tagName === "INPUT" || active?.tagName === "TEXTAREA" || (active as HTMLElement)?.contentEditable === "true") return;
+        e.preventDefault();
+        dispatch({ type: "REMOVE_NODE", payload: { nodeId: selectedNodeId }, description: "Delete" });
+        return;
+      }
+      if (e.key === "Escape") { clearSelection(); return; }
+
+      if (selectedNodeId && !ctrl) {
+        const step = e.shiftKey ? 10 : 1;
+        let dx = 0; let dy = 0;
+        if (e.key === "ArrowLeft") dx = -step;
+        if (e.key === "ArrowRight") dx = step;
+        if (e.key === "ArrowUp") dy = -step;
+        if (e.key === "ArrowDown") dy = step;
+        if (dx !== 0 || dy !== 0) {
+          e.preventDefault();
+          const node = document.nodes[selectedNodeId];
+          if (!node) return;
+          const left = parseFloat(String(node.style.left ?? "0")) || 0;
+          const top = parseFloat(String(node.style.top ?? "0")) || 0;
+          dispatch({ type: "UPDATE_STYLE", payload: { nodeId: selectedNodeId, style: { position: "absolute", left: `${left + dx}px`, top: `${top + dy}px` }, breakpoint }, description: "Nudge" });
+        }
+      }
+    };
+    container.addEventListener("keydown", handleKeyDown);
+    return () => container.removeEventListener("keydown", handleKeyDown);
+  }, [selectedNodeId, document.nodes, document.rootNodeId, state.editor.clipboard, undo, redo, dispatch, clearSelection, breakpoint]);
+
+  const canvasConfigParams = useMemo(() => ({ ...document.canvasConfig, showGrid, snapEnabled }), [document.canvasConfig, showGrid, snapEnabled]);
+
+  const currentRotation = useMemo(() => {
+    if (!selectedNode?.style.transform) return 0;
+    const match = selectedNode.style.transform.match(/rotate\(([-\d.]+)deg\)/);
+    return match ? parseFloat(match[1]!) : 0;
+  }, [selectedNode?.style.transform]);
 
   return (
-    <div className="flex flex-col h-full w-full overflow-hidden bg-background relative">
-      {/* Global Top Toolbar float */}
+    <div
+      className="flex flex-col h-full w-full overflow-hidden bg-background relative"
+      ref={canvasContainerRef}
+      tabIndex={0}
+      style={{ outline: "none" }}
+    >
       <EditorToolbar
         breakpoint={breakpoint}
         zoom={zoom}
         showGrid={showGrid}
-        canUndo
-        canRedo
+        snapEnabled={snapEnabled}
+        canUndo={canUndo}
+        canRedo={canRedo}
         activeTool={activeTool}
         onBreakpointChange={setBreakpoint}
         onZoomChange={setZoom}
         onGridToggle={toggleGrid}
+        onSnapToggle={toggleSnap}
         onUndo={undo}
         onRedo={redo}
-        onToolChange={setActiveTool}
+        onToolChange={(tool) => setActiveTool(tool)}
       />
 
-      {/* Floating Panels */}
       <FloatingPanel id="components" title="Components" defaultPosition={{ x: 16, y: 64 }}>
         <div className="h-[40vh] min-h-[300px] overflow-hidden">
-          <ComponentPalette
-            components={allComponents}
-            onDragStart={handleDragStart}
-          />
+          <ComponentPalette components={allComponents} onDragStart={handleDragStart} />
         </div>
       </FloatingPanel>
 
       <FloatingPanel id="layers" title="Layers" defaultPosition={{ x: 16, y: 480 }} defaultExpanded={false}>
         <div className="h-[30vh] min-h-[250px] overflow-hidden">
-          <LayerTree
-            document={document}
-            selectedIds={selectedNodeIds}
-            onSelect={select}
-            onToggleHidden={handleToggleHidden}
-            onToggleLocked={handleToggleLocked}
-          />
+          <LayerTree document={document} selectedIds={selectedNodeIds} onSelect={select} onToggleHidden={handleToggleHidden} onToggleLocked={handleToggleLocked} />
         </div>
       </FloatingPanel>
 
       <FloatingPanel id="properties" title="Properties" defaultPosition={{ right: 16, y: 64 }}>
         <div className="h-[75vh] min-h-[500px] max-h-[800px] overflow-hidden flex flex-col">
-          <PropertyPanel
-            selectedNode={selectedNode}
-            definition={selectedDefinition}
-            onPropChange={handlePropChange}
-            onStyleChange={handleStyleChange}
-          />
+          <PropertyPanel selectedNode={selectedNode} definition={selectedDefinition} onPropChange={handlePropChange} onStyleChange={handleStyleChange} />
         </div>
       </FloatingPanel>
 
-      {/* Main Canvas Viewport */}
       <div className="flex flex-col overflow-hidden bg-muted/20 absolute inset-0 z-0">
-        <CanvasRoot
-          canvasConfig={canvasConfigParams}
-          zoom={zoom}
-          panOffset={panOffset}
-          onZoomChange={setZoom}
-          onPanOffsetChange={setPanOffset}
-        >
-          {/* Canvas device frame */}
+        <CanvasRoot canvasConfig={canvasConfigParams} zoom={zoom} panOffset={panOffset} onZoomChange={setZoom} onPanOffsetChange={setPanOffset}>
           <div
             ref={canvasFrameRef}
-            style={{
-              width: document.canvasConfig.width,
-              minHeight: document.canvasConfig.height,
-              backgroundColor: document.canvasConfig.backgroundColor ?? "#ffffff",
-              position: "relative",
-              boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
-              borderRadius: 4,
-            }}
+            style={{ width: document.canvasConfig.width ?? 1280, minHeight: document.canvasConfig.height ?? 800, backgroundColor: document.canvasConfig.backgroundColor ?? "#ffffff", position: "relative", boxShadow: "0 4px 24px rgba(0,0,0,0.12)", borderRadius: 4 }}
             onPointerDown={handlePointerDown}
             onMouseOver={handleMouseOver}
             onMouseOut={handleMouseOut}
@@ -417,85 +492,82 @@ function EditorInner() {
             onDragOver={handleDragOver}
             onDrop={handleDrop}
           >
-            {/* Helper lines for container boundaries (e.g. 1200px max width body) */}
             <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[1200px] border-x border-dashed border-blue-400/20 pointer-events-none z-0" />
-            
-            <NodeRenderer
-              nodeId={document.rootNodeId}
-            />
+            <NodeRenderer nodeId={document.rootNodeId} />
           </div>
 
-          {/* Overlays (selection, snap, hover) */}
           <SelectionOverlay
-            selection={{
-              selectedIds: selectedNodeIds,
-              boundingBox: selectionRect,
-              isRubberBanding: !!rubberBanding,
-              rubberBandRect: rubberBanding ? {
-                x: Math.min(rubberBanding.startPoint.x, rubberBanding.currentPoint.x),
-                y: Math.min(rubberBanding.startPoint.y, rubberBanding.currentPoint.y),
-                width: Math.abs(rubberBanding.currentPoint.x - rubberBanding.startPoint.x),
-                height: Math.abs(rubberBanding.currentPoint.y - rubberBanding.startPoint.y),
-              } : null,
-            }}
+            selection={{ selectedIds: selectedNodeIds, boundingBox: selectionRect, isRubberBanding: !!rubberBanding, rubberBandRect: rubberBanding ? { x: Math.min(rubberBanding.startPoint.x, rubberBanding.currentPoint.x), y: Math.min(rubberBanding.startPoint.y, rubberBanding.currentPoint.y), width: Math.abs(rubberBanding.currentPoint.x - rubberBanding.startPoint.x), height: Math.abs(rubberBanding.currentPoint.y - rubberBanding.startPoint.y) } : null }}
             zoom={zoom}
+            rotation={currentRotation}
             onResizeStart={(handle, e) => {
               if (!selectionRect || !selectedNodeId) return;
-              setResizing({
-                handle,
-                nodeId: selectedNodeId,
-                startPoint: { x: e.clientX, y: e.clientY },
-                startRect: { ...selectionRect },
-              });
+              setResizing({ handle, nodeId: selectedNodeId, startPoint: { x: e.clientX, y: e.clientY }, startRect: { ...selectionRect } });
+            }}
+            onRotateStart={(e) => {
+              if (!selectionRect || !selectedNodeId) return;
+              const cx = (selectionRect.x + selectionRect.width / 2) * zoom;
+              const cy = (selectionRect.y + selectionRect.height / 2) * zoom;
+              const startAngle = (Math.atan2(e.clientY - cy, e.clientX - cx) * 180) / Math.PI;
+              setRotating({ nodeId: selectedNodeId, centerX: cx, centerY: cy, startAngle, initialRotation: currentRotation });
             }}
           />
 
           {hoverRect && <HoverOutline rect={hoverRect} zoom={zoom} />}
-
-          <SnapGuides
-            guides={[]}
-            canvasWidth={document.canvasConfig.width ?? 1280}
-            canvasHeight={document.canvasConfig.height ?? 800}
-          />
+          <SnapGuides guides={snapGuides} canvasWidth={document.canvasConfig.width ?? 1280} canvasHeight={document.canvasConfig.height ?? 800} />
         </CanvasRoot>
 
-        {/* Contextual Toolbar (Quick actions) */}
         {selectedNodeId && selectionRect && (
           <ContextualToolbar
             nodeId={selectedNodeId}
             rect={selectionRect}
             zoom={zoom}
+            panOffset={panOffset}
+            onDelete={() => dispatch({ type: "REMOVE_NODE", payload: { nodeId: selectedNodeId }, description: "Delete" })}
+            onDuplicate={() => dispatch({ type: "DUPLICATE_NODE", payload: { nodeId: selectedNodeId, offset: { x: 20, y: 20 } }, description: "Duplicate" })}
+            onMoveUp={() => { const n = document.nodes[selectedNodeId]; if (n) dispatch({ type: "REORDER_NODE", payload: { nodeId: selectedNodeId, insertIndex: Math.max(0, n.order - 1) }, description: "Move up" }); }}
+            onMoveDown={() => { const n = document.nodes[selectedNodeId]; if (n) dispatch({ type: "REORDER_NODE", payload: { nodeId: selectedNodeId, insertIndex: n.order + 1 }, description: "Move down" }); }}
           />
+        )}
+
+        {rotating !== null && selectionRect && (
+          <div className="absolute z-50 bg-background/90 border rounded px-2 py-0.5 text-xs font-mono pointer-events-none" style={{ left: (selectionRect.x + selectionRect.width / 2) * zoom + panOffset.x - 20, top: (selectionRect.y + selectionRect.height) * zoom + panOffset.y + 28 }}>
+            {currentRotation}°
+          </div>
         )}
       </div>
     </div>
   );
 }
 
+// ── Helper: collect subtree ────────────────────────────────────────────────
+function collectSubtree(
+  rootId: string,
+  nodes: Record<string, import("@ui-builder/builder-core").BuilderNode>,
+): Record<string, import("@ui-builder/builder-core").BuilderNode> {
+  const result: Record<string, import("@ui-builder/builder-core").BuilderNode> = {};
+  const queue = [rootId];
+  while (queue.length > 0) {
+    const id = queue.shift()!;
+    const node = nodes[id];
+    if (node) {
+      result[id] = node;
+      for (const n of Object.values(nodes)) {
+        if (n.parentId === id) queue.push(n.id);
+      }
+    }
+  }
+  return result;
+}
+
 // ── Public BuilderEditor ──────────────────────────────────────────────────
 
 export interface BuilderEditorProps {
-  /** Pre-created builder instance, or pass config to auto-create */
   builder?: BuilderAPI;
   config?: BuilderConfig;
   className?: string;
 }
 
-/**
- * BuilderEditor — the full visual editor React component.
- *
- * Composes:
- * - BuilderProvider (state)
- * - EditorToolbar (breakpoints, zoom, undo/redo, grid)
- * - CanvasRoot (zoom/pan, SVG grid)
- * - ComponentPalette (components panel)
- * - PropertyPanel (props/style/events)
- * - LayerTree (node hierarchy)
- * - EditorOverlay (selection, snap, hover)
- *
- * @example
- * <BuilderEditor config={{ document: { name: 'My Page' } }} />
- */
 export function BuilderEditor({ builder, config, className }: BuilderEditorProps) {
   return (
     <BuilderProvider builder={builder} config={config}>

@@ -1162,3 +1162,43 @@ interface BuilderPermissions {
 - Package boundaries must be enforced by lint rules (no cross-package imports outside defined contracts).
 - All public APIs versioned with deprecation warnings before removal.
 - Breaking changes require major version bump.
+
+### Shared Configuration Logic
+
+**Critical rule**: Các chức năng cấu hình chung cho một loại component **phải dùng chung một logic**, không được mỗi nơi khai báo riêng.
+
+**Ví dụ**: Khi select một component `text`, cả **menubar** (toolbar) và **property panel** (bên phải) đều hiển thị các tùy chọn cấu hình như:
+- `fontSize`, `color`, `textDecoration`, `fontWeight`, `fontStyle`, `lineHeight`
+- Text alignment, letter spacing, v.v.
+
+Nếu property panel viết logic xử lý `fontSize` → cập nhật state → render UI, thì menubar **phải tái sử dụng cùng logic đó** — không được viết một bộ logic riêng trong menubar. Ngược lại, dẫn đến:
+- Hành vi không nhất quán giữa các panel
+- Bug khó phát hiện khi update ở một chỗ mà quên chỗ khác
+- Maintenance nightmare khi thay đổi business logic
+
+**Giải pháp**: 
+- Tạo shared utilities/hooks (`useTextPropertyHandler`, `useStyleConfigurator`) ở `packages/builder-react/src/hooks/`
+- Cả property panel và menubar import và dùng chung hooks/utilities này
+- Logic một lần, UI multiple (nhiều panel render khác nhau nhưng dùng cùng core logic)
+
+### Code Review Checklist for All Changes
+
+Mỗi lần thay đổi code, **AI phải kiểm tra**:
+
+| Item                                  | Purpose                                                                          |
+| ------------------------------------- | -------------------------------------------------------------------------------- |
+| **Shared logic duplication**          | Có chỗ nào viết logic cùng chức năng 2+ lần không? (vd: 2 handler cho fontSize)  |
+| **Language keys (i18n)**              | Nếu thêm text UI mới → phải add key vào i18n files cho tất cả supported languages |
+| **AI Assistant context**              | Nếu công việc liên quan AI/prompt → kiểm tra `.agents/skills/` có cần update không |
+| **Type contracts**                    | Nếu update interface → kiểm tra xem có component nào dùng interface này không      |
+| **Event emissions**                   | Nếu state change → có emit event tương ứng vào EventBus không?                   |
+| **Plugin API stability**              | Nếu change public API → phải thêm deprecation warning, không break ngay             |
+| **PropSchema validation**             | Nếu thêm prop mới → phải add vào PropSchema của component definition              |
+| **Responsive breakpoint handling**    | Nếu xử lý style → kiểm tra cả desktop/tablet/mobile breakpoints                   |
+| **A11y attributes**                   | Nếu thêm interactive element → phải add ARIA labels, roles (`ariaLabel`, `role`) |
+| **Performance impact**                | Nếu thêm computation → snap engine có vượt 8ms limit không? Render có vượt 16ms không? |
+| **Undo/Redo history**                 | Nếu state change qua command → inverse command có tính toán đúng không?           |
+| **Error boundary coverage**           | Nếu thêm component mới → có error boundary wrapper không? Fail-safe placeholder? |
+| **Test coverage**                     | Unit test cho logic, integration test cho component interaction                    |
+
+**Nhắc nhở**: Quên kiểm tra những items này → bug, inconsistency, hoặc degradation trải nghiệm người dùng.

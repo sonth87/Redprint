@@ -8,6 +8,7 @@ import { CommandEngine } from "./commands/CommandEngine";
 import { HistoryStack } from "./history/HistoryStack";
 import { PluginEngine } from "./plugins/PluginEngine";
 import { MigrationEngine } from "./migration/MigrationEngine";
+import { registerAllHandlers } from "./commands/handlers";
 import { DEFAULT_BREAKPOINTS } from "./responsive/constants";
 import { CURRENT_SCHEMA_VERSION } from "./document/constants";
 import { v4 as uuidv4 } from "uuid";
@@ -110,6 +111,9 @@ export function createBuilder(config: BuilderConfig = {}): IBuilderAPI {
     config.permissions?.restrictedCommands ?? [],
   );
 
+  // Register all built-in command handlers (critical — must happen before any dispatch)
+  registerAllHandlers(commandEngine, registry);
+
   // Build the PluginAPI implementation
   const pluginStorageMap = new Map<string, Map<string, unknown>>();
   const assetProviders: import("./document/assets").AssetProvider[] = [];
@@ -141,13 +145,13 @@ export function createBuilder(config: BuilderConfig = {}): IBuilderAPI {
   }
 
   // Initialise async (fire-and-forget — errors are isolated per plugin)
-  pluginEngine.initializeAll().catch((err) => {
-    console.error("[createBuilder] Unexpected error during plugin initialisation:", err);
+  pluginEngine.initializeAll().catch((_err) => {
+    // errors isolated per plugin; no console in framework-agnostic core
   });
 
-  // State subscribers
+  // State subscribers — notified on every successful command execution
   const stateListeners = new Set<(state: BuilderState) => void>();
-  eventBus.on("document:changed", () => {
+  eventBus.on("command:executed", () => {
     const state = commandEngine.getState();
     for (const listener of stateListeners) {
       listener(state);
@@ -159,6 +163,8 @@ export function createBuilder(config: BuilderConfig = {}): IBuilderAPI {
     dispatch: (command: Command): CommandResult => commandEngine.dispatch(command),
     undo: () => commandEngine.undo(),
     redo: () => commandEngine.redo(),
+    get canUndo() { return historyStack.canUndo; },
+    get canRedo() { return historyStack.canRedo; },
     registry,
     eventBus,
     subscribe: (listener: (state: BuilderState) => void) => {

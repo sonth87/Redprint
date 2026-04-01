@@ -20,6 +20,9 @@ export { useBreakpoint } from "./hooks/useBreakpoint";
 export { useHistory } from "./hooks/useHistory";
 export { usePlugin } from "./hooks/usePlugin";
 
+// Properties
+export { useNodeProperty } from "./hooks/useNodeProperty";
+
 // Components
 export { NodeRenderer } from "./components/NodeRenderer";
 export type { NodeRendererProps } from "./components/NodeRenderer";

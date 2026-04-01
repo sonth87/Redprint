@@ -1,12 +1,28 @@
-import React, { memo } from "react";
-import { Tabs, TabsList, TabsTrigger, TabsContent, ScrollArea, Label, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, Switch } from "@ui-builder/ui";
-import type { BuilderNode, ComponentDefinition, PropSchema } from "@ui-builder/builder-core";
+import React, { memo, useState, useCallback } from "react";
+import { Tabs, TabsList, TabsTrigger, TabsContent, ScrollArea, Label, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, Switch, Separator, Badge } from "@ui-builder/ui";
+import type { BuilderNode, ComponentDefinition, PropSchema, InteractionConfig, InteractionTrigger, InteractionAction } from "@ui-builder/builder-core";
+import {
+  ChevronDown,
+  ChevronRight,
+  Plus,
+  Trash2,
+  Paintbrush,
+  Zap,
+  Sparkles,
+  Database,
+  Settings2,
+  MousePointer,
+  Eye,
+  EyeOff,
+} from "lucide-react";
+import { cn } from "@ui-builder/ui";
 
 export interface PropertyPanelProps {
   selectedNode: BuilderNode | null;
   definition: ComponentDefinition | null;
   onPropChange: (key: string, value: unknown) => void;
   onStyleChange: (key: string, value: unknown) => void;
+  onInteractionsChange?: (interactions: InteractionConfig[]) => void;
 }
 
 /**
@@ -146,128 +162,1211 @@ function PropControl({
   }
 }
 
+// ── Collapsible section ──────────────────────────────────────────────────
+
+function CollapsibleSection({
+  title,
+  defaultOpen = true,
+  children,
+}: {
+  title: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="border-b last:border-b-0">
+      <button
+        className="flex items-center gap-1 w-full px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide hover:bg-muted/50 transition-colors"
+        onClick={() => setOpen((v) => !v)}
+      >
+        {open ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+        {title}
+      </button>
+      {open && <div className="px-3 pb-3 space-y-3">{children}</div>}
+    </div>
+  );
+}
+
+// ── Interaction editor row ───────────────────────────────────────────────
+
+const TRIGGER_OPTIONS: { value: InteractionTrigger; label: string }[] = [
+  { value: "click", label: "Click" },
+  { value: "dblclick", label: "Double Click" },
+  { value: "hover", label: "Hover" },
+  { value: "mouseenter", label: "Mouse Enter" },
+  { value: "mouseleave", label: "Mouse Leave" },
+  { value: "focus", label: "Focus" },
+  { value: "blur", label: "Blur" },
+  { value: "submit", label: "Submit" },
+  { value: "change", label: "Change" },
+  { value: "mount", label: "Mount" },
+  { value: "unmount", label: "Unmount" },
+  { value: "scroll", label: "Scroll" },
+];
+
+const ACTION_TYPE_OPTIONS = [
+  { value: "navigate", label: "Navigate" },
+  { value: "toggleVisibility", label: "Toggle Visibility" },
+  { value: "setState", label: "Set State" },
+  { value: "showModal", label: "Show Modal" },
+  { value: "hideModal", label: "Hide Modal" },
+  { value: "scrollTo", label: "Scroll To" },
+  { value: "addClass", label: "Add Class" },
+  { value: "removeClass", label: "Remove Class" },
+  { value: "emit", label: "Emit Event" },
+  { value: "triggerApi", label: "API Call" },
+  { value: "custom", label: "Custom" },
+];
+
+function InteractionRow({
+  interaction,
+  index,
+  onChange,
+  onRemove,
+}: {
+  interaction: InteractionConfig;
+  index: number;
+  onChange: (updated: InteractionConfig) => void;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="rounded-md border p-2 space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-semibold text-muted-foreground">
+          #{index + 1}
+        </span>
+        <button
+          className="text-muted-foreground hover:text-destructive transition-colors"
+          onClick={onRemove}
+        >
+          <Trash2 className="h-3 w-3" />
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div className="grid gap-1">
+          <Label className="text-[10px] text-muted-foreground">Trigger</Label>
+          <Select
+            value={interaction.trigger}
+            onValueChange={(val) =>
+              onChange({ ...interaction, trigger: val as InteractionTrigger })
+            }
+          >
+            <SelectTrigger className="h-7 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {TRIGGER_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="grid gap-1">
+          <Label className="text-[10px] text-muted-foreground">Action</Label>
+          <Select
+            value={interaction.actions[0]?.type ?? "navigate"}
+            onValueChange={(val) => {
+              const action = { type: val } as InteractionAction;
+              onChange({ ...interaction, actions: [action] });
+            }}
+          >
+            <SelectTrigger className="h-7 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {ACTION_TYPE_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Action-specific fields */}
+      {interaction.actions[0]?.type === "navigate" && (
+        <div className="grid gap-1">
+          <Label className="text-[10px] text-muted-foreground">URL</Label>
+          <Input
+            className="h-7 text-xs"
+            placeholder="https://..."
+            value={(interaction.actions[0] as { url?: string }).url ?? ""}
+            onChange={(e) =>
+              onChange({
+                ...interaction,
+                actions: [{ type: "navigate" as const, url: e.target.value }],
+              })
+            }
+          />
+        </div>
+      )}
+
+      {(interaction.actions[0]?.type === "toggleVisibility" ||
+        interaction.actions[0]?.type === "showModal" ||
+        interaction.actions[0]?.type === "hideModal" ||
+        interaction.actions[0]?.type === "scrollTo") && (
+        <div className="grid gap-1">
+          <Label className="text-[10px] text-muted-foreground">Target ID</Label>
+          <Input
+            className="h-7 text-xs font-mono"
+            placeholder="node-id"
+            value={(interaction.actions[0] as { targetId?: string }).targetId ?? ""}
+            onChange={(e) => {
+              const action = interaction.actions[0];
+              const actionType = action?.type as "toggleVisibility" | "showModal" | "hideModal" | "scrollTo";
+              onChange({
+                ...interaction,
+                actions: [{ type: actionType, targetId: e.target.value }],
+              });
+            }}
+          />
+        </div>
+      )}
+
+      {interaction.actions[0]?.type === "setState" && (
+        <div className="grid grid-cols-2 gap-2">
+          <div className="grid gap-1">
+            <Label className="text-[10px] text-muted-foreground">Key</Label>
+            <Input
+              className="h-7 text-xs"
+              placeholder="key"
+              value={(interaction.actions[0] as { key?: string }).key ?? ""}
+              onChange={(e) => {
+                const action = interaction.actions[0] as { type: "setState"; key: string; value: unknown };
+                onChange({
+                  ...interaction,
+                  actions: [{ type: "setState" as const, key: e.target.value, value: action?.value ?? "" }],
+                });
+              }}
+            />
+          </div>
+          <div className="grid gap-1">
+            <Label className="text-[10px] text-muted-foreground">Value</Label>
+            <Input
+              className="h-7 text-xs"
+              placeholder="value"
+              value={String((interaction.actions[0] as { value?: unknown }).value ?? "")}
+              onChange={(e) => {
+                const action = interaction.actions[0] as { type: "setState"; key: string; value: unknown };
+                onChange({
+                  ...interaction,
+                  actions: [{ type: "setState" as const, key: action?.key ?? "", value: e.target.value }],
+                });
+              }}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Animation preset options ─────────────────────────────────────────────
+
+const ANIMATION_PRESETS = [
+  { value: "none", label: "None" },
+  { value: "fadeIn", label: "Fade In" },
+  { value: "fadeOut", label: "Fade Out" },
+  { value: "slideInLeft", label: "Slide In Left" },
+  { value: "slideInRight", label: "Slide In Right" },
+  { value: "slideInUp", label: "Slide In Up" },
+  { value: "slideInDown", label: "Slide In Down" },
+  { value: "bounceIn", label: "Bounce In" },
+  { value: "zoomIn", label: "Zoom In" },
+  { value: "zoomOut", label: "Zoom Out" },
+  { value: "rotateIn", label: "Rotate In" },
+  { value: "pulse", label: "Pulse" },
+  { value: "shake", label: "Shake" },
+  { value: "flash", label: "Flash" },
+  { value: "swing", label: "Swing" },
+  { value: "tada", label: "Tada" },
+];
+
+const EASING_OPTIONS = [
+  { value: "ease", label: "Ease" },
+  { value: "ease-in", label: "Ease In" },
+  { value: "ease-out", label: "Ease Out" },
+  { value: "ease-in-out", label: "Ease In Out" },
+  { value: "linear", label: "Linear" },
+  { value: "cubic-bezier(0.4, 0, 0.2, 1)", label: "Smooth" },
+];
+
+// ── Main Property Panel ──────────────────────────────────────────────────
+
 /**
  * PropertyPanel — right panel displaying selected node's editable properties.
  *
- * Tabs: Properties | Style | Interactions
+ * 5 tabs: Design | Events | Effects | Data | Advanced
  */
 export const PropertyPanel = memo(function PropertyPanel({
   selectedNode,
   definition,
   onPropChange,
   onStyleChange,
+  onInteractionsChange,
 }: PropertyPanelProps) {
   if (!selectedNode || !definition) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-xs text-muted-foreground gap-2">
-        <p>Select a component to edit its properties.</p>
+      <div className="flex flex-col items-center justify-center h-full text-xs text-muted-foreground gap-2 p-4">
+        <Settings2 className="h-8 w-8 text-muted-foreground/40" />
+        <p className="text-center">Select a component to edit its properties.</p>
       </div>
     );
   }
 
+  const style = selectedNode.style as Record<string, unknown>;
+  const interactions = selectedNode.interactions ?? [];
+
+  const handleAddInteraction = () => {
+    if (!onInteractionsChange) return;
+    const newInteraction: InteractionConfig = {
+      id: crypto.randomUUID(),
+      trigger: "click",
+      actions: [{ type: "navigate", url: "" }],
+      conditions: [],
+    };
+    onInteractionsChange([...interactions, newInteraction]);
+  };
+
+  const handleUpdateInteraction = (index: number, updated: InteractionConfig) => {
+    if (!onInteractionsChange) return;
+    const next = [...interactions];
+    next[index] = updated;
+    onInteractionsChange(next);
+  };
+
+  const handleRemoveInteraction = (index: number) => {
+    if (!onInteractionsChange) return;
+    onInteractionsChange(interactions.filter((_, i) => i !== index));
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* Node type header */}
-      <div className="px-3 py-2 border-b">
-        <p className="text-xs font-semibold truncate">{selectedNode.name ?? definition.name}</p>
-        <p className="text-[10px] text-muted-foreground font-mono">{selectedNode.type}</p>
+      <div className="px-3 py-2 border-b flex items-center justify-between">
+        <div>
+          <p className="text-xs font-semibold truncate">{selectedNode.name ?? definition.name}</p>
+          <p className="text-[10px] text-muted-foreground font-mono">{selectedNode.type}</p>
+        </div>
+        <div className="flex items-center gap-1">
+          {selectedNode.locked && (
+            <Badge variant="outline" className="text-[9px] px-1 py-0">Locked</Badge>
+          )}
+          {selectedNode.hidden && (
+            <Badge variant="outline" className="text-[9px] px-1 py-0">
+              <EyeOff className="h-2.5 w-2.5" />
+            </Badge>
+          )}
+        </div>
       </div>
 
-      <Tabs defaultValue="props" className="flex flex-col flex-1 min-h-0">
-        <TabsList className="mx-2 mt-2 h-8 grid grid-cols-3">
-          <TabsTrigger value="props" className="text-xs">Props</TabsTrigger>
-          <TabsTrigger value="style" className="text-xs">Style</TabsTrigger>
-          <TabsTrigger value="events" className="text-xs">Events</TabsTrigger>
+      <Tabs defaultValue="design" className="flex flex-col flex-1 min-h-0">
+        <TabsList className="mx-2 mt-2 h-8 grid grid-cols-5">
+          <TabsTrigger value="design" className="text-[10px] gap-0.5 px-1">
+            <Paintbrush className="h-3 w-3" />
+            <span className="hidden sm:inline">Design</span>
+          </TabsTrigger>
+          <TabsTrigger value="events" className="text-[10px] gap-0.5 px-1">
+            <Zap className="h-3 w-3" />
+            <span className="hidden sm:inline">Events</span>
+          </TabsTrigger>
+          <TabsTrigger value="effects" className="text-[10px] gap-0.5 px-1">
+            <Sparkles className="h-3 w-3" />
+            <span className="hidden sm:inline">Effects</span>
+          </TabsTrigger>
+          <TabsTrigger value="data" className="text-[10px] gap-0.5 px-1">
+            <Database className="h-3 w-3" />
+            <span className="hidden sm:inline">Data</span>
+          </TabsTrigger>
+          <TabsTrigger value="advanced" className="text-[10px] gap-0.5 px-1">
+            <Settings2 className="h-3 w-3" />
+            <span className="hidden sm:inline">Adv</span>
+          </TabsTrigger>
         </TabsList>
 
-        {/* Props tab */}
-        <TabsContent value="props" className="flex-1 overflow-hidden mt-0">
+        {/* ── Design tab ───────────────────────────────────────────── */}
+        <TabsContent value="design" className="flex-1 overflow-hidden mt-0">
           <ScrollArea className="h-full">
-            <div className="p-3 space-y-4">
-              {definition.propSchema.length === 0 && (
-                <p className="text-xs text-muted-foreground">No configurable properties.</p>
-              )}
-              {definition.propSchema.map((schema) => {
-                if (schema.type === "group") {
+            {/* Component props */}
+            {definition.propSchema.length > 0 && (
+              <CollapsibleSection title="Properties">
+                {definition.propSchema.map((schema) => {
+                  if (schema.type === "group") {
+                    return (
+                      <div key={schema.key} className="space-y-3">
+                        <p className="text-[10px] font-semibold text-muted-foreground tracking-wide">
+                          {schema.label}
+                        </p>
+                        {schema.children.map((child) => (
+                          <PropControl
+                            key={child.key}
+                            schema={child}
+                            value={selectedNode.props[child.key]}
+                            onChange={(val) => onPropChange(child.key, val)}
+                          />
+                        ))}
+                      </div>
+                    );
+                  }
                   return (
-                    <div key={schema.key} className="space-y-3">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                        {schema.label}
-                      </p>
-                      {schema.children.map((child) => (
-                        <PropControl
-                          key={child.key}
-                          schema={child}
-                          value={selectedNode.props[child.key]}
-                          onChange={(val) => onPropChange(child.key, val)}
-                        />
-                      ))}
-                    </div>
+                    <PropControl
+                      key={schema.key}
+                      schema={schema}
+                      value={selectedNode.props[schema.key]}
+                      onChange={(val) => onPropChange(schema.key, val)}
+                    />
                   );
-                }
-                return (
-                  <PropControl
-                    key={schema.key}
-                    schema={schema}
-                    value={selectedNode.props[schema.key]}
-                    onChange={(val) => onPropChange(schema.key, val)}
+                })}
+              </CollapsibleSection>
+            )}
+
+            {/* Size */}
+            <CollapsibleSection title="Size">
+              <div className="grid grid-cols-2 gap-2">
+                {["width", "height", "minWidth", "maxWidth", "minHeight", "maxHeight"].map((key) => (
+                  <div key={key} className="grid gap-1">
+                    <Label className="text-[10px] text-muted-foreground capitalize">{key}</Label>
+                    <Input
+                      className="h-7 text-xs"
+                      value={String(style[key] ?? "")}
+                      placeholder="auto"
+                      onChange={(e) => onStyleChange(key, e.target.value || undefined)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </CollapsibleSection>
+
+            {/* Spacing */}
+            <CollapsibleSection title="Spacing">
+              <div className="grid grid-cols-2 gap-2">
+                {["padding", "paddingTop", "paddingRight", "paddingBottom", "paddingLeft"].map((key) => (
+                  <div key={key} className="grid gap-1">
+                    <Label className="text-[10px] text-muted-foreground capitalize">
+                      {key === "padding" ? "All" : key.replace("padding", "").toLowerCase()}
+                    </Label>
+                    <Input
+                      className="h-7 text-xs"
+                      value={String(style[key] ?? "")}
+                      placeholder="0"
+                      onChange={(e) => onStyleChange(key, e.target.value || undefined)}
+                    />
+                  </div>
+                ))}
+              </div>
+              <Separator className="my-2" />
+              <div className="grid grid-cols-2 gap-2">
+                {["margin", "marginTop", "marginRight", "marginBottom", "marginLeft"].map((key) => (
+                  <div key={key} className="grid gap-1">
+                    <Label className="text-[10px] text-muted-foreground capitalize">
+                      {key === "margin" ? "All" : key.replace("margin", "").toLowerCase()}
+                    </Label>
+                    <Input
+                      className="h-7 text-xs"
+                      value={String(style[key] ?? "")}
+                      placeholder="0"
+                      onChange={(e) => onStyleChange(key, e.target.value || undefined)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </CollapsibleSection>
+
+            {/* Typography */}
+            <CollapsibleSection title="Typography">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="grid gap-1">
+                  <Label className="text-[10px] text-muted-foreground">Font Family</Label>
+                  <Input
+                    className="h-7 text-xs"
+                    value={String(style.fontFamily ?? "")}
+                    placeholder="inherit"
+                    onChange={(e) => onStyleChange("fontFamily", e.target.value || undefined)}
                   />
-                );
-              })}
-            </div>
-          </ScrollArea>
-        </TabsContent>
+                </div>
+                <div className="grid gap-1">
+                  <Label className="text-[10px] text-muted-foreground">Font Size</Label>
+                  <Input
+                    className="h-7 text-xs"
+                    value={String(style.fontSize ?? "")}
+                    placeholder="16px"
+                    onChange={(e) => onStyleChange("fontSize", e.target.value || undefined)}
+                  />
+                </div>
+                <div className="grid gap-1">
+                  <Label className="text-[10px] text-muted-foreground">Font Weight</Label>
+                  <Select
+                    value={String(style.fontWeight ?? "")}
+                    onValueChange={(v) => onStyleChange("fontWeight", v || undefined)}
+                  >
+                    <SelectTrigger className="h-7 text-xs">
+                      <SelectValue placeholder="Weight" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {["100","200","300","400","500","600","700","800","900"].map((w) => (
+                        <SelectItem key={w} value={w} className="text-xs">{w}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-1">
+                  <Label className="text-[10px] text-muted-foreground">Line Height</Label>
+                  <Input
+                    className="h-7 text-xs"
+                    value={String(style.lineHeight ?? "")}
+                    placeholder="1.5"
+                    onChange={(e) => onStyleChange("lineHeight", e.target.value || undefined)}
+                  />
+                </div>
+                <div className="grid gap-1">
+                  <Label className="text-[10px] text-muted-foreground">Letter Spacing</Label>
+                  <Input
+                    className="h-7 text-xs"
+                    value={String(style.letterSpacing ?? "")}
+                    placeholder="0"
+                    onChange={(e) => onStyleChange("letterSpacing", e.target.value || undefined)}
+                  />
+                </div>
+                <div className="grid gap-1">
+                  <Label className="text-[10px] text-muted-foreground">Text Align</Label>
+                  <Select
+                    value={String(style.textAlign ?? "")}
+                    onValueChange={(v) => onStyleChange("textAlign", v || undefined)}
+                  >
+                    <SelectTrigger className="h-7 text-xs">
+                      <SelectValue placeholder="Align" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {["left", "center", "right", "justify"].map((a) => (
+                        <SelectItem key={a} value={a} className="text-xs capitalize">{a}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid gap-1.5 mt-2">
+                <Label className="text-[10px] text-muted-foreground">Color</Label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    className="h-7 w-10 rounded border border-input bg-background cursor-pointer"
+                    value={String(style.color ?? "#000000")}
+                    onChange={(e) => onStyleChange("color", e.target.value)}
+                  />
+                  <Input
+                    className="h-7 text-xs flex-1 font-mono"
+                    value={String(style.color ?? "")}
+                    onChange={(e) => onStyleChange("color", e.target.value)}
+                  />
+                </div>
+              </div>
+            </CollapsibleSection>
 
-        {/* Style tab */}
-        <TabsContent value="style" className="flex-1 overflow-hidden mt-0">
-          <ScrollArea className="h-full">
-            <div className="p-3 space-y-4">
-              <div className="space-y-3">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Size</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {["width", "height", "minWidth", "maxWidth"].map((key) => (
-                    <div key={key} className="grid gap-1">
-                      <Label className="text-[10px] text-muted-foreground capitalize">{key}</Label>
-                      <Input
-                        className="h-7 text-xs"
-                        value={String((selectedNode.style as Record<string, unknown>)[key] ?? "")}
-                        placeholder="auto"
-                        onChange={(e) => onStyleChange(key, e.target.value || undefined)}
-                      />
-                    </div>
-                  ))}
+            {/* Background */}
+            <CollapsibleSection title="Background" defaultOpen={false}>
+              <div className="grid gap-1.5">
+                <Label className="text-[10px] text-muted-foreground">Background Color</Label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    className="h-7 w-10 rounded border border-input bg-background cursor-pointer"
+                    value={String(style.backgroundColor ?? "#ffffff")}
+                    onChange={(e) => onStyleChange("backgroundColor", e.target.value)}
+                  />
+                  <Input
+                    className="h-7 text-xs flex-1 font-mono"
+                    value={String(style.backgroundColor ?? "")}
+                    onChange={(e) => onStyleChange("backgroundColor", e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="grid gap-1">
+                <Label className="text-[10px] text-muted-foreground">Background Image</Label>
+                <Input
+                  className="h-7 text-xs"
+                  value={String(style.backgroundImage ?? "")}
+                  placeholder="url(...) or gradient"
+                  onChange={(e) => onStyleChange("backgroundImage", e.target.value || undefined)}
+                />
+              </div>
+            </CollapsibleSection>
+
+            {/* Border */}
+            <CollapsibleSection title="Border" defaultOpen={false}>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="grid gap-1">
+                  <Label className="text-[10px] text-muted-foreground">Width</Label>
+                  <Input
+                    className="h-7 text-xs"
+                    value={String(style.borderWidth ?? "")}
+                    placeholder="0"
+                    onChange={(e) => onStyleChange("borderWidth", e.target.value || undefined)}
+                  />
+                </div>
+                <div className="grid gap-1">
+                  <Label className="text-[10px] text-muted-foreground">Style</Label>
+                  <Select
+                    value={String(style.borderStyle ?? "")}
+                    onValueChange={(v) => onStyleChange("borderStyle", v || undefined)}
+                  >
+                    <SelectTrigger className="h-7 text-xs">
+                      <SelectValue placeholder="Style" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {["none","solid","dashed","dotted","double"].map((s) => (
+                        <SelectItem key={s} value={s} className="text-xs capitalize">{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-1">
+                  <Label className="text-[10px] text-muted-foreground">Radius</Label>
+                  <Input
+                    className="h-7 text-xs"
+                    value={String(style.borderRadius ?? "")}
+                    placeholder="0"
+                    onChange={(e) => onStyleChange("borderRadius", e.target.value || undefined)}
+                  />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label className="text-[10px] text-muted-foreground">Color</Label>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="color"
+                      className="h-7 w-8 rounded border border-input bg-background cursor-pointer"
+                      value={String(style.borderColor ?? "#000000")}
+                      onChange={(e) => onStyleChange("borderColor", e.target.value)}
+                    />
+                    <Input
+                      className="h-7 text-xs flex-1 font-mono"
+                      value={String(style.borderColor ?? "")}
+                      onChange={(e) => onStyleChange("borderColor", e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+            </CollapsibleSection>
+
+            {/* Shadow & Effects */}
+            <CollapsibleSection title="Shadow" defaultOpen={false}>
+              <div className="grid gap-1">
+                <Label className="text-[10px] text-muted-foreground">Box Shadow</Label>
+                <Input
+                  className="h-7 text-xs font-mono"
+                  value={String(style.boxShadow ?? "")}
+                  placeholder="0 0 10px rgba(0,0,0,0.1)"
+                  onChange={(e) => onStyleChange("boxShadow", e.target.value || undefined)}
+                />
+              </div>
+            </CollapsibleSection>
+
+            {/* Layout */}
+            <CollapsibleSection title="Layout" defaultOpen={false}>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="grid gap-1">
+                  <Label className="text-[10px] text-muted-foreground">Display</Label>
+                  <Select
+                    value={String(style.display ?? "")}
+                    onValueChange={(v) => onStyleChange("display", v || undefined)}
+                  >
+                    <SelectTrigger className="h-7 text-xs">
+                      <SelectValue placeholder="Display" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {["block","flex","grid","inline-block","inline","none"].map((d) => (
+                        <SelectItem key={d} value={d} className="text-xs">{d}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-1">
+                  <Label className="text-[10px] text-muted-foreground">Position</Label>
+                  <Select
+                    value={String(style.position ?? "")}
+                    onValueChange={(v) => onStyleChange("position", v || undefined)}
+                  >
+                    <SelectTrigger className="h-7 text-xs">
+                      <SelectValue placeholder="Position" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {["static","relative","absolute","fixed","sticky"].map((p) => (
+                        <SelectItem key={p} value={p} className="text-xs">{p}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-1">
+                  <Label className="text-[10px] text-muted-foreground">Overflow</Label>
+                  <Select
+                    value={String(style.overflow ?? "")}
+                    onValueChange={(v) => onStyleChange("overflow", v || undefined)}
+                  >
+                    <SelectTrigger className="h-7 text-xs">
+                      <SelectValue placeholder="Overflow" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {["visible","hidden","scroll","auto"].map((o) => (
+                        <SelectItem key={o} value={o} className="text-xs">{o}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-1">
+                  <Label className="text-[10px] text-muted-foreground">Z-Index</Label>
+                  <Input
+                    className="h-7 text-xs"
+                    value={String(style.zIndex ?? "")}
+                    placeholder="auto"
+                    onChange={(e) => onStyleChange("zIndex", e.target.value || undefined)}
+                  />
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Typography</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {["fontSize", "fontWeight", "lineHeight", "letterSpacing"].map((key) => (
-                    <div key={key} className="grid gap-1">
-                      <Label className="text-[10px] text-muted-foreground capitalize">{key}</Label>
+              {/* Flex-specific props */}
+              {(style.display === "flex" || style.display === "inline-flex") && (
+                <>
+                  <Separator className="my-2" />
+                  <p className="text-[10px] font-semibold text-muted-foreground">Flex</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="grid gap-1">
+                      <Label className="text-[10px] text-muted-foreground">Direction</Label>
+                      <Select
+                        value={String(style.flexDirection ?? "")}
+                        onValueChange={(v) => onStyleChange("flexDirection", v || undefined)}
+                      >
+                        <SelectTrigger className="h-7 text-xs">
+                          <SelectValue placeholder="row" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {["row","row-reverse","column","column-reverse"].map((d) => (
+                            <SelectItem key={d} value={d} className="text-xs">{d}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-1">
+                      <Label className="text-[10px] text-muted-foreground">Wrap</Label>
+                      <Select
+                        value={String(style.flexWrap ?? "")}
+                        onValueChange={(v) => onStyleChange("flexWrap", v || undefined)}
+                      >
+                        <SelectTrigger className="h-7 text-xs">
+                          <SelectValue placeholder="nowrap" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {["nowrap","wrap","wrap-reverse"].map((w) => (
+                            <SelectItem key={w} value={w} className="text-xs">{w}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-1">
+                      <Label className="text-[10px] text-muted-foreground">Justify</Label>
+                      <Select
+                        value={String(style.justifyContent ?? "")}
+                        onValueChange={(v) => onStyleChange("justifyContent", v || undefined)}
+                      >
+                        <SelectTrigger className="h-7 text-xs">
+                          <SelectValue placeholder="start" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {["flex-start","flex-end","center","space-between","space-around","space-evenly"].map((j) => (
+                            <SelectItem key={j} value={j} className="text-xs">{j}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-1">
+                      <Label className="text-[10px] text-muted-foreground">Align Items</Label>
+                      <Select
+                        value={String(style.alignItems ?? "")}
+                        onValueChange={(v) => onStyleChange("alignItems", v || undefined)}
+                      >
+                        <SelectTrigger className="h-7 text-xs">
+                          <SelectValue placeholder="stretch" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {["flex-start","flex-end","center","stretch","baseline"].map((a) => (
+                            <SelectItem key={a} value={a} className="text-xs">{a}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-1 col-span-2">
+                      <Label className="text-[10px] text-muted-foreground">Gap</Label>
                       <Input
                         className="h-7 text-xs"
-                        value={String((selectedNode.style as Record<string, unknown>)[key] ?? "")}
-                        onChange={(e) => onStyleChange(key, e.target.value || undefined)}
+                        value={String(style.gap ?? "")}
+                        placeholder="0"
+                        onChange={(e) => onStyleChange("gap", e.target.value || undefined)}
                       />
                     </div>
-                  ))}
+                  </div>
+                </>
+              )}
+            </CollapsibleSection>
+
+            {/* Opacity & Filter */}
+            <CollapsibleSection title="Visual" defaultOpen={false}>
+              <div className="grid gap-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-[10px] text-muted-foreground">Opacity</Label>
+                  <span className="text-[10px] tabular-nums text-muted-foreground">
+                    {Math.round((Number(style.opacity ?? 1)) * 100)}%
+                  </span>
                 </div>
+                <Slider
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={[Number(style.opacity ?? 1)]}
+                  onValueChange={([v]) => onStyleChange("opacity", String(v))}
+                />
               </div>
-            </div>
+              <div className="grid gap-1">
+                <Label className="text-[10px] text-muted-foreground">Filter</Label>
+                <Input
+                  className="h-7 text-xs font-mono"
+                  value={String(style.filter ?? "")}
+                  placeholder="blur(0px)"
+                  onChange={(e) => onStyleChange("filter", e.target.value || undefined)}
+                />
+              </div>
+              <div className="grid gap-1">
+                <Label className="text-[10px] text-muted-foreground">Backdrop Filter</Label>
+                <Input
+                  className="h-7 text-xs font-mono"
+                  value={String(style.backdropFilter ?? "")}
+                  placeholder="blur(0px)"
+                  onChange={(e) => onStyleChange("backdropFilter", e.target.value || undefined)}
+                />
+              </div>
+              <div className="grid gap-1">
+                <Label className="text-[10px] text-muted-foreground">Mix Blend Mode</Label>
+                <Select
+                  value={String(style.mixBlendMode ?? "")}
+                  onValueChange={(v) => onStyleChange("mixBlendMode", v || undefined)}
+                >
+                  <SelectTrigger className="h-7 text-xs">
+                    <SelectValue placeholder="normal" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {["normal","multiply","screen","overlay","darken","lighten","color-dodge","color-burn","hard-light","soft-light","difference","exclusion"].map((m) => (
+                      <SelectItem key={m} value={m} className="text-xs">{m}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CollapsibleSection>
+
+            {/* Transform */}
+            <CollapsibleSection title="Transform" defaultOpen={false}>
+              <div className="grid gap-1">
+                <Label className="text-[10px] text-muted-foreground">Transform</Label>
+                <Input
+                  className="h-7 text-xs font-mono"
+                  value={String(style.transform ?? "")}
+                  placeholder="rotate(0deg) scale(1)"
+                  onChange={(e) => onStyleChange("transform", e.target.value || undefined)}
+                />
+              </div>
+            </CollapsibleSection>
           </ScrollArea>
         </TabsContent>
 
-        {/* Events tab */}
+        {/* ── Events tab ───────────────────────────────────────────── */}
         <TabsContent value="events" className="flex-1 overflow-hidden mt-0">
           <ScrollArea className="h-full">
-            <div className="p-3">
-              <p className="text-xs text-muted-foreground">
-                {selectedNode.interactions.length === 0
-                  ? "No interactions configured."
-                  : `${selectedNode.interactions.length} interaction(s) configured.`}
-              </p>
+            <div className="p-3 space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold text-muted-foreground">
+                  Interactions ({interactions.length})
+                </p>
+                <button
+                  className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
+                  onClick={handleAddInteraction}
+                >
+                  <Plus className="h-3 w-3" />
+                  Add
+                </button>
+              </div>
+
+              {interactions.length === 0 && (
+                <div className="rounded-md border border-dashed p-4 text-center">
+                  <Zap className="h-6 w-6 mx-auto text-muted-foreground/40 mb-2" />
+                  <p className="text-xs text-muted-foreground">
+                    No interactions yet. Click "Add" to create one.
+                  </p>
+                </div>
+              )}
+
+              {interactions.map((interaction, i) => (
+                <InteractionRow
+                  key={i}
+                  interaction={interaction}
+                  index={i}
+                  onChange={(updated) => handleUpdateInteraction(i, updated)}
+                  onRemove={() => handleRemoveInteraction(i)}
+                />
+              ))}
             </div>
+          </ScrollArea>
+        </TabsContent>
+
+        {/* ── Effects tab ──────────────────────────────────────────── */}
+        <TabsContent value="effects" className="flex-1 overflow-hidden mt-0">
+          <ScrollArea className="h-full">
+            <CollapsibleSection title="Display Animation">
+              <div className="grid gap-1.5">
+                <Label className="text-[10px] text-muted-foreground">Animation</Label>
+                <Select
+                  value={String((selectedNode.props._animation as string) ?? "none")}
+                  onValueChange={(v) => onPropChange("_animation", v === "none" ? undefined : v)}
+                >
+                  <SelectTrigger className="h-7 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ANIMATION_PRESETS.map((a) => (
+                      <SelectItem key={a.value} value={a.value} className="text-xs">
+                        {a.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="grid gap-1">
+                  <Label className="text-[10px] text-muted-foreground">Duration (ms)</Label>
+                  <Input
+                    type="number"
+                    className="h-7 text-xs"
+                    value={Number((selectedNode.props._animationDuration as number) ?? 300)}
+                    min={0}
+                    max={5000}
+                    step={50}
+                    onChange={(e) => onPropChange("_animationDuration", parseFloat(e.target.value))}
+                  />
+                </div>
+                <div className="grid gap-1">
+                  <Label className="text-[10px] text-muted-foreground">Delay (ms)</Label>
+                  <Input
+                    type="number"
+                    className="h-7 text-xs"
+                    value={Number((selectedNode.props._animationDelay as number) ?? 0)}
+                    min={0}
+                    max={5000}
+                    step={50}
+                    onChange={(e) => onPropChange("_animationDelay", parseFloat(e.target.value))}
+                  />
+                </div>
+              </div>
+              <div className="grid gap-1">
+                <Label className="text-[10px] text-muted-foreground">Easing</Label>
+                <Select
+                  value={String((selectedNode.props._animationEasing as string) ?? "ease")}
+                  onValueChange={(v) => onPropChange("_animationEasing", v)}
+                >
+                  <SelectTrigger className="h-7 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EASING_OPTIONS.map((e) => (
+                      <SelectItem key={e.value} value={e.value} className="text-xs">
+                        {e.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CollapsibleSection>
+
+            <CollapsibleSection title="Hover Effect" defaultOpen={false}>
+              <div className="grid gap-2">
+                <div className="grid gap-1">
+                  <Label className="text-[10px] text-muted-foreground">Hover Transform</Label>
+                  <Input
+                    className="h-7 text-xs font-mono"
+                    value={String((selectedNode.props._hoverTransform as string) ?? "")}
+                    placeholder="scale(1.05)"
+                    onChange={(e) => onPropChange("_hoverTransform", e.target.value || undefined)}
+                  />
+                </div>
+                <div className="grid gap-1">
+                  <Label className="text-[10px] text-muted-foreground">Hover Opacity</Label>
+                  <Input
+                    className="h-7 text-xs"
+                    value={String((selectedNode.props._hoverOpacity as string) ?? "")}
+                    placeholder="1"
+                    onChange={(e) => onPropChange("_hoverOpacity", e.target.value || undefined)}
+                  />
+                </div>
+                <div className="grid gap-1">
+                  <Label className="text-[10px] text-muted-foreground">Hover Shadow</Label>
+                  <Input
+                    className="h-7 text-xs font-mono"
+                    value={String((selectedNode.props._hoverShadow as string) ?? "")}
+                    placeholder="0 4px 12px rgba(0,0,0,0.15)"
+                    onChange={(e) => onPropChange("_hoverShadow", e.target.value || undefined)}
+                  />
+                </div>
+                <div className="grid gap-1">
+                  <Label className="text-[10px] text-muted-foreground">Transition</Label>
+                  <Input
+                    className="h-7 text-xs font-mono"
+                    value={String(style.transition ?? "")}
+                    placeholder="all 0.3s ease"
+                    onChange={(e) => onStyleChange("transition", e.target.value || undefined)}
+                  />
+                </div>
+              </div>
+            </CollapsibleSection>
+          </ScrollArea>
+        </TabsContent>
+
+        {/* ── Data tab ─────────────────────────────────────────────── */}
+        <TabsContent value="data" className="flex-1 overflow-hidden mt-0">
+          <ScrollArea className="h-full">
+            <div className="p-3 space-y-3">
+              <div className="rounded-md border border-dashed p-4 text-center">
+                <Database className="h-6 w-6 mx-auto text-muted-foreground/40 mb-2" />
+                <p className="text-xs text-muted-foreground">
+                  Data binding allows you to connect component properties to dynamic data sources.
+                </p>
+              </div>
+
+              <CollapsibleSection title="Repeater" defaultOpen={false}>
+                <div className="grid gap-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Repeat Data</Label>
+                    <Switch
+                      checked={Boolean(selectedNode.props._repeaterEnabled)}
+                      onCheckedChange={(v) => onPropChange("_repeaterEnabled", v)}
+                    />
+                  </div>
+                  {Boolean(selectedNode.props._repeaterEnabled) && (
+                    <div className="grid gap-1">
+                      <Label className="text-[10px] text-muted-foreground">Data Key</Label>
+                      <Input
+                        className="h-7 text-xs font-mono"
+                        value={String(selectedNode.props._repeaterKey ?? "")}
+                        placeholder="items"
+                        onChange={(e) => onPropChange("_repeaterKey", e.target.value)}
+                      />
+                    </div>
+                  )}
+                </div>
+              </CollapsibleSection>
+
+              <CollapsibleSection title="Conditional Visibility" defaultOpen={false}>
+                <div className="grid gap-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Conditional</Label>
+                    <Switch
+                      checked={Boolean(selectedNode.props._conditionalVisibility)}
+                      onCheckedChange={(v) => onPropChange("_conditionalVisibility", v)}
+                    />
+                  </div>
+                  {Boolean(selectedNode.props._conditionalVisibility) && (
+                    <>
+                      <div className="grid gap-1">
+                        <Label className="text-[10px] text-muted-foreground">Variable</Label>
+                        <Input
+                          className="h-7 text-xs font-mono"
+                          value={String(selectedNode.props._conditionVariable ?? "")}
+                          placeholder="isLoggedIn"
+                          onChange={(e) => onPropChange("_conditionVariable", e.target.value)}
+                        />
+                      </div>
+                      <div className="grid gap-1">
+                        <Label className="text-[10px] text-muted-foreground">Operator</Label>
+                        <Select
+                          value={String(selectedNode.props._conditionOperator ?? "eq")}
+                          onValueChange={(v) => onPropChange("_conditionOperator", v)}
+                        >
+                          <SelectTrigger className="h-7 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {["eq","neq","gt","lt","gte","lte","truthy","falsy","contains"].map((op) => (
+                              <SelectItem key={op} value={op} className="text-xs">{op}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-1">
+                        <Label className="text-[10px] text-muted-foreground">Value</Label>
+                        <Input
+                          className="h-7 text-xs"
+                          value={String(selectedNode.props._conditionValue ?? "")}
+                          placeholder="true"
+                          onChange={(e) => onPropChange("_conditionValue", e.target.value)}
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+              </CollapsibleSection>
+            </div>
+          </ScrollArea>
+        </TabsContent>
+
+        {/* ── Advanced tab ─────────────────────────────────────────── */}
+        <TabsContent value="advanced" className="flex-1 overflow-hidden mt-0">
+          <ScrollArea className="h-full">
+            <CollapsibleSection title="Identity">
+              <div className="grid gap-2">
+                <div className="grid gap-1">
+                  <Label className="text-[10px] text-muted-foreground">Name</Label>
+                  <Input
+                    className="h-7 text-xs"
+                    value={selectedNode.name ?? ""}
+                    placeholder="Component name"
+                    onChange={(e) => onPropChange("__name", e.target.value || undefined)}
+                  />
+                </div>
+                <div className="grid gap-1">
+                  <Label className="text-[10px] text-muted-foreground">Node ID</Label>
+                  <Input
+                    className="h-7 text-xs font-mono"
+                    value={selectedNode.id}
+                    readOnly
+                    disabled
+                  />
+                </div>
+              </div>
+            </CollapsibleSection>
+
+            <CollapsibleSection title="CSS Class & Attributes" defaultOpen={false}>
+              <div className="grid gap-2">
+                <div className="grid gap-1">
+                  <Label className="text-[10px] text-muted-foreground">CSS Class</Label>
+                  <Input
+                    className="h-7 text-xs font-mono"
+                    value={String(selectedNode.props._cssClass ?? "")}
+                    placeholder="my-class another-class"
+                    onChange={(e) => onPropChange("_cssClass", e.target.value || undefined)}
+                  />
+                </div>
+                <div className="grid gap-1">
+                  <Label className="text-[10px] text-muted-foreground">Custom Attributes (JSON)</Label>
+                  <textarea
+                    className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-xs font-mono ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
+                    value={String(selectedNode.props._customAttributes ?? "{}")}
+                    placeholder='{"data-testid": "my-component"}'
+                    onChange={(e) => onPropChange("_customAttributes", e.target.value)}
+                  />
+                </div>
+              </div>
+            </CollapsibleSection>
+
+            <CollapsibleSection title="SEO & Accessibility" defaultOpen={false}>
+              <div className="grid gap-2">
+                <div className="grid gap-1">
+                  <Label className="text-[10px] text-muted-foreground">ARIA Role</Label>
+                  <Input
+                    className="h-7 text-xs"
+                    value={String(selectedNode.props._ariaRole ?? "")}
+                    placeholder="button"
+                    onChange={(e) => onPropChange("_ariaRole", e.target.value || undefined)}
+                  />
+                </div>
+                <div className="grid gap-1">
+                  <Label className="text-[10px] text-muted-foreground">ARIA Label</Label>
+                  <Input
+                    className="h-7 text-xs"
+                    value={String(selectedNode.props._ariaLabel ?? "")}
+                    placeholder="Accessible label"
+                    onChange={(e) => onPropChange("_ariaLabel", e.target.value || undefined)}
+                  />
+                </div>
+                <div className="grid gap-1">
+                  <Label className="text-[10px] text-muted-foreground">Tab Index</Label>
+                  <Input
+                    type="number"
+                    className="h-7 text-xs"
+                    value={String(selectedNode.props._tabIndex ?? "")}
+                    placeholder="0"
+                    onChange={(e) => onPropChange("_tabIndex", e.target.value ? parseInt(e.target.value) : undefined)}
+                  />
+                </div>
+              </div>
+            </CollapsibleSection>
+
+            <CollapsibleSection title="Tooltip" defaultOpen={false}>
+              <div className="grid gap-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Show Tooltip</Label>
+                  <Switch
+                    checked={Boolean(selectedNode.props._tooltipEnabled)}
+                    onCheckedChange={(v) => onPropChange("_tooltipEnabled", v)}
+                  />
+                </div>
+                {Boolean(selectedNode.props._tooltipEnabled) && (
+                  <>
+                    <div className="grid gap-1">
+                      <Label className="text-[10px] text-muted-foreground">Text</Label>
+                      <Input
+                        className="h-7 text-xs"
+                        value={String(selectedNode.props._tooltipText ?? "")}
+                        placeholder="Tooltip text..."
+                        onChange={(e) => onPropChange("_tooltipText", e.target.value)}
+                      />
+                    </div>
+                    <div className="grid gap-1">
+                      <Label className="text-[10px] text-muted-foreground">Position</Label>
+                      <Select
+                        value={String(selectedNode.props._tooltipPosition ?? "top")}
+                        onValueChange={(v) => onPropChange("_tooltipPosition", v)}
+                      >
+                        <SelectTrigger className="h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {["top","right","bottom","left"].map((p) => (
+                            <SelectItem key={p} value={p} className="text-xs capitalize">{p}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </>
+                )}
+              </div>
+            </CollapsibleSection>
+
+            <CollapsibleSection title="Metadata" defaultOpen={false}>
+              <div className="grid gap-1 text-xs text-muted-foreground">
+                <div className="flex justify-between">
+                  <span>Created</span>
+                  <span className="font-mono text-[10px]">
+                    {selectedNode.metadata?.createdAt
+                      ? new Date(selectedNode.metadata.createdAt).toLocaleString()
+                      : "—"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Updated</span>
+                  <span className="font-mono text-[10px]">
+                    {selectedNode.metadata?.updatedAt
+                      ? new Date(selectedNode.metadata.updatedAt).toLocaleString()
+                      : "—"}
+                  </span>
+                </div>
+                {selectedNode.metadata?.tags && selectedNode.metadata.tags.length > 0 && (
+                  <div className="flex gap-1 flex-wrap mt-1">
+                    {selectedNode.metadata.tags.map((tag) => (
+                      <Badge key={tag} variant="outline" className="text-[9px]">{tag}</Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </CollapsibleSection>
           </ScrollArea>
         </TabsContent>
       </Tabs>

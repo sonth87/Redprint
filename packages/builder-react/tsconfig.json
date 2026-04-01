@@ -4,8 +4,8 @@
     "rootDir": "./src",
     "outDir": "./dist",
     "paths": {
-      "@ui-builder/builder-core": ["../builder-core/src/index.ts"],
-      "@ui-builder/shared": ["../shared/src/index.ts"]
+      "@ui-builder/builder-core": ["../builder-core/dist/index.d.ts"],
+      "@ui-builder/shared": ["../shared/dist/index.d.ts"]
     }
   },
   "include": ["src"],

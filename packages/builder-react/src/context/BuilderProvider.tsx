@@ -2,15 +2,13 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { BuilderContext } from "./BuilderContext";
 import type { BuilderContextValue } from "./types";
 import { createBuilder } from "@ui-builder/builder-core";
-import type { BuilderConfig, BuilderAPI, BuilderPermissions, BuilderState, Breakpoint } from "@ui-builder/builder-core";
+import type { BuilderConfig, BuilderAPI, BuilderPermissions, BuilderState } from "@ui-builder/builder-core";
 
 export interface BuilderProviderProps {
   /** Optional: pre-created builder instance. If not provided, one is created from config. */
   builder?: BuilderAPI;
   /** Config used to create a builder instance if none is provided */
   config?: BuilderConfig;
-  /** Initial active breakpoint — defaults to 'desktop' */
-  initialBreakpoint?: Breakpoint;
   permissions?: Partial<BuilderPermissions>;
   children: React.ReactNode;
 }
@@ -28,7 +26,6 @@ export interface BuilderProviderProps {
 export function BuilderProvider({
   builder: externalBuilder,
   config,
-  initialBreakpoint = "desktop",
   permissions = {},
   children,
 }: BuilderProviderProps) {
@@ -39,25 +36,14 @@ export function BuilderProvider({
   const builder = builderRef.current;
 
   const [state, setState] = useState<BuilderState>(() => builder.getState());
-  const [breakpoint, setBreakpoint] = useState<Breakpoint>(initialBreakpoint);
 
-  // Bridge core EventBus → React re-render
+  // Breakpoint is derived from state — no separate state needed
+  const breakpoint = state.editor.activeBreakpoint;
+
+  // Bridge core EventBus → React re-render on every command execution
   useEffect(() => {
-    // Subscribe to ALL state-changing events that require re-render
-    const unsubs = [
-      builder.subscribe((nextState) => setState(nextState)),
-    ];
-
-    // Also update breakpoint when it changes
-    const unsub2 = (builder as BuilderAPI & { _eventBus?: any })._eventBus?.on?.(
-      "breakpoint:changed",
-      ({ breakpoint: bp }: { breakpoint: Breakpoint }) => setBreakpoint(bp),
-    );
-
-    return () => {
-      unsubs.forEach((u) => u?.());
-      unsub2?.();
-    };
+    const unsub = builder.subscribe((nextState) => setState(nextState));
+    return unsub;
   }, [builder]);
 
   const dispatch = useCallback(
@@ -73,5 +59,5 @@ export function BuilderProvider({
     permissions,
   };
 
-  return React.createElement(BuilderContext.Provider, { value }, children);
+  return <BuilderContext.Provider value={value}>{children}</BuilderContext.Provider>;
 }

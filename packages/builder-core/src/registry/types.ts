@@ -24,16 +24,16 @@ export interface RichtextToolbarConfig {
 }
 
 export type PropSchema =
-  | { key: string; type: "string"; label: string; default?: string; multiline?: boolean; placeholder?: string }
-  | { key: string; type: "number"; label: string; default?: number; min?: number; max?: number; step?: number; unit?: string }
-  | { key: string; type: "boolean"; label: string; default?: boolean }
+  | { key: string; type: "string"; label: string; default?: string; multiline?: boolean; placeholder?: string; required?: boolean }
+  | { key: string; type: "number"; label: string; default?: number; min?: number; max?: number; step?: number; unit?: string; required?: boolean }
+  | { key: string; type: "boolean"; label: string; default?: boolean; required?: boolean }
   | { key: string; type: "select"; label: string; options: SelectOption[]; default?: string; multiple?: boolean }
   | { key: string; type: "color"; label: string; default?: string; allowGradient?: boolean; allowTransparent?: boolean }
-  | { key: string; type: "image"; label: string; accept?: string[] }
-  | { key: string; type: "video"; label: string }
-  | { key: string; type: "richtext"; label: string; toolbar?: RichtextToolbarConfig }
-  | { key: string; type: "data-binding"; label: string; sourceType?: string }
-  | { key: string; type: "json"; label: string }
+  | { key: string; type: "image"; label: string; accept?: string | string[]; required?: boolean }
+  | { key: string; type: "video"; label: string; accept?: string | string[]; required?: boolean }
+  | { key: string; type: "richtext"; label: string; toolbar?: RichtextToolbarConfig; required?: boolean }
+  | { key: string; type: "data-binding"; label: string; sourceType?: string; required?: boolean }
+  | { key: string; type: "json"; label: string; required?: boolean }
   | { key: string; type: "spacing"; label: string; default?: import("@ui-builder/shared").BoxValue }
   | { key: string; type: "border"; label: string; default?: import("@ui-builder/shared").BorderValue }
   | { key: string; type: "shadow"; label: string }

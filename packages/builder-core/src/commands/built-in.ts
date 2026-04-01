@@ -38,6 +38,8 @@ import type { InteractionConfig } from "../document/interactions";
 import type { Point } from "@ui-builder/shared";
 
 export interface AddNodePayload {
+  /** Optional pre-generated nodeId for predictable undo/redo */
+  nodeId?: string;
   parentId: string;
   componentType: string;
   props?: Record<string, unknown>;

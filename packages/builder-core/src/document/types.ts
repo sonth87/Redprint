@@ -12,8 +12,8 @@ import type { Asset, AssetManifest } from "./assets";
 
 export interface StyleConfig {
   // Box model
-  margin?: BoxValue;
-  padding?: BoxValue;
+  margin?: string | BoxValue;
+  padding?: string | BoxValue;
   width?: string;
   height?: string;
   minWidth?: string;
@@ -33,7 +33,7 @@ export interface StyleConfig {
   textTransform?: string;
 
   // Layout
-  display?: "flex" | "grid" | "block" | "inline-block" | "inline" | "none";
+  display?: "flex" | "grid" | "block" | "inline-block" | "inline" | "inline-flex" | "none";
   flexDirection?: string;
   flexWrap?: string;
   alignItems?: string;
@@ -57,12 +57,15 @@ export interface StyleConfig {
   backgroundSize?: string;
   backgroundPosition?: string;
   backgroundRepeat?: string;
-  border?: BorderValue;
-  borderTop?: BorderValue;
-  borderRight?: BorderValue;
-  borderBottom?: BorderValue;
-  borderLeft?: BorderValue;
+  border?: string | BorderValue;
+  borderTop?: string | BorderValue;
+  borderRight?: string | BorderValue;
+  borderBottom?: string | BorderValue;
+  borderLeft?: string | BorderValue;
   borderRadius?: string;
+  borderWidth?: string;
+  borderColor?: string;
+  borderStyle?: string;
   boxShadow?: string;
   opacity?: number;
   overflow?: string;
@@ -70,6 +73,10 @@ export interface StyleConfig {
   overflowY?: string;
   cursor?: string;
   pointerEvents?: string;
+  objectFit?: string;
+  objectPosition?: string;
+  // CSS flex shorthand
+  flex?: string;
 
   // Filters
   filter?: string;
@@ -127,7 +134,7 @@ export interface BuilderNode {
   hidden?: boolean;
   /** Human-readable label in layer panel */
   name?: string;
-  metadata: NodeMetadata;
+  metadata?: NodeMetadata;
 }
 
 // ── Variable & Plugin Reference ───────────────────────────────────────────

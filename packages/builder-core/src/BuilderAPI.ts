@@ -33,6 +33,8 @@ export interface BuilderAPI {
   dispatch(command: Command): CommandResult;
   undo(): CommandResult;
   redo(): CommandResult;
+  canUndo: boolean;
+  canRedo: boolean;
 
   // Subscription
   subscribe(listener: (state: BuilderState) => void): () => void;

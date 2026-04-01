@@ -3,7 +3,10 @@
  */
 
 import type { Point, Rect } from "@ui-builder/shared";
-import type { BuilderNode, CanvasConfig } from "@ui-builder/builder-core";
+import type { BuilderNode, CanvasConfig, EditorTool } from "@ui-builder/builder-core";
+
+// Re-export so editor consumers can use it
+export type { EditorTool };
 
 // ── Canvas ────────────────────────────────────────────────────────────────
 

@@ -1,49 +1,37 @@
 import React from "react";
 import { Copy, Trash2, ArrowUp, ArrowDown } from "lucide-react";
-import { useBuilder, useDocument } from "@ui-builder/builder-react";
+import { useDocument } from "@ui-builder/builder-react";
 import { Button, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@ui-builder/ui";
 
 export interface ContextualToolbarProps {
   nodeId: string;
   rect: { x: number; y: number; width: number; height: number };
   zoom: number;
+  panOffset: { x: number; y: number };
+  onDelete: () => void;
+  onDuplicate: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
 }
 
-export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, rect, zoom }) => {
-  const { dispatch } = useBuilder();
+export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, rect, zoom, panOffset, onDelete, onDuplicate, onMoveUp, onMoveDown }) => {
   const { document } = useDocument();
   const node = document.nodes[nodeId];
 
   if (!node) return null;
 
-  const handleDuplicate = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    // Simplified duplicate: dispatch duplicate logic or just copy
-    console.log("Duplicate node", nodeId);
-  };
-
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    dispatch({ type: "REMOVE_NODE", payload: { nodeId }, description: "Delete node" });
-  };
-
-  const handleMoveUp = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    console.log("Move up", nodeId);
-  };
-
-  const handleMoveDown = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    console.log("Move down", nodeId);
-  };
+  const wrap = (fn: () => void) => (e: React.MouseEvent) => { e.stopPropagation(); fn(); };
 
   const TOOLBAR_HEIGHT = 40;
+  // Convert canvas-space rect to viewport-space (accounting for zoom + panOffset)
+  const viewportX = rect.x * zoom + panOffset.x;
+  const viewportY = rect.y * zoom + panOffset.y;
   // Position above the node. If off-screen, put below.
-  const yPos = rect.y * zoom - TOOLBAR_HEIGHT - 8 > 0
-    ? rect.y * zoom - TOOLBAR_HEIGHT - 8
-    : rect.y * zoom + rect.height * zoom + 8;
+  const yPos = viewportY - TOOLBAR_HEIGHT - 8 > 0
+    ? viewportY - TOOLBAR_HEIGHT - 8
+    : viewportY + rect.height * zoom + 8;
 
-  const xPos = rect.x * zoom;
+  const xPos = viewportX;
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -63,7 +51,7 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon-sm" className="h-6 w-6" onClick={handleMoveUp}>
+            <Button variant="ghost" size="icon-sm" className="h-6 w-6" onClick={wrap(onMoveUp)}>
               <ArrowUp className="h-3 w-3" />
             </Button>
           </TooltipTrigger>
@@ -72,7 +60,7 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon-sm" className="h-6 w-6" onClick={handleMoveDown}>
+            <Button variant="ghost" size="icon-sm" className="h-6 w-6" onClick={wrap(onMoveDown)}>
               <ArrowDown className="h-3 w-3" />
             </Button>
           </TooltipTrigger>
@@ -81,7 +69,7 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon-sm" className="h-6 w-6" onClick={handleDuplicate}>
+            <Button variant="ghost" size="icon-sm" className="h-6 w-6" onClick={wrap(onDuplicate)}>
               <Copy className="h-3 w-3" />
             </Button>
           </TooltipTrigger>
@@ -92,7 +80,7 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon-sm" className="h-6 w-6 hover:bg-destructive/10 hover:text-destructive" onClick={handleDelete}>
+            <Button variant="ghost" size="icon-sm" className="h-6 w-6 hover:bg-destructive/10 hover:text-destructive" onClick={wrap(onDelete)}>
               <Trash2 className="h-3 w-3" />
             </Button>
           </TooltipTrigger>

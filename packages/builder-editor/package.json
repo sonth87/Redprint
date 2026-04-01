@@ -26,17 +26,22 @@
     "@ui-builder/builder-core": "workspace:*",
     "@ui-builder/builder-react": "workspace:*",
     "@ui-builder/shared": "workspace:*",
-    "@ui-builder/ui": "workspace:*"
+    "@ui-builder/ui": "workspace:*",
+    "i18next": "^26.0.3",
+    "lucide-react": "^1.7.0",
+    "react-i18next": "^17.0.2",
+    "uuid": "^11.0.0"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0"
   },
   "devDependencies": {
-    "@ui-builder/config": "workspace:*",
+    "@testing-library/react": "^16.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "@testing-library/react": "^16.0.0",
+    "@types/uuid": "^10.0.0",
+    "@ui-builder/config": "workspace:*",
     "tsup": "^8.3.0",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"

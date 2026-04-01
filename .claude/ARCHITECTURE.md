@@ -1162,3 +1162,43 @@ interface BuilderPermissions {
 - Package boundaries must be enforced by lint rules (no cross-package imports outside defined contracts).
 - All public APIs versioned with deprecation warnings before removal.
 - Breaking changes require major version bump.
+
+### Shared Configuration Logic
+
+**Critical rule**: Common configuration features for a component type **must use shared logic** across all UI surfaces — never duplicate the same logic in multiple places.
+
+**Example**: When selecting a `text` component, both the **menubar** (top toolbar) and **property panel** (right sidebar) display configuration options like:
+- `fontSize`, `color`, `textDecoration`, `fontWeight`, `fontStyle`, `lineHeight`
+- Text alignment, letter spacing, etc.
+
+If the property panel implements the `fontSize` handler separately from the menubar, inconsistencies arise:
+- Behavior divergence between surfaces
+- Hard-to-find bugs when updating one place but not the other
+- Maintenance nightmare when refactoring business logic
+
+**Solution**:
+- Create shared utilities/hooks (`useTextPropertyHandler`, `useStyleConfigurator`) in `packages/builder-react/src/hooks/`
+- Both property panel and menubar import and use shared hooks/utilities
+- **One logic, multiple UI surfaces** — panels render differently but share the same core logic
+
+### Code Review Checklist for All Changes
+
+Every code change **must verify**:
+
+| Checklist Item                        | Purpose                                                                         |
+| ------------------------------------- | ------------------------------------------------------------------------------- |
+| **Shared logic duplication**          | Is the same functionality implemented 2+ times? (e.g., fontSize handler twice)  |
+| **Language keys (i18n)**              | New UI text? Add i18n keys for all supported languages                          |
+| **AI Assistant context**              | AI/prompt-related change? Update `.agents/skills/` if needed                    |
+| **Type contracts**                    | Interface updated? Check all places using that interface                        |
+| **Event emissions**                   | State changed? Emit corresponding event to EventBus                             |
+| **Plugin API stability**              | Public API changed? Add deprecation warning, don't break existing plugins        |
+| **PropSchema validation**             | New prop added? Update component's `PropSchema` definition                      |
+| **Responsive breakpoint handling**    | Style logic? Handle all breakpoints (desktop/tablet/mobile)                     |
+| **A11y attributes**                   | New interactive element? Add ARIA labels, roles (`ariaLabel`, `role`)           |
+| **Performance targets**               | New computation? Snap engine must stay <8ms, renders <16ms per frame             |
+| **Undo/Redo support**                 | State command? Ensure inverse command is computed correctly                     |
+| **Error boundary coverage**           | New component? Wrap with error boundary, render fail-safe placeholder           |
+| **Test coverage**                     | Unit tests for logic, integration tests for interactions                        |
+
+**Failure to verify these items** → bugs, inconsistency, degraded UX.

@@ -23,10 +23,18 @@ export type { SelectionOverlayProps, SnapGuidesProps, HoverOutlineProps } from "
 // Panels
 export { ComponentPalette } from "./panels/left/ComponentPalette";
 export type { ComponentPaletteProps } from "./panels/left/ComponentPalette";
+export { PresetPalette } from "./panels/left/PresetPalette";
+export type { PresetPaletteProps } from "./panels/left/PresetPalette";
+export { LeftSidebar } from "./panels/left/LeftSidebar";
+export type { LeftSidebarProps, LeftPanelTab } from "./panels/left/LeftSidebar";
 export { LayerTree } from "./panels/bottom/LayerTree";
 export type { LayerTreeProps } from "./panels/bottom/LayerTree";
 export { PropertyPanel } from "./panels/right/PropertyPanel";
 export type { PropertyPanelProps } from "./panels/right/PropertyPanel";
+export { PageSettings } from "./panels/right/PageSettings";
+export type { PageSettingsProps } from "./panels/right/PageSettings";
+export { MediaManager } from "./panels/MediaManager";
+export type { MediaManagerProps } from "./panels/MediaManager";
 
 // Toolbar
 export { EditorToolbar } from "./toolbar/EditorToolbar";
@@ -49,3 +57,40 @@ export type {
   ResizeState,
   ResizeHandleType,
 } from "./types";
+
+// Property controls (shared between toolbar and property panel)
+export {
+  PropertyInput,
+  ColorControl,
+  FontSizeControl,
+  FontWeightControl,
+  TextAlignControl,
+  TextDecorationControl,
+  OpacityControl,
+  BorderRadiusControl,
+  DisplayControl,
+  PositionControl,
+  OverflowControl,
+} from "./properties/PropertyControls";
+
+// i18n
+export { initI18n, i18n, defaultResources } from "./i18n";
+export type { SupportedLocale } from "./i18n";
+
+// AI Assistant
+export { AIAssistant } from "./ai/AIAssistant";
+export type { AIAssistantProps } from "./ai/AIAssistant";
+export { AIConfigPanel } from "./ai/AIConfig";
+export type { AIConfigPanelProps } from "./ai/AIConfig";
+export { sendAIMessage, getAIAdapter } from "./ai/AIService";
+export { buildAIContext } from "./ai/buildAIContext";
+export type {
+  AIProvider,
+  AIConfig,
+  AIMessage,
+  AIConversation,
+  AIBuilderContext,
+  AICommandSuggestion,
+  AIResponse,
+  AIProviderAdapter,
+} from "./ai/types";

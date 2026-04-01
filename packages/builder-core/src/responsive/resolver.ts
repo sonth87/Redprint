@@ -1,6 +1,5 @@
 import type { Breakpoint } from "./types";
 import type { StyleConfig } from "../document/types";
-import { deepMerge } from "@ui-builder/shared";
 
 /**
  * Resolves the effective style for a given breakpoint by merging
@@ -22,5 +21,5 @@ export function resolveStyle(
 ): StyleConfig {
   const override = responsiveStyle[breakpoint];
   if (!override) return baseStyle;
-  return deepMerge(baseStyle, override);
+  return { ...baseStyle, ...override } as StyleConfig;
 }

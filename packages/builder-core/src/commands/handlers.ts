@@ -1,0 +1,833 @@
+/**
+ * Built-in command handler implementations.
+ *
+ * All handlers are pure functions: (state, payload) => newState.
+ * They never mutate the input state.
+ *
+ * Register via registerAllHandlers(engine, registry).
+ */
+
+import { v4 as uuidv4 } from "uuid";
+import type { BuilderState } from "../state/types";
+import type { BuilderNode, StyleConfig } from "../document/types";
+import type { Command } from "./types";
+import type { CommandEngine } from "./CommandEngine";
+import type { ComponentRegistry } from "../registry/ComponentRegistry";
+import type { Breakpoint } from "../responsive/types";
+import {
+  CMD_ADD_NODE,
+  CMD_REMOVE_NODE,
+  CMD_DUPLICATE_NODE,
+  CMD_UPDATE_PROPS,
+  CMD_UPDATE_STYLE,
+  CMD_UPDATE_RESPONSIVE_STYLE,
+  CMD_UPDATE_INTERACTIONS,
+  CMD_RENAME_NODE,
+  CMD_LOCK_NODE,
+  CMD_UNLOCK_NODE,
+  CMD_HIDE_NODE,
+  CMD_SHOW_NODE,
+  CMD_REORDER_NODE,
+  CMD_MOVE_NODE,
+  CMD_GROUP_NODES,
+  CMD_UNGROUP_NODES,
+  CMD_SET_VARIABLE,
+  CMD_UPDATE_CANVAS_CONFIG,
+  type AddNodePayload,
+  type RemoveNodePayload,
+  type DuplicateNodePayload,
+  type UpdatePropsPayload,
+  type UpdateStylePayload,
+  type UpdateResponsiveStylePayload,
+  type UpdateInteractionsPayload,
+  type RenameNodePayload,
+  type LockUnlockNodePayload,
+  type ReorderNodePayload,
+  type MoveNodePayload,
+  type GroupNodesPayload,
+  type UngroupNodesPayload,
+  type SetVariablePayload,
+  type UpdateCanvasConfigPayload,
+} from "./built-in";
+
+// ── Editor-only command types (no undo/redo) ─────────────────────────────
+
+export const CMD_SELECT_NODE = "SELECT_NODE" as const;
+export const CMD_DESELECT_NODE = "DESELECT_NODE" as const;
+export const CMD_CLEAR_SELECTION = "CLEAR_SELECTION" as const;
+export const CMD_SET_BREAKPOINT = "SET_BREAKPOINT" as const;
+export const CMD_SET_CLIPBOARD = "SET_CLIPBOARD" as const;
+export const CMD_COMPONENT_RENDER_ERROR = "COMPONENT_RENDER_ERROR" as const;
+
+export interface SelectNodePayload {
+  nodeId: string;
+  addToSelection?: boolean;
+}
+
+export interface DeselectNodePayload {
+  nodeId: string;
+}
+
+export interface SetBreakpointPayload {
+  breakpoint: Breakpoint;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+
+/**
+ * Collect all descendant node IDs (not including the node itself).
+ */
+function collectDescendants(nodeId: string, nodes: Record<string, BuilderNode>): string[] {
+  const result: string[] = [];
+  const queue = [nodeId];
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    for (const node of Object.values(nodes)) {
+      if (node.parentId === current) {
+        result.push(node.id);
+        queue.push(node.id);
+      }
+    }
+  }
+  return result;
+}
+
+/**
+ * Deep-clone a subtree, generating new UUIDs for each node.
+ * Returns new nodes map and the new root node ID.
+ */
+function cloneSubtree(
+  rootNodeId: string,
+  nodes: Record<string, BuilderNode>,
+  offset: { x: number; y: number } = { x: 20, y: 20 },
+): { newNodes: Record<string, BuilderNode>; newRootId: string } {
+  const now = new Date().toISOString();
+  const idMap = new Map<string, string>();
+
+  // Collect all nodes in order (BFS)
+  const allIds = [rootNodeId, ...collectDescendants(rootNodeId, nodes)];
+  for (const id of allIds) {
+    idMap.set(id, uuidv4());
+  }
+
+  const newNodes: Record<string, BuilderNode> = {};
+  for (const oldId of allIds) {
+    const oldNode = nodes[oldId];
+    if (!oldNode) continue;
+    const newId = idMap.get(oldId)!;
+    const newParentId = oldNode.parentId !== null ? (idMap.get(oldNode.parentId) ?? oldNode.parentId) : null;
+
+    let style = { ...oldNode.style };
+    // Offset the root node position
+    if (oldId === rootNodeId && style.position === "absolute") {
+      const left = parseFloat(String(style.left ?? "0")) || 0;
+      const top = parseFloat(String(style.top ?? "0")) || 0;
+      style = { ...style, left: `${left + offset.x}px`, top: `${top + offset.y}px` };
+    }
+
+    newNodes[newId] = {
+      ...oldNode,
+      id: newId,
+      parentId: newParentId,
+      style,
+      responsiveStyle: { ...oldNode.responsiveStyle },
+      interactions: [...oldNode.interactions],
+      metadata: { ...oldNode.metadata, createdAt: now, updatedAt: now },
+    };
+  }
+
+  return { newNodes, newRootId: idMap.get(rootNodeId)! };
+}
+
+/**
+ * Get sibling count for a given parent.
+ */
+function siblingCount(parentId: string | null, nodes: Record<string, BuilderNode>): number {
+  return Object.values(nodes).filter((n) => n.parentId === parentId).length;
+}
+
+// ── Main registration ─────────────────────────────────────────────────────
+
+/**
+ * Register all built-in command handlers + editor-only commands
+ * on the provided CommandEngine.
+ *
+ * @param engine - The CommandEngine instance
+ * @param registry - The ComponentRegistry (for defaultProps/defaultStyle lookup)
+ */
+export function registerAllHandlers(engine: CommandEngine, registry: ComponentRegistry): void {
+  const now = () => new Date().toISOString();
+
+  // ── ADD_NODE ────────────────────────────────────────────────────────────
+  engine.registerHandler<AddNodePayload>(
+    CMD_ADD_NODE,
+    (state, payload) => {
+      const def = registry.getComponent(payload.componentType);
+      const nodeId = payload.nodeId ?? uuidv4();
+      const timestamp = now();
+
+      const siblings = Object.values(state.document.nodes).filter(
+        (n) => n.parentId === payload.parentId,
+      );
+      const order =
+        payload.insertIndex !== undefined ? payload.insertIndex : siblings.length;
+
+      const newNode: BuilderNode = {
+        id: nodeId,
+        type: payload.componentType,
+        parentId: payload.parentId,
+        order,
+        props: { ...(def?.defaultProps ?? {}), ...(payload.props ?? {}) },
+        style: { ...(def?.defaultStyle ?? {}), ...(payload.style ?? {}) },
+        responsiveStyle: {},
+        interactions: [],
+        hidden: false,
+        locked: false,
+        name: def?.name ?? payload.componentType,
+        metadata: { createdAt: timestamp, updatedAt: timestamp },
+      };
+
+      // Apply absolute positioning if position provided
+      if (payload.position) {
+        newNode.style = {
+          ...newNode.style,
+          position: "absolute",
+          left: `${Math.round(payload.position.x)}px`,
+          top: `${Math.round(payload.position.y)}px`,
+        };
+      }
+
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: timestamp,
+          nodes: { ...state.document.nodes, [nodeId]: newNode },
+        },
+        editor: { ...state.editor, selectedNodeIds: [nodeId] },
+      };
+    },
+    // Inverse: only if nodeId is known (pre-supplied in payload)
+    (state, payload) => {
+      if (!payload.nodeId) {
+        // Can't compute inverse without knowing the nodeId — return no-op
+        return { type: CMD_CLEAR_SELECTION, payload: null };
+      }
+      return { type: CMD_REMOVE_NODE, payload: { nodeId: payload.nodeId } };
+    },
+  );
+
+  // ── REMOVE_NODE ─────────────────────────────────────────────────────────
+  engine.registerHandler<RemoveNodePayload>(
+    CMD_REMOVE_NODE,
+    (state, payload) => {
+      const { nodeId } = payload;
+      const toRemove = new Set([nodeId, ...collectDescendants(nodeId, state.document.nodes)]);
+
+      const newNodes: Record<string, BuilderNode> = {};
+      for (const [id, node] of Object.entries(state.document.nodes)) {
+        if (!toRemove.has(id)) {
+          newNodes[id] = node;
+        }
+      }
+
+      const newSelectedIds = state.editor.selectedNodeIds.filter((id) => !toRemove.has(id));
+
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: now(),
+          nodes: newNodes,
+        },
+        editor: { ...state.editor, selectedNodeIds: newSelectedIds },
+      };
+    },
+    // Inverse: re-add all removed nodes (captured from current state)
+    (state, payload) => {
+      const { nodeId } = payload;
+      const toRemove = [nodeId, ...collectDescendants(nodeId, state.document.nodes)];
+      const snapshot: Record<string, BuilderNode> = {};
+      for (const id of toRemove) {
+        if (state.document.nodes[id]) {
+          snapshot[id] = state.document.nodes[id]!;
+        }
+      }
+      return {
+        type: "RESTORE_NODES",
+        payload: { snapshot, selectNodeId: nodeId },
+      };
+    },
+  );
+
+  // ── RESTORE_NODES (internal inverse of REMOVE_NODE) ───────────────────
+  engine.registerHandler<{ snapshot: Record<string, BuilderNode>; selectNodeId: string }>(
+    "RESTORE_NODES",
+    (state, payload) => ({
+      ...state,
+      document: {
+        ...state.document,
+        updatedAt: now(),
+        nodes: { ...state.document.nodes, ...payload.snapshot },
+      },
+      editor: { ...state.editor, selectedNodeIds: [payload.selectNodeId] },
+    }),
+  );
+
+  // ── DUPLICATE_NODE ──────────────────────────────────────────────────────
+  engine.registerHandler<DuplicateNodePayload>(
+    CMD_DUPLICATE_NODE,
+    (state, payload) => {
+      const { nodeId, offset = { x: 20, y: 20 } } = payload;
+      if (!state.document.nodes[nodeId]) return state;
+
+      const { newNodes, newRootId } = cloneSubtree(nodeId, state.document.nodes, offset);
+
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: now(),
+          nodes: { ...state.document.nodes, ...newNodes },
+        },
+        editor: { ...state.editor, selectedNodeIds: [newRootId] },
+      };
+    },
+    // Inverse: remove the duplicated node (captured by newRootId)
+    // We can't easily know newRootId before the handler runs.
+    // Skip inverse for now (duplicate is not undoable via this simple approach).
+  );
+
+  // ── REORDER_NODE ────────────────────────────────────────────────────────
+  engine.registerHandler<ReorderNodePayload>(
+    CMD_REORDER_NODE,
+    (state, payload) => {
+      const { nodeId, insertIndex } = payload;
+      const node = state.document.nodes[nodeId];
+      if (!node) return state;
+
+      const oldOrder = node.order;
+
+      const newNodes = { ...state.document.nodes };
+      newNodes[nodeId] = { ...node, order: insertIndex };
+
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: now(),
+          nodes: newNodes,
+        },
+      };
+    },
+    (state, payload) => ({
+      type: CMD_REORDER_NODE,
+      payload: { nodeId: payload.nodeId, insertIndex: state.document.nodes[payload.nodeId]?.order ?? 0 },
+    }),
+  );
+
+  // ── MOVE_NODE ───────────────────────────────────────────────────────────
+  engine.registerHandler<MoveNodePayload>(
+    CMD_MOVE_NODE,
+    (state, payload) => {
+      const { nodeId, targetParentId, insertIndex } = payload;
+      const node = state.document.nodes[nodeId];
+      if (!node) return state;
+
+      const siblings = Object.values(state.document.nodes).filter(
+        (n) => n.parentId === targetParentId,
+      );
+      const order = insertIndex !== undefined ? insertIndex : siblings.length;
+
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: now(),
+          nodes: {
+            ...state.document.nodes,
+            [nodeId]: { ...node, parentId: targetParentId, order },
+          },
+        },
+      };
+    },
+    (state, payload) => ({
+      type: CMD_MOVE_NODE,
+      payload: {
+        nodeId: payload.nodeId,
+        targetParentId: state.document.nodes[payload.nodeId]?.parentId ?? state.document.rootNodeId,
+        position: "inside",
+        insertIndex: state.document.nodes[payload.nodeId]?.order,
+      },
+    }),
+  );
+
+  // ── UPDATE_PROPS ────────────────────────────────────────────────────────
+  engine.registerHandler<UpdatePropsPayload>(
+    CMD_UPDATE_PROPS,
+    (state, payload) => {
+      const { nodeId, props } = payload;
+      const node = state.document.nodes[nodeId];
+      if (!node) return state;
+
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: now(),
+          nodes: {
+            ...state.document.nodes,
+            [nodeId]: {
+              ...node,
+              props: { ...node.props, ...props },
+              metadata: { ...node.metadata, updatedAt: now() },
+            },
+          },
+        },
+      };
+    },
+    (state, payload) => {
+      const node = state.document.nodes[payload.nodeId];
+      // Capture only the keys we're overwriting
+      const oldProps: Record<string, unknown> = {};
+      for (const key of Object.keys(payload.props)) {
+        oldProps[key] = node?.props[key];
+      }
+      return {
+        type: CMD_UPDATE_PROPS,
+        payload: { nodeId: payload.nodeId, props: oldProps },
+      };
+    },
+  );
+
+  // ── UPDATE_STYLE ────────────────────────────────────────────────────────
+  engine.registerHandler<UpdateStylePayload>(
+    CMD_UPDATE_STYLE,
+    (state, payload) => {
+      const { nodeId, style, breakpoint } = payload;
+      const node = state.document.nodes[nodeId];
+      if (!node) return state;
+
+      const isBaseStyle = !breakpoint || breakpoint === "desktop";
+
+      if (isBaseStyle) {
+        return {
+          ...state,
+          document: {
+            ...state.document,
+            updatedAt: now(),
+            nodes: {
+              ...state.document.nodes,
+              [nodeId]: {
+                ...node,
+                style: { ...node.style, ...style },
+                metadata: { ...node.metadata, updatedAt: now() },
+              },
+            },
+          },
+        };
+      }
+
+      // Responsive override
+      const currentResponsive = node.responsiveStyle[breakpoint] ?? {};
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: now(),
+          nodes: {
+            ...state.document.nodes,
+            [nodeId]: {
+              ...node,
+              responsiveStyle: {
+                ...node.responsiveStyle,
+                [breakpoint]: { ...currentResponsive, ...style },
+              },
+              metadata: { ...node.metadata, updatedAt: now() },
+            },
+          },
+        },
+      };
+    },
+    (state, payload) => {
+      const node = state.document.nodes[payload.nodeId];
+      const isBaseStyle = !payload.breakpoint || payload.breakpoint === "desktop";
+      const oldStyle: Partial<StyleConfig> = {};
+
+      for (const key of Object.keys(payload.style) as Array<keyof StyleConfig>) {
+        if (isBaseStyle) {
+          oldStyle[key] = node?.style[key] as never;
+        } else {
+          oldStyle[key] = (node?.responsiveStyle[payload.breakpoint!] ?? {})[key] as never;
+        }
+      }
+
+      return {
+        type: CMD_UPDATE_STYLE,
+        payload: { nodeId: payload.nodeId, style: oldStyle, breakpoint: payload.breakpoint },
+      };
+    },
+  );
+
+  // ── UPDATE_RESPONSIVE_STYLE ─────────────────────────────────────────────
+  engine.registerHandler<UpdateResponsiveStylePayload>(
+    CMD_UPDATE_RESPONSIVE_STYLE,
+    (state, payload) => {
+      const { nodeId, breakpoint, style } = payload;
+      const node = state.document.nodes[nodeId];
+      if (!node) return state;
+
+      const currentResponsive = node.responsiveStyle[breakpoint] ?? {};
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: now(),
+          nodes: {
+            ...state.document.nodes,
+            [nodeId]: {
+              ...node,
+              responsiveStyle: {
+                ...node.responsiveStyle,
+                [breakpoint]: { ...currentResponsive, ...style },
+              },
+              metadata: { ...node.metadata, updatedAt: now() },
+            },
+          },
+        },
+      };
+    },
+    (state, payload) => {
+      const node = state.document.nodes[payload.nodeId];
+      const oldStyle = node?.responsiveStyle[payload.breakpoint] ?? {};
+      return {
+        type: CMD_UPDATE_RESPONSIVE_STYLE,
+        payload: { nodeId: payload.nodeId, breakpoint: payload.breakpoint, style: oldStyle },
+      };
+    },
+  );
+
+  // ── UPDATE_INTERACTIONS ─────────────────────────────────────────────────
+  engine.registerHandler<UpdateInteractionsPayload>(
+    CMD_UPDATE_INTERACTIONS,
+    (state, payload) => {
+      const { nodeId, interactions } = payload;
+      const node = state.document.nodes[nodeId];
+      if (!node) return state;
+
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: now(),
+          nodes: {
+            ...state.document.nodes,
+            [nodeId]: {
+              ...node,
+              interactions,
+              metadata: { ...node.metadata, updatedAt: now() },
+            },
+          },
+        },
+      };
+    },
+    (state, payload) => ({
+      type: CMD_UPDATE_INTERACTIONS,
+      payload: {
+        nodeId: payload.nodeId,
+        interactions: state.document.nodes[payload.nodeId]?.interactions ?? [],
+      },
+    }),
+  );
+
+  // ── RENAME_NODE ─────────────────────────────────────────────────────────
+  engine.registerHandler<RenameNodePayload>(
+    CMD_RENAME_NODE,
+    (state, payload) => {
+      const { nodeId, name } = payload;
+      const node = state.document.nodes[nodeId];
+      if (!node) return state;
+
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: now(),
+          nodes: {
+            ...state.document.nodes,
+            [nodeId]: { ...node, name, metadata: { ...node.metadata, updatedAt: now() } },
+          },
+        },
+      };
+    },
+    (state, payload) => ({
+      type: CMD_RENAME_NODE,
+      payload: { nodeId: payload.nodeId, name: state.document.nodes[payload.nodeId]?.name ?? "" },
+    }),
+  );
+
+  // ── LOCK_NODE / UNLOCK_NODE ─────────────────────────────────────────────
+  engine.registerHandler<LockUnlockNodePayload>(
+    CMD_LOCK_NODE,
+    (state, payload) => {
+      const node = state.document.nodes[payload.nodeId];
+      if (!node) return state;
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          nodes: { ...state.document.nodes, [payload.nodeId]: { ...node, locked: true } },
+        },
+      };
+    },
+    (_state, payload) => ({ type: CMD_UNLOCK_NODE, payload }),
+  );
+
+  engine.registerHandler<LockUnlockNodePayload>(
+    CMD_UNLOCK_NODE,
+    (state, payload) => {
+      const node = state.document.nodes[payload.nodeId];
+      if (!node) return state;
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          nodes: { ...state.document.nodes, [payload.nodeId]: { ...node, locked: false } },
+        },
+      };
+    },
+    (_state, payload) => ({ type: CMD_LOCK_NODE, payload }),
+  );
+
+  // ── HIDE_NODE / SHOW_NODE ───────────────────────────────────────────────
+  engine.registerHandler<LockUnlockNodePayload>(
+    CMD_HIDE_NODE,
+    (state, payload) => {
+      const node = state.document.nodes[payload.nodeId];
+      if (!node) return state;
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          nodes: { ...state.document.nodes, [payload.nodeId]: { ...node, hidden: true } },
+        },
+      };
+    },
+    (_state, payload) => ({ type: CMD_SHOW_NODE, payload }),
+  );
+
+  engine.registerHandler<LockUnlockNodePayload>(
+    CMD_SHOW_NODE,
+    (state, payload) => {
+      const node = state.document.nodes[payload.nodeId];
+      if (!node) return state;
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          nodes: { ...state.document.nodes, [payload.nodeId]: { ...node, hidden: false } },
+        },
+      };
+    },
+    (_state, payload) => ({ type: CMD_HIDE_NODE, payload }),
+  );
+
+  // ── GROUP_NODES ─────────────────────────────────────────────────────────
+  engine.registerHandler<GroupNodesPayload>(
+    CMD_GROUP_NODES,
+    (state, payload) => {
+      const { nodeIds, containerType = "Container" } = payload;
+      if (nodeIds.length === 0) return state;
+
+      const firstNode = state.document.nodes[nodeIds[0]!];
+      if (!firstNode) return state;
+
+      const groupId = uuidv4();
+      const timestamp = now();
+      const def = registry.getComponent(containerType);
+
+      const groupNode: BuilderNode = {
+        id: groupId,
+        type: containerType,
+        parentId: firstNode.parentId,
+        order: firstNode.order,
+        props: { ...(def?.defaultProps ?? {}) },
+        style: { ...(def?.defaultStyle ?? {}), position: "absolute" },
+        responsiveStyle: {},
+        interactions: [],
+        hidden: false,
+        locked: false,
+        name: "Group",
+        metadata: { createdAt: timestamp, updatedAt: timestamp },
+      };
+
+      const newNodes = { ...state.document.nodes, [groupId]: groupNode };
+      let childOrder = 0;
+      for (const nodeId of nodeIds) {
+        const node = newNodes[nodeId];
+        if (node) {
+          newNodes[nodeId] = { ...node, parentId: groupId, order: childOrder++ };
+        }
+      }
+
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: timestamp,
+          nodes: newNodes,
+        },
+        editor: { ...state.editor, selectedNodeIds: [groupId] },
+      };
+    },
+  );
+
+  // ── UNGROUP_NODES ───────────────────────────────────────────────────────
+  engine.registerHandler<UngroupNodesPayload>(
+    CMD_UNGROUP_NODES,
+    (state, payload) => {
+      const { nodeId } = payload;
+      const groupNode = state.document.nodes[nodeId];
+      if (!groupNode) return state;
+
+      const children = Object.values(state.document.nodes).filter(
+        (n) => n.parentId === nodeId,
+      );
+
+      const newNodes = { ...state.document.nodes };
+      delete newNodes[nodeId];
+
+      for (const child of children) {
+        newNodes[child.id] = { ...child, parentId: groupNode.parentId };
+      }
+
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: now(),
+          nodes: newNodes,
+        },
+        editor: { ...state.editor, selectedNodeIds: children.map((c) => c.id) },
+      };
+    },
+  );
+
+  // ── SET_VARIABLE ────────────────────────────────────────────────────────
+  engine.registerHandler<SetVariablePayload>(
+    CMD_SET_VARIABLE,
+    (state, payload) => ({
+      ...state,
+      document: {
+        ...state.document,
+        updatedAt: now(),
+        variables: {
+          ...state.document.variables,
+          [payload.key]: {
+            key: payload.key,
+            type: typeof payload.value === "string" ? "string"
+              : typeof payload.value === "number" ? "number"
+              : typeof payload.value === "boolean" ? "boolean"
+              : Array.isArray(payload.value) ? "array"
+              : "object",
+            defaultValue: payload.value,
+          },
+        },
+      },
+    }),
+    (state, payload) => ({
+      type: CMD_SET_VARIABLE,
+      payload: {
+        key: payload.key,
+        value: state.document.variables[payload.key]?.defaultValue,
+      },
+    }),
+  );
+
+  // ── UPDATE_CANVAS_CONFIG ────────────────────────────────────────────────
+  engine.registerHandler<UpdateCanvasConfigPayload>(
+    CMD_UPDATE_CANVAS_CONFIG,
+    (state, payload) => ({
+      ...state,
+      document: {
+        ...state.document,
+        updatedAt: now(),
+        canvasConfig: { ...state.document.canvasConfig, ...payload.config },
+      },
+    }),
+    (state, payload) => ({
+      type: CMD_UPDATE_CANVAS_CONFIG,
+      payload: { config: state.document.canvasConfig },
+    }),
+  );
+
+  // ── LOAD_COMPONENT (async — no-op in command layer) ────────────────────
+  engine.registerHandler(
+    "LOAD_COMPONENT",
+    (state) => state, // actual loading handled by plugin/async middleware
+  );
+
+  // ── COMPONENT_RENDER_ERROR (no-op, just for event emission) ────────────
+  engine.registerHandler(
+    CMD_COMPONENT_RENDER_ERROR,
+    (state) => state,
+  );
+
+  // ── Editor-only commands (no undo/redo — don't register inverse) ────────
+
+  engine.registerHandler<SelectNodePayload>(
+    CMD_SELECT_NODE,
+    (state, payload) => {
+      const { nodeId, addToSelection = false } = payload;
+      // Don't select locked nodes
+      const node = state.document.nodes[nodeId];
+      if (node?.locked) return state;
+
+      const newSelectedIds = addToSelection
+        ? state.editor.selectedNodeIds.includes(nodeId)
+          ? state.editor.selectedNodeIds
+          : [...state.editor.selectedNodeIds, nodeId]
+        : [nodeId];
+
+      return {
+        ...state,
+        editor: { ...state.editor, selectedNodeIds: newSelectedIds },
+      };
+    },
+  );
+
+  engine.registerHandler<DeselectNodePayload>(
+    CMD_DESELECT_NODE,
+    (state, payload) => ({
+      ...state,
+      editor: {
+        ...state.editor,
+        selectedNodeIds: state.editor.selectedNodeIds.filter((id) => id !== payload.nodeId),
+      },
+    }),
+  );
+
+  engine.registerHandler(
+    CMD_CLEAR_SELECTION,
+    (state) => ({
+      ...state,
+      editor: { ...state.editor, selectedNodeIds: [] },
+    }),
+  );
+
+  engine.registerHandler<SetBreakpointPayload>(
+    CMD_SET_BREAKPOINT,
+    (state, payload) => ({
+      ...state,
+      editor: { ...state.editor, activeBreakpoint: payload.breakpoint },
+    }),
+  );
+
+  engine.registerHandler<{ data: import("../state/types").ClipboardData | null }>(
+    CMD_SET_CLIPBOARD,
+    (state, payload) => ({
+      ...state,
+      editor: { ...state.editor, clipboard: payload.data },
+    }),
+  );
+}

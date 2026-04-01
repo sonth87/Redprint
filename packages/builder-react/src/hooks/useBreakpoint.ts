@@ -13,7 +13,8 @@ export function useBreakpoint(): {
   setBreakpoint: (bp: Breakpoint) => void;
   breakpoints: import("@ui-builder/builder-core").BreakpointConfig[];
 } {
-  const { state, breakpoint, dispatch } = useBuilder();
+  const { state, dispatch } = useBuilder();
+  const breakpoint = state.editor.activeBreakpoint;
 
   const setBreakpoint = useCallback(
     (bp: Breakpoint) => {

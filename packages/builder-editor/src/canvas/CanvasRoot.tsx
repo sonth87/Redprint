@@ -1,4 +1,5 @@
-import React, { useRef, useCallback, useEffect, useState, MouseEvent as RMouseEvent } from "react";
+import React, { useRef, useCallback, useEffect, useState } from "react";
+import type { MouseEvent as RMouseEvent } from "react";
 import { cn } from "@ui-builder/ui";
 import type { CanvasConfig } from "@ui-builder/builder-core";
 import type { Point } from "@ui-builder/shared";

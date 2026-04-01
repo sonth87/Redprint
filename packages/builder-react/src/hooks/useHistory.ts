@@ -23,10 +23,8 @@ export function useHistory(): {
   const state = builder.getState();
 
   return {
-    // These fields come from the builder internal history, read from state
-    // if exposed, otherwise use the result outcome. For now we infer from state.
-    canUndo: true, // builder provides undo/redo availability via state or API
-    canRedo: true,
+    canUndo: builder.canUndo,
+    canRedo: builder.canRedo,
     undo,
     redo,
   };

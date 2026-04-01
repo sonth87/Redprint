@@ -67,7 +67,7 @@ export function validateDocument(
 ): { valid: true; data: BuilderDocument } | { valid: false; errors: string[] } {
   const result = BuilderDocumentSchema.safeParse(document);
   if (result.success) {
-    return { valid: true, data: result.data as BuilderDocument };
+    return { valid: true, data: result.data as unknown as BuilderDocument };
   }
   const errors = result.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
   return { valid: false, errors };
