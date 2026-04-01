@@ -44,6 +44,7 @@ build/
 # Testing
 coverage/
 .nyc_output/
+.playwright-mcp/
 
 # Dependency directories
 jspm_packages/

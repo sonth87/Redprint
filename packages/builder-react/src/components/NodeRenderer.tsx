@@ -25,6 +25,19 @@ export function NodeRenderer({ nodeId, mode = "editor" }: NodeRendererProps) {
   const { state, builder } = useBuilder();
   const node = state.document.nodes[nodeId];
 
+  // Track render errors to report via effect (avoids setState during render)
+  const renderErrorRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (renderErrorRef.current) {
+      builder.dispatch({
+        type: "COMPONENT_RENDER_ERROR",
+        payload: { nodeId, type: node?.type ?? "unknown", error: renderErrorRef.current },
+        description: "Render error",
+      });
+      renderErrorRef.current = null;
+    }
+  });
+
   if (!node) {
     return null;
   }
@@ -34,12 +47,7 @@ export function NodeRenderer({ nodeId, mode = "editor" }: NodeRendererProps) {
   const def: ComponentDefinition | undefined = registry?.getComponent(node.type);
 
   if (!def) {
-    // Emit error event for missing component type
-    builder.dispatch({
-      type: "COMPONENT_RENDER_ERROR",
-      payload: { nodeId, type: node.type, error: `No component registered for type "${node.type}"` },
-      description: "Render error",
-    });
+    renderErrorRef.current = `No component registered for type "${node.type}"`;
     return (
       <div
         data-node-id={nodeId}
@@ -75,14 +83,18 @@ export function NodeRenderer({ nodeId, mode = "editor" }: NodeRendererProps) {
       style: resolvedStyle,
       interactions: node.interactions,
     });
+    // Inject data-node-id so canvas event handlers can identify nodes via
+    // closest("[data-node-id]") / querySelector("[data-node-id]")
+    if (React.isValidElement(rendered)) {
+      return React.cloneElement(
+        rendered as React.ReactElement<Record<string, unknown>>,
+        { "data-node-id": nodeId },
+      );
+    }
     return rendered as React.ReactElement;
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
-    builder.dispatch({
-      type: "COMPONENT_RENDER_ERROR",
-      payload: { nodeId, type: node.type, error },
-      description: "Render error",
-    });
+    renderErrorRef.current = error;
     return (
       <div
         data-node-id={nodeId}

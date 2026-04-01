@@ -18,28 +18,32 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
   width = 280,
   defaultExpanded = true,
 }) => {
+  // Committed position — used only for initial style. Updated to React state once on pointerup.
   const [position, setPosition] = useState({ x: 0, y: defaultPosition.y });
+  const positionRef = useRef(position);
+  // Direct ref to panel DOM node for imperative position updates during drag
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // initialize position after mount
-    if (defaultPosition.right !== undefined) {
-      setPosition({ x: window.innerWidth - defaultPosition.right - width, y: defaultPosition.y });
-    } else {
-      setPosition({ x: defaultPosition.x || 16, y: defaultPosition.y });
-    }
+    const initial =
+      defaultPosition.right !== undefined
+        ? { x: window.innerWidth - defaultPosition.right - width, y: defaultPosition.y }
+        : { x: defaultPosition.x ?? 16, y: defaultPosition.y };
+    setPosition(initial);
+    positionRef.current = initial;
   }, [defaultPosition.right, defaultPosition.x, defaultPosition.y, width]);
 
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [isDragging, setIsDragging] = useState(false);
-  // Store position in a ref so the listeners always have the latest value
-  const positionRef = useRef(position);
-  positionRef.current = position;
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
       if (e.button !== 0) return;
       e.preventDefault();
       e.stopPropagation();
+      // Capture pointer so move/up always reach this element even when cursor
+      // moves over the canvas or other panels.
+      e.currentTarget.setPointerCapture(e.pointerId);
 
       const startX = e.clientX;
       const startY = e.clientY;
@@ -51,16 +55,22 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
       const onMove = (ev: PointerEvent) => {
         const newX = Math.max(0, Math.min(window.innerWidth - width, initialX + ev.clientX - startX));
         const newY = Math.max(0, Math.min(window.innerHeight - 40, initialY + ev.clientY - startY));
-        setPosition({ x: newX, y: newY });
+        // Update DOM directly — no React state update, no re-render during drag
+        if (panelRef.current) {
+          panelRef.current.style.left = `${newX}px`;
+          panelRef.current.style.top = `${newY}px`;
+        }
+        positionRef.current = { x: newX, y: newY };
       };
 
       const onUp = () => {
         setIsDragging(false);
+        // Commit final position to React state once so subsequent renders are correct
+        setPosition({ ...positionRef.current });
         window.removeEventListener("pointermove", onMove);
         window.removeEventListener("pointerup", onUp);
       };
 
-      // Register listeners synchronously — no render-cycle gap
       window.addEventListener("pointermove", onMove);
       window.addEventListener("pointerup", onUp);
     },
@@ -69,8 +79,9 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
 
   return (
     <div
+      ref={panelRef}
       className={cn(
-        "fixed z-40 flex flex-col bg-background/95 backdrop-blur-md rounded-lg border shadow-lg overflow-hidden transition-all duration-200",
+        "fixed z-40 flex flex-col bg-background/95 backdrop-blur-lg rounded-lg border shadow-lg overflow-hidden select-none",
         isDragging && "shadow-xl select-none opacity-90",
       )}
       style={{

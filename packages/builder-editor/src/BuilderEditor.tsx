@@ -14,7 +14,7 @@ import {
   useHistory,
   NodeRenderer,
 } from "@ui-builder/builder-react";
-import type { BuilderAPI, BuilderConfig, ComponentDefinition } from "@ui-builder/builder-core";
+import type { BuilderAPI, BuilderConfig, ComponentDefinition, BuilderNode } from "@ui-builder/builder-core";
 import type { EditorTool, SnapGuide, ResizeHandleType } from "./types";
 import type { Point, Rect } from "@ui-builder/shared";
 import { CanvasRoot } from "./canvas/CanvasRoot";
@@ -130,6 +130,7 @@ function EditorInner() {
   // ── Selection + move ────────────────────────────────────────────────────
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
+      if (e.button !== 0) return; // Only left-click: middle-click is reserved for canvas pan
       if (activeTool === "pan") return;
       const target = e.target as HTMLElement;
       if (target.closest("[data-resize-handle]") || target.closest("[data-rotation-handle]")) return;
@@ -141,15 +142,14 @@ function EditorInner() {
           const node = document.nodes[id];
           if (node?.locked) return;
 
-          if (id !== selectedNodeIds[0]) {
-            dispatch({ type: "SELECT_NODE", payload: { nodeId: id, addToSelection: e.shiftKey }, description: "Select" });
-          } else {
-            // Already selected → start moving
-            const style = document.nodes[id]?.style || {};
-            const left = parseFloat(String(style.left ?? "0")) || 0;
-            const top = parseFloat(String(style.top ?? "0")) || 0;
-            setMoving({ nodeId: id, startPoint: { x: e.clientX, y: e.clientY }, startLeft: left, startTop: top });
-          }
+          // Select the node (addToSelection honours Shift+click multi-select)
+          dispatch({ type: "SELECT_NODE", payload: { nodeId: id, addToSelection: e.shiftKey }, description: "Select" });
+
+          // Immediately start a move gesture so a single pointer-down+move moves the node
+          const style = document.nodes[id]?.style || {};
+          const left = parseFloat(String(style.left ?? "0")) || 0;
+          const top = parseFloat(String(style.top ?? "0")) || 0;
+          setMoving({ nodeId: id, startPoint: { x: e.clientX, y: e.clientY }, startLeft: left, startTop: top });
           return;
         }
       }
@@ -161,7 +161,7 @@ function EditorInner() {
         setRubberBanding({ startPoint: pt, currentPoint: pt });
       }
     },
-    [activeTool, dispatch, clearSelection, zoom, document.nodes, document.rootNodeId, selectedNodeIds],
+    [activeTool, dispatch, clearSelection, zoom, document.nodes, document.rootNodeId],
   );
 
   // ── Hover ────────────────────────────────────────────────────────────────
@@ -325,7 +325,7 @@ function EditorInner() {
           const siblings: Rect[] = [];
           const node = document.nodes[moving.nodeId];
           if (node?.parentId && canvasFrameRef.current) {
-            for (const n of Object.values(document.nodes)) {
+            for (const n of Object.values(document.nodes) as BuilderNode[]) {
               if (n.parentId === node.parentId && n.id !== moving.nodeId) {
                 const el = canvasFrameRef.current.querySelector(`[data-node-id="${n.id}"]`) as HTMLElement;
                 if (el) {
@@ -444,6 +444,10 @@ function EditorInner() {
       ref={canvasContainerRef}
       tabIndex={0}
       style={{ outline: "none" }}
+      // Outer drop zone so drag-from-palette works even when cursor is over a FloatingPanel (fixed z-40)
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
     >
       <EditorToolbar
         breakpoint={breakpoint}
@@ -543,9 +547,9 @@ function EditorInner() {
 // ── Helper: collect subtree ────────────────────────────────────────────────
 function collectSubtree(
   rootId: string,
-  nodes: Record<string, import("@ui-builder/builder-core").BuilderNode>,
-): Record<string, import("@ui-builder/builder-core").BuilderNode> {
-  const result: Record<string, import("@ui-builder/builder-core").BuilderNode> = {};
+  nodes: Record<string, BuilderNode>,
+): Record<string, BuilderNode> {
+  const result: Record<string, BuilderNode> = {};
   const queue = [rootId];
   while (queue.length > 0) {
     const id = queue.shift()!;

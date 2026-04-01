@@ -151,12 +151,25 @@ export function createBuilder(config: BuilderConfig = {}): IBuilderAPI {
 
   // State subscribers — notified on every successful command execution
   const stateListeners = new Set<(state: BuilderState) => void>();
-  eventBus.on("command:executed", () => {
+
+  // Internal bridge: command:executed → stateListeners
+  // Extracted so `subscribe()` can re-establish it after a destroy() + re-use
+  // cycle (happens during React 18 StrictMode's double-mount in dev).
+  const bridgeHandler = () => {
     const state = commandEngine.getState();
     for (const listener of stateListeners) {
       listener(state);
     }
-  });
+  };
+
+  const ensureBridge = () => {
+    if (eventBus.listenerCount("command:executed") === 0) {
+      eventBus.on("command:executed", bridgeHandler);
+    }
+  };
+
+  // Register the initial bridge
+  ensureBridge();
 
   return {
     getState: () => commandEngine.getState(),
@@ -169,6 +182,8 @@ export function createBuilder(config: BuilderConfig = {}): IBuilderAPI {
     eventBus,
     subscribe: (listener: (state: BuilderState) => void) => {
       stateListeners.add(listener);
+      // Re-establish the internal bridge if it was destroyed
+      ensureBridge();
       return () => {
         stateListeners.delete(listener);
       };
