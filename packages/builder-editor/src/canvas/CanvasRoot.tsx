@@ -51,10 +51,25 @@ export function CanvasRoot({
     const onWheel = (e: globalThis.WheelEvent) => {
       e.preventDefault();
       if (e.ctrlKey || e.metaKey) {
-        // Pinch-to-zoom or Ctrl+scroll
+        // Pinch-to-zoom or Ctrl+scroll — zoom from cursor position
+        const rect = el.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        // Calculate canvas point under cursor before zoom
+        const canvasX = (mouseX - panOffset.x) / zoom;
+        const canvasY = (mouseY - panOffset.y) / zoom;
+
+        // Calculate next zoom level
         const delta = -e.deltaY * ZOOM_SENSITIVITY;
-        const nextZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom * (1 + delta * 50)));
+        const nextZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom * (1 + delta * 0.5)));
+
+        // Adjust pan so the canvas point stays under the cursor
+        const newPanX = mouseX - canvasX * nextZoom;
+        const newPanY = mouseY - canvasY * nextZoom;
+
         onZoomChange(nextZoom);
+        onPanOffsetChange({ x: newPanX, y: newPanY });
       } else {
         // Pan
         onPanOffsetChange({
