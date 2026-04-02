@@ -83,6 +83,7 @@ function EditorInner() {
     startAngle: number;
     initialRotation: number;
     gestureGroupId: string;
+    hasExceededThreshold: boolean;
   } | null>(null);
 
   // Derive selected node and definition
@@ -429,20 +430,29 @@ function EditorInner() {
   }, [moving, zoom, breakpoint, dispatch, snapEnabled, snapEngine, document.nodes]);
 
   // ── Rotate ───────────────────────────────────────────────────────────────
+  const ROTATION_THRESHOLD = 15; // Dead zone threshold in degrees
   useEffect(() => {
     if (!rotating) return;
     const handleGlobalMouseMove = (e: MouseEvent) => {
       const dx = e.clientX - rotating.centerX;
       const dy = e.clientY - rotating.centerY;
       const currentAngle = (Math.atan2(dy, dx) * 180) / Math.PI;
-      const rotation = Math.round(rotating.initialRotation + (currentAngle - rotating.startAngle));
-      dispatch({ type: "UPDATE_STYLE", payload: { nodeId: rotating.nodeId, style: { transform: `rotate(${rotation}deg)` }, breakpoint }, groupId: rotating.gestureGroupId, description: "Rotate" });
+      let angleDelta = currentAngle - rotating.startAngle;
+      
+      // If starting near 0° (regardless of where we are now), apply damping to entire drag
+      const isNear0Start = rotating.initialRotation === 0 || Math.abs(rotating.initialRotation) < ROTATION_THRESHOLD || Math.abs(rotating.initialRotation - 360) < ROTATION_THRESHOLD;
+      if (isNear0Start) {
+        angleDelta *= 0.25; // Slow down rotation by 75% (need to drag 4x more to get same angle change)
+      }
+      
+      const calculatedRotation = Math.round(rotating.initialRotation + angleDelta);
+      dispatch({ type: "UPDATE_STYLE", payload: { nodeId: rotating.nodeId, style: { transform: `rotate(${calculatedRotation}deg)` }, breakpoint }, groupId: rotating.gestureGroupId, description: "Rotate" });
     };
     const handleGlobalMouseUp = () => setRotating(null);
     window.addEventListener("mousemove", handleGlobalMouseMove);
     window.addEventListener("mouseup", handleGlobalMouseUp);
     return () => { window.removeEventListener("mousemove", handleGlobalMouseMove); window.removeEventListener("mouseup", handleGlobalMouseUp); };
-  }, [rotating, dispatch, breakpoint]);
+  }, [rotating, dispatch, breakpoint, ROTATION_THRESHOLD]);
 
   // ── Keyboard shortcuts (canvas-focused) ───────────────────────────────────
   useEffect(() => {
@@ -585,11 +595,17 @@ function EditorInner() {
               setResizing({ handle, nodeId: selectedNodeId, startPoint: { x: e.clientX, y: e.clientY }, startRect: { ...selectionRect }, gestureGroupId: uuidv4() });
             }}
             onRotateStart={(e) => {
-              if (!selectionRect || !selectedNodeId) return;
-              const cx = (selectionRect.x + selectionRect.width / 2) * zoom;
-              const cy = (selectionRect.y + selectionRect.height / 2) * zoom;
-              const startAngle = (Math.atan2(e.clientY - cy, e.clientX - cx) * 180) / Math.PI;
-              setRotating({ nodeId: selectedNodeId, centerX: cx, centerY: cy, startAngle, initialRotation: currentRotation, gestureGroupId: uuidv4() });
+              if (!selectionRect || !selectedNodeId || !canvasFrameRef.current) return;
+              const el = canvasFrameRef.current.querySelector(`[data-node-id="${selectedNodeId}"]`) as HTMLElement;
+              if (!el) return;
+              
+              // Get element center in viewport coordinates (same as e.clientX, e.clientY)
+              const elRect = el.getBoundingClientRect();
+              const cxViewport = (elRect.left + elRect.right) / 2;
+              const cyViewport = (elRect.top + elRect.bottom) / 2;
+              
+              const startAngle = (Math.atan2(e.clientY - cyViewport, e.clientX - cxViewport) * 180) / Math.PI;
+              setRotating({ nodeId: selectedNodeId, centerX: cxViewport, centerY: cyViewport, startAngle, initialRotation: currentRotation, gestureGroupId: uuidv4(), hasExceededThreshold: false });
             }}
           />
 
