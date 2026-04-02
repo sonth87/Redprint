@@ -12,6 +12,7 @@ export interface CanvasRootProps {
   onPanOffsetChange: (offset: Point) => void;
   children: React.ReactNode;
   className?: string;
+  activeTool?: string;
 }
 
 /**
@@ -34,6 +35,7 @@ export function CanvasRoot({
   onPanOffsetChange,
   children,
   className,
+  activeTool = "select",
 }: CanvasRootProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPanning, setIsPanning] = useState(false);
@@ -97,17 +99,23 @@ export function CanvasRoot({
     return () => el.removeEventListener("wheel", onWheel);
   }, [zoom, panOffset, onZoomChange, onPanOffsetChange]);
 
-  // ── Middle-mouse pan ─────────────────────────────────────────────────────
+  // ── Middle-mouse pan + Pan tool ─────────────────────────────────────────────
   const handleMouseDown = useCallback(
     (e: RMouseEvent) => {
+      // Middle mouse button always pans
       if (e.button === 1) {
-        // Middle mouse
+        e.preventDefault();
+        setIsPanning(true);
+        panStart.current = { pointer: { x: e.clientX, y: e.clientY }, offset: panOffset };
+      }
+      // Left mouse button pans only if pan tool is active
+      if (e.button === 0 && activeTool === "pan") {
         e.preventDefault();
         setIsPanning(true);
         panStart.current = { pointer: { x: e.clientX, y: e.clientY }, offset: panOffset };
       }
     },
-    [panOffset],
+    [panOffset, activeTool],
   );
 
   const handleMouseMove = useCallback(
@@ -156,7 +164,7 @@ export function CanvasRoot({
       className={cn(
         "relative flex-1 overflow-hidden",
         "bg-[hsl(var(--canvas-bg))]",
-        isPanning ? "cursor-grabbing" : "cursor-default",
+        isPanning ? "cursor-grabbing" : activeTool === "pan" ? "cursor-grab" : "cursor-default",
         className,
       )}
       style={{ userSelect: "none" }}

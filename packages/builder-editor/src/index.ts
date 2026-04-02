@@ -39,6 +39,10 @@ export type { MediaManagerProps } from "./panels/MediaManager";
 // Toolbar
 export { EditorToolbar } from "./toolbar/EditorToolbar";
 export type { EditorToolbarProps } from "./toolbar/EditorToolbar";
+export { ToolbarButton } from "./toolbar/ToolbarButton";
+export type { ToolbarButtonProps } from "./toolbar/ToolbarButton";
+export { ToolbarToggle } from "./toolbar/ToolbarToggle";
+export type { ToolbarToggleProps } from "./toolbar/ToolbarToggle";
 
 // Snap + shortcuts
 export { SnapEngine } from "./snap/SnapEngine";

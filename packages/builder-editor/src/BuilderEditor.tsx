@@ -316,7 +316,12 @@ function EditorInner() {
         onSnapToggle={toggleSnap}
         onUndo={undo}
         onRedo={redo}
-        onToolChange={(tool) => setActiveTool(tool)}
+        onToolChange={(tool) => {
+          setActiveTool(tool);
+          if (tool === "pan") {
+            clearSelection();
+          }
+        }}
       />
 
       <FloatingPanel id="components" title="Components" defaultPosition={{ x: 16, y: 64 }}>
@@ -373,6 +378,7 @@ function EditorInner() {
           panOffset={panOffset}
           onZoomChange={setZoom}
           onPanOffsetChange={setPanOffset}
+          activeTool={activeTool}
         >
           <div
             ref={canvasFrameRef}

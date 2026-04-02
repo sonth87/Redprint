@@ -81,7 +81,7 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
     <div
       ref={panelRef}
       className={cn(
-        "fixed z-40 flex flex-col bg-background/95 backdrop-blur-lg rounded-lg border shadow-lg overflow-hidden select-none",
+        "fixed z-40 flex flex-col bg-background/95 backdrop-blur-md rounded-lg border shadow-lg overflow-hidden select-none",
         isDragging && "shadow-xl select-none opacity-90",
       )}
       style={{

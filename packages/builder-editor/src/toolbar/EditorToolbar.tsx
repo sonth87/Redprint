@@ -1,8 +1,10 @@
 import React, { memo, useCallback } from "react";
-import { Button, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider, Toggle, cn } from "@ui-builder/ui";
+import { TooltipProvider } from "@ui-builder/ui";
 import type { Breakpoint } from "@ui-builder/builder-core";
 import { Monitor, Tablet, Smartphone, Undo2, Redo2, ZoomIn, ZoomOut, Grid, MousePointer2, Hand, Magnet } from "lucide-react";
 import type { EditorTool } from "../types";
+import { ToolbarButton } from "./ToolbarButton";
+import { ToolbarToggle } from "./ToolbarToggle";
 
 export interface EditorToolbarProps {
   breakpoint: Breakpoint;
@@ -66,71 +68,39 @@ export const EditorToolbar = memo(function EditorToolbar({
 
         {/* Tool selection */}
         <div className="flex items-center gap-0.5 mr-2 bg-muted rounded-md p-1">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                className={cn(
-                  "inline-flex items-center justify-center rounded-sm px-2 py-1.5 text-sm font-medium transition-all",
-                  activeTool === "select"
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground hover:bg-background/50"
-                )}
-                onClick={() => onToolChange("select")}
-                aria-label="Select tool (V)"
-              >
-                <MousePointer2 className="h-4 w-4" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">Select (V)</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                className={cn(
-                  "inline-flex items-center justify-center rounded-sm px-2 py-1.5 text-sm font-medium transition-all",
-                  activeTool === "pan"
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground hover:bg-background/50"
-                )}
-                onClick={() => onToolChange("pan")}
-                aria-label="Pan tool (H)"
-              >
-                <Hand className="h-4 w-4" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">Pan (H)</TooltipContent>
-          </Tooltip>
+          <ToolbarButton
+            icon={MousePointer2}
+            tooltip="Select (V)"
+            isActive={activeTool === "select"}
+            onClick={() => onToolChange("select")}
+            aria-label="Select tool (V)"
+            compact
+          />
+          <ToolbarButton
+            icon={Hand}
+            tooltip="Pan (H)"
+            isActive={activeTool === "pan"}
+            onClick={() => onToolChange("pan")}
+            aria-label="Pan tool (H)"
+            compact
+          />
         </div>
 
         {/* Undo / Redo */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              disabled={!canUndo}
-              onClick={onUndo}
-              aria-label="Undo (⌘Z)"
-            >
-              <Undo2 className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">Undo (⌘Z)</TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              disabled={!canRedo}
-              onClick={onRedo}
-              aria-label="Redo (⌘Y)"
-            >
-              <Redo2 className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">Redo (⌘⇧Z)</TooltipContent>
-        </Tooltip>
+        <ToolbarButton
+          icon={Undo2}
+          tooltip="Undo (⌘Z)"
+          disabled={!canUndo}
+          onClick={onUndo}
+          aria-label="Undo (⌘Z)"
+        />
+        <ToolbarButton
+          icon={Redo2}
+          tooltip="Redo (⌘⇧Z)"
+          disabled={!canRedo}
+          onClick={onRedo}
+          aria-label="Redo (⌘Y)"
+        />
 
         {/* Separator */}
         <div className="h-6 w-px bg-border mx-1" />
@@ -138,19 +108,14 @@ export const EditorToolbar = memo(function EditorToolbar({
         {/* Breakpoints */}
         <div className="flex items-center gap-0.5">
           {BREAKPOINTS.map(({ bp, label, icon: Icon, shortcut }) => (
-            <Tooltip key={bp}>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={breakpoint === bp ? "secondary" : "ghost"}
-                  size="icon-sm"
-                  onClick={() => onBreakpointChange(bp)}
-                  aria-label={`${label} breakpoint`}
-                >
-                  <Icon className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">{label} ({shortcut})</TooltipContent>
-            </Tooltip>
+            <ToolbarButton
+              key={bp}
+              icon={Icon}
+              tooltip={`${label} (${shortcut})`}
+              isActive={breakpoint === bp}
+              onClick={() => onBreakpointChange(bp)}
+              aria-label={`${label} breakpoint`}
+            />
           ))}
         </div>
 
@@ -159,47 +124,41 @@ export const EditorToolbar = memo(function EditorToolbar({
 
         {/* Zoom */}
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon-sm" onClick={zoomOut} aria-label="Zoom out">
-            <ZoomOut className="h-4 w-4" />
-          </Button>
+          <ToolbarButton 
+            icon={ZoomOut}
+            tooltip="Zoom out"
+            onClick={zoomOut}
+            aria-label="Zoom out"
+          />
           <span className="text-xs tabular-nums w-10 text-center">{zoomPct}%</span>
-          <Button variant="ghost" size="icon-sm" onClick={zoomIn} aria-label="Zoom in">
-            <ZoomIn className="h-4 w-4" />
-          </Button>
+          <ToolbarButton 
+            icon={ZoomIn}
+            tooltip="Zoom in"
+            onClick={zoomIn}
+            aria-label="Zoom in"
+          />
         </div>
 
         {/* Separator */}
         <div className="h-6 w-px bg-border mx-1" />
 
         {/* Grid toggle */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Toggle
-              size="sm"
-              pressed={showGrid}
-              onPressedChange={onGridToggle}
-              aria-label="Toggle grid"
-            >
-              <Grid className="h-4 w-4" />
-            </Toggle>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">Toggle Grid</TooltipContent>
-        </Tooltip>
+        <ToolbarToggle
+          icon={Grid}
+          tooltip="Toggle Grid"
+          pressed={showGrid}
+          onPressedChange={onGridToggle}
+          aria-label="Toggle grid"
+        />
 
         {/* Snap toggle */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Toggle
-              size="sm"
-              pressed={snapEnabled}
-              onPressedChange={onSnapToggle}
-              aria-label="Toggle snap"
-            >
-              <Magnet className="h-4 w-4" />
-            </Toggle>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">Snap to grid</TooltipContent>
-        </Tooltip>
+        <ToolbarToggle
+          icon={Magnet}
+          tooltip="Snap to grid"
+          pressed={snapEnabled}
+          onPressedChange={onSnapToggle}
+          aria-label="Toggle snap"
+        />
 
       </div>
     </TooltipProvider>
