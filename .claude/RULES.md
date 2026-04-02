@@ -677,6 +677,104 @@ When proposing or explaining changes, always structure the response as:
 
 ---
 
+## Documentation Standards
+
+### Organization
+
+**Principle:** Centralized core docs with per-package details.
+
+All documentation follows a **hybrid approach**:
+
+```
+.claude/docs/               ← Core documentation (centralized)
+├── SPECIFICATION.md       ← Project overview, architecture, design principles
+├── DATA_MODEL.md          ← BuilderDocument, types, component protocol
+├── COMMAND_SYSTEM.md      ← Commands, state, history, versioning
+├── EDITOR_UI.md           ← Canvas, panels, selection, snap, shortcuts
+├── RUNTIME.md             ← Rendering, dynamic loading, assets
+├── PLUGINS.md             ← Plugin system, PluginAPI, lifecycle
+├── ACCESSIBILITY.md       ← A11y, error handling, diagnostics
+└── INTEGRATION.md         ← Integration points, events, API catalogue
+
+packages/*/docs/          ← Per-package implementation details (optional)
+├── API.md                ← Deep-dive API reference
+├── INTERNALS.md          ← Internal architecture, state machines
+└── ...
+```
+
+**AI Agents MUST follow this structure** when adding or modifying documentation.
+
+### Where to Document
+
+When adding a new feature, determine the right `.claude/docs/*.md` file:
+
+| Feature Type | Location | Reference |
+| ------------ | -------- | --------- |
+| New command type | `COMMAND_SYSTEM.md` | Built-in Commands table |
+| New component capability | `DATA_MODEL.md` | ComponentCapabilities interface |
+| New UI panel or toolbar button | `EDITOR_UI.md` | Relevant panel section |
+| New rendering behavior | `RUNTIME.md` | Rendering pipeline section |
+| New plugin hook or API method | `PLUGINS.md` | PluginAPI interface |
+| New keyboard shortcut | `EDITOR_UI.md` | Keyboard Shortcut section |
+| New event emission | `INTEGRATION.md` | Event Catalogue table |
+| New error boundary scenario | `ACCESSIBILITY.md` | Error Boundary Contracts section |
+| Integration with external service | `INTEGRATION.md` | Integration Points table |
+
+### Documentation Format
+
+All `.claude/docs/*.md` files follow this format:
+
+```markdown
+# Section Title
+
+One-liner description of scope.
+
+---
+
+## Subsection
+
+### Code Examples
+
+TypeScript/JSX examples with clear context.
+
+### Lists & Tables
+
+Use tables for specifications, lists for concepts.
+
+---
+
+_For related info, see `OTHER_FILE.md` (section name)._
+```
+
+**Rules:**
+
+- Every interface/type must have JSDoc comment above definition
+- Every table must have column headers ('Name', 'Description', 'Required', etc.)
+- Code blocks must specify language: ` ```ts ` or ` ```tsx `
+- Cross-references use markdown links: `[PLUGINS.md](./PLUGINS.md)`
+- No duplicate information across files — reference instead of repeat
+- Line length max 100 characters for readability
+
+### Maintenance
+
+- Update docs when:
+  - Adding new command types
+  - Changing component/state contracts
+  - Adding/removing plugin API methods
+  - Adding keyboard shortcuts
+  - Emitting new events
+  - Changing integration requirements
+
+- **Update README.md ONLY FOR:**
+  - Quick start samples
+  - High-level architecture diagrams
+  - Design system overview
+  - Link updates to `.claude/docs/` files
+
+- **Never put detailed specs in README.md** — keep it <100 lines, gateway only
+
+---
+
 ## Anti-patterns
 
 > A consolidated list of patterns the AI agent (and all developers) must never produce. These complement the per-section rules above.
