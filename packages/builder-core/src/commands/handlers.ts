@@ -306,10 +306,21 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
       const node = state.document.nodes[nodeId];
       if (!node) return state;
 
-      const oldOrder = node.order;
+      // Get all siblings (same parent) sorted by current order
+      const allSiblings = Object.values(state.document.nodes)
+        .filter((n) => n.parentId === node.parentId)
+        .sort((a, b) => a.order - b.order);
 
+      // Remove the node from sorted list, then insert at target position
+      const withoutNode = allSiblings.filter((n) => n.id !== nodeId);
+      const targetIndex = Math.max(0, Math.min(insertIndex, withoutNode.length));
+      withoutNode.splice(targetIndex, 0, node);
+
+      // Reassign sequential order values (0, 1, 2, ...) to all siblings
       const newNodes = { ...state.document.nodes };
-      newNodes[nodeId] = { ...node, order: insertIndex };
+      withoutNode.forEach((n, i) => {
+        newNodes[n.id] = { ...n, order: i };
+      });
 
       return {
         ...state,
@@ -320,10 +331,19 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
         },
       };
     },
-    (state, payload) => ({
-      type: CMD_REORDER_NODE,
-      payload: { nodeId: payload.nodeId, insertIndex: state.document.nodes[payload.nodeId]?.order ?? 0 },
-    }),
+    (state, payload) => {
+      // Capture current position in sorted sibling list for undo
+      const node = state.document.nodes[payload.nodeId];
+      if (!node) return undefined;
+      const siblings = Object.values(state.document.nodes)
+        .filter((n) => n.parentId === node.parentId)
+        .sort((a, b) => a.order - b.order);
+      const currentIndex = siblings.findIndex((n) => n.id === payload.nodeId);
+      return {
+        type: CMD_REORDER_NODE,
+        payload: { nodeId: payload.nodeId, insertIndex: currentIndex >= 0 ? currentIndex : (node.order ?? 0) },
+      };
+    },
   );
 
   // ── MOVE_NODE ───────────────────────────────────────────────────────────

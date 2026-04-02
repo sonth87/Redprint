@@ -1,5 +1,5 @@
 import React from "react";
-import { Copy, Trash2, ArrowUp, ArrowDown } from "lucide-react";
+import { Copy, Trash2, ArrowUp, ArrowDown, GripVertical } from "lucide-react";
 import { useDocument } from "@ui-builder/builder-react";
 import { Button, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@ui-builder/ui";
 
@@ -12,9 +12,10 @@ export interface ContextualToolbarProps {
   onDuplicate: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
+  onDragHandlePointerDown: (e: React.PointerEvent) => void;
 }
 
-export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, rect, zoom, panOffset, onDelete, onDuplicate, onMoveUp, onMoveDown }) => {
+export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, rect, zoom, panOffset, onDelete, onDuplicate, onMoveUp, onMoveDown, onDragHandlePointerDown }) => {
   const { document } = useDocument();
   const node = document.nodes[nodeId];
 
@@ -44,9 +45,17 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
         onPointerDown={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
+        onDoubleClick={(e) => e.stopPropagation()}
       >
-        <div className="px-2 border-r text-[10px] font-bold text-muted-foreground uppercase tracking-wider select-none truncate max-w-[100px]">
-          {node.name || node.type}
+        <div
+          className="flex items-center gap-1 pl-1 pr-2 border-r cursor-grab active:cursor-grabbing touch-none"
+          onPointerDown={onDragHandlePointerDown}
+          title="Drag to move"
+        >
+          <GripVertical className="h-3 w-3 text-muted-foreground" />
+          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider select-none truncate max-w-[100px]">
+            {node.name || node.type}
+          </span>
         </div>
 
         <Tooltip>

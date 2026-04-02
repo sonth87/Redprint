@@ -555,8 +555,46 @@ function EditorInner() {
             panOffset={panOffset}
             onDelete={() => dispatch({ type: "REMOVE_NODE", payload: { nodeId: selectedNodeId }, description: "Delete" })}
             onDuplicate={() => dispatch({ type: "DUPLICATE_NODE", payload: { nodeId: selectedNodeId, offset: { x: 20, y: 20 }, newNodeId: uuidv4() }, description: "Duplicate" })}
-            onMoveUp={() => { const n = document.nodes[selectedNodeId]; if (n) dispatch({ type: "REORDER_NODE", payload: { nodeId: selectedNodeId, insertIndex: Math.max(0, n.order - 1) }, description: "Move up" }); }}
-            onMoveDown={() => { const n = document.nodes[selectedNodeId]; if (n) dispatch({ type: "REORDER_NODE", payload: { nodeId: selectedNodeId, insertIndex: n.order + 1 }, description: "Move down" }); }}
+            onMoveUp={() => {
+              const n = document.nodes[selectedNodeId];
+              if (!n) return;
+              // Sort siblings by effective zIndex, normalize, then swap up
+              const siblings = Object.values(document.nodes)
+                .filter((s) => s.parentId === n.parentId)
+                .sort((a, b) => Number(a.style.zIndex ?? 0) - Number(b.style.zIndex ?? 0));
+              const pos = siblings.findIndex((s) => s.id === selectedNodeId);
+              if (pos >= siblings.length - 1) return; // already on top
+              const above = siblings[pos + 1];
+              // Normalize all siblings to sequential zIndex then swap
+              siblings.forEach((s, i) => {
+                const newZ = i === pos ? pos + 1 : i === pos + 1 ? pos : i;
+                dispatch({ type: "UPDATE_STYLE", payload: { nodeId: s.id, style: { zIndex: newZ } }, description: "Move up" });
+              });
+            }}
+            onMoveDown={() => {
+              const n = document.nodes[selectedNodeId];
+              if (!n) return;
+              // Sort siblings by effective zIndex, normalize, then swap down
+              const siblings = Object.values(document.nodes)
+                .filter((s) => s.parentId === n.parentId)
+                .sort((a, b) => Number(a.style.zIndex ?? 0) - Number(b.style.zIndex ?? 0));
+              const pos = siblings.findIndex((s) => s.id === selectedNodeId);
+              if (pos <= 0) return; // already at bottom
+              // Normalize all siblings to sequential zIndex then swap
+              siblings.forEach((s, i) => {
+                const newZ = i === pos ? pos - 1 : i === pos - 1 ? pos : i;
+                dispatch({ type: "UPDATE_STYLE", payload: { nodeId: s.id, style: { zIndex: newZ } }, description: "Move down" });
+              });
+            }}
+            onDragHandlePointerDown={(e) => {
+              e.stopPropagation();
+              const n = document.nodes[selectedNodeId];
+              if (!n || n.locked) return;
+              const style = n.style || {};
+              const left = parseFloat(String(style.left ?? "0")) || 0;
+              const top = parseFloat(String(style.top ?? "0")) || 0;
+              setMoving({ nodeId: selectedNodeId, startPoint: { x: e.clientX, y: e.clientY }, startLeft: left, startTop: top, gestureGroupId: uuidv4() });
+            }}
           />
         )}
 
