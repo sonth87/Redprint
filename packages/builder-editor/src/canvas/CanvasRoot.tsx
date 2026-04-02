@@ -43,21 +43,19 @@ export function CanvasRoot({
   const MAX_ZOOM = 4;
   const ZOOM_SENSITIVITY = 0.001;
 
-  // ── Force repaint on zoom change to prevent blur ──────────────────────────
+  // ── Disable subpixel rendering on each zoom change to prevent blur ───────
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
-    // Trigger a repaint by temporarily modifying a style property
     const canvasDiv = el.querySelector("[style*='transform']") as HTMLElement | null;
     if (canvasDiv) {
-      const originalFilter = canvasDiv.style.filter;
-      canvasDiv.style.filter = "none";
-      // Force repaint
+      // Force layout recalculation with crisp rendering
+      canvasDiv.style.transform = "none";
       void canvasDiv.offsetHeight;
-      canvasDiv.style.filter = originalFilter;
+      canvasDiv.style.transform = `translate3d(${panOffset.x}px, ${panOffset.y}px, 0) scale(${zoom})`;
     }
-  }, [zoom]);
+  }, [zoom, panOffset]);
 
   // ── Wheel → Zoom or Pan ──────────────────────────────────────────────────
   useEffect(() => {
@@ -179,15 +177,17 @@ export function CanvasRoot({
       <div
         className="absolute"
         style={{
-          transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoom})`,
+          transform: `translate3d(${panOffset.x}px, ${panOffset.y}px, 0) scale3d(${zoom}, ${zoom}, 1)`,
           transformOrigin: "0 0",
-          willChange: "transform",
-          WebkitFontSmoothing: "subpixel-antialiased",
+          WebkitFontSmoothing: "antialiased",
           MozOsxFontSmoothing: "grayscale",
-          textRendering: "geometricPrecision",
+          textRendering: "optimizeLegibility",
           backfaceVisibility: "hidden",
-          imageRendering: "crisp-edges",
-          shapeRendering: "crispEdges",
+          perspective: "1000px",
+          imageRendering: "-webkit-optimize-contrast",
+          shapeRendering: "geometricPrecision",
+          paintOrder: "stroke fill markers",
+          transformStyle: "preserve-3d",
           contain: "layout style", // contain: "layout style paint", bỏ paint vì không hiển thị khi component bên ngoài
         }}
       >

@@ -64,7 +64,7 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
               <ArrowUp className="h-3 w-3" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="top">Move up</TooltipContent>
+          <TooltipContent side="top">Bring forward</TooltipContent>
         </Tooltip>
 
         <Tooltip>
@@ -73,7 +73,7 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
               <ArrowDown className="h-3 w-3" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="top">Move down</TooltipContent>
+          <TooltipContent side="top">Send backward</TooltipContent>
         </Tooltip>
 
         <Tooltip>
@@ -89,7 +89,7 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon-sm" className="h-6 w-6 hover:bg-destructive/10 hover:text-destructive" onClick={wrap(onDelete)}>
+            <Button variant="ghost" size="icon-sm" className="h-6 w-6 hover:bg-destructive/10 hover:text-destructive text-red-500" onClick={wrap(onDelete)}>
               <Trash2 className="h-3 w-3" />
             </Button>
           </TooltipTrigger>

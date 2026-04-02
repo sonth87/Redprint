@@ -16,8 +16,7 @@ import {
 } from "@ui-builder/builder-react";
 import type { BuilderAPI, BuilderConfig, ComponentDefinition, BuilderNode } from "@ui-builder/builder-core";
 import type { EditorTool, SnapGuide, ResizeHandleType } from "./types";
-import type { Point, Rect } from "@ui-builder/shared";
-import { snapToGrid } from "@ui-builder/shared";
+import { snapToGrid, type Point, type Rect } from "@ui-builder/shared";
 import { CanvasRoot } from "./canvas/CanvasRoot";
 import {
   SelectionOverlay,
@@ -153,6 +152,25 @@ function EditorInner() {
           const style = document.nodes[id]?.style || {};
           const left = parseFloat(String(style.left ?? "0")) || 0;
           const top = parseFloat(String(style.top ?? "0")) || 0;
+
+          // ── Ensure component has explicit width/height to prevent reflow during drag ──
+          // If component is positioned absolutely but lacks width/height, capture current dimensions
+          const el = target.closest("[data-node-id]") as HTMLElement;
+          if (
+            el &&
+            style.position === "absolute" &&
+            !style.width &&
+            !style.height
+          ) {
+            const w = el.offsetWidth;
+            const h = el.offsetHeight;
+            dispatch({
+              type: "UPDATE_STYLE",
+              payload: { nodeId: id, style: { width: `${w}px`, height: `${h}px` }, breakpoint },
+              description: "Lock component dimensions for drag",
+            });
+          }
+
           setMoving({ nodeId: id, startPoint: { x: e.clientX, y: e.clientY }, startLeft: left, startTop: top, gestureGroupId: uuidv4() });
           return;
         }
@@ -165,7 +183,7 @@ function EditorInner() {
         setRubberBanding({ startPoint: pt, currentPoint: pt });
       }
     },
-    [activeTool, dispatch, clearSelection, zoom, document.nodes, document.rootNodeId],
+    [activeTool, dispatch, clearSelection, zoom, document.nodes, document.rootNodeId, breakpoint],
   );
 
   // ── Hover ────────────────────────────────────────────────────────────────
@@ -285,6 +303,38 @@ function EditorInner() {
       height: elRect.height / zoom,
     });
   }, [hoveredNodeId, zoom, panOffset, document.nodes]);
+
+  // ── Capture dimensions for newly added absolutely-positioned components ──
+  useEffect(() => {
+    if (!canvasFrameRef.current) return;
+
+    // Find any newly added absolutely-positioned components without explicit width/height
+    for (const [nodeId, node] of Object.entries(document.nodes)) {
+      const n = node as BuilderNode;
+      if (
+        n.style?.position === "absolute" &&
+        !n.style.width &&
+        !n.style.height
+      ) {
+        const el = canvasFrameRef.current.querySelector(`[data-node-id="${nodeId}"]`) as HTMLElement;
+        if (el && el.offsetWidth > 0 && el.offsetHeight > 0) {
+          // Capture the component's current dimensions
+          dispatch({
+            type: "UPDATE_STYLE",
+            payload: {
+              nodeId,
+              style: {
+                width: `${el.offsetWidth}px`,
+                height: `${el.offsetHeight}px`,
+              },
+              breakpoint,
+            },
+            description: "Capture component dimensions",
+          });
+        }
+      }
+    }
+  }, [document.nodes, breakpoint, dispatch]);
 
   // ── Resize ───────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -558,32 +608,33 @@ function EditorInner() {
             onMoveUp={() => {
               const n = document.nodes[selectedNodeId];
               if (!n) return;
-              // Sort siblings by effective zIndex, normalize, then swap up
-              const siblings = Object.values(document.nodes)
+              // Bring Forward: raise z-index above the next sibling in stacking order.
+              // Use node.order as fallback z-index so unset siblings sort deterministically.
+              const siblings = (Object.values(document.nodes) as BuilderNode[])
                 .filter((s) => s.parentId === n.parentId)
-                .sort((a, b) => Number(a.style.zIndex ?? 0) - Number(b.style.zIndex ?? 0));
+                .sort((a, b) => Number(a.style.zIndex ?? a.order) - Number(b.style.zIndex ?? b.order));
               const pos = siblings.findIndex((s) => s.id === selectedNodeId);
-              if (pos >= siblings.length - 1) return; // already on top
-              const above = siblings[pos + 1];
-              // Normalize all siblings to sequential zIndex then swap
+              if (pos >= siblings.length - 1) return; // already front-most
+              // Normalize all siblings to sequential z-indexes 0,1,2,... then swap adjacent pair
+              const groupId = uuidv4();
               siblings.forEach((s, i) => {
                 const newZ = i === pos ? pos + 1 : i === pos + 1 ? pos : i;
-                dispatch({ type: "UPDATE_STYLE", payload: { nodeId: s.id, style: { zIndex: newZ } }, description: "Move up" });
+                dispatch({ type: "UPDATE_STYLE", payload: { nodeId: s.id, style: { zIndex: newZ } }, groupId, description: "Bring forward" });
               });
             }}
             onMoveDown={() => {
               const n = document.nodes[selectedNodeId];
               if (!n) return;
-              // Sort siblings by effective zIndex, normalize, then swap down
-              const siblings = Object.values(document.nodes)
+              // Send Backward: lower z-index below the previous sibling in stacking order.
+              const siblings = (Object.values(document.nodes) as BuilderNode[])
                 .filter((s) => s.parentId === n.parentId)
-                .sort((a, b) => Number(a.style.zIndex ?? 0) - Number(b.style.zIndex ?? 0));
+                .sort((a, b) => Number(a.style.zIndex ?? a.order) - Number(b.style.zIndex ?? b.order));
               const pos = siblings.findIndex((s) => s.id === selectedNodeId);
-              if (pos <= 0) return; // already at bottom
-              // Normalize all siblings to sequential zIndex then swap
+              if (pos <= 0) return; // already back-most
+              const groupId = uuidv4();
               siblings.forEach((s, i) => {
                 const newZ = i === pos ? pos - 1 : i === pos - 1 ? pos : i;
-                dispatch({ type: "UPDATE_STYLE", payload: { nodeId: s.id, style: { zIndex: newZ } }, description: "Move down" });
+                dispatch({ type: "UPDATE_STYLE", payload: { nodeId: s.id, style: { zIndex: newZ } }, groupId, description: "Send backward" });
               });
             }}
             onDragHandlePointerDown={(e) => {
