@@ -1,5 +1,5 @@
 import React, { memo, useCallback } from "react";
-import { Button, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider, Toggle } from "@ui-builder/ui";
+import { Button, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider, Toggle, cn } from "@ui-builder/ui";
 import type { Breakpoint } from "@ui-builder/builder-core";
 import { Monitor, Tablet, Smartphone, Undo2, Redo2, ZoomIn, ZoomOut, Grid, MousePointer2, Hand, Magnet } from "lucide-react";
 import type { EditorTool } from "../types";
@@ -62,33 +62,41 @@ export const EditorToolbar = memo(function EditorToolbar({
 
   return (
     <TooltipProvider delayDuration={400}>
-      <div className="absolute top-4 right-4 z-40 flex items-center h-10 px-3 gap-1.5 bg-background/95 backdrop-blur-md rounded-full border shadow-sm">
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 flex items-center h-10 px-3 gap-1.5 bg-background/95 backdrop-blur-md rounded-full border shadow-sm">
 
         {/* Tool selection */}
-        <div className="flex items-center gap-0.5 mr-2">
+        <div className="flex items-center gap-0.5 mr-2 bg-muted rounded-md p-1">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Toggle
-                size="sm"
-                pressed={activeTool === "select"}
-                onPressedChange={() => onToolChange("select")}
+              <button
+                className={cn(
+                  "inline-flex items-center justify-center rounded-sm px-2 py-1.5 text-sm font-medium transition-all",
+                  activeTool === "select"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                )}
+                onClick={() => onToolChange("select")}
                 aria-label="Select tool (V)"
               >
                 <MousePointer2 className="h-4 w-4" />
-              </Toggle>
+              </button>
             </TooltipTrigger>
             <TooltipContent side="bottom">Select (V)</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Toggle
-                size="sm"
-                pressed={activeTool === "pan"}
-                onPressedChange={() => onToolChange("pan")}
+              <button
+                className={cn(
+                  "inline-flex items-center justify-center rounded-sm px-2 py-1.5 text-sm font-medium transition-all",
+                  activeTool === "pan"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                )}
+                onClick={() => onToolChange("pan")}
                 aria-label="Pan tool (H)"
               >
                 <Hand className="h-4 w-4" />
-              </Toggle>
+              </button>
             </TooltipTrigger>
             <TooltipContent side="bottom">Pan (H)</TooltipContent>
           </Tooltip>

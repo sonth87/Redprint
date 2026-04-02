@@ -8,7 +8,7 @@ import {
   useHistory,
   NodeRenderer,
 } from "@ui-builder/builder-react";
-import type { BuilderAPI, BuilderConfig, ComponentDefinition } from "@ui-builder/builder-core";
+import type { BuilderAPI, BuilderConfig, CanvasConfig, ComponentDefinition } from "@ui-builder/builder-core";
 import { CanvasRoot } from "./canvas/CanvasRoot";
 import {
   SelectionOverlay,
@@ -19,6 +19,7 @@ import { EditorToolbar } from "./toolbar/EditorToolbar";
 import { ComponentPalette } from "./panels/left/ComponentPalette";
 import { LayerTree } from "./panels/bottom/LayerTree";
 import { PropertyPanel } from "./panels/right/PropertyPanel";
+import { PageSettings } from "./panels/right/PageSettings";
 import { cn } from "@ui-builder/ui";
 import { FloatingPanel } from "./panels/FloatingPanel";
 import { ContextualToolbar } from "./toolbar/ContextualToolbar";
@@ -154,6 +155,17 @@ function EditorInner() {
     setMoving,
     setRubberBanding,
   });
+
+  const handleCanvasConfigChange = useCallback(
+    (key: keyof CanvasConfig, value: unknown) => {
+      dispatch({
+        type: "UPDATE_CANVAS_CONFIG",
+        payload: { config: { [key]: value } },
+        description: "Update page settings",
+      });
+    },
+    [dispatch],
+  );
 
   const { onMoveUp, onMoveDown } = useZIndexHandlers({
     selectedNodeId,
@@ -325,18 +337,36 @@ function EditorInner() {
         </div>
       </FloatingPanel>
 
-      <FloatingPanel id="properties" title="Properties" defaultPosition={{ right: 16, y: 64 }}>
+      <FloatingPanel id="properties" title={selectedNode ? "Properties" : "Page Settings"} defaultPosition={{ right: 16, y: 64 }}>
         <div className="h-[75vh] min-h-[500px] max-h-[800px] overflow-hidden flex flex-col">
-          <PropertyPanel
-            selectedNode={selectedNode}
-            definition={selectedDefinition}
-            onPropChange={handlePropChange}
-            onStyleChange={handleStyleChange}
-          />
+          {selectedNode ? (
+            <PropertyPanel
+              selectedNode={selectedNode}
+              definition={selectedDefinition}
+              onPropChange={handlePropChange}
+              onStyleChange={handleStyleChange}
+            />
+          ) : (
+            <PageSettings
+              document={document}
+              onCanvasConfigChange={handleCanvasConfigChange}
+            />
+          )}
         </div>
       </FloatingPanel>
 
-      <div className="flex flex-col overflow-hidden bg-muted/20 absolute inset-0 z-0">
+      <div
+        className="flex flex-col overflow-hidden bg-muted/20 absolute inset-0 z-0"
+        onPointerDown={(e) => {
+          const target = e.target as HTMLElement;
+          if (
+            canvasFrameRef.current?.contains(target) ||
+            target.closest("[data-resize-handle]") ||
+            target.closest("[data-rotation-handle]")
+          ) return;
+          clearSelection();
+        }}
+      >
         <CanvasRoot
           canvasConfig={canvasConfigParams}
           zoom={zoom}
