@@ -57,7 +57,6 @@ function EditorInner() {
     panOffset, setPanOffset,
     activeTool, setActiveTool,
     showGrid, toggleGrid,
-    snapEnabled, toggleSnap,
   } = useViewport();
 
   // ── Derived ──────────────────────────────────────────────────────────────
@@ -72,12 +71,12 @@ function EditorInner() {
     () =>
       new SnapEngine({
         gridSize: document.canvasConfig.gridSize,
-        snapEnabled,
+        snapEnabled: showGrid,
         snapToGrid: showGrid,
         snapToComponents: document.canvasConfig.snapToComponents,
         threshold: document.canvasConfig.snapThreshold,
       }),
-    [document.canvasConfig, snapEnabled, showGrid],
+    [document.canvasConfig, showGrid],
   );
 
   // ── Gesture hooks ────────────────────────────────────────────────────────
@@ -101,7 +100,7 @@ function EditorInner() {
     snapGuides: moveSnapGuides,
   } = useMoveGesture({
     zoom, breakpoint,
-    snapEnabled, snapEngine,
+    snapEnabled: showGrid, snapEngine,
     nodes: document.nodes,
     canvasFrameRef,
     dispatch,
@@ -287,8 +286,8 @@ function EditorInner() {
   );
 
   const canvasConfigParams = useMemo(
-    () => ({ ...document.canvasConfig, showGrid, snapEnabled }),
-    [document.canvasConfig, showGrid, snapEnabled],
+    () => ({ ...document.canvasConfig, showGrid, snapEnabled: showGrid }),
+    [document.canvasConfig, showGrid],
   );
 
   // ── Render ───────────────────────────────────────────────────────────────
@@ -306,14 +305,12 @@ function EditorInner() {
         breakpoint={breakpoint}
         zoom={zoom}
         showGrid={showGrid}
-        snapEnabled={snapEnabled}
         canUndo={canUndo}
         canRedo={canRedo}
         activeTool={activeTool}
         onBreakpointChange={setBreakpoint}
         onZoomChange={setZoom}
         onGridToggle={toggleGrid}
-        onSnapToggle={toggleSnap}
         onUndo={undo}
         onRedo={redo}
         onToolChange={(tool) => {

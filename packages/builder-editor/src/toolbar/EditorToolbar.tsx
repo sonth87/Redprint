@@ -1,23 +1,20 @@
 import React, { memo, useCallback } from "react";
 import { TooltipProvider } from "@ui-builder/ui";
 import type { Breakpoint } from "@ui-builder/builder-core";
-import { Monitor, Tablet, Smartphone, Undo2, Redo2, ZoomIn, ZoomOut, Grid, MousePointer2, Hand, Magnet } from "lucide-react";
+import { Monitor, Tablet, Smartphone, Undo2, Redo2, ZoomIn, ZoomOut, Grid, MousePointer2, Hand } from "lucide-react";
 import type { EditorTool } from "../types";
 import { ToolbarButton } from "./ToolbarButton";
-import { ToolbarToggle } from "./ToolbarToggle";
 
 export interface EditorToolbarProps {
   breakpoint: Breakpoint;
   zoom: number;
   showGrid: boolean;
-  snapEnabled: boolean;
   canUndo: boolean;
   canRedo: boolean;
   activeTool: EditorTool;
   onBreakpointChange: (bp: Breakpoint) => void;
   onZoomChange: (zoom: number) => void;
   onGridToggle: () => void;
-  onSnapToggle: () => void;
   onUndo: () => void;
   onRedo: () => void;
   onToolChange: (tool: EditorTool) => void;
@@ -38,14 +35,12 @@ export const EditorToolbar = memo(function EditorToolbar({
   breakpoint,
   zoom,
   showGrid,
-  snapEnabled,
   canUndo,
   canRedo,
   activeTool,
   onBreakpointChange,
   onZoomChange,
   onGridToggle,
-  onSnapToggle,
   onUndo,
   onRedo,
   onToolChange,
@@ -64,10 +59,10 @@ export const EditorToolbar = memo(function EditorToolbar({
 
   return (
     <TooltipProvider delayDuration={400}>
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 flex items-center h-10 px-3 gap-1.5 bg-background/95 backdrop-blur-md rounded-full border shadow-sm">
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 flex items-center h-10 px-3 gap-1.5 bg-background/60 backdrop-blur-md rounded-full border shadow-sm">
 
         {/* Tool selection */}
-        <div className="flex items-center gap-0.5 mr-2 bg-muted rounded-md p-1">
+        <div className="flex items-center gap-0.5 mr-2 rounded-md p-1">
           <ToolbarButton
             icon={MousePointer2}
             tooltip="Select (V)"
@@ -115,6 +110,7 @@ export const EditorToolbar = memo(function EditorToolbar({
               isActive={breakpoint === bp}
               onClick={() => onBreakpointChange(bp)}
               aria-label={`${label} breakpoint`}
+              compact
             />
           ))}
         </div>
@@ -129,6 +125,7 @@ export const EditorToolbar = memo(function EditorToolbar({
             tooltip="Zoom out"
             onClick={zoomOut}
             aria-label="Zoom out"
+            compact
           />
           <span className="text-xs tabular-nums w-10 text-center">{zoomPct}%</span>
           <ToolbarButton 
@@ -136,6 +133,7 @@ export const EditorToolbar = memo(function EditorToolbar({
             tooltip="Zoom in"
             onClick={zoomIn}
             aria-label="Zoom in"
+            compact
           />
         </div>
 
@@ -143,21 +141,13 @@ export const EditorToolbar = memo(function EditorToolbar({
         <div className="h-6 w-px bg-border mx-1" />
 
         {/* Grid toggle */}
-        <ToolbarToggle
+        <ToolbarButton
           icon={Grid}
           tooltip="Toggle Grid"
-          pressed={showGrid}
-          onPressedChange={onGridToggle}
+          isActive={showGrid}
+          onClick={onGridToggle}
           aria-label="Toggle grid"
-        />
-
-        {/* Snap toggle */}
-        <ToolbarToggle
-          icon={Magnet}
-          tooltip="Snap to grid"
-          pressed={snapEnabled}
-          onPressedChange={onSnapToggle}
-          aria-label="Toggle snap"
+          compact
         />
 
       </div>

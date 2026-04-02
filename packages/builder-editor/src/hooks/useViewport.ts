@@ -20,10 +20,11 @@ export function useViewport(): UseViewportReturn {
   const [panOffset, setPanOffset] = useState<Point>({ x: 32, y: 32 });
   const [activeTool, setActiveTool] = useState<EditorTool>("select");
   const [showGrid, setShowGrid] = useState(true);
-  const [snapEnabled, setSnapEnabled] = useState(true);
 
   const toggleGrid = useCallback(() => setShowGrid((v) => !v), []);
-  const toggleSnap = useCallback(() => setSnapEnabled((v) => !v), []);
+  // snapEnabled always equals showGrid
+  const snapEnabled = showGrid;
+  const toggleSnap = useCallback(() => {}, []);
 
   return {
     zoom,
