@@ -85,6 +85,7 @@ export function createBuilder(config: BuilderConfig = {}): IBuilderAPI {
       zoom: 1,
       panOffset: { x: 0, y: 0 },
       clipboard: null,
+      canvasMode: "single",
     },
     interaction: {
       dragOperation: null,
@@ -112,7 +113,7 @@ export function createBuilder(config: BuilderConfig = {}): IBuilderAPI {
   );
 
   // Register all built-in command handlers (critical — must happen before any dispatch)
-  registerAllHandlers(commandEngine, registry);
+  registerAllHandlers(commandEngine, registry, eventBus);
 
   // Build the PluginAPI implementation
   const pluginStorageMap = new Map<string, Map<string, unknown>>();

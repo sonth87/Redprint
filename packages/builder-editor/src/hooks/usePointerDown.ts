@@ -21,6 +21,8 @@ interface UsePointerDownOptions {
   rootNodeId: string;
   nodes: Record<string, BuilderNode>;
   canvasFrameRef: React.RefObject<HTMLDivElement | null>;
+  /** In dual mode: the currently-active artboard ref for coordinate computations */
+  activeFrameRef?: React.RefObject<HTMLDivElement | null>;
   dragStartedRef: React.MutableRefObject<boolean>;
   dispatch: (action: { type: string; payload: unknown; description?: string }) => void;
   clearSelection: () => void;
@@ -38,6 +40,7 @@ export function usePointerDown({
   rootNodeId,
   nodes,
   canvasFrameRef,
+  activeFrameRef,
   dragStartedRef,
   dispatch,
   clearSelection,
@@ -77,7 +80,8 @@ export function usePointerDown({
             startLeft = parseFloat(String(style.left ?? "0")) || 0;
             startTop = parseFloat(String(style.top ?? "0")) || 0;
           } else if (el && canvasFrameRef.current) {
-            const frameRect = canvasFrameRef.current.getBoundingClientRect();
+            const frameEl = activeFrameRef?.current ?? canvasFrameRef.current;
+            const frameRect = frameEl.getBoundingClientRect();
             const elRect = el.getBoundingClientRect();
             startLeft = (elRect.left - frameRect.left) / zoom;
             startTop = (elRect.top - frameRect.top) / zoom;
@@ -122,6 +126,7 @@ export function usePointerDown({
       nodes,
       rootNodeId,
       canvasFrameRef,
+      activeFrameRef,
       dragStartedRef,
       setMoving,
       setRubberBanding,

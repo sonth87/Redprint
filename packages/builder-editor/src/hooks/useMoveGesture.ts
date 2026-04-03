@@ -22,6 +22,8 @@ interface UseMoveGestureOptions {
   snapEngine: SnapEngine;
   nodes: Record<string, BuilderNode>;
   canvasFrameRef: React.RefObject<HTMLDivElement | null>;
+  /** In dual mode: the currently-active artboard ref for snap coordinate computations */
+  activeFrameRef?: React.RefObject<HTMLDivElement | null>;
   dispatch: (action: { type: string; payload: unknown; groupId?: string; description?: string }) => void;
 }
 
@@ -42,6 +44,7 @@ export function useMoveGesture({
   snapEngine,
   nodes,
   canvasFrameRef,
+  activeFrameRef,
   dispatch,
 }: UseMoveGestureOptions): UseMoveGestureReturn {
   const [moving, setMoving] = useState<MovingState | null>(null);
@@ -92,7 +95,8 @@ export function useMoveGesture({
       let guides: SnapGuide[] = [];
 
       if (snapEnabled && canvasFrameRef.current) {
-        const nodeEl = canvasFrameRef.current.querySelector(
+        const frameEl = activeFrameRef?.current ?? canvasFrameRef.current;
+        const nodeEl = frameEl.querySelector(
           `[data-node-id="${moving.nodeId}"]`
         ) as HTMLElement;
         if (nodeEl) {
@@ -104,11 +108,11 @@ export function useMoveGesture({
           if (node?.parentId && canvasFrameRef.current) {
             for (const n of Object.values(nodes) as BuilderNode[]) {
               if (n.parentId === node.parentId && n.id !== moving.nodeId) {
-                const el = canvasFrameRef.current.querySelector(
+                const el = frameEl.querySelector(
                   `[data-node-id="${n.id}"]`
                 ) as HTMLElement;
                 if (el) {
-                  const fr = canvasFrameRef.current.getBoundingClientRect();
+                  const fr = frameEl.getBoundingClientRect();
                   const er = el.getBoundingClientRect();
                   siblings.push({
                     x: (er.left - fr.left) / zoom,
@@ -153,7 +157,7 @@ export function useMoveGesture({
       window.removeEventListener("mousemove", handleGlobalMouseMove);
       window.removeEventListener("mouseup", handleGlobalMouseUp);
     };
-  }, [moving, zoom, breakpoint, dispatch, snapEnabled, snapEngine, nodes, canvasFrameRef]);
+  }, [moving, zoom, breakpoint, dispatch, snapEnabled, snapEngine, nodes, canvasFrameRef, activeFrameRef]);
 
   return { moving, setMoving, dragStartedRef, snapGuides, setSnapGuides };
 }

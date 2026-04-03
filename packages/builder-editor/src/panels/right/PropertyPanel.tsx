@@ -1,6 +1,7 @@
 import React, { memo, useState, useCallback } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent, ScrollArea, Label, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, Switch, Separator, Badge } from "@ui-builder/ui";
-import type { BuilderNode, ComponentDefinition, PropSchema, InteractionConfig, InteractionTrigger, InteractionAction } from "@ui-builder/builder-core";
+import type { BuilderNode, Breakpoint, ComponentDefinition, PropSchema, InteractionConfig, InteractionTrigger, InteractionAction } from "@ui-builder/builder-core";
+import { resolveStyle, resolveProps } from "@ui-builder/builder-core";
 import {
   ChevronDown,
   ChevronRight,
@@ -20,6 +21,7 @@ import { cn } from "@ui-builder/ui";
 export interface PropertyPanelProps {
   selectedNode: BuilderNode | null;
   definition: ComponentDefinition | null;
+  breakpoint?: Breakpoint;
   onPropChange: (key: string, value: unknown) => void;
   onStyleChange: (key: string, value: unknown) => void;
   onInteractionsChange?: (interactions: InteractionConfig[]) => void;
@@ -407,6 +409,7 @@ const EASING_OPTIONS = [
 export const PropertyPanel = memo(function PropertyPanel({
   selectedNode,
   definition,
+  breakpoint,
   onPropChange,
   onStyleChange,
   onInteractionsChange,
@@ -420,7 +423,10 @@ export const PropertyPanel = memo(function PropertyPanel({
     );
   }
 
-  const style = selectedNode.style as Record<string, unknown>;
+  const activeBp = breakpoint ?? "desktop";
+  const resolvedStyle = resolveStyle(selectedNode.style, selectedNode.responsiveStyle ?? {}, activeBp);
+  const resolvedPropsMap = resolveProps(selectedNode.props, selectedNode.responsiveProps, activeBp);
+  const style = resolvedStyle as Record<string, unknown>;
   const interactions = selectedNode.interactions ?? [];
 
   const handleAddInteraction = () => {
@@ -507,7 +513,7 @@ export const PropertyPanel = memo(function PropertyPanel({
                           <PropControl
                             key={child.key}
                             schema={child}
-                            value={selectedNode.props[child.key]}
+                            value={resolvedPropsMap[child.key]}
                             onChange={(val) => onPropChange(child.key, val)}
                           />
                         ))}
@@ -518,7 +524,7 @@ export const PropertyPanel = memo(function PropertyPanel({
                     <PropControl
                       key={schema.key}
                       schema={schema}
-                      value={selectedNode.props[schema.key]}
+                      value={resolvedPropsMap[schema.key]}
                       onChange={(val) => onPropChange(schema.key, val)}
                     />
                   );

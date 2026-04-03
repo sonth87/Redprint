@@ -5,8 +5,9 @@
  * and the property panel dispatch the exact same commands — zero duplication.
  */
 
-import type { StyleConfig } from "../document/types";
+import type { StyleConfig, BuilderNode } from "../document/types";
 import type { Breakpoint } from "../responsive/types";
+import { resolveStyle, resolveProps } from "../responsive/resolver";
 
 // ── Descriptor types ──────────────────────────────────────────────────────
 
@@ -16,8 +17,10 @@ export interface PropertyDescriptor<T = unknown> {
   key: string;
   category: PropertyCategory;
   label: string;
-  /** Get the current value from a node */
-  getValue: (node: { props: Record<string, unknown>; style: StyleConfig }, breakpoint?: Breakpoint) => T;
+  /** Get the current value from a node, resolving breakpoint overrides */
+  getValue: (node: Pick<BuilderNode, "props" | "style" | "responsiveStyle" | "responsiveProps">, breakpoint?: Breakpoint) => T;
+  /** Returns true if the value is an explicit breakpoint override (not inherited from base) */
+  isOverridden: (node: Pick<BuilderNode, "responsiveStyle" | "responsiveProps">, breakpoint?: Breakpoint) => boolean;
   /** Build the dispatch payload for a change */
   toPayload: (nodeId: string, value: T, breakpoint?: Breakpoint) => {
     type: string;
@@ -31,6 +34,7 @@ export interface PropertyDescriptor<T = unknown> {
 /**
  * Create a descriptor for a style property (e.g. fontSize, color).
  * Dispatches UPDATE_STYLE with the correct breakpoint.
+ * When on mobile breakpoint, reads overridden value from responsiveStyle first.
  */
 export function createStyleProperty<T = string>(
   key: keyof StyleConfig & string,
@@ -40,7 +44,17 @@ export function createStyleProperty<T = string>(
     key,
     category: "style",
     label,
-    getValue: (node) => (node.style as Record<string, unknown>)[key] as T,
+    getValue: (node, breakpoint) => {
+      if (!breakpoint || breakpoint === "desktop") {
+        return (node.style as Record<string, unknown>)[key] as T;
+      }
+      const resolved = resolveStyle(node.style, node.responsiveStyle ?? {}, breakpoint);
+      return (resolved as Record<string, unknown>)[key] as T;
+    },
+    isOverridden: (node, breakpoint) => {
+      if (!breakpoint || breakpoint === "desktop") return false;
+      return key in (node.responsiveStyle?.[breakpoint] ?? {});
+    },
     toPayload: (nodeId, value, breakpoint) => ({
       type: "UPDATE_STYLE",
       payload: { nodeId, style: { [key]: value }, breakpoint },
@@ -51,7 +65,8 @@ export function createStyleProperty<T = string>(
 
 /**
  * Create a descriptor for a component prop (e.g. text, src, label).
- * Dispatches UPDATE_PROPS.
+ * On desktop, dispatches UPDATE_PROPS (base props).
+ * On mobile/tablet, dispatches UPDATE_RESPONSIVE_PROPS (per-breakpoint override).
  */
 export function createPropProperty<T = unknown>(
   key: string,
@@ -61,12 +76,31 @@ export function createPropProperty<T = unknown>(
     key,
     category: "prop",
     label,
-    getValue: (node) => node.props[key] as T,
-    toPayload: (nodeId, value) => ({
-      type: "UPDATE_PROPS",
-      payload: { nodeId, props: { [key]: value } },
-      description: `Set ${label}`,
-    }),
+    getValue: (node, breakpoint) => {
+      if (!breakpoint || breakpoint === "desktop") {
+        return node.props[key] as T;
+      }
+      const resolved = resolveProps(node.props, node.responsiveProps ?? {}, breakpoint);
+      return resolved[key] as T;
+    },
+    isOverridden: (node, breakpoint) => {
+      if (!breakpoint || breakpoint === "desktop") return false;
+      return key in (node.responsiveProps?.[breakpoint] ?? {});
+    },
+    toPayload: (nodeId, value, breakpoint) => {
+      if (!breakpoint || breakpoint === "desktop") {
+        return {
+          type: "UPDATE_PROPS",
+          payload: { nodeId, props: { [key]: value } },
+          description: `Set ${label}`,
+        };
+      }
+      return {
+        type: "UPDATE_RESPONSIVE_PROPS",
+        payload: { nodeId, breakpoint, props: { [key]: value } },
+        description: `Set ${label}`,
+      };
+    },
   };
 }
 

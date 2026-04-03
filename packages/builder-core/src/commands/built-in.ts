@@ -21,6 +21,11 @@ export const CMD_UNLOCK_NODE = "UNLOCK_NODE" as const;
 export const CMD_HIDE_NODE = "HIDE_NODE" as const;
 export const CMD_SHOW_NODE = "SHOW_NODE" as const;
 
+// Responsive
+export const CMD_TOGGLE_RESPONSIVE_HIDDEN = "TOGGLE_RESPONSIVE_HIDDEN" as const;
+export const CMD_UPDATE_RESPONSIVE_PROPS = "UPDATE_RESPONSIVE_PROPS" as const;
+export const CMD_RESET_RESPONSIVE_STYLE = "RESET_RESPONSIVE_STYLE" as const;
+
 // Group operations
 export const CMD_GROUP_NODES = "GROUP_NODES" as const;
 export const CMD_UNGROUP_NODES = "UNGROUP_NODES" as const;
@@ -29,6 +34,9 @@ export const CMD_UNGROUP_NODES = "UNGROUP_NODES" as const;
 export const CMD_SET_VARIABLE = "SET_VARIABLE" as const;
 export const CMD_UPDATE_CANVAS_CONFIG = "UPDATE_CANVAS_CONFIG" as const;
 export const CMD_LOAD_COMPONENT = "LOAD_COMPONENT" as const;
+
+// Editor UI
+export const CMD_SET_CANVAS_MODE = "SET_CANVAS_MODE" as const;
 
 // ── Payload Types ─────────────────────────────────────────────────────────
 
@@ -126,4 +134,28 @@ export interface UpdateCanvasConfigPayload {
 export interface LoadComponentPayload {
   manifestUrl: string;
   componentType: string;
+}
+
+export interface ToggleResponsiveHiddenPayload {
+  nodeId: string;
+  breakpoint: Breakpoint;
+  /** true = hide on this breakpoint, false = show (remove override) */
+  hidden: boolean;
+}
+
+export interface UpdateResponsivePropsPayload {
+  nodeId: string;
+  breakpoint: Breakpoint;
+  props: Record<string, unknown>;
+}
+
+export interface ResetResponsiveStylePayload {
+  nodeId: string;
+  breakpoint: Breakpoint;
+  /** CSS property keys to remove from the breakpoint override */
+  keys: string[];
+}
+
+export interface SetCanvasModePayload {
+  canvasMode: import("../state/types").CanvasMode;
 }

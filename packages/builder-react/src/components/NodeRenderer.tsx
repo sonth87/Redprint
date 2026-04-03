@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useRef } from "react";
 import type { BuilderNode, ComponentDefinition } from "@ui-builder/builder-core";
-import { resolveStyle } from "@ui-builder/builder-core";
+import { resolveStyle, resolveProps, resolveVisibility } from "@ui-builder/builder-core";
 import { useBuilder } from "../hooks/useBuilder";
+import { useResolvedBreakpoint } from "../hooks/useResolvedBreakpoint";
 
 export interface NodeRendererProps {
   nodeId: string;
@@ -24,6 +25,9 @@ export interface NodeRendererProps {
 export function NodeRenderer({ nodeId, mode = "editor" }: NodeRendererProps) {
   const { state, builder } = useBuilder();
   const node = state.document.nodes[nodeId];
+  // Use override context if inside a BreakpointOverrideProvider (e.g. dual canvas),
+  // otherwise fall back to global active breakpoint.
+  const breakpoint = useResolvedBreakpoint();
 
   // Track render errors to report via effect (avoids setState during render)
   const renderErrorRef = useRef<string | null>(null);
@@ -40,6 +44,30 @@ export function NodeRenderer({ nodeId, mode = "editor" }: NodeRendererProps) {
 
   if (!node) {
     return null;
+  }
+
+  // Check per-breakpoint visibility (respects responsiveHidden and global hidden).
+  // In editor mode: render a ghost/stub so the element still occupies space in the
+  // layer panel and can be re-shown. In runtime mode: omit entirely.
+  const visible = resolveVisibility(node, breakpoint);
+  if (!visible) {
+    if (mode === "runtime") return null;
+    // Editor: render placeholder so the node is still discoverable
+    return (
+      <div
+        data-node-id={nodeId}
+        data-hidden-on={breakpoint}
+        style={{
+          opacity: 0,
+          position: node.style.position === "absolute" ? "absolute" : undefined,
+          left: node.style.left,
+          top: node.style.top,
+          width: node.style.width,
+          height: node.style.height,
+          pointerEvents: "none",
+        }}
+      />
+    );
   }
 
   // Lookup registry — exposed via builder API
@@ -62,8 +90,11 @@ export function NodeRenderer({ nodeId, mode = "editor" }: NodeRendererProps) {
   const resolvedStyle = resolveStyle(
     node.style,
     node.responsiveStyle,
-    state.editor.activeBreakpoint,
+    breakpoint,
   );
+
+  // Resolve props: merge base props with breakpoint-specific overrides
+  const resolvedProps = resolveProps(node.props, node.responsiveProps, breakpoint);
 
   // Build children
   const childNodes = Object.values(state.document.nodes).filter(
@@ -78,7 +109,7 @@ export function NodeRenderer({ nodeId, mode = "editor" }: NodeRendererProps) {
 
   try {
     const rendered = renderer({
-      node,
+      node: { ...node, props: resolvedProps },
       children: children.length > 0 ? children : undefined,
       style: resolvedStyle,
       interactions: node.interactions,

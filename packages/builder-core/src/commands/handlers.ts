@@ -13,6 +13,7 @@ import type { BuilderNode, StyleConfig } from "../document/types";
 import type { Command } from "./types";
 import type { CommandEngine } from "./CommandEngine";
 import type { ComponentRegistry } from "../registry/ComponentRegistry";
+import type { EventBus } from "../events/EventBus";
 import type { Breakpoint } from "../responsive/types";
 import {
   CMD_ADD_NODE,
@@ -33,6 +34,10 @@ import {
   CMD_UNGROUP_NODES,
   CMD_SET_VARIABLE,
   CMD_UPDATE_CANVAS_CONFIG,
+  CMD_TOGGLE_RESPONSIVE_HIDDEN,
+  CMD_UPDATE_RESPONSIVE_PROPS,
+  CMD_RESET_RESPONSIVE_STYLE,
+  CMD_SET_CANVAS_MODE,
   type AddNodePayload,
   type RemoveNodePayload,
   type DuplicateNodePayload,
@@ -48,6 +53,10 @@ import {
   type UngroupNodesPayload,
   type SetVariablePayload,
   type UpdateCanvasConfigPayload,
+  type ToggleResponsiveHiddenPayload,
+  type UpdateResponsivePropsPayload,
+  type ResetResponsiveStylePayload,
+  type SetCanvasModePayload,
 } from "./built-in";
 
 // ── Editor-only command types (no undo/redo) ─────────────────────────────
@@ -156,7 +165,7 @@ function siblingCount(parentId: string | null, nodes: Record<string, BuilderNode
  * @param engine - The CommandEngine instance
  * @param registry - The ComponentRegistry (for defaultProps/defaultStyle lookup)
  */
-export function registerAllHandlers(engine: CommandEngine, registry: ComponentRegistry): void {
+export function registerAllHandlers(engine: CommandEngine, registry: ComponentRegistry, eventBus?: EventBus): void {
   const now = () => new Date().toISOString();
 
   // ── ADD_NODE ────────────────────────────────────────────────────────────
@@ -870,10 +879,14 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
 
   engine.registerHandler<SetBreakpointPayload>(
     CMD_SET_BREAKPOINT,
-    (state, payload) => ({
-      ...state,
-      editor: { ...state.editor, activeBreakpoint: payload.breakpoint },
-    }),
+    (state, payload) => {
+      // Emit breakpoint:changed event so plugins & consumers can react
+      eventBus?.emit("breakpoint:changed", { breakpoint: payload.breakpoint });
+      return {
+        ...state,
+        editor: { ...state.editor, activeBreakpoint: payload.breakpoint },
+      };
+    },
   );
 
   engine.registerHandler<{ data: import("../state/types").ClipboardData | null }>(
@@ -881,6 +894,143 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
     (state, payload) => ({
       ...state,
       editor: { ...state.editor, clipboard: payload.data },
+    }),
+  );
+
+  // ── TOGGLE_RESPONSIVE_HIDDEN ─────────────────────────────────────────────
+  engine.registerHandler<ToggleResponsiveHiddenPayload>(
+    CMD_TOGGLE_RESPONSIVE_HIDDEN,
+    (state, payload) => {
+      const { nodeId, breakpoint, hidden } = payload;
+      const node = state.document.nodes[nodeId];
+      if (!node) return state;
+
+      const currentResponsiveHidden = node.responsiveHidden ?? {};
+      const updatedHidden = { ...currentResponsiveHidden };
+      if (hidden) {
+        updatedHidden[breakpoint] = true;
+      } else {
+        delete updatedHidden[breakpoint];
+      }
+
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: now(),
+          nodes: {
+            ...state.document.nodes,
+            [nodeId]: {
+              ...node,
+              responsiveHidden: Object.keys(updatedHidden).length > 0 ? updatedHidden : undefined,
+              metadata: { ...node.metadata, updatedAt: now() },
+            },
+          },
+        },
+      };
+    },
+    (state, payload) => ({
+      type: CMD_TOGGLE_RESPONSIVE_HIDDEN,
+      payload: {
+        nodeId: payload.nodeId,
+        breakpoint: payload.breakpoint,
+        hidden: state.document.nodes[payload.nodeId]?.responsiveHidden?.[payload.breakpoint] === true,
+      },
+    }),
+  );
+
+  // ── UPDATE_RESPONSIVE_PROPS ──────────────────────────────────────────────
+  engine.registerHandler<UpdateResponsivePropsPayload>(
+    CMD_UPDATE_RESPONSIVE_PROPS,
+    (state, payload) => {
+      const { nodeId, breakpoint, props } = payload;
+      const node = state.document.nodes[nodeId];
+      if (!node) return state;
+
+      const currentResponsiveProps = node.responsiveProps?.[breakpoint] ?? {};
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: now(),
+          nodes: {
+            ...state.document.nodes,
+            [nodeId]: {
+              ...node,
+              responsiveProps: {
+                ...(node.responsiveProps ?? {}),
+                [breakpoint]: { ...currentResponsiveProps, ...props },
+              },
+              metadata: { ...node.metadata, updatedAt: now() },
+            },
+          },
+        },
+      };
+    },
+    (state, payload) => {
+      const node = state.document.nodes[payload.nodeId];
+      const oldProps: Record<string, unknown> = {};
+      for (const key of Object.keys(payload.props)) {
+        oldProps[key] = node?.responsiveProps?.[payload.breakpoint]?.[key];
+      }
+      return {
+        type: CMD_UPDATE_RESPONSIVE_PROPS,
+        payload: { nodeId: payload.nodeId, breakpoint: payload.breakpoint, props: oldProps },
+      };
+    },
+  );
+
+  // ── RESET_RESPONSIVE_STYLE ───────────────────────────────────────────────
+  engine.registerHandler<ResetResponsiveStylePayload>(
+    CMD_RESET_RESPONSIVE_STYLE,
+    (state, payload) => {
+      const { nodeId, breakpoint, keys } = payload;
+      const node = state.document.nodes[nodeId];
+      if (!node) return state;
+
+      const currentOverride = { ...(node.responsiveStyle[breakpoint] ?? {}) };
+      for (const key of keys) {
+        delete (currentOverride as Record<string, unknown>)[key];
+      }
+
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: now(),
+          nodes: {
+            ...state.document.nodes,
+            [nodeId]: {
+              ...node,
+              responsiveStyle: {
+                ...node.responsiveStyle,
+                [breakpoint]: Object.keys(currentOverride).length > 0 ? currentOverride : undefined,
+              },
+              metadata: { ...node.metadata, updatedAt: now() },
+            },
+          },
+        },
+      };
+    },
+    (state, payload) => {
+      const node = state.document.nodes[payload.nodeId];
+      const oldStyle: Partial<StyleConfig> = {};
+      for (const key of payload.keys as Array<keyof StyleConfig>) {
+        oldStyle[key] = (node?.responsiveStyle[payload.breakpoint] ?? {})[key] as never;
+      }
+      return {
+        type: CMD_UPDATE_RESPONSIVE_STYLE,
+        payload: { nodeId: payload.nodeId, breakpoint: payload.breakpoint, style: oldStyle },
+      };
+    },
+  );
+
+  // ── SET_CANVAS_MODE (editor-only, no undo/redo) ──────────────────────────
+  engine.registerHandler<SetCanvasModePayload>(
+    CMD_SET_CANVAS_MODE,
+    (state, payload) => ({
+      ...state,
+      editor: { ...state.editor, canvasMode: payload.canvasMode },
     }),
   );
 }
