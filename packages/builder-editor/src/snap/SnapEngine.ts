@@ -1,6 +1,6 @@
 import type { Point, Rect } from "@ui-builder/shared";
 import { snapToGrid, clamp } from "@ui-builder/shared";
-import type { SnapGuide } from "../types";
+import type { SnapGuide, DistanceGuide } from "../types";
 import type { BuilderNode } from "@ui-builder/builder-core";
 
 export interface SnapEngineConfig {
@@ -108,5 +108,155 @@ export class SnapEngine {
     }
 
     return { snappedPoint: { x, y }, guides };
+  }
+
+  /**
+   * Find the nearest sibling rect on each edge (left, right, top, bottom) and
+   * compute distance guides for visual feedback during drag/resize.
+   *
+   * Only siblings within `threshold` px are considered.
+   *
+   * @param draggingRect  The current bounding rect of the element being moved/resized
+   * @param otherRects    Sibling bounding rects to measure against
+   * @param threshold     Max distance (canvas px) to look for neighbors
+   */
+  distanceGuides(
+    draggingRect: Rect,
+    otherRects: Rect[],
+    threshold = 100,
+  ): DistanceGuide[] {
+    const guides: DistanceGuide[] = [];
+
+    const dLeft = draggingRect.x;
+    const dRight = draggingRect.x + draggingRect.width;
+    const dTop = draggingRect.y;
+    const dBottom = draggingRect.y + draggingRect.height;
+    const dCX = draggingRect.x + draggingRect.width / 2;
+    const dCY = draggingRect.y + draggingRect.height / 2;
+
+    // Nearest sibling per edge — track best candidate {distance, lineStart, lineEnd, linePosition}
+    type Candidate = { distance: number; lineStart: number; lineEnd: number; linePosition: number };
+    let bestLeft: Candidate | null = null;
+    let bestRight: Candidate | null = null;
+    let bestTop: Candidate | null = null;
+    let bestBottom: Candidate | null = null;
+
+    for (const other of otherRects) {
+      const oLeft = other.x;
+      const oRight = other.x + other.width;
+      const oTop = other.y;
+      const oBottom = other.y + other.height;
+      const oCY = other.y + other.height / 2;
+      const oCX = other.x + other.width / 2;
+
+      // --- Left gap: sibling is to the LEFT of dragging element ---
+      // The gap is between oRight and dLeft
+      if (oRight <= dLeft) {
+        const gap = dLeft - oRight;
+        if (gap <= threshold) {
+          // The guide line runs horizontally at the dragging element's vertical center
+          const lineY = clamp(dCY, Math.max(dTop, oTop), Math.min(dBottom, oBottom));
+          if (!bestLeft || gap < bestLeft.distance) {
+            bestLeft = { distance: gap, lineStart: oRight, lineEnd: dLeft, linePosition: lineY };
+          }
+        }
+      }
+
+      // --- Right gap: sibling is to the RIGHT ---
+      if (oLeft >= dRight) {
+        const gap = oLeft - dRight;
+        if (gap <= threshold) {
+          const lineY = clamp(dCY, Math.max(dTop, oTop), Math.min(dBottom, oBottom));
+          if (!bestRight || gap < bestRight.distance) {
+            bestRight = { distance: gap, lineStart: dRight, lineEnd: oLeft, linePosition: lineY };
+          }
+        }
+      }
+
+      // --- Top gap: sibling is ABOVE ---
+      if (oBottom <= dTop) {
+        const gap = dTop - oBottom;
+        if (gap <= threshold) {
+          const lineX = clamp(dCX, Math.max(dLeft, oLeft), Math.min(dRight, oRight));
+          if (!bestTop || gap < bestTop.distance) {
+            bestTop = { distance: gap, lineStart: oBottom, lineEnd: dTop, linePosition: lineX };
+          }
+        }
+      }
+
+      // --- Bottom gap: sibling is BELOW ---
+      if (oTop >= dBottom) {
+        const gap = oTop - dBottom;
+        if (gap <= threshold) {
+          const lineX = clamp(dCX, Math.max(dLeft, oLeft), Math.min(dRight, oRight));
+          if (!bestBottom || gap < bestBottom.distance) {
+            bestBottom = { distance: gap, lineStart: dBottom, lineEnd: oTop, linePosition: lineX };
+          }
+        }
+      }
+    }
+
+    if (bestLeft)   guides.push({ edge: "left",   ...bestLeft });
+    if (bestRight)  guides.push({ edge: "right",  ...bestRight });
+    if (bestTop)    guides.push({ edge: "top",    ...bestTop });
+    if (bestBottom) guides.push({ edge: "bottom", ...bestBottom });
+
+    return guides;
+  }
+
+  /**
+   * Compute visual alignment guide lines against ALL nodes on canvas (cross-container).
+   *
+   * Unlike `snap()`, this does NOT adjust the dragging position. It only returns
+   * guide lines to show horizontal/vertical alignment with any other element,
+   * regardless of parent hierarchy.
+   *
+   * Both `draggingRect` and `otherRects` must be in the same canvas-frame
+   * coordinate space (pixels from top-left of canvas frame, pre-zoom).
+   *
+   * @param draggingRect  Bounding rect of the element being moved/resized (canvas coords)
+   * @param otherRects    All other visible node rects in canvas coords
+   */
+  alignmentGuides(draggingRect: Rect, otherRects: Rect[]): SnapGuide[] {
+    if (!this.config.snapToComponents || otherRects.length === 0) return [];
+
+    const guides: SnapGuide[] = [];
+    const seen = new Set<string>();
+    const add = (guide: SnapGuide) => {
+      const key = `${guide.type}:${guide.position}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        guides.push(guide);
+      }
+    };
+
+    const { x, y, width, height } = draggingRect;
+    const dragCX = x + width / 2;
+    const dragCY = y + height / 2;
+    const dragRight = x + width;
+    const dragBottom = y + height;
+
+    for (const other of otherRects) {
+      const oCX = other.x + other.width / 2;
+      const oCY = other.y + other.height / 2;
+      const oRight = other.x + other.width;
+      const oBottom = other.y + other.height;
+
+      // ── Horizontal alignment guides (shared Y positions) ──────────────
+      if (Math.abs(y - other.y)        < this.config.threshold) add({ type: "horizontal", position: other.y,   source: "component-edge" });
+      if (Math.abs(y - oBottom)        < this.config.threshold) add({ type: "horizontal", position: oBottom,   source: "component-edge" });
+      if (Math.abs(dragBottom - other.y)  < this.config.threshold) add({ type: "horizontal", position: other.y,   source: "component-edge" });
+      if (Math.abs(dragBottom - oBottom)  < this.config.threshold) add({ type: "horizontal", position: oBottom,   source: "component-edge" });
+      if (Math.abs(dragCY - oCY)       < this.config.threshold) add({ type: "horizontal", position: oCY,      source: "component-center" });
+
+      // ── Vertical alignment guides (shared X positions) ────────────────
+      if (Math.abs(x - other.x)        < this.config.threshold) add({ type: "vertical",   position: other.x,   source: "component-edge" });
+      if (Math.abs(x - oRight)         < this.config.threshold) add({ type: "vertical",   position: oRight,    source: "component-edge" });
+      if (Math.abs(dragRight - other.x)   < this.config.threshold) add({ type: "vertical",   position: other.x,   source: "component-edge" });
+      if (Math.abs(dragRight - oRight)    < this.config.threshold) add({ type: "vertical",   position: oRight,    source: "component-edge" });
+      if (Math.abs(dragCX - oCX)       < this.config.threshold) add({ type: "vertical",   position: oCX,       source: "component-center" });
+    }
+
+    return guides;
   }
 }

@@ -36,6 +36,32 @@ export interface SnapGuide {
   nodeIds?: string[];
 }
 
+/**
+ * A distance guide shows the gap between the dragging/resizing element
+ * and its nearest sibling on one edge. Rendered as a bracketed line with a label.
+ */
+export interface DistanceGuide {
+  /** Which edge of the dragging element this distance is measured from */
+  edge: "left" | "right" | "top" | "bottom";
+  /** Pixel distance between the dragging element edge and the sibling edge */
+  distance: number;
+  /** Canvas-coordinate start of the gap line (x for horizontal, y for vertical) */
+  lineStart: number;
+  /** Canvas-coordinate end of the gap line */
+  lineEnd: number;
+  /**
+   * For a horizontal gap (left/right edges): the Y axis position of the line.
+   * For a vertical gap (top/bottom edges): the X axis position of the line.
+   */
+  linePosition: number;
+}
+
+/** Live dimensions (width/height) of an element during drag or resize */
+export interface LiveDimensions {
+  width: number;
+  height: number;
+}
+
 export interface SelectionState {
   selectedIds: string[];
   /** The bounding box covering all selected nodes */

@@ -19,7 +19,7 @@ import {
 } from "@ui-builder/builder-core";
 import { Monitor, Smartphone, GripVertical } from "lucide-react";
 import { CanvasRoot } from "./canvas/CanvasRoot";
-import { SelectionOverlay, SnapGuides, HoverOutline } from "./overlay/EditorOverlay";
+import { SelectionOverlay, SnapGuides, HoverOutline, DistanceGuides, LiveDimensionsDisplay } from "./overlay/EditorOverlay";
 import { EditorToolbar } from "./toolbar/EditorToolbar";
 import { ComponentPalette } from "./panels/left/ComponentPalette";
 import { LayerTree } from "./panels/bottom/LayerTree";
@@ -146,11 +146,20 @@ function EditorInner() {
   );
 
   // ── Gesture hooks ────────────────────────────────────────────────────────
-  const { setResizing, snapGuides: resizeSnapGuides } = useResizeGesture({
+  const {
+    setResizing,
+    snapGuides: resizeSnapGuides,
+    distanceGuides: resizeDistanceGuides,
+    liveDimensions: resizeLiveDimensions,
+  } = useResizeGesture({
     zoom,
     breakpoint,
     showGrid,
     gridSize: document.canvasConfig.gridSize,
+    snapEngine,
+    nodes: document.nodes,
+    canvasFrameRef,
+    activeFrameRef,
     dispatch,
   });
 
@@ -164,6 +173,8 @@ function EditorInner() {
     setMoving,
     dragStartedRef,
     snapGuides: moveSnapGuides,
+    distanceGuides: moveDistanceGuides,
+    liveDimensions: moveLiveDimensions,
   } = useMoveGesture({
     zoom,
     breakpoint,
@@ -176,6 +187,8 @@ function EditorInner() {
   });
 
   const snapGuides = moving ? moveSnapGuides : resizeSnapGuides;
+  const distanceGuides = moving ? moveDistanceGuides : resizeDistanceGuides;
+  const liveDimensions = moving ? moveLiveDimensions : resizeLiveDimensions;
 
   const { rotating, startRotate } = useRotateGesture({ breakpoint, dispatch });
 
@@ -736,6 +749,14 @@ function EditorInner() {
             canvasWidth={canvasWidth}
             canvasHeight={canvasMinHeight}
           />
+          <DistanceGuides guides={distanceGuides} zoom={zoom} />
+          {selectionRect && liveDimensions && (
+            <LiveDimensionsDisplay
+              bounds={selectionRect}
+              dimensions={liveDimensions}
+              zoom={zoom}
+            />
+          )}
         </CanvasRoot>
 
         {selectedNodeId && selectionRect && (
