@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { resolveStyle, resolveProps, resolveVisibility } from "../../src/responsive/resolver";
-import type { BuilderNode } from "../../src/document/types";
-import type { StyleConfig } from "../../src/document/types";
+import type { BuilderNode, StyleConfig } from "../../src/document/types";
 
 // ── resolveStyle ────────────────────────────────────────────────────────────
 

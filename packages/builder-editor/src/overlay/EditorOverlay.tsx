@@ -1,7 +1,6 @@
 import React, { memo } from "react";
-import type { Rect, Point } from "@ui-builder/shared";
+import type { Rect } from "@ui-builder/shared";
 import type { SelectionState, SnapGuide, ResizeHandleType, DistanceGuide, LiveDimensions } from "../types";
-import { cn } from "@ui-builder/ui";
 
 // ── Selection bounding box ─────────────────────────────────────────────────
 
@@ -28,7 +27,7 @@ const HANDLE_CURSORS: Record<ResizeHandleType, string> = {
   ne: "ne-resize", nw: "nw-resize", se: "se-resize", sw: "sw-resize",
 };
 
-const ResizeHandle = memo(({ handle, bounds, zoom, onMouseDown }: ResizeHandleProps) => {
+const ResizeHandle = memo(({ handle, bounds: _bounds, zoom, onMouseDown }: ResizeHandleProps) => {
   const pos = HANDLE_POSITIONS[handle];
   const size = Math.max(6, 8 / zoom);
   return (
@@ -67,7 +66,7 @@ export interface SelectionOverlayProps {
 export const SelectionOverlay = memo(function SelectionOverlay({
   selection,
   zoom,
-  rotation = 0,
+  rotation: _rotation = 0,
   isSection = false,
   onResizeStart,
   onRotateStart,

@@ -26,6 +26,8 @@
   "toolbar": {
     "undo": "Undo",
     "redo": "Redo",
+    "select": "Select",
+    "pan": "Pan",
     "desktop": "Desktop",
     "tablet": "Tablet",
     "mobile": "Mobile",
@@ -36,9 +38,11 @@
     "snap": "Snap",
     "preview": "Preview",
     "export": "Export",
-    "import": "Import"
+    "import": "Import",
+    "aiAssistant": "AI Assistant"
   },
   "contextToolbar": {
+    "dragToMove": "Drag to move",
     "moveUp": "Move up",
     "moveDown": "Move down",
     "duplicate": "Duplicate",
@@ -255,6 +259,7 @@
     "maxTokens": "Max Tokens",
     "systemPrompt": "System Prompt",
     "defaultSystemPrompt": "You are an AI assistant for a visual UI builder. Help users build, modify, and improve their web page designs.",
+    "apiKeyNotConfigured": "API key is not configured. Please open AI settings.",
     "providers": {
       "openai": "OpenAI (ChatGPT)",
       "gemini": "Google Gemini",

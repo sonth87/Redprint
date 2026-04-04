@@ -26,6 +26,8 @@
   "toolbar": {
     "undo": "Hoàn tác",
     "redo": "Làm lại",
+    "select": "Chọn",
+    "pan": "Di chuyển",
     "desktop": "Máy tính",
     "tablet": "Máy tính bảng",
     "mobile": "Điện thoại",
@@ -36,9 +38,11 @@
     "snap": "Hút dính",
     "preview": "Xem trước",
     "export": "Xuất",
-    "import": "Nhập"
+    "import": "Nhập",
+    "aiAssistant": "Trợ lý AI"
   },
   "contextToolbar": {
+    "dragToMove": "Kéo để di chuyển",
     "moveUp": "Di chuyển lên",
     "moveDown": "Di chuyển xuống",
     "duplicate": "Nhân đôi",
@@ -255,6 +259,7 @@
     "maxTokens": "Token tối đa",
     "systemPrompt": "Prompt hệ thống",
     "defaultSystemPrompt": "Bạn là trợ lý AI cho trình xây dựng giao diện trực quan. Hãy giúp người dùng xây dựng, chỉnh sửa và cải thiện thiết kế trang web.",
+    "apiKeyNotConfigured": "Chưa cấu hình API key. Vui lòng mở cài đặt AI.",
     "providers": {
       "openai": "OpenAI (ChatGPT)",
       "gemini": "Google Gemini",

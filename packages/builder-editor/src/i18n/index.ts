@@ -14,16 +14,20 @@ export const defaultResources = {
   vi: { translation: vi },
 } as const;
 
-let initialized = false;
-
 /**
- * Initialize i18n. Safe to call multiple times — only the first call takes effect.
+ * Initialize i18n. Safe to call multiple times.
+ * - First call performs full initialization with the given options (or defaults).
+ * - Subsequent calls with a `language` option switch the active language without
+ *   re-initializing, which avoids i18next double-init warnings.
  */
 export function initI18n(options?: {
   language?: string;
   resources?: Record<string, { translation: Record<string, unknown> }>;
 }) {
-  if (initialized) return i18n;
+  if (i18n.isInitialized) {
+    if (options?.language) i18n.changeLanguage(options.language);
+    return i18n;
+  }
 
   const resources = options?.resources
     ? { ...defaultResources, ...options.resources }
@@ -41,9 +45,12 @@ export function initI18n(options?: {
     },
   });
 
-  initialized = true;
   return i18n;
 }
+
+// Auto-initialize with defaults so every component using useTranslation()
+// gets translated strings without requiring the consumer to call initI18n().
+initI18n();
 
 export { i18n };
 export type SupportedLocale = "en" | "vi";

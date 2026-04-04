@@ -15,6 +15,7 @@ import {
   Separator,
 } from "@ui-builder/ui";
 import type { AIConfig as AIConfigType, AIProvider } from "./types";
+import { useTranslation } from "react-i18next";
 
 // ── Props ───────────────────────────────────────────────────────────────
 
@@ -47,6 +48,7 @@ const PROVIDER_MODELS: Record<AIProvider, { value: string; label: string }[]> = 
 // ── Component ───────────────────────────────────────────────────────────
 
 export function AIConfigPanel({ config, onChange }: AIConfigPanelProps) {
+  const { t } = useTranslation();
   const update = <K extends keyof AIConfigType>(key: K, value: AIConfigType[K]) => {
     onChange({ ...config, [key]: value });
   };
@@ -57,12 +59,12 @@ export function AIConfigPanel({ config, onChange }: AIConfigPanelProps) {
   return (
     <div className="space-y-4 p-4 text-sm">
       <h3 className="font-medium text-xs text-muted-foreground uppercase tracking-wider">
-        AI Configuration
+        {t("ai.configTitle")}
       </h3>
 
       {/* Provider */}
       <div className="space-y-1.5">
-        <Label className="text-xs">Provider</Label>
+        <Label className="text-xs">{t("ai.provider")}</Label>
         <Select
           value={config.provider}
           onValueChange={(v) => {
@@ -75,16 +77,16 @@ export function AIConfigPanel({ config, onChange }: AIConfigPanelProps) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="openai">OpenAI</SelectItem>
-            <SelectItem value="gemini">Google Gemini</SelectItem>
-            <SelectItem value="claude">Anthropic Claude</SelectItem>
+            <SelectItem value="openai">{t("ai.providers.openai")}</SelectItem>
+            <SelectItem value="gemini">{t("ai.providers.gemini")}</SelectItem>
+            <SelectItem value="claude">{t("ai.providers.claude")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {/* API Key */}
       <div className="space-y-1.5">
-        <Label className="text-xs">API Key</Label>
+        <Label className="text-xs">{t("ai.apiKey")}</Label>
         <Input
           type="password"
           value={config.apiKey}
@@ -99,7 +101,7 @@ export function AIConfigPanel({ config, onChange }: AIConfigPanelProps) {
 
       {/* Model */}
       <div className="space-y-1.5">
-        <Label className="text-xs">Model</Label>
+        <Label className="text-xs">{t("ai.model")}</Label>
         <Select
           value={config.model || defaultModel}
           onValueChange={(v) => update("model", v)}
@@ -122,7 +124,7 @@ export function AIConfigPanel({ config, onChange }: AIConfigPanelProps) {
       {/* Temperature */}
       <div className="space-y-1.5">
         <div className="flex justify-between items-center">
-          <Label className="text-xs">Temperature</Label>
+          <Label className="text-xs">{t("ai.temperature")}</Label>
           <span className="text-[10px] text-muted-foreground">
             {(config.temperature ?? 0.7).toFixed(1)}
           </span>
@@ -142,7 +144,7 @@ export function AIConfigPanel({ config, onChange }: AIConfigPanelProps) {
 
       {/* Max tokens */}
       <div className="space-y-1.5">
-        <Label className="text-xs">Max Tokens</Label>
+        <Label className="text-xs">{t("ai.maxTokens")}</Label>
         <Input
           type="number"
           value={config.maxTokens ?? 2048}
@@ -158,7 +160,7 @@ export function AIConfigPanel({ config, onChange }: AIConfigPanelProps) {
 
       {/* System Prompt */}
       <div className="space-y-1.5">
-        <Label className="text-xs">System Prompt (optional)</Label>
+        <Label className="text-xs">{t("ai.systemPrompt")}</Label>
         <textarea
           value={config.systemPrompt ?? ""}
           onChange={(e) => update("systemPrompt", e.target.value)}

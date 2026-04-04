@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Copy, Trash2, ArrowUp, ArrowDown, GripVertical } from "lucide-react";
 import { useDocument } from "@ui-builder/builder-react";
 import { Button, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@ui-builder/ui";
@@ -18,6 +19,7 @@ export interface ContextualToolbarProps {
 
 export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, rect, zoom, panOffset, onDelete, onDuplicate, onMoveUp, onMoveDown, onDragHandlePointerDown }) => {
   const { document } = useDocument();
+  const { t } = useTranslation();
   const node = document.nodes[nodeId];
 
   if (!node) return null;
@@ -51,7 +53,7 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
         <div
           className="flex items-center gap-1 pl-1 pr-2 border-r cursor-grab active:cursor-grabbing touch-none"
           onPointerDown={onDragHandlePointerDown}
-          title="Drag to move"
+          title={t("contextToolbar.dragToMove")}
         >
           <GripVertical className="h-3 w-3 text-muted-foreground" />
           <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider select-none truncate max-w-[100px]">
@@ -65,7 +67,7 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
               <ArrowUp className="h-3 w-3" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="top">Bring forward</TooltipContent>
+          <TooltipContent side="top">{t("contextToolbar.moveUp")}</TooltipContent>
         </Tooltip>
 
         <Tooltip>
@@ -74,7 +76,7 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
               <ArrowDown className="h-3 w-3" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="top">Send backward</TooltipContent>
+          <TooltipContent side="top">{t("contextToolbar.moveDown")}</TooltipContent>
         </Tooltip>
 
         <Tooltip>
@@ -83,7 +85,7 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
               <Copy className="h-3 w-3" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="top">Duplicate</TooltipContent>
+          <TooltipContent side="top">{t("contextToolbar.duplicate")}</TooltipContent>
         </Tooltip>
 
         <div className="w-px h-4 bg-border mx-0.5" />
@@ -94,7 +96,7 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
               <Trash2 className="h-3 w-3" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="top">Delete</TooltipContent>
+          <TooltipContent side="top">{t("contextToolbar.delete")}</TooltipContent>
         </Tooltip>
       </div>
     </TooltipProvider>

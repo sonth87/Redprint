@@ -8,9 +8,8 @@
  */
 
 import { v4 as uuidv4 } from "uuid";
-import type { BuilderState } from "../state/types";
-import type { BuilderNode, StyleConfig } from "../document/types";
-import type { Command } from "./types";
+import type { ClipboardData } from "../state/types";
+import type { BuilderNode, NodeMetadata, StyleConfig } from "../document/types";
 import type { CommandEngine } from "./CommandEngine";
 import type { ComponentRegistry } from "../registry/ComponentRegistry";
 import type { EventBus } from "../events/EventBus";
@@ -150,13 +149,6 @@ function cloneSubtree(
   return { newNodes, newRootId: idMap.get(rootNodeId)! };
 }
 
-/**
- * Get sibling count for a given parent.
- */
-function siblingCount(parentId: string | null, nodes: Record<string, BuilderNode>): number {
-  return Object.values(nodes).filter((n) => n.parentId === parentId).length;
-}
-
 // ── Main registration ─────────────────────────────────────────────────────
 
 /**
@@ -168,6 +160,12 @@ function siblingCount(parentId: string | null, nodes: Record<string, BuilderNode
  */
 export function registerAllHandlers(engine: CommandEngine, registry: ComponentRegistry, eventBus?: EventBus): void {
   const now = () => new Date().toISOString();
+  // Explicitly typed return ensures TypeScript preserves required `createdAt`
+  // and handles nodes where metadata may have been omitted.
+  const updateMeta = (meta: NodeMetadata | undefined): NodeMetadata => {
+    const ts = now();
+    return { ...meta, createdAt: meta?.createdAt ?? ts, updatedAt: ts };
+  };
 
   // ── ADD_NODE ────────────────────────────────────────────────────────────
   engine.registerHandler<AddNodePayload>(
@@ -420,7 +418,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
             [nodeId]: {
               ...node,
               props: { ...node.props, ...props },
-              metadata: { ...node.metadata, updatedAt: now() },
+              metadata: updateMeta(node.metadata),
             },
           },
         },
@@ -461,7 +459,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
               [nodeId]: {
                 ...node,
                 style: { ...node.style, ...style },
-                metadata: { ...node.metadata, updatedAt: now() },
+                metadata: updateMeta(node.metadata),
               },
             },
           },
@@ -483,7 +481,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
                 ...node.responsiveStyle,
                 [breakpoint]: { ...currentResponsive, ...style },
               },
-              metadata: { ...node.metadata, updatedAt: now() },
+              metadata: updateMeta(node.metadata),
             },
           },
         },
@@ -531,7 +529,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
                 ...node.responsiveStyle,
                 [breakpoint]: { ...currentResponsive, ...style },
               },
-              metadata: { ...node.metadata, updatedAt: now() },
+              metadata: updateMeta(node.metadata),
             },
           },
         },
@@ -565,7 +563,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
             [nodeId]: {
               ...node,
               interactions,
-              metadata: { ...node.metadata, updatedAt: now() },
+              metadata: updateMeta(node.metadata),
             },
           },
         },
@@ -595,7 +593,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
           updatedAt: now(),
           nodes: {
             ...state.document.nodes,
-            [nodeId]: { ...node, name, metadata: { ...node.metadata, updatedAt: now() } },
+            [nodeId]: { ...node, name, metadata: updateMeta(node.metadata) },
           },
         },
       };
@@ -828,7 +826,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
         canvasConfig: { ...state.document.canvasConfig, ...payload.config },
       },
     }),
-    (state, payload) => ({
+    (state, _payload) => ({
       type: CMD_UPDATE_CANVAS_CONFIG,
       payload: { config: state.document.canvasConfig },
     }),
@@ -900,7 +898,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
     },
   );
 
-  engine.registerHandler<{ data: import("../state/types").ClipboardData | null }>(
+  engine.registerHandler<{ data: ClipboardData | null }>(
     CMD_SET_CLIPBOARD,
     (state, payload) => ({
       ...state,
@@ -934,7 +932,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
             [nodeId]: {
               ...node,
               responsiveHidden: Object.keys(updatedHidden).length > 0 ? updatedHidden : undefined,
-              metadata: { ...node.metadata, updatedAt: now() },
+              metadata: updateMeta(node.metadata),
             },
           },
         },
@@ -972,7 +970,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
                 ...(node.responsiveProps ?? {}),
                 [breakpoint]: { ...currentResponsiveProps, ...props },
               },
-              metadata: { ...node.metadata, updatedAt: now() },
+              metadata: updateMeta(node.metadata),
             },
           },
         },
@@ -1017,7 +1015,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
                 ...node.responsiveStyle,
                 [breakpoint]: Object.keys(currentOverride).length > 0 ? currentOverride : undefined,
               },
-              metadata: { ...node.metadata, updatedAt: now() },
+              metadata: updateMeta(node.metadata),
             },
           },
         },

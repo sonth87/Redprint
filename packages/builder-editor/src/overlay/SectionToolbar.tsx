@@ -17,8 +17,7 @@ import {
   TooltipProvider,
 } from "@ui-builder/ui";
 import type { BuilderNode, CanvasMode } from "@ui-builder/builder-core";
-import type { Point } from "@ui-builder/shared";
-import { TOOLTIP_DELAY_MS } from "@ui-builder/shared";
+import { TOOLTIP_DELAY_MS, type Point } from "@ui-builder/shared";
 import {
   BTN_SIZE,
   TOOLBAR_WIDTH,

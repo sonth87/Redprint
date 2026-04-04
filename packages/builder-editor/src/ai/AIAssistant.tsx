@@ -20,6 +20,20 @@ import {
 import { useBuilder } from "@ui-builder/builder-react";
 import type { AIConfig, AIMessage, AIConversation, AICommandSuggestion, AIBuilderContext } from "./types";
 import { sendAIMessage } from "./AIService";
+import { useTranslation } from "react-i18next";
+
+// Commands the AI is allowed to dispatch — destructive/system commands are excluded
+const ALLOWED_AI_COMMANDS = new Set([
+  "ADD_NODE",
+  "UPDATE_PROPS",
+  "UPDATE_STYLE",
+  "UPDATE_RESPONSIVE_PROPS",
+  "UPDATE_RESPONSIVE_STYLE",
+  "RENAME_NODE",
+  "DUPLICATE_NODE",
+  "UPDATE_CANVAS_CONFIG",
+  "UPDATE_NODE_INTERACTIONS",
+]);
 
 // ── Props ───────────────────────────────────────────────────────────────
 
@@ -33,6 +47,7 @@ export interface AIAssistantProps {
 // ── Component ───────────────────────────────────────────────────────────
 
 export function AIAssistant({ open, onOpenChange, config, context }: AIAssistantProps) {
+  const { t } = useTranslation();
   const { dispatch } = useBuilder();
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -62,7 +77,7 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
     const text = input.trim();
     if (!text || conversation.isLoading) return;
     if (!config.apiKey) {
-      setConversation((c) => ({ ...c, error: "API key is not configured." }));
+      setConversation((c) => ({ ...c, error: t("ai.apiKeyNotConfigured") }));
       return;
     }
 
@@ -128,6 +143,7 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
 
   const applySuggestion = useCallback(
     (suggestion: AICommandSuggestion) => {
+      if (!ALLOWED_AI_COMMANDS.has(suggestion.type)) return;
       try {
         dispatch({ type: suggestion.type, payload: suggestion.payload } as never);
       } catch {
@@ -146,7 +162,7 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
       <DialogContent className="sm:max-w-[540px] max-h-[80vh] flex flex-col p-0 gap-0">
         <DialogHeader className="px-4 py-3 border-b shrink-0">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-sm font-medium">AI Assistant</DialogTitle>
+            <DialogTitle className="text-sm font-medium">{t("ai.title")}</DialogTitle>
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="text-[10px]">
                 {config.provider}
@@ -165,7 +181,7 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
           <div className="py-3 space-y-3">
             {conversation.messages.length === 0 && !conversation.isLoading && (
               <p className="text-xs text-muted-foreground text-center py-8">
-                Ask AI to help build, modify, or style your components.
+                {t("ai.placeholder")}
               </p>
             )}
 

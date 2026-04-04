@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   BuilderProvider,
   useBuilder,
@@ -60,6 +60,10 @@ import { usePointerDown } from "./hooks/usePointerDown";
 import { useZIndexHandlers } from "./hooks/useZIndexHandlers";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useSectionResize } from "./hooks/useSectionResize";
+import { AIAssistant } from "./ai/AIAssistant";
+import { AIConfigPanel } from "./ai/AIConfig";
+import { buildAIContext } from "./ai/buildAIContext";
+import type { AIConfig } from "./ai/types";
 
 // ── Inner editor (must be inside BuilderProvider) ─────────────────────────
 
@@ -71,6 +75,27 @@ function EditorInner() {
   const { undo, redo, canUndo, canRedo } = useHistory();
 
   const canvasMode: CanvasMode = state.editor.canvasMode ?? "single";
+
+  // ── AI assistant state ────────────────────────────────────────────────────
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiConfig, setAiConfig] = useState<AIConfig>(() => {
+    try {
+      const stored = localStorage.getItem("ui-builder:ai-config");
+      if (stored) return JSON.parse(stored) as AIConfig;
+    } catch {
+      // ignore
+    }
+    return { provider: "openai", apiKey: "", model: "gpt-4o-mini", temperature: 0.7, maxTokens: 2048 };
+  });
+
+  const handleAIConfigChange = useCallback((config: AIConfig) => {
+    setAiConfig(config);
+    try {
+      localStorage.setItem("ui-builder:ai-config", JSON.stringify(config));
+    } catch {
+      // ignore storage errors
+    }
+  }, []);
 
   const setCanvasMode = useCallback(
     (mode: CanvasMode) => {
@@ -126,6 +151,18 @@ function EditorInner() {
         ? (document.canvasConfig.height ?? DEVICE_VIEWPORT_PRESETS.desktop.height)
         : (DEVICE_VIEWPORT_PRESETS[breakpoint]?.height ?? DEVICE_VIEWPORT_PRESETS.desktop.height);
 
+  // ── Viewport ─────────────────────────────────────────────────────────────
+  const {
+    zoom,
+    setZoom,
+    panOffset,
+    setPanOffset,
+    activeTool,
+    setActiveTool,
+    showGrid,
+    toggleGrid,
+  } = useViewport();
+
   // Auto-fit zoom when switching to a narrower device
   const prevBreakpointRef = useRef<string>(breakpoint);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
@@ -145,19 +182,8 @@ function EditorInner() {
       const centeredY = Math.max(CANVAS_CENTER_OFFSET, (containerHeight - canvasMinHeight * actualZoom) / VERTICAL_CENTER_DIVISOR);
       setPanOffset({ x: centeredX, y: centeredY });
     }
-  }, [breakpoint, canvasWidth, canvasMinHeight, canvasMode, clearSelection]);
-
-  // ── Viewport ─────────────────────────────────────────────────────────────
-  const {
-    zoom,
-    setZoom,
-    panOffset,
-    setPanOffset,
-    activeTool,
-    setActiveTool,
-    showGrid,
-    toggleGrid,
-  } = useViewport();
+  // setZoom/setPanOffset are stable useState setters — adding them satisfies exhaustive-deps
+  }, [breakpoint, canvasWidth, canvasMinHeight, canvasMode, clearSelection, setZoom, setPanOffset]);
 
   // ── Derived ──────────────────────────────────────────────────────────────
   const selectedNodeId = selectedNodeIds[0] ?? null;
@@ -166,6 +192,7 @@ function EditorInner() {
   const selectedDefinition =
     selectedNode && registry ? (registry.getComponent(selectedNode.type) ?? null) : null;
   const allComponents: ComponentDefinition[] = registry ? registry.listComponents() : [];
+  const aiContext = useMemo(() => buildAIContext(state, allComponents), [state, allComponents]);
 
   // ── Snap engine ──────────────────────────────────────────────────────────
   const snapEngine = useMemo(
@@ -525,6 +552,7 @@ function EditorInner() {
           }
         }}
         onCanvasModeToggle={toggleCanvasMode}
+        onAIOpen={() => setAiOpen(true)}
       />
 
       <FloatingPanel id="components" title="Components" defaultPosition={DEFAULT_COMPONENTS_PANEL_POS}>
@@ -565,10 +593,23 @@ function EditorInner() {
               onStyleChange={handleStyleChange}
             />
           ) : (
-            <PageSettings document={document} onCanvasConfigChange={handleCanvasConfigChange} />
+            <div className="flex flex-col h-full">
+              <PageSettings document={document} onCanvasConfigChange={handleCanvasConfigChange} />
+              <div className="border-t shrink-0">
+                <AIConfigPanel config={aiConfig} onChange={handleAIConfigChange} />
+              </div>
+            </div>
           )}
         </div>
       </FloatingPanel>
+
+      {/* AI Assistant dialog */}
+      <AIAssistant
+        open={aiOpen}
+        onOpenChange={setAiOpen}
+        config={aiConfig}
+        context={aiContext}
+      />
 
       <div
         className="bg-muted/20 absolute inset-0 z-0 overflow-hidden"

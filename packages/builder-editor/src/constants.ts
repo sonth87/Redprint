@@ -23,11 +23,11 @@ export const BTN_SIZE = 28 as const;
 export const TOOLBAR_WIDTH = 32 as const;
 
 /**
- * Toolbar icon size (14px).
+ * Toolbar icon size (16px).
  * Size of lucide-react icons rendered inside toolbar buttons.
- * Design: 14px = small enough to fit comfortably in 28px button with padding.
+ * Design: 16px = small enough to fit comfortably in 28px button with padding.
  */
-export const ICON_SIZE = 14 as const;
+export const ICON_SIZE = 16 as const;
 
 /**
  * Toolbar button gap (2px).

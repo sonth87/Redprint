@@ -79,6 +79,9 @@ Complete technical reference organized by domain:
 | **[PLUGINS.md](./.claude/docs/PLUGINS.md)** | Plugin system, PluginAPI, lifecycle hooks, patterns |
 | **[ACCESSIBILITY.md](./.claude/docs/ACCESSIBILITY.md)** | A11y, keyboard navigation, error handling, diagnostics |
 | **[INTEGRATION.md](./.claude/docs/INTEGRATION.md)** | External services, event catalogue, performance targets |
+| **[AI_ASSISTANT.md](./.claude/docs/AI_ASSISTANT.md)** | AI conversational interface — providers, context, command whitelist |
+| **[PROPERTY_SYSTEM.md](./.claude/docs/PROPERTY_SYSTEM.md)** | PropertyDescriptor, shared style/prop editing, PropertyControls |
+| **[PRESETS.md](./.claude/docs/PRESETS.md)** | Component preset types, PresetRegistry API, palette UI |
 
 **For AI Agents:** Always read `SPECIFICATION.md` first for project context.
 
