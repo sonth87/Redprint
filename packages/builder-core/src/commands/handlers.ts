@@ -15,6 +15,7 @@ import type { CommandEngine } from "./CommandEngine";
 import type { ComponentRegistry } from "../registry/ComponentRegistry";
 import type { EventBus } from "../events/EventBus";
 import type { Breakpoint } from "../responsive/types";
+import { DUPLICATE_OFFSET } from "../constants";
 import {
   CMD_ADD_NODE,
   CMD_REMOVE_NODE,
@@ -108,7 +109,7 @@ function collectDescendants(nodeId: string, nodes: Record<string, BuilderNode>):
 function cloneSubtree(
   rootNodeId: string,
   nodes: Record<string, BuilderNode>,
-  offset: { x: number; y: number } = { x: 20, y: 20 },
+  offset: { x: number; y: number } = DUPLICATE_OFFSET,
   overrideRootId?: string,
 ): { newNodes: Record<string, BuilderNode>; newRootId: string } {
   const now = new Date().toISOString();
@@ -295,7 +296,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
   engine.registerHandler<DuplicateNodePayload>(
     CMD_DUPLICATE_NODE,
     (state, payload) => {
-      const { nodeId, offset = { x: 20, y: 20 }, newNodeId } = payload;
+      const { nodeId, offset = DUPLICATE_OFFSET, newNodeId } = payload;
       if (!state.document.nodes[nodeId]) return state;
 
       const { newNodes, newRootId } = cloneSubtree(nodeId, state.document.nodes, offset, newNodeId);

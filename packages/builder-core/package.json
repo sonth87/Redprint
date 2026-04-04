@@ -2,6 +2,7 @@
   "name": "@ui-builder/builder-core",
   "version": "0.0.1",
   "private": true,
+  "type": "module",
   "description": "Framework-agnostic engine — document model, command system, event bus, plugin engine",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

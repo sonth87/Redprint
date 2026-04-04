@@ -11,6 +11,7 @@ import { MigrationEngine } from "./migration/MigrationEngine";
 import { registerAllHandlers } from "./commands/handlers";
 import { DEFAULT_BREAKPOINTS } from "./responsive/constants";
 import { CURRENT_SCHEMA_VERSION } from "./document/constants";
+import { GRID_UNIT_PX, DEFAULT_LEFT_PANEL_WIDTH_PX, DEFAULT_BOTTOM_PANEL_HEIGHT_PX } from "./constants";
 import { v4 as uuidv4 } from "uuid";
 
 /**
@@ -95,9 +96,9 @@ export function createBuilder(config: BuilderConfig = {}): IBuilderAPI {
     },
     ui: {
       panels: {
-        leftPanel: { visible: true, width: 260, activeTab: "components" },
+        leftPanel: { visible: true, width: DEFAULT_LEFT_PANEL_WIDTH_PX, activeTab: "components" },
         rightPanel: { visible: true, width: 300, activeTab: "properties" },
-        bottomPanel: { visible: false, height: 200 },
+        bottomPanel: { visible: false, height: DEFAULT_BOTTOM_PANEL_HEIGHT_PX },
         topToolbar: { visible: true },
       },
       quickToolbar: { visible: false, targetNodeId: null, position: { x: 0, y: 0 } },

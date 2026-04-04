@@ -2,6 +2,7 @@ import React from "react";
 import { Copy, Trash2, ArrowUp, ArrowDown, GripVertical } from "lucide-react";
 import { useDocument } from "@ui-builder/builder-react";
 import { Button, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@ui-builder/ui";
+import { TOOLTIP_DELAY_MS } from "@ui-builder/shared";
 
 export interface ContextualToolbarProps {
   nodeId: string;
@@ -35,7 +36,7 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
   const xPos = viewportX;
 
   return (
-    <TooltipProvider delayDuration={300}>
+    <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
       <div
         className="absolute z-30 flex items-center bg-background/95 backdrop-blur-md rounded-md border shadow-md p-1 gap-1"
         style={{

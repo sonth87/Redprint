@@ -17,6 +17,15 @@ import {
   type CanvasMode,
   type ComponentDefinition,
 } from "@ui-builder/builder-core";
+import {
+  MIN_ZOOM,
+  FIT_TO_SCREEN_PADDING,
+  CANVAS_CENTER_OFFSET,
+  VERTICAL_CENTER_DIVISOR,
+  DEFAULT_SECTION_HEIGHT_PX,
+  TRANSITION_FAST_CSS,
+  TRANSITION_MID_CSS,
+} from "@ui-builder/shared";
 import { Monitor, Smartphone, GripVertical } from "lucide-react";
 import { CanvasRoot } from "./canvas/CanvasRoot";
 import { SelectionOverlay, SnapGuides, HoverOutline, DistanceGuides, LiveDimensionsDisplay } from "./overlay/EditorOverlay";
@@ -32,6 +41,11 @@ import { FloatingPanel } from "./panels/FloatingPanel";
 import { ContextualToolbar } from "./toolbar/ContextualToolbar";
 import { SnapEngine } from "./snap/SnapEngine";
 import { v4 as uuidv4 } from "uuid";
+import {
+  DEFAULT_COMPONENTS_PANEL_POS,
+  DEFAULT_LAYERS_PANEL_POS,
+  DEFAULT_PROPERTIES_PANEL_POS,
+} from "./constants";
 
 import { useViewport } from "./hooks/useViewport";
 import { useResizeGesture } from "./hooks/useResizeGesture";
@@ -101,7 +115,7 @@ function EditorInner() {
   const sectionsTotalHeight = useMemo(() => {
     if (sectionNodes.length === 0) return 0;
     return sectionNodes.reduce((sum, n) => {
-      const h = typeof n.props.minHeight === "number" ? n.props.minHeight : 400;
+      const h = typeof n.props.minHeight === "number" ? n.props.minHeight : DEFAULT_SECTION_HEIGHT_PX;
       return sum + h;
     }, 0);
   }, [sectionNodes]);
@@ -124,11 +138,11 @@ function EditorInner() {
     if (canvasContainerRef.current) {
       const containerWidth = canvasContainerRef.current.offsetWidth;
       const containerHeight = canvasContainerRef.current.offsetHeight;
-      const fitZoom = Math.min((containerWidth - 64) / canvasWidth, 1);
-      const actualZoom = Math.max(0.25, parseFloat(fitZoom.toFixed(2)));
+      const fitZoom = Math.min((containerWidth - FIT_TO_SCREEN_PADDING) / canvasWidth, 1);
+      const actualZoom = Math.max(MIN_ZOOM, parseFloat(fitZoom.toFixed(2)));
       setZoom(actualZoom);
-      const centeredX = Math.max(32, (containerWidth - canvasWidth * actualZoom) / 2);
-      const centeredY = Math.max(32, (containerHeight - canvasMinHeight * actualZoom) / 4);
+      const centeredX = Math.max(CANVAS_CENTER_OFFSET, (containerWidth - canvasWidth * actualZoom) / 2);
+      const centeredY = Math.max(CANVAS_CENTER_OFFSET, (containerHeight - canvasMinHeight * actualZoom) / VERTICAL_CENTER_DIVISOR);
       setPanOffset({ x: centeredX, y: centeredY });
     }
   }, [breakpoint, canvasWidth, canvasMinHeight, canvasMode, clearSelection]);
@@ -436,7 +450,7 @@ function EditorInner() {
           nodeId: newId,
           parentId: document.rootNodeId,
           componentType: "Section",
-          props: { minHeight: 400 },
+          props: { minHeight: DEFAULT_SECTION_HEIGHT_PX },
           style: {
             display: "flex",
             flexDirection: "column",
@@ -513,7 +527,7 @@ function EditorInner() {
         onCanvasModeToggle={toggleCanvasMode}
       />
 
-      <FloatingPanel id="components" title="Components" defaultPosition={{ x: 16, y: 64 }}>
+      <FloatingPanel id="components" title="Components" defaultPosition={DEFAULT_COMPONENTS_PANEL_POS}>
         <div className="h-[40vh] min-h-[300px] overflow-hidden">
           <ComponentPalette components={allComponents} onDragStart={handleDragStart} />
         </div>
@@ -522,7 +536,7 @@ function EditorInner() {
       <FloatingPanel
         id="layers"
         title="Layers"
-        defaultPosition={{ x: 16, y: 480 }}
+        defaultPosition={DEFAULT_LAYERS_PANEL_POS}
         defaultExpanded={false}
       >
         <div className="h-[30vh] min-h-[250px] overflow-hidden">
@@ -539,7 +553,7 @@ function EditorInner() {
       <FloatingPanel
         id="properties"
         title={selectedNode ? "Properties" : "Page Settings"}
-        defaultPosition={{ right: 16, y: 64 }}
+        defaultPosition={DEFAULT_PROPERTIES_PANEL_POS}
       >
         <div className="flex h-[75vh] max-h-[800px] min-h-[500px] flex-col overflow-hidden">
           {selectedNode ? (
@@ -640,7 +654,7 @@ function EditorInner() {
                           ? "0 4px 24px rgba(0,0,0,0.12), 0 0 0 2px hsl(221.2 83.2% 53.3%)"
                           : "0 4px 24px rgba(0,0,0,0.12)",
                       borderRadius: 4,
-                      transition: "box-shadow 0.15s ease",
+                      transition: `box-shadow ${TRANSITION_FAST_CSS} ease`,
                     }}
                     onPointerDown={(e) => {
                       setBreakpoint("desktop");
@@ -679,7 +693,7 @@ function EditorInner() {
                     position: "relative",
                     boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
                     borderRadius: 4,
-                    transition: "width 0.25s ease, min-height 0.25s ease, box-shadow 0.15s ease",
+                    transition: `width ${TRANSITION_MID_CSS} ease, min-height ${TRANSITION_MID_CSS} ease, box-shadow ${TRANSITION_FAST_CSS} ease`,
                   }}
                   onPointerDown={handlePointerDown}
                   onMouseOver={handleMouseOver}
@@ -781,7 +795,7 @@ function EditorInner() {
                           ? "0 4px 24px rgba(0,0,0,0.12), 0 0 0 2px hsl(221.2 83.2% 53.3%)"
                           : "0 4px 24px rgba(0,0,0,0.12)",
                       borderRadius: 4,
-                      transition: "box-shadow 0.15s ease",
+                      transition: `box-shadow ${TRANSITION_FAST_CSS} ease`,
                     }}
                     onPointerDown={(e) => {
                       setBreakpoint("mobile");

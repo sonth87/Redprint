@@ -2,6 +2,7 @@ import React, { useState, useEffect, useLayoutEffect, useRef, memo, useCallback,
 import { Plus, GripHorizontal } from "lucide-react";
 import type { BuilderNode } from "@ui-builder/builder-core";
 import type { Point } from "@ui-builder/shared";
+import { SECTION_HOVER_ZONE } from "../constants";
 
 interface SectionBoundary {
   nodeId: string;
@@ -30,9 +31,6 @@ export interface SectionOverlayProps {
   /** Whether a section resize is in progress (suppresses UI jitter) */
   isResizing: boolean;
 }
-
-/** How many px from the bottom edge of a section activates the hover zone */
-const HOVER_ZONE_HEIGHT = 32;
 
 /**
  * SectionOverlay — renders "Thêm mới Section" + resize handle at the bottom
@@ -118,9 +116,9 @@ export const SectionOverlay = memo(function SectionOverlay({
               style={{
                 position: "absolute",
                 left: 0,
-                top: b.bottom - HOVER_ZONE_HEIGHT / zoom,
+                top: b.bottom - SECTION_HOVER_ZONE / zoom,
                 width: "100%",
-                height: HOVER_ZONE_HEIGHT / zoom,
+                height: SECTION_HOVER_ZONE / zoom,
                 zIndex: 60,
                 pointerEvents: "auto",
                 cursor: "default",

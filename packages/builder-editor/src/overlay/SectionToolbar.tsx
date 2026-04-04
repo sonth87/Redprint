@@ -18,6 +18,17 @@ import {
 } from "@ui-builder/ui";
 import type { BuilderNode, CanvasMode } from "@ui-builder/builder-core";
 import type { Point } from "@ui-builder/shared";
+import { TOOLTIP_DELAY_MS } from "@ui-builder/shared";
+import {
+  BTN_SIZE,
+  TOOLBAR_WIDTH,
+  ICON_SIZE,
+  NUM_TOOLBAR_BUTTONS,
+  TOOLBAR_BTN_GAP,
+  TOOLBAR_PADDING,
+  DUAL_GAP_PX,
+  TOOLBAR_LEFT_OFFSET,
+} from "../constants";
 
 export interface SectionToolbarProps {
   node: BuilderNode;
@@ -113,12 +124,7 @@ export const SectionToolbar = memo(function SectionToolbar({
   };
 
   // ── Screen-space positioning ────────────────────────────────────────────
-  const BTN_SIZE = 28;
-  const GAP = 2;
-  const PADDING = 4;
-  const NUM_BUTTONS = 8;
-  const TOOLBAR_WIDTH = 32;
-  const toolbarHeight = NUM_BUTTONS * BTN_SIZE + (NUM_BUTTONS - 1) * GAP + PADDING * 2;
+  const toolbarHeight = NUM_TOOLBAR_BUTTONS * BTN_SIZE + (NUM_TOOLBAR_BUTTONS - 1) * TOOLBAR_BTN_GAP + TOOLBAR_PADDING * 2;
 
   // Sections stack vertically from y=0, x=0 in canvas-space
   const canvasTop = sectionNodes
@@ -127,16 +133,14 @@ export const SectionToolbar = memo(function SectionToolbar({
   const canvasHeight = (node.props?.minHeight as number) ?? 400;
 
   const isOnMobile = canvasMode === "dual" && activeBreakpoint === "mobile";
-  /** Gap (px in canvas-space) between desktop and mobile frames in dual mode */
-  const DUAL_GAP = 240;
   const mobileXOffset = isOnMobile
-    ? (desktopFrameWidth + DUAL_GAP + (mobileFramePos?.x ?? 0)) * zoom
+    ? (desktopFrameWidth + DUAL_GAP_PX + (mobileFramePos?.x ?? 0)) * zoom
     : 0;
   const mobileYOffset = isOnMobile ? (mobileFramePos?.y ?? 0) * zoom : 0;
 
   const toolbarTop =
     canvasTop * zoom + panOffset.y + mobileYOffset + (canvasHeight * zoom - toolbarHeight) / 2;
-  const toolbarLeft = panOffset.x + mobileXOffset - TOOLBAR_WIDTH - 8;
+  const toolbarLeft = panOffset.x + mobileXOffset - TOOLBAR_WIDTH - TOOLBAR_LEFT_OFFSET;
 
   // ── Button definitions ─────────────────────────────────────────────────
   const buttons: Array<{
@@ -146,33 +150,33 @@ export const SectionToolbar = memo(function SectionToolbar({
     disabled?: boolean;
     danger?: boolean;
   }> = [
-    { icon: <Settings size={14} />, tooltip: "Cài đặt section", onClick: () => {} },
+    { icon: <Settings size={ICON_SIZE} />, tooltip: "Cài đặt section", onClick: () => {} },
     {
-      icon: <Info size={14} />,
+      icon: <Info size={ICON_SIZE} />,
       tooltip: `Section: ${node.name ?? node.id} · ${sectionNodes.length} sections`,
       onClick: () => {},
     },
-    { icon: <Bookmark size={14} />, tooltip: "Lưu làm preset", onClick: () => {} },
+    { icon: <Bookmark size={ICON_SIZE} />, tooltip: "Lưu làm preset", onClick: () => {} },
     {
-      icon: <ArrowUp size={14} />,
+      icon: <ArrowUp size={ICON_SIZE} />,
       tooltip: "Di chuyển lên trên",
       onClick: handleMoveUp,
       disabled: isFirst,
     },
     {
-      icon: <ArrowDown size={14} />,
+      icon: <ArrowDown size={ICON_SIZE} />,
       tooltip: "Di chuyển xuống dưới",
       onClick: handleMoveDown,
       disabled: isLast,
     },
     {
-      icon: isHidden ? <Eye size={14} /> : <EyeOff size={14} />,
+      icon: isHidden ? <Eye size={ICON_SIZE} /> : <EyeOff size={ICON_SIZE} />,
       tooltip: isHidden ? "Hiện section" : "Ẩn section",
       onClick: handleToggleHidden,
     },
-    { icon: <Copy size={14} />, tooltip: "Clone section", onClick: handleClone },
+    { icon: <Copy size={ICON_SIZE} />, tooltip: "Clone section", onClick: handleClone },
     {
-      icon: <Trash2 size={14} />,
+      icon: <Trash2 size={ICON_SIZE} />,
       tooltip: "Xóa section",
       onClick: handleDelete,
       danger: true,
@@ -180,15 +184,15 @@ export const SectionToolbar = memo(function SectionToolbar({
   ];
 
   return (
-    <TooltipProvider delayDuration={300}>
+    <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
       <div
         className="bg-background/95 border-border shadow-md absolute z-30 flex flex-col items-center rounded-md border backdrop-blur-md"
         style={{
           top: toolbarTop,
           left: toolbarLeft,
           width: TOOLBAR_WIDTH,
-          padding: PADDING,
-          gap: GAP,
+          padding: TOOLBAR_PADDING,
+          gap: TOOLBAR_BTN_GAP,
         }}
         onPointerDown={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}

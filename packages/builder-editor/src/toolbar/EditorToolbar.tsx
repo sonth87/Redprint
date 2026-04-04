@@ -17,6 +17,7 @@ import {
   Hand,
   Columns2,
 } from "lucide-react";
+import { ZOOM_LEVELS, TOOLTIP_DELAY_EXTENDED_MS } from "@ui-builder/shared";
 import type { EditorTool } from "../types";
 import { ToolbarButton } from "./ToolbarButton";
 
@@ -42,8 +43,6 @@ const BREAKPOINTS: { bp: Breakpoint; label: string; icon: typeof Monitor; shortc
   { bp: "desktop", label: "Desktop", icon: Monitor, shortcut: "D" },
   { bp: "mobile", label: "Mobile", icon: Smartphone, shortcut: "M" },
 ];
-
-const ZOOM_LEVELS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4];
 
 /**
  * EditorToolbar — top toolbar with breakpoints, zoom, tool selection, undo/redo, grid/dual toggle.
@@ -78,7 +77,7 @@ export const EditorToolbar = memo(function EditorToolbar({
   }, [zoom, onZoomChange]);
 
   return (
-    <TooltipProvider delayDuration={400}>
+    <TooltipProvider delayDuration={TOOLTIP_DELAY_EXTENDED_MS}>
       <div className="bg-background/60 absolute left-1/2 top-4 z-40 flex h-10 -translate-x-1/2 items-center gap-1.5 rounded-full border px-3 shadow-sm backdrop-blur-md">
         {/* Tool selection */}
         <div className="mr-2 flex items-center gap-0.5 rounded-md p-1">

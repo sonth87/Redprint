@@ -2,6 +2,7 @@
   "name": "@ui-builder/shared",
   "version": "0.0.1",
   "private": true,
+  "type": "module",
   "description": "Shared types, utility functions, and constants for the UI Builder Library",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
