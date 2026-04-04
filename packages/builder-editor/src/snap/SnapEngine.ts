@@ -10,6 +10,10 @@ export interface SnapEngineConfig {
   snapToComponents: boolean;
   /** Snap threshold in pixels */
   threshold: number;
+  /** Canvas frame width in px — enables canvas-center and canvas-edge snapping */
+  canvasWidth?: number;
+  /** Canvas frame height in px — enables canvas horizontal-center snapping */
+  canvasHeight?: number;
 }
 
 export interface SnapResult {
@@ -107,6 +111,42 @@ export class SnapEngine {
       }
     }
 
+    // 3. Canvas axis snap — snap to canvas center line and canvas edges.
+    //    These provide the most important alignment guides in a page editor
+    //    (equivalent to Figma's "snap to canvas" feature).
+    if (this.config.snapToComponents && this.config.canvasWidth != null) {
+      const cw = this.config.canvasWidth;
+      const canvasCX = cw / 2;
+      const dragCX = x + draggingRect.width / 2;
+      const dragRight = x + draggingRect.width;
+      let addedCanvasCenterX = false;
+
+      const pushCenterX = (snappedX: number) => {
+        x = snappedX;
+        if (!addedCanvasCenterX) {
+          guides.push({ type: "vertical", position: canvasCX, source: "canvas-center" });
+          addedCanvasCenterX = true;
+        }
+      };
+
+      // Left edge → canvas left border (x = 0)
+      if (Math.abs(x) <= this.config.threshold) {
+        x = 0;
+        guides.push({ type: "vertical", position: 0, source: "canvas-edge" });
+      }
+      // Left edge → canvas center
+      if (Math.abs(x - canvasCX) <= this.config.threshold) pushCenterX(canvasCX);
+      // Element center → canvas center
+      if (Math.abs(dragCX - canvasCX) <= this.config.threshold) pushCenterX(canvasCX - draggingRect.width / 2);
+      // Right edge → canvas center
+      if (Math.abs(dragRight - canvasCX) <= this.config.threshold) pushCenterX(canvasCX - draggingRect.width);
+      // Right edge → canvas right border
+      if (Math.abs(dragRight - cw) <= this.config.threshold) {
+        x = cw - draggingRect.width;
+        guides.push({ type: "vertical", position: cw, source: "canvas-edge" });
+      }
+    }
+
     return { snappedPoint: { x, y }, guides };
   }
 
@@ -123,7 +163,7 @@ export class SnapEngine {
   distanceGuides(
     draggingRect: Rect,
     otherRects: Rect[],
-    threshold = 100,
+    threshold = 150,
   ): DistanceGuide[] {
     const guides: DistanceGuide[] = [];
 
@@ -153,7 +193,8 @@ export class SnapEngine {
       // The gap is between oRight and dLeft
       if (oRight <= dLeft) {
         const gap = dLeft - oRight;
-        if (gap <= threshold) {
+        const overlapsVertically = oBottom >= dTop && oTop <= dBottom;
+        if (gap <= threshold && overlapsVertically) {
           // The guide line runs horizontally at the dragging element's vertical center
           const lineY = clamp(dCY, Math.max(dTop, oTop), Math.min(dBottom, oBottom));
           if (!bestLeft || gap < bestLeft.distance) {
@@ -165,7 +206,8 @@ export class SnapEngine {
       // --- Right gap: sibling is to the RIGHT ---
       if (oLeft >= dRight) {
         const gap = oLeft - dRight;
-        if (gap <= threshold) {
+        const overlapsVertically = oBottom >= dTop && oTop <= dBottom;
+        if (gap <= threshold && overlapsVertically) {
           const lineY = clamp(dCY, Math.max(dTop, oTop), Math.min(dBottom, oBottom));
           if (!bestRight || gap < bestRight.distance) {
             bestRight = { distance: gap, lineStart: dRight, lineEnd: oLeft, linePosition: lineY };
@@ -176,7 +218,8 @@ export class SnapEngine {
       // --- Top gap: sibling is ABOVE ---
       if (oBottom <= dTop) {
         const gap = dTop - oBottom;
-        if (gap <= threshold) {
+        const overlapsHorizontally = oRight >= dLeft && oLeft <= dRight;
+        if (gap <= threshold && overlapsHorizontally) {
           const lineX = clamp(dCX, Math.max(dLeft, oLeft), Math.min(dRight, oRight));
           if (!bestTop || gap < bestTop.distance) {
             bestTop = { distance: gap, lineStart: oBottom, lineEnd: dTop, linePosition: lineX };
@@ -187,7 +230,8 @@ export class SnapEngine {
       // --- Bottom gap: sibling is BELOW ---
       if (oTop >= dBottom) {
         const gap = oTop - dBottom;
-        if (gap <= threshold) {
+        const overlapsHorizontally = oRight >= dLeft && oLeft <= dRight;
+        if (gap <= threshold && overlapsHorizontally) {
           const lineX = clamp(dCX, Math.max(dLeft, oLeft), Math.min(dRight, oRight));
           if (!bestBottom || gap < bestBottom.distance) {
             bestBottom = { distance: gap, lineStart: dBottom, lineEnd: oTop, linePosition: lineX };
@@ -255,6 +299,20 @@ export class SnapEngine {
       if (Math.abs(dragRight - other.x)   < this.config.threshold) add({ type: "vertical",   position: other.x,   source: "component-edge" });
       if (Math.abs(dragRight - oRight)    < this.config.threshold) add({ type: "vertical",   position: oRight,    source: "component-edge" });
       if (Math.abs(dragCX - oCX)       < this.config.threshold) add({ type: "vertical",   position: oCX,       source: "component-center" });
+    }
+
+    // ── Canvas axis alignment guides ───────────────────────────────────
+    if (this.config.canvasWidth != null) {
+      const cw = this.config.canvasWidth;
+      const canvasCX = cw / 2;
+
+      // Vertical center of canvas
+      if (Math.abs(x - canvasCX)              < this.config.threshold) add({ type: "vertical", position: canvasCX, source: "canvas-center" });
+      if (Math.abs(dragCX - canvasCX)         < this.config.threshold) add({ type: "vertical", position: canvasCX, source: "canvas-center" });
+      if (Math.abs(dragRight - canvasCX)      < this.config.threshold) add({ type: "vertical", position: canvasCX, source: "canvas-center" });
+      // Canvas edges
+      if (Math.abs(x)                         < this.config.threshold) add({ type: "vertical", position: 0,  source: "canvas-edge" });
+      if (Math.abs(dragRight - cw)            < this.config.threshold) add({ type: "vertical", position: cw, source: "canvas-edge" });
     }
 
     return guides;

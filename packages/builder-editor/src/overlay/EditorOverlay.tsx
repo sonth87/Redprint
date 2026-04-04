@@ -150,7 +150,40 @@ export interface SnapGuidesProps {
   guides: SnapGuide[];
   canvasWidth: number;
   canvasHeight: number;
+  helperLineColor?: string;
 }
+
+export interface CanvasHelperLinesProps {
+  canvasWidth: number;
+  canvasHeight: number;
+  color?: string;
+}
+
+export const CanvasHelperLines = memo(function CanvasHelperLines({
+  canvasWidth,
+  canvasHeight,
+  color,
+}: CanvasHelperLinesProps) {
+  const guideColor = color ?? "hsl(var(--snap-guide-color, 221.2 83.2% 53.3%))";
+  const opacity = 0.3; // Make these subtle compared to active snap guides
+
+  return (
+    <>
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          left: canvasWidth / 2,
+          top: 0,
+          width: 1,
+          height: canvasHeight,
+          backgroundColor: guideColor,
+          opacity,
+          zIndex: 49,
+        }}
+      />
+    </>
+  );
+});
 
 /**
  * SnapGuides — renders horizontal/vertical snap guide lines.
@@ -159,36 +192,57 @@ export const SnapGuides = memo(function SnapGuides({
   guides,
   canvasWidth,
   canvasHeight,
+  helperLineColor,
 }: SnapGuidesProps) {
   return (
     <>
-      {guides.map((guide, i) => (
-        <div
-          key={i}
-          className="absolute pointer-events-none"
-          style={
-            guide.type === "horizontal"
-              ? {
-                  left: 0,
-                  top: guide.position,
-                  width: canvasWidth,
-                  height: 1,
-                  backgroundColor: "hsl(var(--snap-guide-color, 221.2 83.2% 53.3%))",
-                  opacity: 0.8,
-                  zIndex: 50,
-                }
-              : {
-                  top: 0,
-                  left: guide.position,
-                  height: canvasHeight,
-                  width: 1,
-                  backgroundColor: "hsl(var(--snap-guide-color, 221.2 83.2% 53.3%))",
-                  opacity: 0.8,
-                  zIndex: 50,
-                }
-          }
-        />
-      ))}
+      {guides.map((guide, i) => {
+        const clampedPosition = Math.max(
+          0,
+          Math.min(
+            guide.type === "horizontal" ? canvasHeight : canvasWidth,
+            guide.position
+          )
+        );
+
+        const defaultColor = helperLineColor ?? "hsl(var(--snap-guide-color, 221.2 83.2% 53.3%))";
+        const guideColor =
+          guide.source === "canvas-center"
+            ? "hsl(280 70% 55%)"
+            : guide.source === "canvas-edge"
+            ? "hsl(0 70% 55%)"
+            : guide.source === "component-center"
+            ? "hsl(200 80% 50%)"
+            : defaultColor;
+
+        return (
+          <div
+            key={i}
+            className="absolute pointer-events-none"
+            style={
+              guide.type === "horizontal"
+                ? {
+                    left: 0,
+                    top: clampedPosition,
+                    width: canvasWidth,
+                    height: 1,
+                    backgroundColor: guideColor,
+                    opacity: 0.8,
+                    zIndex: 50,
+                  }
+                : {
+                    top: 0,
+                    left: clampedPosition,
+                    height: canvasHeight,
+                    width: 1,
+                    backgroundColor: guideColor,
+                    opacity: 0.8,
+                    zIndex: 50,
+                  }
+            }
+          />
+        );
+      })}
     </>
   );
 });

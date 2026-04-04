@@ -17,8 +17,8 @@ export { CanvasRoot } from "./canvas/CanvasRoot";
 export type { CanvasRootProps } from "./canvas/CanvasRoot";
 
 // Overlays
-export { SelectionOverlay, SnapGuides, HoverOutline, DistanceGuides, LiveDimensionsDisplay } from "./overlay/EditorOverlay";
-export type { SelectionOverlayProps, SnapGuidesProps, HoverOutlineProps, DistanceGuidesProps, LiveDimensionsDisplayProps } from "./overlay/EditorOverlay";
+export { SelectionOverlay, SnapGuides, CanvasHelperLines, HoverOutline, DistanceGuides, LiveDimensionsDisplay } from "./overlay/EditorOverlay";
+export type { SelectionOverlayProps, SnapGuidesProps, CanvasHelperLinesProps, HoverOutlineProps, DistanceGuidesProps, LiveDimensionsDisplayProps } from "./overlay/EditorOverlay";
 
 // Panels
 export { ComponentPalette } from "./panels/left/ComponentPalette";

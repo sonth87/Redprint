@@ -54,6 +54,7 @@ export function useMoveGesture({
   const [distanceGuides, setDistanceGuides] = useState<DistanceGuide[]>([]);
   const [liveDimensions, setLiveDimensions] = useState<LiveDimensions | null>(null);
   const dragStartedRef = useRef(false);
+  const canvasOffsetRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     if (!moving) return;
@@ -76,6 +77,22 @@ export function useMoveGesture({
       const isFirstMove = !dragStartedRef.current;
       if (isFirstMove) {
         dragStartedRef.current = true;
+        // On first move, explicitly record the offset between local CSS coords (startLeft)
+        // and true visual Canvas coords (er.left - fr.left). This bypasses complex DOM hierarchies!
+        const frameEl = activeFrameRef?.current ?? canvasFrameRef.current;
+        const nodeEl = frameEl?.querySelector(`[data-node-id="${moving.nodeId}"]`) as HTMLElement;
+        if (nodeEl && frameEl) {
+          const fr = frameEl.getBoundingClientRect();
+          const er = nodeEl.getBoundingClientRect();
+          const trueCanvasX = (er.left - fr.left) / zoom;
+          const trueCanvasY = (er.top - fr.top) / zoom;
+          canvasOffsetRef.current = {
+            x: trueCanvasX - moving.startLeft,
+            y: trueCanvasY - moving.startTop,
+          };
+        } else {
+          canvasOffsetRef.current = { x: 0, y: 0 };
+        }
       }
 
       const rawLeft = moving.startLeft + dx / zoom;
@@ -94,7 +111,11 @@ export function useMoveGesture({
           const w = nodeEl.offsetWidth;
           const h = nodeEl.offsetHeight;
           const fr = frameEl.getBoundingClientRect();
-          const movingRect: Rect = { x: rawLeft, y: rawTop, width: w, height: h };
+          
+          // Use our reliable canvasOffsetRef to map local coordinates to Canvas coordinates
+          const rawCanvasX = rawLeft + canvasOffsetRef.current.x;
+          const rawCanvasY = rawTop + canvasOffsetRef.current.y;
+          const movingRectInCanvas: Rect = { x: rawCanvasX, y: rawCanvasY, width: w, height: h };
 
           // ── Same-parent siblings (positional snap + distance guides) ──
           const siblings: Rect[] = [];
@@ -117,31 +138,19 @@ export function useMoveGesture({
               }
             }
           }
-          const result = snapEngine.snap(movingRect, siblings);
+          const result = snapEngine.snap(movingRectInCanvas, siblings);
           guides = result.guides;
-          finalLeft = Math.round(result.snappedPoint.x);
-          finalTop = Math.round(result.snappedPoint.y);
+          
+          // Convert snapped Canvas coordinates back to local CSS coordinates
+          finalLeft = Math.round(result.snappedPoint.x - canvasOffsetRef.current.x);
+          finalTop = Math.round(result.snappedPoint.y - canvasOffsetRef.current.y);
 
-          // ── Use SNAPPED position for guides ────────────────────────────
-          const snappedMovingRect: Rect = { x: finalLeft, y: finalTop, width: w, height: h };
-
-          // ── Cross-container alignment guides ──────────────────────────
-          const node2 = nodes[moving.nodeId];
-          const parentEl = node2?.parentId
-            ? (frameEl.querySelector(`[data-node-id="${node2.parentId}"]`) as HTMLElement | null)
-            : null;
-          const parentOffset = parentEl
-            ? {
-                x: (parentEl.getBoundingClientRect().left - fr.left) / zoom,
-                y: (parentEl.getBoundingClientRect().top - fr.top) / zoom,
-              }
-            : { x: 0, y: 0 };
-
-          const snappedMovingRectInCanvas: Rect = {
-            x: finalLeft + parentOffset.x,
-            y: finalTop + parentOffset.y,
-            width: w,
-            height: h,
+          // ── SNAPPED position in Canvas coordinates ─────────────────────────
+          const snappedMovingRectInCanvas: Rect = { 
+            x: result.snappedPoint.x, 
+            y: result.snappedPoint.y, 
+            width: w, 
+            height: h 
           };
 
           const allOtherRects: Rect[] = [];
@@ -162,7 +171,7 @@ export function useMoveGesture({
           const crossGuides = snapEngine.alignmentGuides(snappedMovingRectInCanvas, allOtherRects);
           guides = [...guides, ...crossGuides];
 
-          setDistanceGuides(snapEngine.distanceGuides(snappedMovingRect, siblings));
+          setDistanceGuides(snapEngine.distanceGuides(snappedMovingRectInCanvas, siblings));
           setLiveDimensions({ width: w, height: h });
         }
       }

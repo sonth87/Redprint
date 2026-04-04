@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useLayoutEffect, useRef, memo, useCallback, useMemo } from "react";
-import { Plus, GripHorizontal } from "lucide-react";
+import { Plus, UnfoldVertical } from "lucide-react";
 import type { BuilderNode } from "@ui-builder/builder-core";
 import type { Point } from "@ui-builder/shared";
 import { SECTION_HOVER_ZONE } from "../constants";
@@ -208,7 +208,7 @@ export const SectionOverlay = memo(function SectionOverlay({
                     onResizeStart(b.nodeId, e.clientY, b.height, id);
                   }}
                 >
-                  <GripHorizontal size={10 / zoom} />
+                  <UnfoldVertical size={10 / zoom} />
                 </button>
               </div>
             </div>

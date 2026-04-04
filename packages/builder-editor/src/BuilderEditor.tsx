@@ -28,7 +28,7 @@ import {
 } from "@ui-builder/shared";
 import { Monitor, Smartphone, GripVertical } from "lucide-react";
 import { CanvasRoot } from "./canvas/CanvasRoot";
-import { SelectionOverlay, SnapGuides, HoverOutline, DistanceGuides, LiveDimensionsDisplay } from "./overlay/EditorOverlay";
+import { SelectionOverlay, SnapGuides, CanvasHelperLines, HoverOutline, DistanceGuides, LiveDimensionsDisplay } from "./overlay/EditorOverlay";
 import { SectionOverlay } from "./overlay/SectionOverlay";
 import { SectionToolbar } from "./overlay/SectionToolbar";
 import { EditorToolbar } from "./toolbar/EditorToolbar";
@@ -203,8 +203,10 @@ function EditorInner() {
         snapToGrid: showGrid,
         snapToComponents: document.canvasConfig.snapToComponents,
         threshold: document.canvasConfig.snapThreshold,
+        canvasWidth,
+        canvasHeight: canvasMinHeight,
       }),
-    [document.canvasConfig, showGrid],
+    [document.canvasConfig, showGrid, canvasWidth, canvasMinHeight],
   );
 
   // ── Gesture hooks ────────────────────────────────────────────────────────
@@ -909,10 +911,12 @@ function EditorInner() {
           />
 
           {hoverRect && <HoverOutline rect={hoverRect} zoom={zoom} />}
+
           <SnapGuides
-            guides={snapGuides}
+            guides={document.canvasConfig.showHelperLines ? snapGuides : []}
             canvasWidth={canvasWidth}
             canvasHeight={canvasMinHeight}
+            helperLineColor={document.canvasConfig.helperLineColor}
           />
           <DistanceGuides guides={distanceGuides} zoom={zoom} />
           {selectionRect && liveDimensions && (
