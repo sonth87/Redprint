@@ -17,9 +17,11 @@ import {
   Badge,
   Separator,
 } from "@ui-builder/ui";
+import { Settings } from "lucide-react";
 import { useBuilder } from "@ui-builder/builder-react";
 import type { AIConfig, AIMessage, AIConversation, AICommandSuggestion, AIBuilderContext } from "./types";
 import { sendAIMessage } from "./AIService";
+import { AIConfigPanel } from "./AIConfig";
 import { useTranslation } from "react-i18next";
 
 // Commands the AI is allowed to dispatch — destructive/system commands are excluded
@@ -41,17 +43,19 @@ export interface AIAssistantProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   config: AIConfig;
+  onConfigChange?: (config: AIConfig) => void;
   context: AIBuilderContext;
 }
 
 // ── Component ───────────────────────────────────────────────────────────
 
-export function AIAssistant({ open, onOpenChange, config, context }: AIAssistantProps) {
+export function AIAssistant({ open, onOpenChange, config, onConfigChange, context }: AIAssistantProps) {
   const { t } = useTranslation();
   const { dispatch } = useBuilder();
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const [view, setView] = useState<"chat" | "settings">("chat");
   const [conversation, setConversation] = useState<AIConversation>({
     messages: [],
     isLoading: false,
@@ -129,7 +133,7 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
         error: err instanceof Error ? err.message : "Unknown error",
       }));
     }
-  }, [input, conversation, config, context]);
+  }, [input, conversation, config, context, t]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -160,78 +164,116 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[540px] max-h-[80vh] flex flex-col p-0 gap-0">
+        {/* Header with tabs */}
         <DialogHeader className="px-4 py-3 border-b shrink-0">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-sm font-medium">{t("ai.title")}</DialogTitle>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1">
+              <DialogTitle className="text-sm font-medium">{t("ai.title")}</DialogTitle>
+            </div>
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="text-[10px]">
                 {config.provider}
               </Badge>
-              {conversation.messages.length > 0 && (
-                <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={clearChat}>
-                  Clear
-                </Button>
-              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0"
+                onClick={() => setView(view === "chat" ? "settings" : "chat")}
+                title={view === "chat" ? "Settings" : "Chat"}
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </DialogHeader>
 
-        {/* Message list */}
-        <ScrollArea className="flex-1 min-h-0 px-4" ref={scrollRef}>
-          <div className="py-3 space-y-3">
-            {conversation.messages.length === 0 && !conversation.isLoading && (
-              <p className="text-xs text-muted-foreground text-center py-8">
-                {t("ai.placeholder")}
-              </p>
-            )}
+        {/* Content based on view */}
+        {view === "chat" ? (
+          <>
+            {/* Message list */}
+            <ScrollArea className="flex-1 min-h-0 px-4" ref={scrollRef}>
+              <div className="py-3 space-y-3">
+                {conversation.messages.length === 0 && !conversation.isLoading && (
+                  <p className="text-xs text-muted-foreground text-center py-8">
+                    {t("ai.placeholder")}
+                  </p>
+                )}
 
-            {conversation.messages.map((msg) => (
-              <MessageBubble
-                key={msg.id}
-                message={msg}
-                onApplySuggestion={applySuggestion}
-              />
-            ))}
+                {conversation.messages.map((msg) => (
+                  <MessageBubble
+                    key={msg.id}
+                    message={msg}
+                    onApplySuggestion={applySuggestion}
+                  />
+                ))}
 
-            {conversation.isLoading && (
-              <div className="flex gap-1 items-center text-xs text-muted-foreground py-2">
-                <span className="animate-pulse">●</span>
-                <span className="animate-pulse delay-100">●</span>
-                <span className="animate-pulse delay-200">●</span>
-                <span className="ml-1">Thinking…</span>
+                {conversation.isLoading && (
+                  <div className="flex gap-1 items-center text-xs text-muted-foreground py-2">
+                    <span className="animate-pulse">●</span>
+                    <span className="animate-pulse delay-100">●</span>
+                    <span className="animate-pulse delay-200">●</span>
+                    <span className="ml-1">Thinking…</span>
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+
+            {/* Error */}
+            {conversation.error && (
+              <div className="px-4 py-2 bg-destructive/10 text-destructive text-xs border-t">
+                {conversation.error}
               </div>
             )}
-          </div>
-        </ScrollArea>
 
-        {/* Error */}
-        {conversation.error && (
-          <div className="px-4 py-2 bg-destructive/10 text-destructive text-xs border-t">
-            {conversation.error}
-          </div>
+            <Separator />
+
+            {/* Input */}
+            <div className="px-4 py-3 flex gap-2 shrink-0">
+              <Input
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask AI to help…"
+                disabled={conversation.isLoading}
+                className="text-sm"
+              />
+              <Button
+                size="sm"
+                onClick={() => void handleSend()}
+                disabled={!input.trim() || conversation.isLoading}
+              >
+                Send
+              </Button>
+            </div>
+
+            {/* Clear button at bottom */}
+            {conversation.messages.length > 0 && (
+              <div className="px-4 py-2 border-t">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs h-8"
+                  onClick={clearChat}
+                >
+                  Clear Conversation
+                </Button>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            {/* Settings panel */}
+            <ScrollArea className="flex-1 min-h-0">
+              <AIConfigPanel 
+                config={config} 
+                onChange={(newConfig) => {
+                  onConfigChange?.(newConfig);
+                }}
+              />
+            </ScrollArea>
+          </>
         )}
-
-        <Separator />
-
-        {/* Input */}
-        <div className="px-4 py-3 flex gap-2 shrink-0">
-          <Input
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Ask AI to help…"
-            disabled={conversation.isLoading}
-            className="text-sm"
-          />
-          <Button
-            size="sm"
-            onClick={() => void handleSend()}
-            disabled={!input.trim() || conversation.isLoading}
-          >
-            Send
-          </Button>
-        </div>
       </DialogContent>
     </Dialog>
   );

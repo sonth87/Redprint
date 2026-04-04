@@ -608,6 +608,7 @@ function EditorInner() {
         open={aiOpen}
         onOpenChange={setAiOpen}
         config={aiConfig}
+        onConfigChange={handleAIConfigChange}
         context={aiContext}
       />
 
