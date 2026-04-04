@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type { BuilderNode } from "@ui-builder/builder-core";
 import { ShortcutManager } from "../shortcuts/ShortcutManager";
 import { v4 as uuidv4 } from "uuid";
@@ -16,7 +16,7 @@ interface UseKeyboardShortcutsOptions {
   clipboard: ClipboardData | null;
   breakpoint: string;
   canvasContainerRef: React.RefObject<HTMLElement | null>;
-  dispatch: (action: { type: string; payload: unknown; description?: string }) => void;
+  dispatch: (action: { type: string; payload: unknown; description?: string; groupId?: string }) => void;
   clearSelection: () => void;
   undo: () => void;
   redo: () => void;
@@ -57,13 +57,25 @@ export function useKeyboardShortcuts({
 }: UseKeyboardShortcutsOptions): void {
   const manager = useMemo(() => new ShortcutManager(), []);
 
+  // Refs for arrow nudge coalescing — group rapid nudge keystrokes into one
+  // history entry so Ctrl+Z undoes the entire nudge burst, not each pixel.
+  const nudgeGroupIdRef = useRef<string | null>(null);
+  const nudgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ── Undo / Redo — registered on window so they work regardless of focus ──
+  // (User may click into the Properties or Layers panel, losing canvas focus)
   useEffect(() => {
-    const container = canvasContainerRef.current;
-    if (!container) return;
+    const handleUndoRedo = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      // Skip if typing in a text input
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable
+      )
+        return;
 
-    const handleKeyDown = (e: KeyboardEvent) => {
       const ctrl = e.ctrlKey || e.metaKey;
-
       if (ctrl && e.key === "z" && !e.shiftKey) {
         e.preventDefault();
         undo();
@@ -74,6 +86,22 @@ export function useKeyboardShortcuts({
         redo();
         return;
       }
+    };
+
+    window.addEventListener("keydown", handleUndoRedo);
+    return () => window.removeEventListener("keydown", handleUndoRedo);
+  }, [undo, redo]);
+
+  // ── All other shortcuts — scoped to canvas container ─────────────────────
+  useEffect(() => {
+    const container = canvasContainerRef.current;
+    if (!container) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const ctrl = e.ctrlKey || e.metaKey;
+
+      // Undo/Redo handled by window listener above — skip here
+      if (ctrl && (e.key === "z" || e.key === "y")) return;
 
       if (ctrl && e.key === "c" && selectedNodeId) {
         e.preventDefault();
@@ -150,7 +178,6 @@ export function useKeyboardShortcuts({
       }
 
       // Device breakpoint shortcuts (D = desktop, M = mobile)
-      // Only fire when not typing in an input
       if (!ctrl && !e.shiftKey && !e.altKey && setBreakpoint) {
         const active = globalThis.document?.activeElement;
         const isTyping =
@@ -185,6 +212,15 @@ export function useKeyboardShortcuts({
           if (!node) return;
           const left = parseFloat(String(node.style.left ?? "0")) || 0;
           const top = parseFloat(String(node.style.top ?? "0")) || 0;
+
+          // Coalesce rapid nudge keystrokes: reuse the same groupId for 500 ms
+          // so that pressing ↑↑↑ 10 times only creates one undo step.
+          if (nudgeTimerRef.current) clearTimeout(nudgeTimerRef.current);
+          if (!nudgeGroupIdRef.current) nudgeGroupIdRef.current = uuidv4();
+          nudgeTimerRef.current = setTimeout(() => {
+            nudgeGroupIdRef.current = null;
+          }, 500);
+
           dispatch({
             type: "UPDATE_STYLE",
             payload: {
@@ -196,6 +232,7 @@ export function useKeyboardShortcuts({
               },
               breakpoint,
             },
+            groupId: nudgeGroupIdRef.current,
             description: "Nudge",
           });
         }
@@ -209,8 +246,6 @@ export function useKeyboardShortcuts({
     nodes,
     rootNodeId,
     clipboard,
-    undo,
-    redo,
     dispatch,
     clearSelection,
     breakpoint,

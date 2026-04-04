@@ -167,6 +167,19 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
     return { ...meta, createdAt: meta?.createdAt ?? ts, updatedAt: ts };
   };
 
+  /**
+   * Merge two style objects, removing keys whose value is `undefined`.
+   * This ensures that undo correctly deletes properties that didn't exist
+   * before the command (e.g. restoring a flow-positioned node after drag).
+   */
+  const mergeStyle = (
+    base: Partial<StyleConfig>,
+    override: Partial<StyleConfig>,
+  ): Partial<StyleConfig> =>
+    Object.fromEntries(
+      Object.entries({ ...base, ...override }).filter(([, v]) => v !== undefined),
+    ) as Partial<StyleConfig>;
+
   // ── ADD_NODE ────────────────────────────────────────────────────────────
   engine.registerHandler<AddNodePayload>(
     CMD_ADD_NODE,
@@ -458,7 +471,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
               ...state.document.nodes,
               [nodeId]: {
                 ...node,
-                style: { ...node.style, ...style },
+                style: mergeStyle(node.style, style),
                 metadata: updateMeta(node.metadata),
               },
             },
@@ -479,7 +492,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
               ...node,
               responsiveStyle: {
                 ...node.responsiveStyle,
-                [breakpoint]: { ...currentResponsive, ...style },
+                [breakpoint]: mergeStyle(currentResponsive, style),
               },
               metadata: updateMeta(node.metadata),
             },
@@ -527,7 +540,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
               ...node,
               responsiveStyle: {
                 ...node.responsiveStyle,
-                [breakpoint]: { ...currentResponsive, ...style },
+                [breakpoint]: mergeStyle(currentResponsive, style),
               },
               metadata: updateMeta(node.metadata),
             },
@@ -780,6 +793,26 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
           nodes: newNodes,
         },
         editor: { ...state.editor, selectedNodeIds: children.map((c) => c.id) },
+      };
+    },
+    // Inverse: restore the group container + all children with their original parentIds
+    (state, payload) => {
+      const { nodeId } = payload;
+      const groupNode = state.document.nodes[nodeId];
+      if (!groupNode) return undefined;
+
+      const children = Object.values(state.document.nodes).filter(
+        (n) => n.parentId === nodeId,
+      );
+
+      const snapshot: Record<string, BuilderNode> = { [nodeId]: groupNode };
+      for (const child of children) {
+        snapshot[child.id] = child;
+      }
+
+      return {
+        type: "RESTORE_NODES",
+        payload: { snapshot, selectNodeId: nodeId },
       };
     },
   );

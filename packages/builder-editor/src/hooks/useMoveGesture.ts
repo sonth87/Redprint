@@ -68,27 +68,14 @@ export function useMoveGesture({
       )
         return;
 
-      if (!dragStartedRef.current) {
+      // Track whether this is the very first move event past the threshold.
+      // On the first move, we include dimension-lock in the SAME dispatch as the
+      // position update — this ensures the history entry's `inverseCommand`
+      // captures ALL affected style keys at once (position + dimensions),
+      // so undo can correctly restore the element to its pre-drag layout.
+      const isFirstMove = !dragStartedRef.current;
+      if (isFirstMove) {
         dragStartedRef.current = true;
-        if (
-          !moving.wasAbsolute &&
-          moving.startWidth != null &&
-          moving.startHeight != null
-        ) {
-          dispatch({
-            type: "UPDATE_STYLE",
-            payload: {
-              nodeId: moving.nodeId,
-              style: {
-                width: `${moving.startWidth}px`,
-                height: `${moving.startHeight}px`,
-              },
-              breakpoint,
-            },
-            groupId: moving.gestureGroupId,
-            description: "Lock dimensions for drag",
-          });
-        }
       }
 
       const rawLeft = moving.startLeft + dx / zoom;
@@ -136,12 +123,9 @@ export function useMoveGesture({
           finalTop = Math.round(result.snappedPoint.y);
 
           // ── Use SNAPPED position for guides ────────────────────────────
-          // Recalculate rects using snapped coordinates (not raw mouse position)
           const snappedMovingRect: Rect = { x: finalLeft, y: finalTop, width: w, height: h };
 
           // ── Cross-container alignment guides ──────────────────────────
-          // finalLeft/finalTop are parent-relative snapped coords; add parent's canvas
-          // offset so all rects share the same canvas-frame coordinate space.
           const node2 = nodes[moving.nodeId];
           const parentEl = node2?.parentId
             ? (frameEl.querySelector(`[data-node-id="${node2.parentId}"]`) as HTMLElement | null)
@@ -160,7 +144,6 @@ export function useMoveGesture({
             height: h,
           };
 
-          // Collect all visible node rects in a single querySelectorAll pass
           const allOtherRects: Rect[] = [];
           const allNodeEls = Array.from(
             frameEl.querySelectorAll("[data-node-id]")
@@ -179,24 +162,31 @@ export function useMoveGesture({
           const crossGuides = snapEngine.alignmentGuides(snappedMovingRectInCanvas, allOtherRects);
           guides = [...guides, ...crossGuides];
 
-          // Compute distance guides to sibling elements using SNAPPED position
           setDistanceGuides(snapEngine.distanceGuides(snappedMovingRect, siblings));
-
-          // Update live dimensions (w/h stays fixed during drag, but update on first move)
           setLiveDimensions({ width: w, height: h });
         }
       }
 
       setSnapGuides(guides);
+
+      // Build style update. On the first move of a non-absolute element, include
+      // width+height in this same dispatch so the single history entry's
+      // inverseCommand captures ALL keys being changed (position + dimensions).
+      const styleUpdate: Record<string, string> = {
+        position: "absolute",
+        left: `${finalLeft}px`,
+        top: `${finalTop}px`,
+      };
+      if (isFirstMove && !moving.wasAbsolute && moving.startWidth != null && moving.startHeight != null) {
+        styleUpdate.width = `${moving.startWidth}px`;
+        styleUpdate.height = `${moving.startHeight}px`;
+      }
+
       dispatch({
         type: "UPDATE_STYLE",
         payload: {
           nodeId: moving.nodeId,
-          style: {
-            position: "absolute",
-            left: `${finalLeft}px`,
-            top: `${finalTop}px`,
-          },
+          style: styleUpdate,
           breakpoint,
         },
         groupId: moving.gestureGroupId,
