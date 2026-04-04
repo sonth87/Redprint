@@ -1,0 +1,223 @@
+import React, { memo } from "react";
+import {
+  Settings,
+  Info,
+  Bookmark,
+  ArrowUp,
+  ArrowDown,
+  EyeOff,
+  Eye,
+  Copy,
+  Trash2,
+} from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider,
+} from "@ui-builder/ui";
+import type { BuilderNode, CanvasMode } from "@ui-builder/builder-core";
+import type { Point } from "@ui-builder/shared";
+
+export interface SectionToolbarProps {
+  node: BuilderNode;
+  sectionNodes: BuilderNode[];
+  zoom: number;
+  panOffset: Point;
+  canvasFrameRef: React.RefObject<HTMLDivElement | null>;
+  dispatch: (action: { type: string; payload: unknown; groupId?: string; description?: string }) => void;
+  newNodeId: () => string;
+  /** Dual-mode positioning extras */
+  canvasMode?: CanvasMode;
+  activeBreakpoint?: string;
+  desktopFrameWidth?: number;
+  mobileFramePos?: Point;
+}
+
+/**
+ * Vertical icon toolbar anchored to the left of the selected section.
+ * Positioned in screen-space (outside CanvasRoot transform), like ContextualToolbar.
+ * Screen position: canvasX * zoom + panOffset.x
+ */
+export const SectionToolbar = memo(function SectionToolbar({
+  node,
+  sectionNodes,
+  zoom,
+  panOffset,
+  dispatch,
+  newNodeId,
+  canvasMode,
+  activeBreakpoint,
+  desktopFrameWidth = 0,
+  mobileFramePos,
+}: SectionToolbarProps) {
+  const currentIdx = sectionNodes.findIndex((s) => s.id === node.id);
+  const isFirst = currentIdx === 0;
+  const isLast = currentIdx === sectionNodes.length - 1;
+  const isMobileOrTablet = activeBreakpoint && activeBreakpoint !== "desktop";
+  const isHidden = isMobileOrTablet
+    ? Boolean(node.responsiveHidden?.[activeBreakpoint as "mobile" | "tablet"])
+    : Boolean(node.hidden);
+
+  const handleMoveUp = () => {
+    if (isFirst) return;
+    dispatch({
+      type: "REORDER_NODE",
+      payload: { nodeId: node.id, insertIndex: currentIdx - 1 },
+      description: "Move section up",
+    });
+  };
+
+  const handleMoveDown = () => {
+    if (isLast) return;
+    dispatch({
+      type: "REORDER_NODE",
+      payload: { nodeId: node.id, insertIndex: currentIdx + 1 },
+      description: "Move section down",
+    });
+  };
+
+  const handleToggleHidden = () => {
+    const isMobileOrTablet = activeBreakpoint && activeBreakpoint !== "desktop";
+    if (isMobileOrTablet) {
+      // Per-breakpoint hide — does not affect desktop
+      dispatch({
+        type: "TOGGLE_RESPONSIVE_HIDDEN",
+        payload: { nodeId: node.id, breakpoint: activeBreakpoint, hidden: !isHidden },
+        description: isHidden ? "Show section on mobile" : "Hide section on mobile",
+      });
+    } else {
+      // Global hide (desktop = base)
+      dispatch({
+        type: isHidden ? "SHOW_NODE" : "HIDE_NODE",
+        payload: { nodeId: node.id },
+        description: isHidden ? "Show section" : "Hide section",
+      });
+    }
+  };
+
+  const handleClone = () => {
+    dispatch({
+      type: "DUPLICATE_NODE",
+      payload: { nodeId: node.id, offset: { x: 0, y: 0 }, newNodeId: newNodeId() },
+      description: "Clone section",
+    });
+  };
+
+  const handleDelete = () => {
+    dispatch({
+      type: "REMOVE_NODE",
+      payload: { nodeId: node.id },
+      description: "Delete section",
+    });
+  };
+
+  // ── Screen-space positioning ────────────────────────────────────────────
+  const BTN_SIZE = 28;
+  const GAP = 2;
+  const PADDING = 4;
+  const NUM_BUTTONS = 8;
+  const TOOLBAR_WIDTH = 32;
+  const toolbarHeight = NUM_BUTTONS * BTN_SIZE + (NUM_BUTTONS - 1) * GAP + PADDING * 2;
+
+  // Sections stack vertically from y=0, x=0 in canvas-space
+  const canvasTop = sectionNodes
+    .slice(0, currentIdx)
+    .reduce((sum, s) => sum + ((s.props?.minHeight as number) ?? 0), 0);
+  const canvasHeight = (node.props?.minHeight as number) ?? 400;
+
+  const isOnMobile = canvasMode === "dual" && activeBreakpoint === "mobile";
+  /** Gap (px in canvas-space) between desktop and mobile frames in dual mode */
+  const DUAL_GAP = 240;
+  const mobileXOffset = isOnMobile
+    ? (desktopFrameWidth + DUAL_GAP + (mobileFramePos?.x ?? 0)) * zoom
+    : 0;
+  const mobileYOffset = isOnMobile ? (mobileFramePos?.y ?? 0) * zoom : 0;
+
+  const toolbarTop =
+    canvasTop * zoom + panOffset.y + mobileYOffset + (canvasHeight * zoom - toolbarHeight) / 2;
+  const toolbarLeft = panOffset.x + mobileXOffset - TOOLBAR_WIDTH - 8;
+
+  // ── Button definitions ─────────────────────────────────────────────────
+  const buttons: Array<{
+    icon: React.ReactNode;
+    tooltip: string;
+    onClick: () => void;
+    disabled?: boolean;
+    danger?: boolean;
+  }> = [
+    { icon: <Settings size={14} />, tooltip: "Cài đặt section", onClick: () => {} },
+    {
+      icon: <Info size={14} />,
+      tooltip: `Section: ${node.name ?? node.id} · ${sectionNodes.length} sections`,
+      onClick: () => {},
+    },
+    { icon: <Bookmark size={14} />, tooltip: "Lưu làm preset", onClick: () => {} },
+    {
+      icon: <ArrowUp size={14} />,
+      tooltip: "Di chuyển lên trên",
+      onClick: handleMoveUp,
+      disabled: isFirst,
+    },
+    {
+      icon: <ArrowDown size={14} />,
+      tooltip: "Di chuyển xuống dưới",
+      onClick: handleMoveDown,
+      disabled: isLast,
+    },
+    {
+      icon: isHidden ? <Eye size={14} /> : <EyeOff size={14} />,
+      tooltip: isHidden ? "Hiện section" : "Ẩn section",
+      onClick: handleToggleHidden,
+    },
+    { icon: <Copy size={14} />, tooltip: "Clone section", onClick: handleClone },
+    {
+      icon: <Trash2 size={14} />,
+      tooltip: "Xóa section",
+      onClick: handleDelete,
+      danger: true,
+    },
+  ];
+
+  return (
+    <TooltipProvider delayDuration={300}>
+      <div
+        className="bg-background/95 border-border shadow-md absolute z-30 flex flex-col items-center rounded-md border backdrop-blur-md"
+        style={{
+          top: toolbarTop,
+          left: toolbarLeft,
+          width: TOOLBAR_WIDTH,
+          padding: PADDING,
+          gap: GAP,
+        }}
+        onPointerDown={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {buttons.map((btn, i) => (
+          <Tooltip key={i}>
+            <TooltipTrigger asChild>
+              <button
+                disabled={btn.disabled}
+                onClick={btn.onClick}
+                className={[
+                  "flex h-7 w-7 items-center justify-center rounded transition-colors",
+                  btn.disabled
+                    ? "cursor-not-allowed text-muted-foreground/40"
+                    : btn.danger
+                      ? "text-destructive hover:bg-destructive/10 cursor-pointer"
+                      : "text-foreground hover:bg-accent cursor-pointer",
+                ].join(" ")}
+              >
+                {btn.icon}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="text-xs">
+              {btn.tooltip}
+            </TooltipContent>
+          </Tooltip>
+        ))}
+      </div>
+    </TooltipProvider>
+  );
+});

@@ -20,6 +20,8 @@ import {
 import { Monitor, Smartphone, GripVertical } from "lucide-react";
 import { CanvasRoot } from "./canvas/CanvasRoot";
 import { SelectionOverlay, SnapGuides, HoverOutline, DistanceGuides, LiveDimensionsDisplay } from "./overlay/EditorOverlay";
+import { SectionOverlay } from "./overlay/SectionOverlay";
+import { SectionToolbar } from "./overlay/SectionToolbar";
 import { EditorToolbar } from "./toolbar/EditorToolbar";
 import { ComponentPalette } from "./panels/left/ComponentPalette";
 import { LayerTree } from "./panels/bottom/LayerTree";
@@ -43,6 +45,7 @@ import { useDragHandlers } from "./hooks/useDragHandlers";
 import { usePointerDown } from "./hooks/usePointerDown";
 import { useZIndexHandlers } from "./hooks/useZIndexHandlers";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
+import { useSectionResize } from "./hooks/useSectionResize";
 
 // ── Inner editor (must be inside BuilderProvider) ─────────────────────────
 
@@ -86,10 +89,28 @@ function EditorInner() {
     breakpoint === "desktop"
       ? (document.canvasConfig.width ?? DEVICE_VIEWPORT_PRESETS.desktop.width)
       : (DEVICE_VIEWPORT_PRESETS[breakpoint]?.width ?? DEVICE_VIEWPORT_PRESETS.desktop.width);
+
+  // Sections drive canvas height: sum of each section's minHeight, fallback to config
+  const sectionNodes = useMemo(
+    () =>
+      Object.values(document.nodes)
+        .filter((n) => n.parentId === document.rootNodeId && n.type === "Section")
+        .sort((a, b) => a.order - b.order),
+    [document.nodes, document.rootNodeId],
+  );
+  const sectionsTotalHeight = useMemo(() => {
+    if (sectionNodes.length === 0) return 0;
+    return sectionNodes.reduce((sum, n) => {
+      const h = typeof n.props.minHeight === "number" ? n.props.minHeight : 400;
+      return sum + h;
+    }, 0);
+  }, [sectionNodes]);
   const canvasMinHeight =
-    breakpoint === "desktop"
-      ? (document.canvasConfig.height ?? DEVICE_VIEWPORT_PRESETS.desktop.height)
-      : (DEVICE_VIEWPORT_PRESETS[breakpoint]?.height ?? DEVICE_VIEWPORT_PRESETS.desktop.height);
+    sectionsTotalHeight > 0
+      ? sectionsTotalHeight
+      : breakpoint === "desktop"
+        ? (document.canvasConfig.height ?? DEVICE_VIEWPORT_PRESETS.desktop.height)
+        : (DEVICE_VIEWPORT_PRESETS[breakpoint]?.height ?? DEVICE_VIEWPORT_PRESETS.desktop.height);
 
   // Auto-fit zoom when switching to a narrower device
   const prevBreakpointRef = useRef<string>(breakpoint);
@@ -191,6 +212,15 @@ function EditorInner() {
   const liveDimensions = moving ? moveLiveDimensions : resizeLiveDimensions;
 
   const { rotating, startRotate } = useRotateGesture({ breakpoint, dispatch });
+
+  // ── Section resize ───────────────────────────────────────────────────────
+  const { sectionResizing, startSectionResize } = useSectionResize({
+    zoom,
+    showGrid,
+    gridSize: document.canvasConfig.gridSize,
+    breakpoint,
+    dispatch,
+  });
 
   // ── DOM observation hooks ────────────────────────────────────────────────
   const { selectionRect, currentRotation } = useSelectionRect({
@@ -391,6 +421,38 @@ function EditorInner() {
     [document.canvasConfig, showGrid],
   );
 
+  // ── Section helpers ──────────────────────────────────────────────────────
+  const selectedSectionNode =
+    selectedNodeId && document.nodes[selectedNodeId]?.type === "Section"
+      ? document.nodes[selectedNodeId]
+      : null;
+
+  const handleAddSection = useCallback(
+    (afterOrder: number) => {
+      const newId = uuidv4();
+      dispatch({
+        type: "ADD_NODE",
+        payload: {
+          nodeId: newId,
+          parentId: document.rootNodeId,
+          componentType: "Section",
+          props: { minHeight: 400 },
+          style: {
+            display: "flex",
+            flexDirection: "column",
+            width: "100%",
+            minHeight: "400px",
+            position: "relative",
+            backgroundColor: "#ffffff",
+          },
+          insertIndex: afterOrder + 1,
+        },
+        description: "Add section",
+      });
+    },
+    [dispatch, document.rootNodeId],
+  );
+
   // ── Mobile frame drag offset ─────────────────────────────────────────────
   const [mobileFramePos, setMobileFramePos] = React.useState({ x: 0, y: 0 });
   const handleMobileFrameGripDown = useCallback(
@@ -522,15 +584,18 @@ function EditorInner() {
             style={{
               display: "flex",
               alignItems: "flex-start",
-              gap: canvasMode === "dual" ? 120 : 0,
+              gap: canvasMode === "dual" ? 240 : 0,
             }}
           >
             {/* ── Desktop frame (primary in single; always left in dual) ─── */}
             <div style={{ display: "flex", flexDirection: "column", flexShrink: 0 }}>
               {canvasMode === "dual" ? (
                 <BreakpointOverrideProvider breakpoint="desktop">
+                  <div style={{ position: "relative" }}>
                   <div
                     style={{
+                      position: "absolute",
+                      bottom: "100%",
                       marginBottom: 8,
                       fontSize: 11,
                       color: "hsl(var(--muted-foreground))",
@@ -539,6 +604,7 @@ function EditorInner() {
                       gap: 5,
                       userSelect: "none",
                       cursor: "pointer",
+                      whiteSpace: "nowrap",
                     }}
                     onClick={() => setBreakpoint("desktop")}
                   >
@@ -588,6 +654,19 @@ function EditorInner() {
                   >
                     <div className="pointer-events-none absolute inset-y-0 left-1/2 z-0 w-[1200px] -translate-x-1/2 border-x border-dashed border-blue-400/20" />
                     <NodeRenderer nodeId={document.rootNodeId} />
+                    <SectionOverlay
+                      nodes={document.nodes}
+                      rootNodeId={document.rootNodeId}
+                      zoom={zoom}
+                      panOffset={panOffset}
+                      canvasFrameRef={canvasFrameRef}
+                      onAddSection={handleAddSection}
+                      onResizeStart={(nodeId, clientY, currentHeightPx, gid) =>
+                        startSectionResize(nodeId, clientY, currentHeightPx, gid)
+                      }
+                      isResizing={sectionResizing !== null}
+                    />
+                  </div>
                   </div>
                 </BreakpointOverrideProvider>
               ) : (
@@ -611,6 +690,18 @@ function EditorInner() {
                 >
                   <div className="pointer-events-none absolute inset-y-0 left-1/2 z-0 w-[1200px] -translate-x-1/2 border-x border-dashed border-blue-400/20" />
                   <NodeRenderer nodeId={document.rootNodeId} />
+                  <SectionOverlay
+                    nodes={document.nodes}
+                    rootNodeId={document.rootNodeId}
+                    zoom={zoom}
+                    panOffset={panOffset}
+                    canvasFrameRef={canvasFrameRef}
+                    onAddSection={handleAddSection}
+                    onResizeStart={(nodeId, clientY, currentHeightPx, gid) =>
+                      startSectionResize(nodeId, clientY, currentHeightPx, gid)
+                    }
+                    isResizing={sectionResizing !== null}
+                  />
                 </div>
               )}
             </div>
@@ -627,8 +718,11 @@ function EditorInner() {
                   left: mobileFramePos.x,
                 }}
               >
+                <div style={{ position: "relative" }}>
                 <div
                   style={{
+                    position: "absolute",
+                    bottom: "100%",
                     marginBottom: 8,
                     fontSize: 11,
                     color: "hsl(var(--muted-foreground))",
@@ -637,6 +731,7 @@ function EditorInner() {
                     gap: 5,
                     userSelect: "none",
                     cursor: "pointer",
+                    whiteSpace: "nowrap",
                   }}
                   onClick={() => setBreakpoint("mobile")}
                 >
@@ -699,8 +794,21 @@ function EditorInner() {
                     onDrop={handleDrop}
                   >
                     <NodeRenderer nodeId={document.rootNodeId} mode="editor" />
+                    <SectionOverlay
+                      nodes={document.nodes}
+                      rootNodeId={document.rootNodeId}
+                      zoom={zoom}
+                      panOffset={panOffset}
+                      canvasFrameRef={mobileFrameRef}
+                      onAddSection={handleAddSection}
+                      onResizeStart={(nodeId, clientY, currentHeightPx, gid) =>
+                        startSectionResize(nodeId, clientY, currentHeightPx, gid)
+                      }
+                      isResizing={sectionResizing !== null}
+                    />
                   </div>
                 </BreakpointOverrideProvider>
+                </div>
               </div>
             )}
           </div>
@@ -714,6 +822,7 @@ function EditorInner() {
             }}
             zoom={zoom}
             rotation={currentRotation}
+            isSection={!!selectedSectionNode}
             onResizeStart={(handle, e) => {
               if (!selectionRect || !selectedNodeId) return;
               setResizing({
@@ -757,9 +866,29 @@ function EditorInner() {
               zoom={zoom}
             />
           )}
+
+          {/* Section overlays are now rendered inside each frame div */}
+
         </CanvasRoot>
 
-        {selectedNodeId && selectionRect && (
+        {/* ── Section toolbar: left-side action bar for selected section (screen-space) ── */}
+        {selectedSectionNode && (
+          <SectionToolbar
+            node={selectedSectionNode}
+            sectionNodes={sectionNodes}
+            zoom={zoom}
+            panOffset={panOffset}
+            canvasFrameRef={canvasFrameRef}
+            dispatch={dispatch}
+            newNodeId={uuidv4}
+            canvasMode={canvasMode}
+            activeBreakpoint={breakpoint}
+            desktopFrameWidth={document.canvasConfig.width ?? DEVICE_VIEWPORT_PRESETS.desktop.width}
+            mobileFramePos={mobileFramePos}
+          />
+        )}
+
+        {selectedNodeId && selectionRect && !selectedSectionNode && (
           <ContextualToolbar
             nodeId={selectedNodeId}
             rect={selectionRect}

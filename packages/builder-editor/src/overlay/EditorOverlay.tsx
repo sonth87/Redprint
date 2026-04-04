@@ -55,6 +55,7 @@ export interface SelectionOverlayProps {
   selection: SelectionState;
   zoom: number;
   rotation?: number;
+  isSection?: boolean;
   onResizeStart: (handle: ResizeHandleType, e: React.MouseEvent) => void;
   onRotateStart: (e: React.MouseEvent) => void;
 }
@@ -67,6 +68,7 @@ export const SelectionOverlay = memo(function SelectionOverlay({
   selection,
   zoom,
   rotation = 0,
+  isSection = false,
   onResizeStart,
   onRotateStart,
 }: SelectionOverlayProps) {
@@ -92,8 +94,8 @@ export const SelectionOverlay = memo(function SelectionOverlay({
           zIndex: 40,
         }}
       >
-        {/* Resize handles — only show when single selection */}
-        {selection.selectedIds.length === 1 && (
+        {/* Resize handles — only show when single selection and not a section */}
+        {selection.selectedIds.length === 1 && !isSection && (
           (["n", "s", "e", "w", "ne", "nw", "se", "sw"] as ResizeHandleType[]).map((h) => (
             <ResizeHandle
               key={h}
@@ -106,7 +108,7 @@ export const SelectionOverlay = memo(function SelectionOverlay({
         )}
 
         {/* Rotation handle */}
-        {selection.selectedIds.length === 1 && (
+        {selection.selectedIds.length === 1 && !isSection && (
           <div
             data-rotation-handle
             className="absolute pointer-events-auto cursor-crosshair"

@@ -47,28 +47,9 @@ export function NodeRenderer({ nodeId, mode = "editor" }: NodeRendererProps) {
   }
 
   // Check per-breakpoint visibility (respects responsiveHidden and global hidden).
-  // In editor mode: render a ghost/stub so the element still occupies space in the
-  // layer panel and can be re-shown. In runtime mode: omit entirely.
+  // In runtime mode: omit entirely. In editor mode: render dimmed so user can still select/edit.
   const visible = resolveVisibility(node, breakpoint);
-  if (!visible) {
-    if (mode === "runtime") return null;
-    // Editor: render placeholder so the node is still discoverable
-    return (
-      <div
-        data-node-id={nodeId}
-        data-hidden-on={breakpoint}
-        style={{
-          opacity: 0,
-          position: node.style.position === "absolute" ? "absolute" : undefined,
-          left: node.style.left,
-          top: node.style.top,
-          width: node.style.width,
-          height: node.style.height,
-          pointerEvents: "none",
-        }}
-      />
-    );
-  }
+  if (!visible && mode === "runtime") return null;
 
   // Lookup registry — exposed via builder API
   const registry = builder.registry;
@@ -117,9 +98,16 @@ export function NodeRenderer({ nodeId, mode = "editor" }: NodeRendererProps) {
     // Inject data-node-id so canvas event handlers can identify nodes via
     // closest("[data-node-id]") / querySelector("[data-node-id]")
     if (React.isValidElement(rendered)) {
+      const extraProps: Record<string, unknown> = { "data-node-id": nodeId };
+      // In editor mode, dim hidden nodes so they are visible but clearly marked as hidden
+      if (!visible && mode === "editor") {
+        extraProps["data-editor-hidden"] = "true";
+        const existingStyle = (rendered.props as Record<string, unknown>).style as React.CSSProperties | undefined;
+        extraProps.style = { ...existingStyle, opacity: 0.35, outline: "2px dashed rgba(99,102,241,0.5)", outlineOffset: "-2px" };
+      }
       return React.cloneElement(
         rendered as React.ReactElement<Record<string, unknown>>,
-        { "data-node-id": nodeId },
+        extraProps,
       );
     }
     return rendered as React.ReactElement;

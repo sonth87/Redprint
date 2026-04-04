@@ -182,6 +182,16 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
       const order =
         payload.insertIndex !== undefined ? payload.insertIndex : siblings.length;
 
+      // Shift existing siblings to make room when inserting at a specific index
+      const shiftedSiblings: Record<string, BuilderNode> = {};
+      if (payload.insertIndex !== undefined) {
+        for (const sib of siblings) {
+          if (sib.order >= payload.insertIndex) {
+            shiftedSiblings[sib.id] = { ...sib, order: sib.order + 1 };
+          }
+        }
+      }
+
       const newNode: BuilderNode = {
         id: nodeId,
         type: payload.componentType,
@@ -212,7 +222,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
         document: {
           ...state.document,
           updatedAt: timestamp,
-          nodes: { ...state.document.nodes, [nodeId]: newNode },
+          nodes: { ...state.document.nodes, ...shiftedSiblings, [nodeId]: newNode },
         },
         editor: { ...state.editor, selectedNodeIds: [nodeId] },
       };
