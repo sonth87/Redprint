@@ -116,7 +116,7 @@ export const SectionOverlay = memo(function SectionOverlay({
               style={{
                 position: "absolute",
                 left: 0,
-                top: b.bottom - SECTION_HOVER_ZONE / zoom,
+                top: b.bottom - SECTION_HOVER_ZONE / zoom / 2,
                 width: "100%",
                 height: SECTION_HOVER_ZONE / zoom,
                 zIndex: 60,
