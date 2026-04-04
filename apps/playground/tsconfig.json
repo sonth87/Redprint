@@ -8,5 +8,6 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "noEmit": true
   },
-  "include": ["src", "vite.config.ts"]
+  "include": ["src", "vite.config.ts"],
+  "exclude": ["vite.config.js", "vite.config.d.ts", "postcss.config.cjs"]
 }

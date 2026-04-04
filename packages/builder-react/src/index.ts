@@ -10,6 +10,12 @@ export { BuilderProvider } from "./context/BuilderProvider";
 export type { BuilderProviderProps } from "./context/BuilderProvider";
 export { BuilderContext } from "./context/BuilderContext";
 export type { BuilderContextValue } from "./context/types";
+export {
+  BreakpointOverrideProvider,
+  BreakpointOverrideContext,
+  useBreakpointOverride,
+} from "./context/BreakpointOverrideContext";
+export type { BreakpointOverrideProviderProps } from "./context/BreakpointOverrideContext";
 
 // Hooks
 export { useBuilder } from "./hooks/useBuilder";
@@ -19,6 +25,7 @@ export { useDocument } from "./hooks/useDocument";
 export { useBreakpoint } from "./hooks/useBreakpoint";
 export { useHistory } from "./hooks/useHistory";
 export { usePlugin } from "./hooks/usePlugin";
+export { useResolvedBreakpoint } from "./hooks/useResolvedBreakpoint";
 
 // Properties
 export { useNodeProperty } from "./hooks/useNodeProperty";

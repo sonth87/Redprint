@@ -20,6 +20,7 @@ interface UseKeyboardShortcutsOptions {
   clearSelection: () => void;
   undo: () => void;
   redo: () => void;
+  setBreakpoint?: (bp: "desktop" | "mobile") => void;
 }
 
 function collectSubtree(
@@ -52,6 +53,7 @@ export function useKeyboardShortcuts({
   clearSelection,
   undo,
   redo,
+  setBreakpoint,
 }: UseKeyboardShortcutsOptions): void {
   const manager = useMemo(() => new ShortcutManager(), []);
 
@@ -147,6 +149,28 @@ export function useKeyboardShortcuts({
         return;
       }
 
+      // Device breakpoint shortcuts (D = desktop, M = mobile)
+      // Only fire when not typing in an input
+      if (!ctrl && !e.shiftKey && !e.altKey && setBreakpoint) {
+        const active = globalThis.document?.activeElement;
+        const isTyping =
+          active?.tagName === "INPUT" ||
+          active?.tagName === "TEXTAREA" ||
+          (active as HTMLElement)?.contentEditable === "true";
+        if (!isTyping) {
+          if (e.key === "d" || e.key === "D") {
+            e.preventDefault();
+            setBreakpoint("desktop");
+            return;
+          }
+          if (e.key === "m" || e.key === "M") {
+            e.preventDefault();
+            setBreakpoint("mobile");
+            return;
+          }
+        }
+      }
+
       if (selectedNodeId && !ctrl) {
         const step = e.shiftKey ? 10 : 1;
         let dx = 0;
@@ -191,6 +215,7 @@ export function useKeyboardShortcuts({
     clearSelection,
     breakpoint,
     canvasContainerRef,
+    setBreakpoint,
   ]);
 
   // Suppress unused variable warning for manager — available for future extension

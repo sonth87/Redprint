@@ -3,6 +3,7 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
+    "verbatimModuleSyntax": false,
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "paths": {
       "@ui-builder/builder-core": ["../builder-core/dist/index.d.ts"],

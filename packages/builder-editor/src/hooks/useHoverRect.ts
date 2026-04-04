@@ -9,6 +9,9 @@ interface UseHoverRectOptions {
   panOffset: { x: number; y: number };
   nodes: Record<string, BuilderNode>;
   canvasFrameRef: React.RefObject<HTMLDivElement | null>;
+  /** In dual-canvas mode, pass the active frame ref so hover queries the right DOM tree.
+   *  Coordinate origin always uses canvasFrameRef (Desktop frame = canvas origin). */
+  nodeQueryRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 export interface UseHoverRectReturn {
@@ -25,6 +28,7 @@ export function useHoverRect({
   panOffset,
   nodes,
   canvasFrameRef,
+  nodeQueryRef,
 }: UseHoverRectOptions): UseHoverRectReturn {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [hoverRect, setHoverRect] = useState<Rect | null>(null);
@@ -55,7 +59,8 @@ export function useHoverRect({
       setHoverRect(null);
       return;
     }
-    const el = canvasFrameRef.current.querySelector(
+    const queryRoot = nodeQueryRef?.current ?? canvasFrameRef.current;
+    const el = queryRoot.querySelector(
       `[data-node-id="${hoveredNodeId}"]`
     ) as HTMLElement;
     if (!el) {
@@ -70,7 +75,7 @@ export function useHoverRect({
       width: elRect.width / zoom,
       height: elRect.height / zoom,
     });
-  }, [hoveredNodeId, zoom, panOffset, nodes, canvasFrameRef]);
+  }, [hoveredNodeId, zoom, panOffset, nodes, canvasFrameRef, nodeQueryRef]);
 
   return { hoveredNodeId, hoverRect, handleMouseOver, handleMouseOut };
 }

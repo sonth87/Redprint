@@ -1,7 +1,6 @@
 /**
  * AI Assistant types.
  */
-import type { BuilderDocument, BuilderNode, ComponentDefinition } from "@ui-builder/builder-core";
 
 export type AIProvider = "openai" | "gemini" | "claude";
 
@@ -40,8 +39,16 @@ export interface AIBuilderContext {
     name: string | undefined;
     props: Record<string, unknown>;
     style: Record<string, unknown>;
+    capabilities?: string[];
+    propSchema?: Array<{ key: string; label: string; type: string }>;
   } | null;
-  availableComponents: { type: string; name: string; category: string }[];
+  availableComponents: {
+    type: string;
+    name: string;
+    category: string;
+    propSchema?: Array<{ key: string; label: string; type: string }>;
+    capabilities?: string[];
+  }[];
   activeBreakpoint: string;
 }
 

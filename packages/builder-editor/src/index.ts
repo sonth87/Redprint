@@ -17,8 +17,8 @@ export { CanvasRoot } from "./canvas/CanvasRoot";
 export type { CanvasRootProps } from "./canvas/CanvasRoot";
 
 // Overlays
-export { SelectionOverlay, SnapGuides, HoverOutline } from "./overlay/EditorOverlay";
-export type { SelectionOverlayProps, SnapGuidesProps, HoverOutlineProps } from "./overlay/EditorOverlay";
+export { SelectionOverlay, SnapGuides, HoverOutline, DistanceGuides, LiveDimensionsDisplay } from "./overlay/EditorOverlay";
+export type { SelectionOverlayProps, SnapGuidesProps, HoverOutlineProps, DistanceGuidesProps, LiveDimensionsDisplayProps } from "./overlay/EditorOverlay";
 
 // Panels
 export { ComponentPalette } from "./panels/left/ComponentPalette";
@@ -55,6 +55,8 @@ export type {
   ViewportState,
   NodeRect,
   SnapGuide,
+  DistanceGuide,
+  LiveDimensions,
   SelectionState,
   DropIndicatorState,
   DropIndicatorType,

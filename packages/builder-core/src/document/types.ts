@@ -135,6 +135,10 @@ export interface BuilderNode {
   /** Human-readable label in layer panel */
   name?: string;
   metadata?: NodeMetadata;
+  /** Per-breakpoint visibility override. true = hidden on that breakpoint only. */
+  responsiveHidden?: Partial<Record<Breakpoint, boolean>>;
+  /** Per-breakpoint prop overrides (e.g. different text on mobile). Merged onto base props. */
+  responsiveProps?: Partial<Record<Breakpoint, Record<string, unknown>>>;
 }
 
 // ── Variable & Plugin Reference ───────────────────────────────────────────

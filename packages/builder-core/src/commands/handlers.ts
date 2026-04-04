@@ -8,12 +8,13 @@
  */
 
 import { v4 as uuidv4 } from "uuid";
-import type { BuilderState } from "../state/types";
-import type { BuilderNode, StyleConfig } from "../document/types";
-import type { Command } from "./types";
+import type { ClipboardData } from "../state/types";
+import type { BuilderNode, NodeMetadata, StyleConfig } from "../document/types";
 import type { CommandEngine } from "./CommandEngine";
 import type { ComponentRegistry } from "../registry/ComponentRegistry";
+import type { EventBus } from "../events/EventBus";
 import type { Breakpoint } from "../responsive/types";
+import { DUPLICATE_OFFSET } from "../constants";
 import {
   CMD_ADD_NODE,
   CMD_REMOVE_NODE,
@@ -33,6 +34,10 @@ import {
   CMD_UNGROUP_NODES,
   CMD_SET_VARIABLE,
   CMD_UPDATE_CANVAS_CONFIG,
+  CMD_TOGGLE_RESPONSIVE_HIDDEN,
+  CMD_UPDATE_RESPONSIVE_PROPS,
+  CMD_RESET_RESPONSIVE_STYLE,
+  CMD_SET_CANVAS_MODE,
   type AddNodePayload,
   type RemoveNodePayload,
   type DuplicateNodePayload,
@@ -48,6 +53,10 @@ import {
   type UngroupNodesPayload,
   type SetVariablePayload,
   type UpdateCanvasConfigPayload,
+  type ToggleResponsiveHiddenPayload,
+  type UpdateResponsivePropsPayload,
+  type ResetResponsiveStylePayload,
+  type SetCanvasModePayload,
 } from "./built-in";
 
 // ── Editor-only command types (no undo/redo) ─────────────────────────────
@@ -99,7 +108,7 @@ function collectDescendants(nodeId: string, nodes: Record<string, BuilderNode>):
 function cloneSubtree(
   rootNodeId: string,
   nodes: Record<string, BuilderNode>,
-  offset: { x: number; y: number } = { x: 20, y: 20 },
+  offset: { x: number; y: number } = DUPLICATE_OFFSET,
   overrideRootId?: string,
 ): { newNodes: Record<string, BuilderNode>; newRootId: string } {
   const now = new Date().toISOString();
@@ -140,13 +149,6 @@ function cloneSubtree(
   return { newNodes, newRootId: idMap.get(rootNodeId)! };
 }
 
-/**
- * Get sibling count for a given parent.
- */
-function siblingCount(parentId: string | null, nodes: Record<string, BuilderNode>): number {
-  return Object.values(nodes).filter((n) => n.parentId === parentId).length;
-}
-
 // ── Main registration ─────────────────────────────────────────────────────
 
 /**
@@ -156,8 +158,14 @@ function siblingCount(parentId: string | null, nodes: Record<string, BuilderNode
  * @param engine - The CommandEngine instance
  * @param registry - The ComponentRegistry (for defaultProps/defaultStyle lookup)
  */
-export function registerAllHandlers(engine: CommandEngine, registry: ComponentRegistry): void {
+export function registerAllHandlers(engine: CommandEngine, registry: ComponentRegistry, eventBus?: EventBus): void {
   const now = () => new Date().toISOString();
+  // Explicitly typed return ensures TypeScript preserves required `createdAt`
+  // and handles nodes where metadata may have been omitted.
+  const updateMeta = (meta: NodeMetadata | undefined): NodeMetadata => {
+    const ts = now();
+    return { ...meta, createdAt: meta?.createdAt ?? ts, updatedAt: ts };
+  };
 
   // ── ADD_NODE ────────────────────────────────────────────────────────────
   engine.registerHandler<AddNodePayload>(
@@ -172,6 +180,16 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
       );
       const order =
         payload.insertIndex !== undefined ? payload.insertIndex : siblings.length;
+
+      // Shift existing siblings to make room when inserting at a specific index
+      const shiftedSiblings: Record<string, BuilderNode> = {};
+      if (payload.insertIndex !== undefined) {
+        for (const sib of siblings) {
+          if (sib.order >= payload.insertIndex) {
+            shiftedSiblings[sib.id] = { ...sib, order: sib.order + 1 };
+          }
+        }
+      }
 
       const newNode: BuilderNode = {
         id: nodeId,
@@ -203,7 +221,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
         document: {
           ...state.document,
           updatedAt: timestamp,
-          nodes: { ...state.document.nodes, [nodeId]: newNode },
+          nodes: { ...state.document.nodes, ...shiftedSiblings, [nodeId]: newNode },
         },
         editor: { ...state.editor, selectedNodeIds: [nodeId] },
       };
@@ -276,7 +294,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
   engine.registerHandler<DuplicateNodePayload>(
     CMD_DUPLICATE_NODE,
     (state, payload) => {
-      const { nodeId, offset = { x: 20, y: 20 }, newNodeId } = payload;
+      const { nodeId, offset = DUPLICATE_OFFSET, newNodeId } = payload;
       if (!state.document.nodes[nodeId]) return state;
 
       const { newNodes, newRootId } = cloneSubtree(nodeId, state.document.nodes, offset, newNodeId);
@@ -400,7 +418,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
             [nodeId]: {
               ...node,
               props: { ...node.props, ...props },
-              metadata: { ...node.metadata, updatedAt: now() },
+              metadata: updateMeta(node.metadata),
             },
           },
         },
@@ -441,7 +459,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
               [nodeId]: {
                 ...node,
                 style: { ...node.style, ...style },
-                metadata: { ...node.metadata, updatedAt: now() },
+                metadata: updateMeta(node.metadata),
               },
             },
           },
@@ -463,7 +481,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
                 ...node.responsiveStyle,
                 [breakpoint]: { ...currentResponsive, ...style },
               },
-              metadata: { ...node.metadata, updatedAt: now() },
+              metadata: updateMeta(node.metadata),
             },
           },
         },
@@ -511,7 +529,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
                 ...node.responsiveStyle,
                 [breakpoint]: { ...currentResponsive, ...style },
               },
-              metadata: { ...node.metadata, updatedAt: now() },
+              metadata: updateMeta(node.metadata),
             },
           },
         },
@@ -545,7 +563,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
             [nodeId]: {
               ...node,
               interactions,
-              metadata: { ...node.metadata, updatedAt: now() },
+              metadata: updateMeta(node.metadata),
             },
           },
         },
@@ -575,7 +593,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
           updatedAt: now(),
           nodes: {
             ...state.document.nodes,
-            [nodeId]: { ...node, name, metadata: { ...node.metadata, updatedAt: now() } },
+            [nodeId]: { ...node, name, metadata: updateMeta(node.metadata) },
           },
         },
       };
@@ -808,7 +826,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
         canvasConfig: { ...state.document.canvasConfig, ...payload.config },
       },
     }),
-    (state, payload) => ({
+    (state, _payload) => ({
       type: CMD_UPDATE_CANVAS_CONFIG,
       payload: { config: state.document.canvasConfig },
     }),
@@ -870,17 +888,158 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
 
   engine.registerHandler<SetBreakpointPayload>(
     CMD_SET_BREAKPOINT,
-    (state, payload) => ({
-      ...state,
-      editor: { ...state.editor, activeBreakpoint: payload.breakpoint },
-    }),
+    (state, payload) => {
+      // Emit breakpoint:changed event so plugins & consumers can react
+      eventBus?.emit("breakpoint:changed", { breakpoint: payload.breakpoint });
+      return {
+        ...state,
+        editor: { ...state.editor, activeBreakpoint: payload.breakpoint },
+      };
+    },
   );
 
-  engine.registerHandler<{ data: import("../state/types").ClipboardData | null }>(
+  engine.registerHandler<{ data: ClipboardData | null }>(
     CMD_SET_CLIPBOARD,
     (state, payload) => ({
       ...state,
       editor: { ...state.editor, clipboard: payload.data },
+    }),
+  );
+
+  // ── TOGGLE_RESPONSIVE_HIDDEN ─────────────────────────────────────────────
+  engine.registerHandler<ToggleResponsiveHiddenPayload>(
+    CMD_TOGGLE_RESPONSIVE_HIDDEN,
+    (state, payload) => {
+      const { nodeId, breakpoint, hidden } = payload;
+      const node = state.document.nodes[nodeId];
+      if (!node) return state;
+
+      const currentResponsiveHidden = node.responsiveHidden ?? {};
+      const updatedHidden = { ...currentResponsiveHidden };
+      if (hidden) {
+        updatedHidden[breakpoint] = true;
+      } else {
+        delete updatedHidden[breakpoint];
+      }
+
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: now(),
+          nodes: {
+            ...state.document.nodes,
+            [nodeId]: {
+              ...node,
+              responsiveHidden: Object.keys(updatedHidden).length > 0 ? updatedHidden : undefined,
+              metadata: updateMeta(node.metadata),
+            },
+          },
+        },
+      };
+    },
+    (state, payload) => ({
+      type: CMD_TOGGLE_RESPONSIVE_HIDDEN,
+      payload: {
+        nodeId: payload.nodeId,
+        breakpoint: payload.breakpoint,
+        hidden: state.document.nodes[payload.nodeId]?.responsiveHidden?.[payload.breakpoint] === true,
+      },
+    }),
+  );
+
+  // ── UPDATE_RESPONSIVE_PROPS ──────────────────────────────────────────────
+  engine.registerHandler<UpdateResponsivePropsPayload>(
+    CMD_UPDATE_RESPONSIVE_PROPS,
+    (state, payload) => {
+      const { nodeId, breakpoint, props } = payload;
+      const node = state.document.nodes[nodeId];
+      if (!node) return state;
+
+      const currentResponsiveProps = node.responsiveProps?.[breakpoint] ?? {};
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: now(),
+          nodes: {
+            ...state.document.nodes,
+            [nodeId]: {
+              ...node,
+              responsiveProps: {
+                ...(node.responsiveProps ?? {}),
+                [breakpoint]: { ...currentResponsiveProps, ...props },
+              },
+              metadata: updateMeta(node.metadata),
+            },
+          },
+        },
+      };
+    },
+    (state, payload) => {
+      const node = state.document.nodes[payload.nodeId];
+      const oldProps: Record<string, unknown> = {};
+      for (const key of Object.keys(payload.props)) {
+        oldProps[key] = node?.responsiveProps?.[payload.breakpoint]?.[key];
+      }
+      return {
+        type: CMD_UPDATE_RESPONSIVE_PROPS,
+        payload: { nodeId: payload.nodeId, breakpoint: payload.breakpoint, props: oldProps },
+      };
+    },
+  );
+
+  // ── RESET_RESPONSIVE_STYLE ───────────────────────────────────────────────
+  engine.registerHandler<ResetResponsiveStylePayload>(
+    CMD_RESET_RESPONSIVE_STYLE,
+    (state, payload) => {
+      const { nodeId, breakpoint, keys } = payload;
+      const node = state.document.nodes[nodeId];
+      if (!node) return state;
+
+      const currentOverride = { ...(node.responsiveStyle[breakpoint] ?? {}) };
+      for (const key of keys) {
+        delete (currentOverride as Record<string, unknown>)[key];
+      }
+
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: now(),
+          nodes: {
+            ...state.document.nodes,
+            [nodeId]: {
+              ...node,
+              responsiveStyle: {
+                ...node.responsiveStyle,
+                [breakpoint]: Object.keys(currentOverride).length > 0 ? currentOverride : undefined,
+              },
+              metadata: updateMeta(node.metadata),
+            },
+          },
+        },
+      };
+    },
+    (state, payload) => {
+      const node = state.document.nodes[payload.nodeId];
+      const oldStyle: Partial<StyleConfig> = {};
+      for (const key of payload.keys as Array<keyof StyleConfig>) {
+        oldStyle[key] = (node?.responsiveStyle[payload.breakpoint] ?? {})[key] as never;
+      }
+      return {
+        type: CMD_UPDATE_RESPONSIVE_STYLE,
+        payload: { nodeId: payload.nodeId, breakpoint: payload.breakpoint, style: oldStyle },
+      };
+    },
+  );
+
+  // ── SET_CANVAS_MODE (editor-only, no undo/redo) ──────────────────────────
+  engine.registerHandler<SetCanvasModePayload>(
+    CMD_SET_CANVAS_MODE,
+    (state, payload) => ({
+      ...state,
+      editor: { ...state.editor, canvasMode: payload.canvasMode },
     }),
   );
 }

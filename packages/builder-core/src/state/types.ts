@@ -89,6 +89,8 @@ export interface UIState {
 
 // ── Editor state ──────────────────────────────────────────────────────────
 
+export type CanvasMode = "single" | "dual";
+
 export interface EditorState {
   selectedNodeIds: string[];
   hoveredNodeId: string | null;
@@ -97,6 +99,8 @@ export interface EditorState {
   zoom: number;
   panOffset: Point;
   clipboard: ClipboardData | null;
+  /** Display mode: single canvas (switching device) or dual side-by-side */
+  canvasMode: CanvasMode;
 }
 
 // ── Interaction state ─────────────────────────────────────────────────────

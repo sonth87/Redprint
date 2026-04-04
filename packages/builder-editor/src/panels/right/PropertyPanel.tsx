@@ -1,6 +1,7 @@
-import React, { memo, useState, useCallback } from "react";
+import React, { memo, useState, useCallback, useMemo } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent, ScrollArea, Label, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, Switch, Separator, Badge } from "@ui-builder/ui";
-import type { BuilderNode, ComponentDefinition, PropSchema, InteractionConfig, InteractionTrigger, InteractionAction } from "@ui-builder/builder-core";
+import type { BuilderNode, Breakpoint, ComponentDefinition, PropSchema, InteractionConfig, InteractionTrigger, InteractionAction } from "@ui-builder/builder-core";
+import { resolveStyle, resolveProps } from "@ui-builder/builder-core";
 import {
   ChevronDown,
   ChevronRight,
@@ -16,10 +17,12 @@ import {
   EyeOff,
 } from "lucide-react";
 import { cn } from "@ui-builder/ui";
+import { useTranslation } from "react-i18next";
 
 export interface PropertyPanelProps {
   selectedNode: BuilderNode | null;
   definition: ComponentDefinition | null;
+  breakpoint?: Breakpoint;
   onPropChange: (key: string, value: unknown) => void;
   onStyleChange: (key: string, value: unknown) => void;
   onInteractionsChange?: (interactions: InteractionConfig[]) => void;
@@ -190,35 +193,6 @@ function CollapsibleSection({
 
 // ── Interaction editor row ───────────────────────────────────────────────
 
-const TRIGGER_OPTIONS: { value: InteractionTrigger; label: string }[] = [
-  { value: "click", label: "Click" },
-  { value: "dblclick", label: "Double Click" },
-  { value: "hover", label: "Hover" },
-  { value: "mouseenter", label: "Mouse Enter" },
-  { value: "mouseleave", label: "Mouse Leave" },
-  { value: "focus", label: "Focus" },
-  { value: "blur", label: "Blur" },
-  { value: "submit", label: "Submit" },
-  { value: "change", label: "Change" },
-  { value: "mount", label: "Mount" },
-  { value: "unmount", label: "Unmount" },
-  { value: "scroll", label: "Scroll" },
-];
-
-const ACTION_TYPE_OPTIONS = [
-  { value: "navigate", label: "Navigate" },
-  { value: "toggleVisibility", label: "Toggle Visibility" },
-  { value: "setState", label: "Set State" },
-  { value: "showModal", label: "Show Modal" },
-  { value: "hideModal", label: "Hide Modal" },
-  { value: "scrollTo", label: "Scroll To" },
-  { value: "addClass", label: "Add Class" },
-  { value: "removeClass", label: "Remove Class" },
-  { value: "emit", label: "Emit Event" },
-  { value: "triggerApi", label: "API Call" },
-  { value: "custom", label: "Custom" },
-];
-
 function InteractionRow({
   interaction,
   index,
@@ -230,6 +204,40 @@ function InteractionRow({
   onChange: (updated: InteractionConfig) => void;
   onRemove: () => void;
 }) {
+  const { t } = useTranslation();
+  const triggerOptions: { value: InteractionTrigger; label: string }[] = useMemo(
+    () => [
+      { value: "click", label: t("events.click") },
+      { value: "dblclick", label: t("events.dblclick") },
+      { value: "hover", label: t("events.hover") },
+      { value: "mouseenter", label: t("events.mouseenter") },
+      { value: "mouseleave", label: t("events.mouseleave") },
+      { value: "focus", label: t("events.focus") },
+      { value: "blur", label: t("events.blur") },
+      { value: "submit", label: t("events.submit") },
+      { value: "change", label: t("events.change") },
+      { value: "mount", label: t("events.mount") },
+      { value: "unmount", label: t("events.unmount") },
+      { value: "scroll", label: t("events.scroll") },
+    ],
+    [t],
+  );
+  const actionTypeOptions = useMemo(
+    () => [
+      { value: "navigate", label: t("events.navigate") },
+      { value: "toggleVisibility", label: t("events.toggleVisibility") },
+      { value: "setState", label: t("events.setState") },
+      { value: "showModal", label: t("events.showModal") },
+      { value: "hideModal", label: t("events.hideModal") },
+      { value: "scrollTo", label: t("events.scrollTo") },
+      { value: "addClass", label: t("events.addClass") },
+      { value: "removeClass", label: t("events.removeClass") },
+      { value: "emit", label: t("events.emitEvent") },
+      { value: "triggerApi", label: t("events.apiCall") },
+      { value: "custom", label: t("events.custom") },
+    ],
+    [t],
+  );
   return (
     <div className="rounded-md border p-2 space-y-2">
       <div className="flex items-center justify-between">
@@ -246,7 +254,7 @@ function InteractionRow({
 
       <div className="grid grid-cols-2 gap-2">
         <div className="grid gap-1">
-          <Label className="text-[10px] text-muted-foreground">Trigger</Label>
+          <Label className="text-[10px] text-muted-foreground">{t("events.trigger")}</Label>
           <Select
             value={interaction.trigger}
             onValueChange={(val) =>
@@ -257,7 +265,7 @@ function InteractionRow({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {TRIGGER_OPTIONS.map((opt) => (
+              {triggerOptions.map((opt) => (
                 <SelectItem key={opt.value} value={opt.value} className="text-xs">
                   {opt.label}
                 </SelectItem>
@@ -267,7 +275,7 @@ function InteractionRow({
         </div>
 
         <div className="grid gap-1">
-          <Label className="text-[10px] text-muted-foreground">Action</Label>
+          <Label className="text-[10px] text-muted-foreground">{t("events.action")}</Label>
           <Select
             value={interaction.actions[0]?.type ?? "navigate"}
             onValueChange={(val) => {
@@ -279,7 +287,7 @@ function InteractionRow({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {ACTION_TYPE_OPTIONS.map((opt) => (
+              {actionTypeOptions.map((opt) => (
                 <SelectItem key={opt.value} value={opt.value} className="text-xs">
                   {opt.label}
                 </SelectItem>
@@ -292,7 +300,7 @@ function InteractionRow({
       {/* Action-specific fields */}
       {interaction.actions[0]?.type === "navigate" && (
         <div className="grid gap-1">
-          <Label className="text-[10px] text-muted-foreground">URL</Label>
+          <Label className="text-[10px] text-muted-foreground">{t("events.url")}</Label>
           <Input
             className="h-7 text-xs"
             placeholder="https://..."
@@ -312,7 +320,7 @@ function InteractionRow({
         interaction.actions[0]?.type === "hideModal" ||
         interaction.actions[0]?.type === "scrollTo") && (
         <div className="grid gap-1">
-          <Label className="text-[10px] text-muted-foreground">Target ID</Label>
+          <Label className="text-[10px] text-muted-foreground">{t("events.targetId")}</Label>
           <Input
             className="h-7 text-xs font-mono"
             placeholder="node-id"
@@ -332,7 +340,7 @@ function InteractionRow({
       {interaction.actions[0]?.type === "setState" && (
         <div className="grid grid-cols-2 gap-2">
           <div className="grid gap-1">
-            <Label className="text-[10px] text-muted-foreground">Key</Label>
+            <Label className="text-[10px] text-muted-foreground">{t("events.key")}</Label>
             <Input
               className="h-7 text-xs"
               placeholder="key"
@@ -347,7 +355,7 @@ function InteractionRow({
             />
           </div>
           <div className="grid gap-1">
-            <Label className="text-[10px] text-muted-foreground">Value</Label>
+            <Label className="text-[10px] text-muted-foreground">{t("events.value")}</Label>
             <Input
               className="h-7 text-xs"
               placeholder="value"
@@ -407,20 +415,25 @@ const EASING_OPTIONS = [
 export const PropertyPanel = memo(function PropertyPanel({
   selectedNode,
   definition,
+  breakpoint,
   onPropChange,
   onStyleChange,
   onInteractionsChange,
 }: PropertyPanelProps) {
+  const { t } = useTranslation();
   if (!selectedNode || !definition) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-xs text-muted-foreground gap-2 p-4">
         <Settings2 className="h-8 w-8 text-muted-foreground/40" />
-        <p className="text-center">Select a component to edit its properties.</p>
+        <p className="text-center">{t("panels.selectComponent")}</p>
       </div>
     );
   }
 
-  const style = selectedNode.style as Record<string, unknown>;
+  const activeBp = breakpoint ?? "desktop";
+  const resolvedStyle = resolveStyle(selectedNode.style, selectedNode.responsiveStyle ?? {}, activeBp);
+  const resolvedPropsMap = resolveProps(selectedNode.props, selectedNode.responsiveProps, activeBp);
+  const style = resolvedStyle as Record<string, unknown>;
   const interactions = selectedNode.interactions ?? [];
 
   const handleAddInteraction = () => {
@@ -456,7 +469,7 @@ export const PropertyPanel = memo(function PropertyPanel({
         </div>
         <div className="flex items-center gap-1">
           {selectedNode.locked && (
-            <Badge variant="outline" className="text-[9px] px-1 py-0">Locked</Badge>
+            <Badge variant="outline" className="text-[9px] px-1 py-0">{t("propertyPanel.locked")}</Badge>
           )}
           {selectedNode.hidden && (
             <Badge variant="outline" className="text-[9px] px-1 py-0">
@@ -470,23 +483,23 @@ export const PropertyPanel = memo(function PropertyPanel({
         <TabsList className="mx-2 mt-2 h-8 grid grid-cols-5">
           <TabsTrigger value="design" className="text-[10px] gap-0.5 px-1">
             <Paintbrush className="h-3 w-3" />
-            <span className="hidden sm:inline">Design</span>
+            <span className="hidden sm:inline">{t("propertyPanel.design")}</span>
           </TabsTrigger>
           <TabsTrigger value="events" className="text-[10px] gap-0.5 px-1">
             <Zap className="h-3 w-3" />
-            <span className="hidden sm:inline">Events</span>
+            <span className="hidden sm:inline">{t("propertyPanel.events")}</span>
           </TabsTrigger>
           <TabsTrigger value="effects" className="text-[10px] gap-0.5 px-1">
             <Sparkles className="h-3 w-3" />
-            <span className="hidden sm:inline">Effects</span>
+            <span className="hidden sm:inline">{t("propertyPanel.effects")}</span>
           </TabsTrigger>
           <TabsTrigger value="data" className="text-[10px] gap-0.5 px-1">
             <Database className="h-3 w-3" />
-            <span className="hidden sm:inline">Data</span>
+            <span className="hidden sm:inline">{t("propertyPanel.data")}</span>
           </TabsTrigger>
           <TabsTrigger value="advanced" className="text-[10px] gap-0.5 px-1">
             <Settings2 className="h-3 w-3" />
-            <span className="hidden sm:inline">Adv</span>
+            <span className="hidden sm:inline">{t("propertyPanel.advanced")}</span>
           </TabsTrigger>
         </TabsList>
 
@@ -495,7 +508,7 @@ export const PropertyPanel = memo(function PropertyPanel({
           <ScrollArea className="h-full">
             {/* Component props */}
             {definition.propSchema.length > 0 && (
-              <CollapsibleSection title="Properties">
+              <CollapsibleSection title={t("propertyPanel.properties")}>
                 {definition.propSchema.map((schema) => {
                   if (schema.type === "group") {
                     return (
@@ -507,7 +520,7 @@ export const PropertyPanel = memo(function PropertyPanel({
                           <PropControl
                             key={child.key}
                             schema={child}
-                            value={selectedNode.props[child.key]}
+                            value={resolvedPropsMap[child.key]}
                             onChange={(val) => onPropChange(child.key, val)}
                           />
                         ))}
@@ -518,7 +531,7 @@ export const PropertyPanel = memo(function PropertyPanel({
                     <PropControl
                       key={schema.key}
                       schema={schema}
-                      value={selectedNode.props[schema.key]}
+                      value={resolvedPropsMap[schema.key]}
                       onChange={(val) => onPropChange(schema.key, val)}
                     />
                   );
@@ -527,7 +540,7 @@ export const PropertyPanel = memo(function PropertyPanel({
             )}
 
             {/* Size */}
-            <CollapsibleSection title="Size">
+            <CollapsibleSection title={t("design.size")}>
               <div className="grid grid-cols-2 gap-2">
                 {["width", "height", "minWidth", "maxWidth", "minHeight", "maxHeight"].map((key) => (
                   <div key={key} className="grid gap-1">
@@ -544,7 +557,7 @@ export const PropertyPanel = memo(function PropertyPanel({
             </CollapsibleSection>
 
             {/* Spacing */}
-            <CollapsibleSection title="Spacing">
+            <CollapsibleSection title={t("design.spacing")}>
               <div className="grid grid-cols-2 gap-2">
                 {["padding", "paddingTop", "paddingRight", "paddingBottom", "paddingLeft"].map((key) => (
                   <div key={key} className="grid gap-1">
@@ -579,7 +592,7 @@ export const PropertyPanel = memo(function PropertyPanel({
             </CollapsibleSection>
 
             {/* Typography */}
-            <CollapsibleSection title="Typography">
+            <CollapsibleSection title={t("design.typography")}>
               <div className="grid grid-cols-2 gap-2">
                 <div className="grid gap-1">
                   <Label className="text-[10px] text-muted-foreground">Font Family</Label>
@@ -669,7 +682,7 @@ export const PropertyPanel = memo(function PropertyPanel({
             </CollapsibleSection>
 
             {/* Background */}
-            <CollapsibleSection title="Background" defaultOpen={false}>
+            <CollapsibleSection title={t("design.background")} defaultOpen={false}>
               <div className="grid gap-1.5">
                 <Label className="text-[10px] text-muted-foreground">Background Color</Label>
                 <div className="flex items-center gap-2">
@@ -698,7 +711,7 @@ export const PropertyPanel = memo(function PropertyPanel({
             </CollapsibleSection>
 
             {/* Border */}
-            <CollapsibleSection title="Border" defaultOpen={false}>
+            <CollapsibleSection title={t("design.border")} defaultOpen={false}>
               <div className="grid grid-cols-2 gap-2">
                 <div className="grid gap-1">
                   <Label className="text-[10px] text-muted-foreground">Width</Label>
@@ -754,7 +767,7 @@ export const PropertyPanel = memo(function PropertyPanel({
             </CollapsibleSection>
 
             {/* Shadow & Effects */}
-            <CollapsibleSection title="Shadow" defaultOpen={false}>
+            <CollapsibleSection title={t("design.shadow")} defaultOpen={false}>
               <div className="grid gap-1">
                 <Label className="text-[10px] text-muted-foreground">Box Shadow</Label>
                 <Input
@@ -767,7 +780,7 @@ export const PropertyPanel = memo(function PropertyPanel({
             </CollapsibleSection>
 
             {/* Layout */}
-            <CollapsibleSection title="Layout" defaultOpen={false}>
+            <CollapsibleSection title={t("design.layout")} defaultOpen={false}>
               <div className="grid grid-cols-2 gap-2">
                 <div className="grid gap-1">
                   <Label className="text-[10px] text-muted-foreground">Display</Label>
@@ -913,7 +926,7 @@ export const PropertyPanel = memo(function PropertyPanel({
             </CollapsibleSection>
 
             {/* Opacity & Filter */}
-            <CollapsibleSection title="Visual" defaultOpen={false}>
+            <CollapsibleSection title={t("design.visual")} defaultOpen={false}>
               <div className="grid gap-2">
                 <div className="flex items-center justify-between">
                   <Label className="text-[10px] text-muted-foreground">Opacity</Label>
@@ -966,7 +979,7 @@ export const PropertyPanel = memo(function PropertyPanel({
             </CollapsibleSection>
 
             {/* Transform */}
-            <CollapsibleSection title="Transform" defaultOpen={false}>
+            <CollapsibleSection title={t("design.transform")} defaultOpen={false}>
               <div className="grid gap-1">
                 <Label className="text-[10px] text-muted-foreground">Transform</Label>
                 <Input
@@ -1001,7 +1014,7 @@ export const PropertyPanel = memo(function PropertyPanel({
                 <div className="rounded-md border border-dashed p-4 text-center">
                   <Zap className="h-6 w-6 mx-auto text-muted-foreground/40 mb-2" />
                   <p className="text-xs text-muted-foreground">
-                    No interactions yet. Click "Add" to create one.
+                    {t("events.noInteractions")}
                   </p>
                 </div>
               )}
@@ -1022,7 +1035,7 @@ export const PropertyPanel = memo(function PropertyPanel({
         {/* ── Effects tab ──────────────────────────────────────────── */}
         <TabsContent value="effects" className="flex-1 overflow-hidden mt-0">
           <ScrollArea className="h-full">
-            <CollapsibleSection title="Display Animation">
+            <CollapsibleSection title={t("effects.displayAnimation")}>
               <div className="grid gap-1.5">
                 <Label className="text-[10px] text-muted-foreground">Animation</Label>
                 <Select
@@ -1087,7 +1100,7 @@ export const PropertyPanel = memo(function PropertyPanel({
               </div>
             </CollapsibleSection>
 
-            <CollapsibleSection title="Hover Effect" defaultOpen={false}>
+            <CollapsibleSection title={t("effects.hoverEffect")} defaultOpen={false}>
               <div className="grid gap-2">
                 <div className="grid gap-1">
                   <Label className="text-[10px] text-muted-foreground">Hover Transform</Label>
@@ -1137,11 +1150,11 @@ export const PropertyPanel = memo(function PropertyPanel({
               <div className="rounded-md border border-dashed p-4 text-center">
                 <Database className="h-6 w-6 mx-auto text-muted-foreground/40 mb-2" />
                 <p className="text-xs text-muted-foreground">
-                  Data binding allows you to connect component properties to dynamic data sources.
+                  {t("dataTab.description")}
                 </p>
               </div>
 
-              <CollapsibleSection title="Repeater" defaultOpen={false}>
+              <CollapsibleSection title={t("dataTab.repeater")} defaultOpen={false}>
                 <div className="grid gap-2">
                   <div className="flex items-center justify-between">
                     <Label className="text-xs">Repeat Data</Label>
@@ -1164,7 +1177,7 @@ export const PropertyPanel = memo(function PropertyPanel({
                 </div>
               </CollapsibleSection>
 
-              <CollapsibleSection title="Conditional Visibility" defaultOpen={false}>
+              <CollapsibleSection title={t("dataTab.conditionalVisibility")} defaultOpen={false}>
                 <div className="grid gap-2">
                   <div className="flex items-center justify-between">
                     <Label className="text-xs">Conditional</Label>
@@ -1220,7 +1233,7 @@ export const PropertyPanel = memo(function PropertyPanel({
         {/* ── Advanced tab ─────────────────────────────────────────── */}
         <TabsContent value="advanced" className="flex-1 overflow-hidden mt-0">
           <ScrollArea className="h-full">
-            <CollapsibleSection title="Identity">
+            <CollapsibleSection title={t("advancedTab.identity")}>
               <div className="grid gap-2">
                 <div className="grid gap-1">
                   <Label className="text-[10px] text-muted-foreground">Name</Label>
@@ -1243,7 +1256,7 @@ export const PropertyPanel = memo(function PropertyPanel({
               </div>
             </CollapsibleSection>
 
-            <CollapsibleSection title="CSS Class & Attributes" defaultOpen={false}>
+            <CollapsibleSection title={t("advancedTab.cssClassAttributes")} defaultOpen={false}>
               <div className="grid gap-2">
                 <div className="grid gap-1">
                   <Label className="text-[10px] text-muted-foreground">CSS Class</Label>
@@ -1266,7 +1279,7 @@ export const PropertyPanel = memo(function PropertyPanel({
               </div>
             </CollapsibleSection>
 
-            <CollapsibleSection title="SEO & Accessibility" defaultOpen={false}>
+            <CollapsibleSection title={t("advancedTab.seoAccessibility")} defaultOpen={false}>
               <div className="grid gap-2">
                 <div className="grid gap-1">
                   <Label className="text-[10px] text-muted-foreground">ARIA Role</Label>
@@ -1299,7 +1312,7 @@ export const PropertyPanel = memo(function PropertyPanel({
               </div>
             </CollapsibleSection>
 
-            <CollapsibleSection title="Tooltip" defaultOpen={false}>
+            <CollapsibleSection title={t("advancedTab.tooltip")} defaultOpen={false}>
               <div className="grid gap-2">
                 <div className="flex items-center justify-between">
                   <Label className="text-xs">Show Tooltip</Label>
@@ -1340,7 +1353,7 @@ export const PropertyPanel = memo(function PropertyPanel({
               </div>
             </CollapsibleSection>
 
-            <CollapsibleSection title="Metadata" defaultOpen={false}>
+            <CollapsibleSection title={t("advancedTab.metadata")} defaultOpen={false}>
               <div className="grid gap-1 text-xs text-muted-foreground">
                 <div className="flex justify-between">
                   <span>Created</span>

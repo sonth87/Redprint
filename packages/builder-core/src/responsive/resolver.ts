@@ -1,5 +1,5 @@
 import type { Breakpoint } from "./types";
-import type { StyleConfig } from "../document/types";
+import type { StyleConfig, BuilderNode } from "../document/types";
 
 /**
  * Resolves the effective style for a given breakpoint by merging
@@ -22,4 +22,43 @@ export function resolveStyle(
   const override = responsiveStyle[breakpoint];
   if (!override) return baseStyle;
   return { ...baseStyle, ...override } as StyleConfig;
+}
+
+/**
+ * Resolves the effective props for a given breakpoint by merging
+ * the base props with the breakpoint-specific override.
+ *
+ * Desktop edits go to base props. Mobile/tablet overrides go to responsiveProps.
+ *
+ * @example
+ * const resolved = resolveProps(node.props, node.responsiveProps, 'mobile');
+ */
+export function resolveProps(
+  baseProps: Record<string, unknown>,
+  responsiveProps: Partial<Record<Breakpoint, Record<string, unknown>>> | undefined,
+  breakpoint: Breakpoint,
+): Record<string, unknown> {
+  if (!responsiveProps) return baseProps;
+  const override = responsiveProps[breakpoint];
+  if (!override) return baseProps;
+  return { ...baseProps, ...override };
+}
+
+/**
+ * Returns true if the node should be visible at the given breakpoint.
+ *
+ * A node is hidden if:
+ * - node.hidden is true (global editor toggle), OR
+ * - node.responsiveHidden[breakpoint] is true
+ *
+ * @example
+ * if (!resolveVisibility(node, 'mobile')) { // hide on mobile }
+ */
+export function resolveVisibility(
+  node: Pick<BuilderNode, "hidden" | "responsiveHidden">,
+  breakpoint: Breakpoint,
+): boolean {
+  if (node.hidden) return false;
+  if (node.responsiveHidden?.[breakpoint]) return false;
+  return true;
 }

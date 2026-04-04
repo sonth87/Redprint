@@ -1,7 +1,25 @@
 import React, { memo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { TooltipProvider } from "@ui-builder/ui";
-import type { Breakpoint } from "@ui-builder/builder-core";
-import { Monitor, Tablet, Smartphone, Undo2, Redo2, ZoomIn, ZoomOut, Grid, MousePointer2, Hand } from "lucide-react";
+import {
+  type Breakpoint,
+  type CanvasMode,
+  DEVICE_VIEWPORT_PRESETS,
+} from "@ui-builder/builder-core";
+import {
+  Monitor,
+  Smartphone,
+  Undo2,
+  Redo2,
+  ZoomIn,
+  ZoomOut,
+  Grid,
+  MousePointer2,
+  Hand,
+  Columns2,
+  Sparkles,
+} from "lucide-react";
+import { ZOOM_LEVELS, TOOLTIP_DELAY_EXTENDED_MS } from "@ui-builder/shared";
 import type { EditorTool } from "../types";
 import { ToolbarButton } from "./ToolbarButton";
 
@@ -12,24 +30,19 @@ export interface EditorToolbarProps {
   canUndo: boolean;
   canRedo: boolean;
   activeTool: EditorTool;
+  canvasMode: CanvasMode;
   onBreakpointChange: (bp: Breakpoint) => void;
   onZoomChange: (zoom: number) => void;
   onGridToggle: () => void;
   onUndo: () => void;
   onRedo: () => void;
   onToolChange: (tool: EditorTool) => void;
+  onCanvasModeToggle: () => void;
+  onAIOpen?: () => void;
 }
 
-const BREAKPOINTS = [
-  { bp: "desktop" as Breakpoint, label: "Desktop", icon: Monitor, shortcut: "D" },
-  { bp: "tablet" as Breakpoint, label: "Tablet", icon: Tablet, shortcut: "T" },
-  { bp: "mobile" as Breakpoint, label: "Mobile", icon: Smartphone, shortcut: "M" },
-];
-
-const ZOOM_LEVELS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4];
-
 /**
- * EditorToolbar — top toolbar with breakpoints, zoom, tool selection, undo/redo, grid toggle.
+ * EditorToolbar — top toolbar with breakpoints, zoom, tool selection, undo/redo, grid/dual toggle.
  */
 export const EditorToolbar = memo(function EditorToolbar({
   breakpoint,
@@ -38,14 +51,24 @@ export const EditorToolbar = memo(function EditorToolbar({
   canUndo,
   canRedo,
   activeTool,
+  canvasMode,
   onBreakpointChange,
   onZoomChange,
   onGridToggle,
   onUndo,
   onRedo,
   onToolChange,
+  onCanvasModeToggle,
+  onAIOpen,
 }: EditorToolbarProps) {
   const zoomPct = Math.round(zoom * 100);
+  const deviceWidth = DEVICE_VIEWPORT_PRESETS[breakpoint]?.width ?? 1280;
+  const { t } = useTranslation();
+
+  const breakpointOptions = [
+    { bp: "desktop" as const, label: t("toolbar.desktop"), icon: Monitor, shortcut: "D" },
+    { bp: "mobile" as const, label: t("toolbar.mobile"), icon: Smartphone, shortcut: "M" },
+  ];
 
   const zoomIn = useCallback(() => {
     const next = ZOOM_LEVELS.find((z) => z > zoom);
@@ -58,25 +81,24 @@ export const EditorToolbar = memo(function EditorToolbar({
   }, [zoom, onZoomChange]);
 
   return (
-    <TooltipProvider delayDuration={400}>
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 flex items-center h-10 px-3 gap-1.5 bg-background/60 backdrop-blur-md rounded-full border shadow-sm">
-
+    <TooltipProvider delayDuration={TOOLTIP_DELAY_EXTENDED_MS}>
+      <div className="bg-background/60 absolute left-1/2 top-4 z-40 flex h-10 -translate-x-1/2 items-center gap-1.5 rounded-full border px-3 shadow-sm backdrop-blur-md">
         {/* Tool selection */}
-        <div className="flex items-center gap-0.5 mr-2 rounded-md p-1">
+        <div className="mr-2 flex items-center gap-0.5 rounded-md p-1">
           <ToolbarButton
             icon={MousePointer2}
-            tooltip="Select (V)"
+            tooltip={`${t("toolbar.select")} (V)`}
             isActive={activeTool === "select"}
             onClick={() => onToolChange("select")}
-            aria-label="Select tool (V)"
+            aria-label={`${t("toolbar.select")} (V)`}
             compact
           />
           <ToolbarButton
             icon={Hand}
-            tooltip="Pan (H)"
+            tooltip={`${t("toolbar.pan")} (H)`}
             isActive={activeTool === "pan"}
             onClick={() => onToolChange("pan")}
-            aria-label="Pan tool (H)"
+            aria-label={`${t("toolbar.pan")} (H)`}
             compact
           />
         </div>
@@ -84,51 +106,60 @@ export const EditorToolbar = memo(function EditorToolbar({
         {/* Undo / Redo */}
         <ToolbarButton
           icon={Undo2}
-          tooltip="Undo (⌘Z)"
+          tooltip={`${t("toolbar.undo")} (⌘Z)`}
           disabled={!canUndo}
           onClick={onUndo}
-          aria-label="Undo (⌘Z)"
+          aria-label={`${t("toolbar.undo")} (⌘Z)`}
         />
         <ToolbarButton
           icon={Redo2}
-          tooltip="Redo (⌘⇧Z)"
+          tooltip={`${t("toolbar.redo")} (⌘⇧Z)`}
           disabled={!canRedo}
           onClick={onRedo}
-          aria-label="Redo (⌘Y)"
+          aria-label={`${t("toolbar.redo")} (⌘Y)`}
         />
 
         {/* Separator */}
-        <div className="h-6 w-px bg-border mx-1" />
+        <div className="bg-border mx-1 h-6 w-px" />
 
-        {/* Breakpoints */}
-        <div className="flex items-center gap-0.5">
-          {BREAKPOINTS.map(({ bp, label, icon: Icon, shortcut }) => (
-            <ToolbarButton
-              key={bp}
-              icon={Icon}
-              tooltip={`${label} (${shortcut})`}
-              isActive={breakpoint === bp}
-              onClick={() => onBreakpointChange(bp)}
-              aria-label={`${label} breakpoint`}
-              compact
-            />
-          ))}
-        </div>
+        {/* Breakpoints — Desktop and Mobile only */}
+        {canvasMode !== "dual" && (
+          <>
+            <div className="flex items-center gap-0.5">
+              {breakpointOptions.map(({ bp, label, icon: Icon, shortcut }) => (
+                <ToolbarButton
+                  key={bp}
+                  icon={Icon}
+                  tooltip={`${label} ${DEVICE_VIEWPORT_PRESETS[bp].width}px (${shortcut})`}
+                  isActive={breakpoint === bp}
+                  onClick={() => onBreakpointChange(bp)}
+                  aria-label={`${label} breakpoint`}
+                  compact
+                />
+              ))}
+            </div>
 
-        {/* Separator */}
-        <div className="h-6 w-px bg-border mx-1" />
+            {/* Current device width indicator */}
+            <span className="text-muted-foreground select-none px-1 text-[10px] tabular-nums">
+              {deviceWidth}px
+            </span>
+
+            {/* Separator */}
+            <div className="bg-border mx-1 h-6 w-px" />
+          </>
+        )}
 
         {/* Zoom */}
         <div className="flex items-center gap-1">
-          <ToolbarButton 
+          <ToolbarButton
             icon={ZoomOut}
-            tooltip="Zoom out"
+            tooltip={t("toolbar.zoomOut")}
             onClick={zoomOut}
-            aria-label="Zoom out"
+            aria-label={t("toolbar.zoomOut")}
             compact
           />
-          <span className="text-xs tabular-nums w-10 text-center">{zoomPct}%</span>
-          <ToolbarButton 
+          <span className="w-10 text-center text-xs tabular-nums">{zoomPct}%</span>
+          <ToolbarButton
             icon={ZoomIn}
             tooltip="Zoom in"
             onClick={zoomIn}
@@ -138,7 +169,7 @@ export const EditorToolbar = memo(function EditorToolbar({
         </div>
 
         {/* Separator */}
-        <div className="h-6 w-px bg-border mx-1" />
+        <div className="bg-border mx-1 h-6 w-px" />
 
         {/* Grid toggle */}
         <ToolbarButton
@@ -150,6 +181,33 @@ export const EditorToolbar = memo(function EditorToolbar({
           compact
         />
 
+        {/* Dual canvas toggle */}
+        <ToolbarButton
+          icon={Columns2}
+          tooltip={
+            canvasMode === "dual"
+              ? "Single canvas (current: side-by-side)"
+              : "Dual canvas — Desktop + Mobile side-by-side"
+          }
+          isActive={canvasMode === "dual"}
+          onClick={onCanvasModeToggle}
+          aria-label="Toggle dual canvas mode"
+          compact
+        />
+
+        {onAIOpen && (
+          <>
+            {/* Separator */}
+            <div className="bg-border mx-1 h-6 w-px" />
+            <ToolbarButton
+              icon={Sparkles}
+              tooltip={t("toolbar.aiAssistant")}
+              onClick={onAIOpen}
+              aria-label={t("toolbar.aiAssistant")}
+              compact
+            />
+          </>
+        )}
       </div>
     </TooltipProvider>
   );

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useMemo, memo } from "react";
 import type { BuilderDocument, Breakpoint, ComponentDefinition } from "@ui-builder/builder-core";
-import { ComponentRegistry, resolveStyle } from "@ui-builder/builder-core";
+import { ComponentRegistry, resolveStyle, resolveProps, resolveVisibility } from "@ui-builder/builder-core";
 import type { RendererConfig } from "./types";
 import { StylePipeline } from "./pipeline/StylePipeline";
 import { InteractionBinder } from "./pipeline/InteractionBinder";
@@ -31,7 +31,10 @@ const RuntimeNode = memo(function RuntimeNode({ nodeId }: { nodeId: string }) {
   const ctx = useRuntimeContext();
   const node = ctx.document.nodes[nodeId];
 
-  if (!node || node.hidden) return null;
+  if (!node) return null;
+
+  // Resolve per-breakpoint visibility (respects both global hidden and responsiveHidden)
+  if (!resolveVisibility(node, ctx.breakpoint)) return null;
 
   const def =
     ctx.registry.getComponent(node.type) ??
@@ -80,8 +83,10 @@ const RuntimeNode = memo(function RuntimeNode({ nodeId }: { nodeId: string }) {
   }
 
   try {
+    // Resolve per-breakpoint props override
+    const resolvedNodeProps = resolveProps(node.props, node.responsiveProps, ctx.breakpoint);
     const rendered = def.runtimeRenderer({
-      node,
+      node: { ...node, props: resolvedNodeProps },
       children: children.length > 0 ? children : undefined,
       style: resolvedStyle,
       interactions: node.interactions,

@@ -719,8 +719,62 @@ When adding a new feature, determine the right `.claude/docs/*.md` file:
 | New event emission | `INTEGRATION.md` | Event Catalogue table |
 | New error boundary scenario | `ACCESSIBILITY.md` | Error Boundary Contracts section |
 | Integration with external service | `INTEGRATION.md` | Integration Points table |
+| AI provider or model change | `AI_ASSISTANT.md` | Provider Adapters section |
+| New preset or preset category | `PRESETS.md` | Preset Palette UI section |
+| New shared property descriptor | `PROPERTY_SYSTEM.md` | Pre-built Descriptors section |
 
-### Documentation Format
+### Feature Implementation Checklist
+
+Every time a new feature is added to the UI Builder, the implementer must complete **all** of
+the following steps before the task is considered done. This checklist applies to both human
+developers and AI agents.
+
+#### 1. New UI Component or Panel
+
+- [ ] Component is exported from the package `index.ts`
+- [ ] All user-facing strings use `t('key')` — no hardcoded strings
+- [ ] Translation keys added to **both** `en.json` and `vi.json` simultaneously
+- [ ] Component renders correctly with no selected node (empty/placeholder state handled)
+- [ ] Keyboard navigation works (Tab order, Escape closes overlays)
+
+#### 2. New Builder Component Type
+
+- [ ] `ComponentDefinition` JSON created with complete `propSchema`, `defaultProps`,
+  `defaultStyle`, `capabilities`, `editorRenderer`, and `runtimeRenderer`
+- [ ] Component registered in the component registry
+- [ ] Props documented in `propSchema.label` fields
+- [ ] At least one preset created for the component (optional but recommended)
+- [ ] `DATA_MODEL.md` updated if the component introduces new `ComponentCapabilities` flags
+
+#### 3. New Command
+
+- [ ] Command type added to the `CommandType` union in `builder-core`
+- [ ] Forward handler implemented in `handlers.ts`
+- [ ] Inverse (undo) handler implemented in `handlers.ts`
+- [ ] Handler registered in `registerAllHandlers()`
+- [ ] `COMMAND_SYSTEM.md` — Built-in Commands table updated
+- [ ] Unit test added to `commands.integration.test.ts`
+
+#### 4. New Spec Feature (AI, Auth, Rendering change, etc.)
+
+- [ ] Spec document in `.claude/docs/` created or updated
+- [ ] `README.md` documentation table updated to include new doc
+- [ ] `ARCHITECTURE.md` updated if the feature introduces a new package or cross-cutting contract
+- [ ] All events emitted by the feature added to `INTEGRATION.md` Event Catalogue
+
+#### 5. i18n Additions
+
+- [ ] Keys added to `en.json` first
+- [ ] Same keys added to `vi.json` with correct Vietnamese translations
+- [ ] No key in `en.json` is missing from `vi.json` (keep both files in sync)
+- [ ] Dot-notation key follows convention: `{namespace}.{feature}.{label}` (e.g.
+  `ai.providers.openai`, `events.click`)
+
+#### 6. Verification (Mandatory Before Marking Done)
+
+- [ ] `pnpm typecheck` — zero TypeScript errors across all packages
+- [ ] `pnpm test` — all tests pass
+- [ ] `pnpm lint` — zero linting errors
 
 All `.claude/docs/*.md` files follow this format:
 

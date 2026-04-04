@@ -4,9 +4,10 @@
  * Allows editing document-level settings: canvas config, variables, metadata.
  */
 import React, { memo, useState } from "react";
-import { ScrollArea, Label, Input, Switch, Slider, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Separator } from "@ui-builder/ui";
+import { ScrollArea, Label, Input, Switch, Slider, Separator } from "@ui-builder/ui";
 import type { BuilderDocument, CanvasConfig } from "@ui-builder/builder-core";
 import { FileText, Grid3X3, Ruler, Settings2, ChevronDown, ChevronRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export interface PageSettingsProps {
   document: BuilderDocument;
@@ -46,22 +47,23 @@ export const PageSettings = memo(function PageSettings({
   onCanvasConfigChange,
   onDocumentMetaChange,
 }: PageSettingsProps) {
+  const { t } = useTranslation();
   const config = doc.canvasConfig;
 
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="px-3 py-2 border-b">
-        <p className="text-xs font-semibold">Page Settings</p>
+        <p className="text-xs font-semibold">{t("pageSettings.title")}</p>
         <p className="text-[10px] text-muted-foreground truncate">{doc.name}</p>
       </div>
 
       <ScrollArea className="flex-1">
         {/* Document info */}
-        <CollapsibleSection title="Document" icon={FileText}>
+        <CollapsibleSection title={t("pageSettings.document")} icon={FileText}>
           <div className="grid gap-2">
             <div className="grid gap-1">
-              <Label className="text-[10px] text-muted-foreground">Name</Label>
+              <Label className="text-[10px] text-muted-foreground">{t("pageSettings.name")}</Label>
               <Input
                 className="h-7 text-xs"
                 value={doc.name}
@@ -69,7 +71,7 @@ export const PageSettings = memo(function PageSettings({
               />
             </div>
             <div className="grid gap-1">
-              <Label className="text-[10px] text-muted-foreground">Description</Label>
+              <Label className="text-[10px] text-muted-foreground">{t("pageSettings.description")}</Label>
               <textarea
                 className="flex min-h-[50px] w-full rounded-md border border-input bg-background px-3 py-2 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
                 value={doc.description ?? ""}
@@ -78,7 +80,7 @@ export const PageSettings = memo(function PageSettings({
               />
             </div>
             <div className="grid gap-1">
-              <Label className="text-[10px] text-muted-foreground">Schema Version</Label>
+              <Label className="text-[10px] text-muted-foreground">{t("pageSettings.schemaVersion")}</Label>
               <Input
                 className="h-7 text-xs font-mono"
                 value={doc.schemaVersion}
@@ -90,10 +92,10 @@ export const PageSettings = memo(function PageSettings({
         </CollapsibleSection>
 
         {/* Canvas config */}
-        <CollapsibleSection title="Canvas" icon={Grid3X3}>
+        <CollapsibleSection title={t("pageSettings.canvas")} icon={Grid3X3}>
           <div className="grid gap-2">
             <div className="grid gap-1">
-              <Label className="text-[10px] text-muted-foreground">Width (px)</Label>
+              <Label className="text-[10px] text-muted-foreground">{t("pageSettings.widthPx")}</Label>
               <Input
                 type="number"
                 className="h-7 text-xs"
@@ -105,7 +107,7 @@ export const PageSettings = memo(function PageSettings({
               />
             </div>
             <div className="grid gap-1.5">
-              <Label className="text-[10px] text-muted-foreground">Background Color</Label>
+              <Label className="text-[10px] text-muted-foreground">{t("pageSettings.backgroundColor")}</Label>
               <div className="flex items-center gap-2">
                 <input
                   type="color"
@@ -124,10 +126,10 @@ export const PageSettings = memo(function PageSettings({
         </CollapsibleSection>
 
         {/* Grid & Snap */}
-        <CollapsibleSection title="Grid & Snap" icon={Ruler}>
+        <CollapsibleSection title={t("pageSettings.gridSnap")} icon={Ruler}>
           <div className="grid gap-3">
             <div className="flex items-center justify-between">
-              <Label className="text-xs">Show Grid</Label>
+              <Label className="text-xs">{t("pageSettings.showGrid")}</Label>
               <Switch
                 checked={config.showGrid}
                 onCheckedChange={(v) => onCanvasConfigChange("showGrid", v)}
@@ -135,7 +137,7 @@ export const PageSettings = memo(function PageSettings({
             </div>
             <div className="grid gap-1.5">
               <div className="flex items-center justify-between">
-                <Label className="text-[10px] text-muted-foreground">Grid Size</Label>
+                <Label className="text-[10px] text-muted-foreground">{t("pageSettings.gridSize")}</Label>
                 <span className="text-[10px] tabular-nums text-muted-foreground">
                   {config.gridSize}px
                 </span>
@@ -152,7 +154,7 @@ export const PageSettings = memo(function PageSettings({
             <Separator />
 
             <div className="flex items-center justify-between">
-              <Label className="text-xs">Snap Enabled</Label>
+              <Label className="text-xs">{t("pageSettings.snapEnabled")}</Label>
               <Switch
                 checked={config.snapEnabled}
                 onCheckedChange={(v) => onCanvasConfigChange("snapEnabled", v)}
@@ -160,7 +162,7 @@ export const PageSettings = memo(function PageSettings({
             </div>
             <div className="grid gap-1.5">
               <div className="flex items-center justify-between">
-                <Label className="text-[10px] text-muted-foreground">Snap Threshold</Label>
+                <Label className="text-[10px] text-muted-foreground">{t("pageSettings.snapThreshold")}</Label>
                 <span className="text-[10px] tabular-nums text-muted-foreground">
                   {config.snapThreshold}px
                 </span>
@@ -174,7 +176,7 @@ export const PageSettings = memo(function PageSettings({
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label className="text-xs">Snap to Grid</Label>
+              <Label className="text-xs">{t("pageSettings.snapToGrid")}</Label>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] text-muted-foreground">
                   {config.showGrid ? "ON" : "OFF"}
@@ -183,21 +185,21 @@ export const PageSettings = memo(function PageSettings({
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <Label className="text-xs">Snap to Components</Label>
+              <Label className="text-xs">{t("pageSettings.snapToComponents")}</Label>
               <Switch
                 checked={config.snapToComponents}
                 onCheckedChange={(v) => onCanvasConfigChange("snapToComponents", v)}
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label className="text-xs">Show Ruler</Label>
+              <Label className="text-xs">{t("pageSettings.showRuler")}</Label>
               <Switch
                 checked={config.rulerEnabled}
                 onCheckedChange={(v) => onCanvasConfigChange("rulerEnabled", v)}
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label className="text-xs">Helper Lines</Label>
+              <Label className="text-xs">{t("pageSettings.helperLines")}</Label>
               <Switch
                 checked={config.showHelperLines}
                 onCheckedChange={(v) => onCanvasConfigChange("showHelperLines", v)}
@@ -207,10 +209,10 @@ export const PageSettings = memo(function PageSettings({
         </CollapsibleSection>
 
         {/* Variables */}
-        <CollapsibleSection title="Variables" icon={Settings2} defaultOpen={false}>
+        <CollapsibleSection title={t("pageSettings.variables")} icon={Settings2} defaultOpen={false}>
           <div className="space-y-2">
             {Object.keys(doc.variables ?? {}).length === 0 ? (
-              <p className="text-xs text-muted-foreground">No variables defined.</p>
+              <p className="text-xs text-muted-foreground">{t("pageSettings.noVariables")}</p>
             ) : (
               Object.entries(doc.variables ?? {}).map(([key, varDef]) => (
                 <div key={key} className="flex items-center gap-2 text-xs">

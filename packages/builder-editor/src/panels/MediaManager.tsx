@@ -17,8 +17,8 @@ import {
   TabsTrigger,
   TabsContent,
   ScrollArea,
-  Badge,
   Label,
+  cn,
 } from "@ui-builder/ui";
 import {
   Search,
@@ -31,7 +31,6 @@ import {
   Check,
   FolderOpen,
 } from "lucide-react";
-import { cn } from "@ui-builder/ui";
 import type { Asset, AssetType } from "@ui-builder/builder-core";
 
 export interface MediaManagerProps {

@@ -173,3 +173,7 @@ export function boxToCSS(box: BoxValue): string {
   const { top = 0, right = 0, bottom = 0, left = 0 } = box;
   return [top, right, bottom, left].map(toPx).join(" ");
 }
+
+// ── Constants ──────────────────────────────────────────────────────────────
+// Timing, colors, zoom, and layout constants used across packages.
+export * from "./constants";

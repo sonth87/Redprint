@@ -8,6 +8,9 @@ interface UseSelectionRectOptions {
   panOffset: { x: number; y: number };
   nodes: Record<string, BuilderNode>;
   canvasFrameRef: React.RefObject<HTMLDivElement | null>;
+  /** In dual-canvas mode, pass the active frame ref so selection queries the right DOM tree.
+   *  Coordinate origin always uses canvasFrameRef (Desktop frame = canvas origin). */
+  nodeQueryRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 export interface UseSelectionRectReturn {
@@ -21,6 +24,7 @@ export function useSelectionRect({
   panOffset,
   nodes,
   canvasFrameRef,
+  nodeQueryRef,
 }: UseSelectionRectOptions): UseSelectionRectReturn {
   const [selectionRect, setSelectionRect] = useState<Rect | null>(null);
 
@@ -38,7 +42,8 @@ export function useSelectionRect({
       return;
     }
     const id = selectedNodeIds[0]!;
-    const el = canvasFrameRef.current.querySelector(
+    const queryRoot = nodeQueryRef?.current ?? canvasFrameRef.current;
+    const el = queryRoot.querySelector(
       `[data-node-id="${id}"]`
     ) as HTMLElement;
     if (!el) {
@@ -60,7 +65,7 @@ export function useSelectionRect({
       width: el.offsetWidth,
       height: el.offsetHeight,
     });
-  }, [selectedNodeIds, zoom, panOffset, nodes, canvasFrameRef]);
+  }, [selectedNodeIds, zoom, panOffset, nodes, canvasFrameRef, nodeQueryRef]);
 
   return { selectionRect, currentRotation };
 }

@@ -42,8 +42,8 @@ export { CURRENT_SCHEMA_VERSION } from "./document/constants";
 
 // ── Responsive ─────────────────────────────────────────────────────────────
 export type { Breakpoint, BreakpointConfig } from "./responsive/types";
-export { DEFAULT_BREAKPOINTS } from "./responsive/constants";
-export { resolveStyle } from "./responsive/resolver";
+export { DEFAULT_BREAKPOINTS, DEVICE_VIEWPORT_PRESETS } from "./responsive/constants";
+export { resolveStyle, resolveProps, resolveVisibility } from "./responsive/resolver";
 
 // ── Events ─────────────────────────────────────────────────────────────────
 export { EventBus } from "./events/EventBus";
@@ -101,6 +101,10 @@ export {
   CMD_SET_VARIABLE,
   CMD_UPDATE_CANVAS_CONFIG,
   CMD_LOAD_COMPONENT,
+  CMD_TOGGLE_RESPONSIVE_HIDDEN,
+  CMD_UPDATE_RESPONSIVE_PROPS,
+  CMD_RESET_RESPONSIVE_STYLE,
+  CMD_SET_CANVAS_MODE,
 } from "./commands/built-in";
 export type {
   AddNodePayload,
@@ -114,6 +118,10 @@ export type {
   GroupNodesPayload,
   SetVariablePayload,
   UpdateCanvasConfigPayload,
+  ToggleResponsiveHiddenPayload,
+  UpdateResponsivePropsPayload,
+  ResetResponsiveStylePayload,
+  SetCanvasModePayload,
 } from "./commands/built-in";
 
 // ── History ────────────────────────────────────────────────────────────────
@@ -134,6 +142,7 @@ export type {
   ClipboardData,
   PanelState,
   EditorTool,
+  CanvasMode,
 } from "./state/types";
 
 // ── Plugins ────────────────────────────────────────────────────────────────
