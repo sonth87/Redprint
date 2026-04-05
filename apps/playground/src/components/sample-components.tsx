@@ -269,6 +269,7 @@ export const ContainerComponent: ComponentDefinition = {
         flexDirection: (node.props.direction as "row" | "column") ?? "column",
         gap: `${node.props.gap ?? 8}px`,
         padding: `${node.props.padding ?? 16}px`,
+        minHeight: "40px",
       }}
     >
       {children as React.ReactNode}

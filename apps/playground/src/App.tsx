@@ -98,9 +98,18 @@ export function App() {
         {/* Preview tab — RuntimeRenderer */}
         {activeTab === "preview" && (
           <div className="h-full overflow-auto bg-muted/40 flex items-start justify-center p-8">
+            {/* Artboard frame — mirrors the editor canvas frame exactly so that
+                position:absolute nodes, widths, and overflow behave identically. */}
             <div
-              // className="bg-white rounded-xl overflow-auto w-full"
-              // style={{ maxWidth: 1280, minHeight: 400 }}
+              style={{
+                width: state.document.canvasConfig.width ?? 1280,
+                minHeight: state.document.canvasConfig.height ?? 800,
+                backgroundColor: state.document.canvasConfig.backgroundColor ?? "#ffffff",
+                position: "relative",
+                // boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
+                borderRadius: 4,
+                flexShrink: 0,
+              }}
             >
               <RuntimeRenderer
                 document={state.document}
