@@ -58,6 +58,8 @@ export interface AddNodePayload {
   style?: Partial<StyleConfig>;
   position?: Point;
   insertIndex?: number;
+  /** Named slot to assign the new node to (for slot-based containers) */
+  slotName?: string;
 }
 
 export interface RemoveNodePayload {

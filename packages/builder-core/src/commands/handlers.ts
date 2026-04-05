@@ -221,6 +221,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
         locked: false,
         name: def?.name ?? payload.componentType,
         metadata: { createdAt: timestamp, updatedAt: timestamp },
+        ...(payload.slotName ? { slot: payload.slotName } : {}),
       };
 
       // Apply absolute positioning if position provided
@@ -393,6 +394,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
         (n) => n.parentId === targetParentId,
       );
       const order = insertIndex !== undefined ? insertIndex : siblings.length;
+      const slotUpdate = payload.slotName !== undefined ? { slot: payload.slotName } : {};
 
       return {
         ...state,
@@ -401,7 +403,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
           updatedAt: now(),
           nodes: {
             ...state.document.nodes,
-            [nodeId]: { ...node, parentId: targetParentId, order },
+            [nodeId]: { ...node, parentId: targetParentId, order, ...slotUpdate },
           },
         },
       };

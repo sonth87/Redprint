@@ -42,6 +42,11 @@ export interface SectionToolbarProps {
   activeBreakpoint?: string;
   desktopFrameWidth?: number;
   mobileFramePos?: Point;
+  /**
+   * Optional delete override — called instead of dispatching REMOVE_NODE directly.
+   * Allows BuilderEditor to show a confirmation dialog before deletion.
+   */
+  onDelete?: (nodeId: string) => void;
 }
 
 /**
@@ -60,6 +65,7 @@ export const SectionToolbar = memo(function SectionToolbar({
   activeBreakpoint,
   desktopFrameWidth = 0,
   mobileFramePos,
+  onDelete,
 }: SectionToolbarProps) {
   const currentIdx = sectionNodes.findIndex((s) => s.id === node.id);
   const isFirst = currentIdx === 0;
@@ -115,11 +121,15 @@ export const SectionToolbar = memo(function SectionToolbar({
   };
 
   const handleDelete = () => {
-    dispatch({
-      type: "REMOVE_NODE",
-      payload: { nodeId: node.id },
-      description: "Delete section",
-    });
+    if (onDelete) {
+      onDelete(node.id);
+    } else {
+      dispatch({
+        type: "REMOVE_NODE",
+        payload: { nodeId: node.id },
+        description: "Delete section",
+      });
+    }
   };
 
   // ── Screen-space positioning ────────────────────────────────────────────

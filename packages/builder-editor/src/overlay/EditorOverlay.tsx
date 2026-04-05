@@ -465,3 +465,160 @@ export const LiveDimensionsDisplay = memo(function LiveDimensionsDisplay({
     </div>
   );
 });
+
+// ── Flow Drop Placeholder ─────────────────────────────────────────────────────────────────
+
+export interface FlowDropPlaceholderProps {
+  /**
+   * Canvas-space rect of the container element being hovered.
+   * The placeholder line is rendered at the top/bottom edge of a sibling
+   * (or at the top of the container if inserting at index 0).
+   */
+  containerRect: Rect;
+  /**
+   * Canvas-space rect of the sibling immediately BEFORE the insert point,
+   * or null when inserting at index 0 (line at the top of the container).
+   */
+  prevSiblingRect: Rect | null;
+  /**
+   * Canvas-space rect of the sibling immediately AFTER the insert point,
+   * or null when inserting at the end (line at the bottom of the last sibling).
+   */
+  nextSiblingRect: Rect | null;
+  /**
+   * For grid containers: canvas-space rect of the exact cell being targeted.
+   * When provided a cell-highlight box is rendered instead of the insert line.
+   */
+  gridCellRect?: Rect;
+  zoom: number;
+}
+
+/**
+ * FlowDropPlaceholder — renders a horizontal blue insert-line that shows
+ * where the dragged component will be placed inside a flow/grid container.
+ *
+ * The line sits in the gap between prevSiblingRect and nextSiblingRect (canvas
+ * coordinates). When there are no siblings the line fills the empty container.
+ */
+export const FlowDropPlaceholder = memo(function FlowDropPlaceholder({
+  containerRect,
+  prevSiblingRect,
+  nextSiblingRect,
+  gridCellRect,
+  zoom,
+}: FlowDropPlaceholderProps) {
+  // ── Grid mode: highlight the targeted cell ──────────────────────────────
+  if (gridCellRect) {
+    const borderWidth = Math.max(1.5, 2 / zoom);
+    return (
+      <>
+        {/* Container dashed outline */}
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            left: containerRect.x,
+            top: containerRect.y,
+            width: containerRect.width,
+            height: containerRect.height,
+            outline: `${Math.max(1.5, 2 / zoom)}px dashed hsl(221.2 83.2% 53.3% / 0.4)`,
+            borderRadius: 4 / zoom,
+            zIndex: 48,
+          }}
+        />
+        {/* Cell highlight */}
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            left: gridCellRect.x,
+            top: gridCellRect.y,
+            width: gridCellRect.width,
+            height: gridCellRect.height,
+            backgroundColor: "hsl(221.2 83.2% 53.3% / 0.12)",
+            outline: `${borderWidth}px solid hsl(221.2 83.2% 53.3%)`,
+            borderRadius: 4 / zoom,
+            zIndex: 58,
+          }}
+        />
+      </>
+    );
+  }
+
+  // ── Flow/flex mode: horizontal insert line ──────────────────────────────
+
+  // ── Compute Y position of the insert line ──────────────────────────
+  let lineY: number;
+  if (prevSiblingRect) {
+    // midpoint between bottom of previous sibling and top of next sibling (or container bottom)
+    const prevBottom = prevSiblingRect.y + prevSiblingRect.height;
+    const nextTop = nextSiblingRect ? nextSiblingRect.y : (containerRect.y + containerRect.height);
+    lineY = (prevBottom + nextTop) / 2;
+  } else if (nextSiblingRect) {
+    // inserting before first sibling — put line slightly above its top
+    lineY = nextSiblingRect.y - Math.max(2, 4 / zoom);
+  } else {
+    // empty container — put line at top with some padding
+    lineY = containerRect.y + Math.max(4, 8 / zoom);
+  }
+
+  const lineThickness = Math.max(2, 2 / zoom);
+  const dotSize = Math.max(8, 8 / zoom);
+  const padding = Math.max(6, 8 / zoom);
+
+  return (
+    <>
+      {/* Container highlight */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          left: containerRect.x,
+          top: containerRect.y,
+          width: containerRect.width,
+          height: containerRect.height,
+          outline: `${Math.max(1.5, 2 / zoom)}px dashed hsl(221.2 83.2% 53.3% / 0.5)`,
+          borderRadius: 4 / zoom,
+          zIndex: 48,
+        }}
+      />
+      {/* Insert line */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          left: containerRect.x + padding,
+          top: lineY - lineThickness / 2,
+          width: containerRect.width - padding * 2,
+          height: lineThickness,
+          backgroundColor: "hsl(221.2 83.2% 53.3%)",
+          borderRadius: lineThickness,
+          zIndex: 58,
+        }}
+      />
+      {/* Left dot */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          left: containerRect.x + padding - dotSize / 2,
+          top: lineY - dotSize / 2,
+          width: dotSize,
+          height: dotSize,
+          borderRadius: "50%",
+          backgroundColor: "hsl(221.2 83.2% 53.3%)",
+          zIndex: 58,
+        }}
+      />
+      {/* Right dot */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          left: containerRect.x + containerRect.width - padding - dotSize / 2,
+          top: lineY - dotSize / 2,
+          width: dotSize,
+          height: dotSize,
+          borderRadius: "50%",
+          backgroundColor: "hsl(221.2 83.2% 53.3%)",
+          zIndex: 58,
+        }}
+      />
+    </>
+  );
+});
+

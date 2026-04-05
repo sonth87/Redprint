@@ -21,6 +21,12 @@ interface UseKeyboardShortcutsOptions {
   undo: () => void;
   redo: () => void;
   setBreakpoint?: (bp: "desktop" | "mobile") => void;
+  /**
+   * Optional override for delete action.
+   * When provided, called instead of dispatching REMOVE_NODE directly.
+   * Allows BuilderEditor to inject a confirmation dialog.
+   */
+  onDeleteNode?: (nodeId: string) => void;
 }
 
 function collectSubtree(
@@ -54,6 +60,7 @@ export function useKeyboardShortcuts({
   undo,
   redo,
   setBreakpoint,
+  onDeleteNode,
 }: UseKeyboardShortcutsOptions): void {
   const manager = useMemo(() => new ShortcutManager(), []);
 
@@ -164,11 +171,15 @@ export function useKeyboardShortcuts({
         )
           return;
         e.preventDefault();
-        dispatch({
-          type: "REMOVE_NODE",
-          payload: { nodeId: selectedNodeId },
-          description: "Delete",
-        });
+        if (onDeleteNode) {
+          onDeleteNode(selectedNodeId);
+        } else {
+          dispatch({
+            type: "REMOVE_NODE",
+            payload: { nodeId: selectedNodeId },
+            description: "Delete",
+          });
+        }
         return;
       }
 
@@ -251,6 +262,7 @@ export function useKeyboardShortcuts({
     breakpoint,
     canvasContainerRef,
     setBreakpoint,
+    onDeleteNode,
   ]);
 
   // Suppress unused variable warning for manager — available for future extension

@@ -302,7 +302,8 @@
     "paragraph": "Paragraph",
     "list": "List",
     "buttonSingle": "Button",
-    "buttonGroup": "Button Group"
+    "buttonGroup": "Button Group",
+    "grid": "Grid & Column"
   },
   "textEdit": {
     "bold": "Bold",

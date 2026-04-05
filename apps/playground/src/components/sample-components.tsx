@@ -241,6 +241,9 @@ export const ContainerComponent: ComponentDefinition = {
     padding: "16px",
     width: "100%",
     minHeight: "40px",
+    // position: relative ensures children with position:absolute are scoped
+    // to this container, not an ancestor section.
+    position: "relative",
   },
   editorRenderer: ({ node, children, style }) => (
     <div
@@ -485,11 +488,299 @@ export const SectionComponent: ComponentDefinition = {
   ),
 };
 
+// ── Grid ──────────────────────────────────────────────────────────────────
+
+export const GridComponent: ComponentDefinition = {
+  type: "Grid",
+  name: "Grid",
+  category: "layout",
+  group: "layout",
+  subGroup: "grid",
+  description: "A CSS grid layout container. Children are placed in grid cells — no absolute positioning.",
+  version: "1.0.0",
+  tags: ["layout", "grid", "columns", "rows", "css-grid"],
+  capabilities: {
+    canContainChildren: true,
+    canResize: true,
+    canTriggerEvents: false,
+    canBindData: false,
+    canBeHidden: true,
+    canBeLocked: true,
+  },
+  containerConfig: {
+    layoutType: "grid",
+    // Column component belongs to a separate concept — Grid uses CSS grid directly
+    disallowedChildTypes: ["Column"],
+    emptyStateConfig: { message: "Drop components into grid cells", allowDrop: true },
+  },
+  propSchema: [
+    {
+      key: "columns",
+      label: "Columns",
+      type: "number",
+      default: 3,
+      min: 1,
+      max: 12,
+      step: 1,
+    },
+    {
+      key: "rows",
+      label: "Rows",
+      type: "number",
+      default: 1,
+      min: 1,
+      max: 20,
+      step: 1,
+    },
+    {
+      key: "columnGap",
+      label: "Column Gap",
+      type: "number",
+      default: 16,
+      min: 0,
+      max: 128,
+      step: 4,
+      unit: "px",
+    },
+    {
+      key: "rowGap",
+      label: "Row Gap",
+      type: "number",
+      default: 16,
+      min: 0,
+      max: 128,
+      step: 4,
+      unit: "px",
+    },
+    {
+      key: "padding",
+      label: "Padding",
+      type: "number",
+      default: 16,
+      min: 0,
+      max: 128,
+      step: 4,
+      unit: "px",
+    },
+  ],
+  defaultProps: { columns: 3, rows: 1, columnGap: 16, rowGap: 16, padding: 16 },
+  defaultStyle: {
+    display: "grid",
+    // gridTemplateColumns is NOT stored here — it is computed dynamically
+    // from node.props.columns in the renderer so changing the prop always
+    // takes effect without a separate style update.
+    columnGap: "16px",
+    rowGap: "16px",
+    padding: "16px",
+    width: "100%",
+    minHeight: "80px",
+  },
+  editorRenderer: ({ node, children, style }) => {
+    const columns = Number(node.props.columns ?? 3);
+    const rows = Number(node.props.rows ?? 1);
+    const columnGap = Number(node.props.columnGap ?? 16);
+    const rowGap = Number(node.props.rowGap ?? 16);
+    const padding = Number(node.props.padding ?? 16);
+
+    const gridStyle: React.CSSProperties = {
+      ...(style as React.CSSProperties),
+      display: "grid",
+      gridTemplateColumns: `repeat(${columns}, 1fr)`,
+      gridTemplateRows: rows > 1 ? `repeat(${rows}, auto)` : "auto",
+      columnGap: `${columnGap}px`,
+      rowGap: `${rowGap}px`,
+      padding: `${padding}px`,
+      width: "100%",
+      minHeight: "80px",
+      boxSizing: "border-box",
+    };
+
+    return (
+      <div data-node-id={node.id} data-layout-type="grid" style={gridStyle}>
+        {(children as React.ReactNode) ??
+          Array.from({ length: columns }, (_, i) => (
+            <div
+              key={i}
+              style={{
+                minHeight: "80px",
+                border: "2px dashed #e5e7eb",
+                borderRadius: 8,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#9ca3af",
+                fontSize: 12,
+                userSelect: "none",
+              }}
+            >
+              {i + 1}
+            </div>
+          ))}
+      </div>
+    );
+  },
+  runtimeRenderer: ({ node, children, style }) => {
+    const columns = Number(node.props.columns ?? 3);
+    const rows = Number(node.props.rows ?? 1);
+    const columnGap = Number(node.props.columnGap ?? 16);
+    const rowGap = Number(node.props.rowGap ?? 16);
+    const padding = Number(node.props.padding ?? 16);
+
+    return (
+      <div
+        style={{
+          ...(style as React.CSSProperties),
+          display: "grid",
+          gridTemplateColumns: `repeat(${columns}, 1fr)`,
+          gridTemplateRows: rows > 1 ? `repeat(${rows}, auto)` : "auto",
+          columnGap: `${columnGap}px`,
+          rowGap: `${rowGap}px`,
+          padding: `${padding}px`,
+          width: "100%",
+        }}
+      >
+        {children as React.ReactNode}
+      </div>
+    );
+  },
+};
+
+// ── Column ────────────────────────────────────────────────────────────────
+
+export const ColumnComponent: ComponentDefinition = {
+  type: "Column",
+  name: "Column",
+  category: "layout",
+  group: "layout",
+  subGroup: "grid",
+  description: "A flex column container. Children stack vertically without absolute positioning.",
+  version: "1.0.0",
+  tags: ["layout", "column", "flex", "stack"],
+  capabilities: {
+    canContainChildren: true,
+    canResize: true,
+    canTriggerEvents: false,
+    canBindData: false,
+    canBeHidden: true,
+    canBeLocked: true,
+  },
+  containerConfig: {
+    layoutType: "flex",
+    emptyStateConfig: { message: "Drop components here", allowDrop: true },
+  },
+  propSchema: [
+    {
+      key: "gap",
+      label: "Gap",
+      type: "number",
+      default: 8,
+      min: 0,
+      max: 96,
+      step: 4,
+      unit: "px",
+    },
+    {
+      key: "padding",
+      label: "Padding",
+      type: "number",
+      default: 16,
+      min: 0,
+      max: 96,
+      step: 4,
+      unit: "px",
+    },
+    {
+      key: "alignItems",
+      label: "Align Items",
+      type: "select",
+      options: [
+        { value: "flex-start", label: "Start" },
+        { value: "center", label: "Center" },
+        { value: "flex-end", label: "End" },
+        { value: "stretch", label: "Stretch" },
+      ],
+      default: "stretch",
+    },
+  ],
+  defaultProps: { gap: 8, padding: 16, alignItems: "stretch" },
+  defaultStyle: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "8px",
+    padding: "16px",
+    width: "100%",
+    minHeight: "80px",
+    position: "relative",
+  },
+  editorRenderer: ({ node, children, style }) => {
+    const gap = Number(node.props.gap ?? 8);
+    const padding = Number(node.props.padding ?? 16);
+    const alignItems = String(node.props.alignItems ?? "stretch");
+
+    return (
+      <div
+        data-node-id={node.id}
+        data-layout-type="flex"
+        style={{
+          ...(style as React.CSSProperties),
+          display: "flex",
+          flexDirection: "column",
+          gap: `${gap}px`,
+          padding: `${padding}px`,
+          alignItems,
+          width: "100%",
+          minHeight: "80px",
+        }}
+      >
+        {(children as React.ReactNode) ?? (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: "40px",
+              color: "#9ca3af",
+              fontSize: 12,
+              border: "2px dashed #e5e7eb",
+              borderRadius: 8,
+              userSelect: "none",
+            }}
+          >
+            Drop components here
+          </div>
+        )}
+      </div>
+    );
+  },
+  runtimeRenderer: ({ node, children, style }) => {
+    const gap = Number(node.props.gap ?? 8);
+    const padding = Number(node.props.padding ?? 16);
+    const alignItems = String(node.props.alignItems ?? "stretch");
+
+    return (
+      <div
+        style={{
+          ...(style as React.CSSProperties),
+          display: "flex",
+          flexDirection: "column",
+          gap: `${gap}px`,
+          padding: `${padding}px`,
+          alignItems,
+        }}
+      >
+        {children as React.ReactNode}
+      </div>
+    );
+  },
+};
+
 // ── Export all ────────────────────────────────────────────────────────────
 
 export const SAMPLE_COMPONENTS: ComponentDefinition[] = [
   SectionComponent,
   ContainerComponent,
+  GridComponent,
+  ColumnComponent,
   TextComponent,
   ButtonComponent,
   ImageComponent,

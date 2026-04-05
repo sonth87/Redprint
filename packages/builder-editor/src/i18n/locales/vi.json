@@ -302,7 +302,8 @@
     "paragraph": "Đoạn văn",
     "list": "Danh sách",
     "buttonSingle": "Nút bấm đơn",
-    "buttonGroup": "Nhóm nút"
+    "buttonGroup": "Nhóm nút",
+    "grid": "Grid & Cột"
   },
   "textEdit": {
     "bold": "Đậm",

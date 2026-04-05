@@ -32,7 +32,7 @@ import {
 } from "@ui-builder/shared";
 import { Monitor, Smartphone, GripVertical } from "lucide-react";
 import { CanvasRoot } from "./canvas/CanvasRoot";
-import { SelectionOverlay, SnapGuides, CanvasHelperLines, HoverOutline, DistanceGuides, LiveDimensionsDisplay } from "./overlay/EditorOverlay";
+import { SelectionOverlay, SnapGuides, CanvasHelperLines, HoverOutline, DistanceGuides, LiveDimensionsDisplay, FlowDropPlaceholder } from "./overlay/EditorOverlay";
 import { SectionOverlay } from "./overlay/SectionOverlay";
 import { SectionToolbar } from "./overlay/SectionToolbar";
 import { EditorToolbar } from "./toolbar/EditorToolbar";
@@ -42,7 +42,7 @@ import { InlineTextEditor } from "./canvas/InlineTextEditor";
 import { LayerTree } from "./panels/bottom/LayerTree";
 import { PropertyPanel } from "./panels/right/PropertyPanel";
 import { PageSettings } from "./panels/right/PageSettings";
-import { cn } from "@ui-builder/ui";
+import { cn, Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription, Button } from "@ui-builder/ui";
 import { FloatingPanel } from "./panels/FloatingPanel";
 import { ContextualToolbar } from "./toolbar/ContextualToolbar";
 import { SnapEngine } from "./snap/SnapEngine";
@@ -58,6 +58,7 @@ import { useResizeGesture } from "./hooks/useResizeGesture";
 import { useRubberBand } from "./hooks/useRubberBand";
 import { useMoveGesture } from "./hooks/useMoveGesture";
 import { useRotateGesture } from "./hooks/useRotateGesture";
+import { getGridCellClientRect } from "./hooks/useDropSlotResolver";
 import { useSelectionRect } from "./hooks/useSelectionRect";
 import { useHoverRect } from "./hooks/useHoverRect";
 import { useDimensionCapture } from "./hooks/useDimensionCapture";
@@ -217,6 +218,20 @@ function EditorInner({ groupRegistry }: { groupRegistry?: GroupRegistry }) {
   const allComponents: ComponentDefinition[] = registry ? registry.listComponents() : [];
   const aiContext = useMemo(() => buildAIContext(state, allComponents), [state, allComponents]);
 
+  // ── getContainerConfig — shared by drag and move hooks ─────────────────
+  const getContainerConfig = useCallback(
+    (componentType: string) => {
+      const def = registry?.getComponent(componentType);
+      return def?.containerConfig
+        ? {
+            layoutType: def.containerConfig.layoutType,
+            disallowedChildTypes: def.containerConfig.disallowedChildTypes,
+          }
+        : undefined;
+    },
+    [registry],
+  );
+
   // ── Snap engine ──────────────────────────────────────────────────────────
   const snapEngine = useMemo(
     () =>
@@ -262,6 +277,8 @@ function EditorInner({ groupRegistry }: { groupRegistry?: GroupRegistry }) {
     snapGuides: moveSnapGuides,
     distanceGuides: moveDistanceGuides,
     liveDimensions: moveLiveDimensions,
+    flowDragOffset,
+    flowDropTarget,
   } = useMoveGesture({
     zoom,
     breakpoint,
@@ -271,6 +288,8 @@ function EditorInner({ groupRegistry }: { groupRegistry?: GroupRegistry }) {
     canvasFrameRef,
     activeFrameRef,
     dispatch,
+    rootNodeId: document.rootNodeId,
+    getContainerConfig,
   });
 
   const snapGuides = moving ? moveSnapGuides : resizeSnapGuides;
@@ -300,9 +319,18 @@ function EditorInner({ groupRegistry }: { groupRegistry?: GroupRegistry }) {
 
   // While inline editing, use the live rect from ResizeObserver so handles
   // track content-height changes; otherwise use the normal computed rect.
-  const selectionRect = editingNodeId
+  const selectionRectBase = editingNodeId
     ? (editingOverrideRect ?? selectionRectRaw)
     : selectionRectRaw;
+
+  // During a flow/grid-mode drag, the element is moved visually via an imperative
+  // CSS transform (no node state dispatch until mouseup). useSelectionRect only
+  // re-runs when `nodes` changes, so the overlay would otherwise sit at the
+  // element's original grid position. Shift the rect by the accumulated drag
+  // offset so SelectionOverlay and ContextualToolbar track the cursor in real-time.
+  const selectionRect = selectionRectBase && flowDragOffset
+    ? { ...selectionRectBase, x: selectionRectBase.x + flowDragOffset.x, y: selectionRectBase.y + flowDragOffset.y }
+    : selectionRectBase;
 
   const { hoverRect, handleMouseOver, handleMouseOut } = useHoverRect({
     selectedNodeIds,
@@ -327,6 +355,8 @@ function EditorInner({ groupRegistry }: { groupRegistry?: GroupRegistry }) {
     zoom,
     canvasFrameRef,
     dispatch,
+    nodes: document.nodes,
+    getContainerConfig,
   });
 
   const { handlePointerDown } = usePointerDown({
@@ -342,6 +372,49 @@ function EditorInner({ groupRegistry }: { groupRegistry?: GroupRegistry }) {
     setMoving,
     setRubberBanding,
   });
+
+  // ── Delete-with-confirmation ─────────────────────────────────────────────
+  const [deleteConfirmNodeId, setDeleteConfirmNodeId] = useState<string | null>(null);
+
+  const deleteConfirmChildCount = useMemo(() => {
+    if (!deleteConfirmNodeId) return 0;
+    const countDescendants = (id: string): number => {
+      const kids = Object.values(document.nodes).filter((n) => n.parentId === id);
+      return kids.reduce((sum, k) => sum + 1 + countDescendants(k.id), 0);
+    };
+    return countDescendants(deleteConfirmNodeId);
+  }, [deleteConfirmNodeId, document.nodes]);
+
+  const handleDeleteNode = useCallback(
+    (nodeId: string) => {
+      const node = document.nodes[nodeId];
+      if (!node) return;
+      const def = registry?.getComponent(node.type);
+      const hasChildren = Object.values(document.nodes).some(
+        (n) => n.parentId === nodeId,
+      );
+      if (def?.capabilities.canContainChildren && hasChildren) {
+        setDeleteConfirmNodeId(nodeId);
+      } else {
+        dispatch({
+          type: "REMOVE_NODE",
+          payload: { nodeId },
+          description: "Delete",
+        });
+      }
+    },
+    [document.nodes, registry, dispatch],
+  );
+
+  const executeConfirmedDelete = useCallback(() => {
+    if (!deleteConfirmNodeId) return;
+    dispatch({
+      type: "REMOVE_NODE",
+      payload: { nodeId: deleteConfirmNodeId },
+      description: "Delete",
+    });
+    setDeleteConfirmNodeId(null);
+  }, [deleteConfirmNodeId, dispatch]);
 
   const handleCanvasConfigChange = useCallback(
     (key: keyof CanvasConfig, value: unknown) => {
@@ -417,6 +490,7 @@ function EditorInner({ groupRegistry }: { groupRegistry?: GroupRegistry }) {
     undo,
     redo,
     setBreakpoint,
+    onDeleteNode: handleDeleteNode,
   });
 
   // ── Layer tree handlers ─────────────────────────────────────────────────
@@ -1007,6 +1081,74 @@ function EditorInner({ groupRegistry }: { groupRegistry?: GroupRegistry }) {
 
           {/* Section overlays are now rendered inside each frame div */}
 
+          {/* ── Flow drop placeholder ──────────────────────────────────── */}
+          {(() => {
+            if (!flowDropTarget || !moving) return null;
+            const frameEl = activeFrameRef.current ?? canvasFrameRef.current;
+            if (!frameEl) return null;
+            const containerEl = frameEl.querySelector(
+              `[data-node-id="${flowDropTarget.containerId}"]`,
+            ) as HTMLElement | null;
+            if (!containerEl) return null;
+            const fr = frameEl.getBoundingClientRect();
+            const cRect = containerEl.getBoundingClientRect();
+            const containerRect = {
+              x: (cRect.left - fr.left) / zoom + panOffset.x / zoom,
+              y: (cRect.top - fr.top) / zoom + panOffset.y / zoom,
+              width: cRect.width / zoom,
+              height: cRect.height / zoom,
+            };
+            // Siblings in insert order (excluding the dragged node)
+            const siblings = Object.values(document.nodes)
+              .filter((n) => n.parentId === flowDropTarget.containerId && n.id !== moving.nodeId)
+              .sort((a, b) => a.order - b.order);
+            const getSibRect = (n: (typeof siblings)[0]) => {
+              const el = frameEl.querySelector(`[data-node-id="${n.id}"]`) as HTMLElement | null;
+              if (!el) return null;
+              const r = el.getBoundingClientRect();
+              return {
+                x: (r.left - fr.left) / zoom + panOffset.x / zoom,
+                y: (r.top - fr.top) / zoom + panOffset.y / zoom,
+                width: r.width / zoom,
+                height: r.height / zoom,
+              };
+            };
+            const idx = flowDropTarget.insertIndex;
+            const prevSib = idx > 0 ? (siblings[idx - 1] ?? null) : null;
+            const nextSib = siblings[idx] ?? null;
+            const prevSiblingRect = prevSib ? getSibRect(prevSib) : null;
+            const nextSiblingRect = nextSib ? getSibRect(nextSib) : null;
+
+            // For grid containers: compute the canvas-space cell rect
+            let gridCellRect: { x: number; y: number; width: number; height: number } | undefined;
+            if (flowDropTarget.gridCell) {
+              const cellClient = getGridCellClientRect(
+                containerEl,
+                flowDropTarget.gridCell.col,
+                flowDropTarget.gridCell.row,
+              );
+              if (cellClient) {
+                gridCellRect = {
+                  x: (cellClient.left - fr.left) / zoom + panOffset.x / zoom,
+                  y: (cellClient.top - fr.top) / zoom + panOffset.y / zoom,
+                  width: cellClient.width / zoom,
+                  height: cellClient.height / zoom,
+                };
+              }
+            }
+
+            return (
+              <FlowDropPlaceholder
+                containerRect={containerRect}
+                prevSiblingRect={prevSiblingRect}
+                nextSiblingRect={nextSiblingRect}
+                gridCellRect={gridCellRect}
+                zoom={zoom}
+              />
+            );
+          })()}
+
+
         </CanvasRoot>
 
         {/* ── Section toolbar: left-side action bar for selected section (screen-space) ── */}
@@ -1023,6 +1165,7 @@ function EditorInner({ groupRegistry }: { groupRegistry?: GroupRegistry }) {
             activeBreakpoint={breakpoint}
             desktopFrameWidth={document.canvasConfig.width ?? DEVICE_VIEWPORT_PRESETS.desktop.width}
             mobileFramePos={mobileFramePos}
+            onDelete={handleDeleteNode}
           />
         )}
 
@@ -1032,13 +1175,7 @@ function EditorInner({ groupRegistry }: { groupRegistry?: GroupRegistry }) {
             rect={selectionRect}
             zoom={zoom}
             panOffset={panOffset}
-            onDelete={() =>
-              dispatch({
-                type: "REMOVE_NODE",
-                payload: { nodeId: selectedNodeId },
-                description: "Delete",
-              })
-            }
+            onDelete={() => handleDeleteNode(selectedNodeId)}
             onDuplicate={() =>
               dispatch({
                 type: "DUPLICATE_NODE",
@@ -1112,6 +1249,32 @@ function EditorInner({ groupRegistry }: { groupRegistry?: GroupRegistry }) {
         )}
       </div>
     </div>
+    {/* ── Delete confirmation dialog ─────────────────────────────────────── */}
+    <Dialog
+      open={!!deleteConfirmNodeId}
+      onOpenChange={(open) => {
+        if (!open) setDeleteConfirmNodeId(null);
+      }}
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Xóa component?</DialogTitle>
+          <DialogDescription>
+            Component này chứa{" "}
+            <strong>{deleteConfirmChildCount}</strong> component con bên trong.
+            Tất cả sẽ bị xóa vĩnh viễn. Bạn có chắc không?
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setDeleteConfirmNodeId(null)}>
+            Hủy
+          </Button>
+          <Button variant="destructive" onClick={executeConfirmedDelete}>
+            Xóa tất cả
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     </AIConfigProvider>
   );
 }

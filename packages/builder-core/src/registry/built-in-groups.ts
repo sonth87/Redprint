@@ -62,4 +62,7 @@ export const BUILT_IN_SUB_GROUPS: ComponentSubGroup[] = [
   // Button sub-groups
   { id: "button-single", parentGroupId: "button", label: "Button",       icon: "mouse-pointer-click", order: 0, i18nKey: "subGroups.buttonSingle" },
   { id: "button-group",  parentGroupId: "button", label: "Button Group", icon: "layout-template",     order: 1, i18nKey: "subGroups.buttonGroup" },
+
+  // Layout sub-groups
+  { id: "grid",   parentGroupId: "layout", label: "Grid & Column", icon: "grid-3x3",    order: 0, i18nKey: "subGroups.grid" },
 ];
