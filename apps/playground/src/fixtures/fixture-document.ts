@@ -246,10 +246,10 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
         flexDirection: "column",
         flex: "1",
         gap: "24px",
-        paddingRight: "40px",
+        padding: "0 40px 0 0",
       },
       responsiveStyle: {
-        tablet: { paddingRight: "0", alignItems: "center", textAlign: "center", marginBottom: "48px" }
+        tablet: { padding: "0", alignItems: "center", textAlign: "center", margin: "0 0 48px 0" }
       },
       interactions: [],
       hidden: false,
@@ -350,7 +350,7 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
         display: "flex",
         flexDirection: "row",
         gap: "16px",
-        marginTop: "16px",
+        margin: "16px 0 0 0",
       },
       responsiveStyle: {
         mobile: { flexDirection: "column", width: "100%" }
@@ -656,7 +656,7 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
         flexDirection: "column",
         alignItems: "center",
         textAlign: "center",
-        marginBottom: "64px",
+        margin: "0 0 64px 0",
         maxWidth: "700px",
       },
       responsiveStyle: {},
@@ -707,7 +707,7 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
         alignItems: "center",
         width: "100%",
         maxWidth: "1100px",
-        marginBottom: "96px",
+        margin: "0 0 96px 0",
       },
       responsiveStyle: {
         tablet: { flexDirection: "column", gap: "40px" }
@@ -756,8 +756,8 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
       parentId: "feature-row-1",
       order: 1,
       props: { display: "flex", direction: "column", gap: 24, padding: 0 },
-      style: { display: "flex", flexDirection: "column", flex: "1", paddingLeft: "16px" },
-      responsiveStyle: { tablet: { paddingLeft: "0" } },
+      style: { display: "flex", flexDirection: "column", flex: "1", padding: "0 0 0 16px" },
+      responsiveStyle: { tablet: { padding: "0" } },
       interactions: [],
       hidden: false,
       locked: false,
@@ -798,7 +798,7 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
       parentId: "feature-text-box-1",
       order: 2,
       props: { display: "flex", direction: "column", gap: 12, padding: 0 },
-      style: { display: "flex", flexDirection: "column", gap: "12px", marginTop: "8px" },
+      style: { display: "flex", flexDirection: "column", gap: "12px", margin: "8px 0 0 0" },
       responsiveStyle: {},
       interactions: [],
       hidden: false,
@@ -863,8 +863,8 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
       parentId: "feature-row-2",
       order: 0,
       props: { display: "flex", direction: "column", gap: 24, padding: 0 },
-      style: { display: "flex", flexDirection: "column", flex: "1", paddingRight: "16px" },
-      responsiveStyle: { tablet: { paddingRight: "0" } },
+      style: { display: "flex", flexDirection: "column", flex: "1", padding: "0 16px 0 0" },
+      responsiveStyle: { tablet: { padding: "0" } },
       interactions: [],
       hidden: false,
       locked: false,
@@ -913,7 +913,7 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
         border: "1px solid #2563eb",
         borderRadius: "8px",
         fontWeight: "600",
-        marginTop: "8px",
+        margin: "8px 0 0 0",
         cursor: "pointer",
       },
       responsiveStyle: {},
@@ -1033,7 +1033,7 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
       order: 2,
       props: { label: "Create Free Account", variant: "primary", size: "lg", disabled: false },
       style: {
-        marginTop: "16px",
+        margin: "16px 0 0 0",
         padding: "16px 40px",
         backgroundColor: "#ffffff",
         color: "#2563eb",

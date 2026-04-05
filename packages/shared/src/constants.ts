@@ -114,7 +114,7 @@ export const DESTRUCTIVE_COLOR: string = "#f00";
  * Ascending order for UI dropdown menus.
  * Design: 0.25x (overview) → 1x (actual) → 4x (magnified).
  */
-export const ZOOM_LEVELS: readonly number[] = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4];
+export const ZOOM_LEVELS: readonly number[] = [0.05, 0.075, 0.1, 0.15, 0.25, 0.35, 0.5, 0.65, 0.75, 1, 1.25, 1.5, 2, 3, 4];
 
 /**
  * Minimum zoom level constraint (0.25 = 25%).

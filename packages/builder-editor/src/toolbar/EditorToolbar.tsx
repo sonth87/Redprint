@@ -18,6 +18,7 @@ import {
   Hand,
   Columns2,
   Sparkles,
+  Maximize2,
 } from "lucide-react";
 import { ZOOM_LEVELS, TOOLTIP_DELAY_EXTENDED_MS } from "@ui-builder/shared";
 import type { EditorTool } from "../types";
@@ -38,6 +39,7 @@ export interface EditorToolbarProps {
   onRedo: () => void;
   onToolChange: (tool: EditorTool) => void;
   onCanvasModeToggle: () => void;
+  onFitToScreen?: () => void;
   onAIOpen?: () => void;
 }
 
@@ -59,6 +61,7 @@ export const EditorToolbar = memo(function EditorToolbar({
   onRedo,
   onToolChange,
   onCanvasModeToggle,
+  onFitToScreen,
   onAIOpen,
 }: EditorToolbarProps) {
   const zoomPct = Math.round(zoom * 100);
@@ -167,6 +170,17 @@ export const EditorToolbar = memo(function EditorToolbar({
             compact
           />
         </div>
+
+        {/* Fit to Screen */}
+        {onFitToScreen && (
+          <ToolbarButton
+            icon={Maximize2}
+            tooltip={`${t("toolbar.fitToScreen")} (⇧1)`}
+            onClick={onFitToScreen}
+            aria-label={t("toolbar.fitToScreen")}
+            compact
+          />
+        )}
 
         {/* Separator */}
         <div className="bg-border mx-1 h-6 w-px" />

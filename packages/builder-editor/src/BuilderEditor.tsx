@@ -30,7 +30,7 @@ import {
   TRANSITION_FAST_CSS,
   TRANSITION_MID_CSS,
 } from "@ui-builder/shared";
-import { Monitor, Smartphone, GripVertical } from "lucide-react";
+import { Monitor, Smartphone, GripVertical, LocateFixed } from "lucide-react";
 import { CanvasRoot } from "./canvas/CanvasRoot";
 import { SelectionOverlay, SnapGuides, CanvasHelperLines, HoverOutline, DistanceGuides, LiveDimensionsDisplay, FlowDropPlaceholder } from "./overlay/EditorOverlay";
 import { SectionOverlay } from "./overlay/SectionOverlay";
@@ -73,10 +73,12 @@ import { buildAIContext } from "./ai/buildAIContext";
 import { AIConfigProvider } from "./ai/AIConfigContext";
 import type { AIConfig } from "./ai/types";
 import { initI18n, type SupportedLocale } from "./i18n";
+import { useTranslation } from "react-i18next";
 
 // ── Inner editor (must be inside BuilderProvider) ─────────────────────────
 
 function EditorInner({ groupRegistry }: { groupRegistry?: GroupRegistry }) {
+  const { t } = useTranslation();
   const { builder, state, dispatch } = useBuilder();
   const { selectedNodeIds, select, clearSelection } = useSelection();
   const { document } = useDocument();
@@ -208,6 +210,32 @@ function EditorInner({ groupRegistry }: { groupRegistry?: GroupRegistry }) {
     }
   // setZoom/setPanOffset are stable useState setters — adding them satisfies exhaustive-deps
   }, [breakpoint, canvasWidth, canvasMinHeight, canvasMode, clearSelection, setZoom, setPanOffset]);
+
+  // ── Fit-to-screen ─────────────────────────────────────────────────────────
+  const handleFitToScreen = useCallback(() => {
+    if (!canvasContainerRef.current) return;
+    const containerWidth  = canvasContainerRef.current.offsetWidth;
+    const containerHeight = canvasContainerRef.current.offsetHeight;
+    const fitZoom = Math.min(
+      (containerWidth  - FIT_TO_SCREEN_PADDING) / canvasWidth,
+      (containerHeight - FIT_TO_SCREEN_PADDING) / canvasMinHeight,
+      1,
+    );
+    const actualZoom = Math.max(MIN_ZOOM, parseFloat(fitZoom.toFixed(2)));
+    setZoom(actualZoom);
+    const centeredX = Math.max(CANVAS_CENTER_OFFSET, (containerWidth  - canvasWidth    * actualZoom) / 2);
+    const centeredY = Math.max(CANVAS_CENTER_OFFSET, (containerHeight - canvasMinHeight * actualZoom) / VERTICAL_CENTER_DIVISOR);
+    setPanOffset({ x: centeredX, y: centeredY });
+  }, [canvasWidth, canvasMinHeight, setZoom, setPanOffset]);
+
+  // ── Canvas visibility ────────────────────────────────────────────────────
+  const containerW = canvasContainerRef.current?.offsetWidth  ?? 1000;
+  const containerH = canvasContainerRef.current?.offsetHeight ?? 1000;
+  const isCanvasInViewport =
+    panOffset.x + canvasWidth    * zoom > 0 &&
+    panOffset.x                          < containerW &&
+    panOffset.y + canvasMinHeight * zoom > 0 &&
+    panOffset.y                          < containerH;
 
   // ── Derived ──────────────────────────────────────────────────────────────
   const selectedNodeId = selectedNodeIds[0] ?? null;
@@ -703,6 +731,7 @@ function EditorInner({ groupRegistry }: { groupRegistry?: GroupRegistry }) {
           }
         }}
         onCanvasModeToggle={toggleCanvasMode}
+        onFitToScreen={handleFitToScreen}
         onAIOpen={() => setAiOpen(true)}
       />
 
@@ -1246,6 +1275,21 @@ function EditorInner({ groupRegistry }: { groupRegistry?: GroupRegistry }) {
           >
             {currentRotation}°
           </div>
+        )}
+
+        {/* ── Return to Canvas button: shown when canvas is completely out of view ─ */}
+        {!isCanvasInViewport && (
+          <button
+            onClick={handleFitToScreen}
+            className="absolute bottom-[4.5rem] left-1/2 z-40 -translate-x-1/2
+                       flex items-center gap-1.5 rounded-full
+                       bg-primary px-4 py-2 text-[13px] font-semibold text-primary-foreground
+                       shadow-lg ring-1 ring-primary/20
+                       hover:bg-primary/90 active:scale-95 transition-all"
+          >
+            <LocateFixed size={14} />
+            {t("toolbar.returnToCanvas")}
+          </button>
         )}
       </div>
     </div>
