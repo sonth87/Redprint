@@ -13,6 +13,7 @@ import {
   SelectItem,
   Slider,
   Separator,
+  Switch,
 } from "@ui-builder/ui";
 import type { AIConfig as AIConfigType, AIProvider } from "./types";
 import { useTranslation } from "react-i18next";
@@ -168,6 +169,36 @@ export function AIConfigPanel({ config, onChange }: AIConfigPanelProps) {
           placeholder="Override the default system prompt…"
           rows={3}
           className="w-full rounded-md border bg-transparent px-2 py-1.5 text-xs resize-y focus:outline-none focus:ring-1 focus:ring-ring"
+        />
+      </div>
+
+      <Separator />
+
+      {/* Streaming */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="space-y-0.5">
+          <Label className="text-xs">Streaming</Label>
+          <p className="text-[10px] text-muted-foreground">
+            Stream tokens in real-time via SSE. Disable for slower networks.
+          </p>
+        </div>
+        <Switch
+          checked={config.streamingEnabled !== false}
+          onCheckedChange={(v) => update("streamingEnabled", v)}
+        />
+      </div>
+
+      {/* Include page context */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="space-y-0.5">
+          <Label className="text-xs">Include page context</Label>
+          <p className="text-[10px] text-muted-foreground">
+            Send full node tree to AI for targeted edits. Increases token usage.
+          </p>
+        </div>
+        <Switch
+          checked={config.includePageContext === true}
+          onCheckedChange={(v) => update("includePageContext", v)}
         />
       </div>
     </div>

@@ -14,7 +14,9 @@ const DEFAULT_CONFIG: AIConfig = {
   apiKey: "",
   model: "gpt-4o-mini",
   temperature: 0.7,
-  maxTokens: 2048,
+  maxTokens: 8192,
+  streamingEnabled: false,
+  includePageContext: false,
 };
 
 const AIConfigContext = createContext<AIConfig>(DEFAULT_CONFIG);

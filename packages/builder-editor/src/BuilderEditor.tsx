@@ -104,14 +104,15 @@ function EditorInner({ groupRegistry }: { groupRegistry?: GroupRegistry }) {
 
   // ── AI assistant state ────────────────────────────────────────────────────
   const [aiOpen, setAiOpen] = useState(false);
+  const DEFAULT_AI_CONFIG: AIConfig = { provider: "openai", apiKey: "", model: "gpt-4o-mini", temperature: 0.7, maxTokens: 8192, streamingEnabled: false, includePageContext: false };
   const [aiConfig, setAiConfig] = useState<AIConfig>(() => {
     try {
       const stored = localStorage.getItem("ui-builder:ai-config");
-      if (stored) return JSON.parse(stored) as AIConfig;
+      if (stored) return { ...DEFAULT_AI_CONFIG, ...JSON.parse(stored) as AIConfig };
     } catch {
       // ignore
     }
-    return { provider: "openai", apiKey: "", model: "gpt-4o-mini", temperature: 0.7, maxTokens: 2048 };
+    return DEFAULT_AI_CONFIG;
   });
 
   const handleAIConfigChange = useCallback((config: AIConfig) => {
@@ -244,7 +245,10 @@ function EditorInner({ groupRegistry }: { groupRegistry?: GroupRegistry }) {
   const selectedDefinition =
     selectedNode && registry ? (registry.getComponent(selectedNode.type) ?? null) : null;
   const allComponents: ComponentDefinition[] = registry ? registry.listComponents() : [];
-  const aiContext = useMemo(() => buildAIContext(state, allComponents), [state, allComponents]);
+  const aiContext = useMemo(
+    () => buildAIContext(state, allComponents, { includePageContext: aiConfig.includePageContext }),
+    [state, allComponents, aiConfig.includePageContext],
+  );
 
   // ── getContainerConfig — shared by drag and move hooks ─────────────────
   const getContainerConfig = useCallback(
@@ -417,6 +421,9 @@ function EditorInner({ groupRegistry }: { groupRegistry?: GroupRegistry }) {
     (nodeId: string) => {
       const node = document.nodes[nodeId];
       if (!node) return;
+
+      const isLastSection = node.type === "Section" && sectionNodes.length === 1;
+
       const def = registry?.getComponent(node.type);
       const hasChildren = Object.values(document.nodes).some(
         (n) => n.parentId === nodeId,
@@ -429,20 +436,66 @@ function EditorInner({ groupRegistry }: { groupRegistry?: GroupRegistry }) {
           payload: { nodeId },
           description: "Delete",
         });
+        if (isLastSection) {
+          dispatch({
+            type: "ADD_NODE",
+            payload: {
+              nodeId: uuidv4(),
+              parentId: document.rootNodeId,
+              componentType: "Section",
+              props: { minHeight: DEFAULT_SECTION_HEIGHT_PX },
+              style: {
+                display: "flex",
+                flexDirection: "column",
+                width: "100%",
+                minHeight: "400px",
+                position: "relative",
+                backgroundColor: "#ffffff",
+              },
+              insertIndex: 0,
+            },
+            description: "Add default section",
+          });
+        }
       }
     },
-    [document.nodes, registry, dispatch],
+    [document.nodes, document.rootNodeId, registry, dispatch, sectionNodes],
   );
 
   const executeConfirmedDelete = useCallback(() => {
     if (!deleteConfirmNodeId) return;
+
+    const node = document.nodes[deleteConfirmNodeId];
+    const isLastSection = node?.type === "Section" && sectionNodes.length === 1;
+
     dispatch({
       type: "REMOVE_NODE",
       payload: { nodeId: deleteConfirmNodeId },
       description: "Delete",
     });
+    if (isLastSection) {
+      dispatch({
+        type: "ADD_NODE",
+        payload: {
+          nodeId: uuidv4(),
+          parentId: document.rootNodeId,
+          componentType: "Section",
+          props: { minHeight: DEFAULT_SECTION_HEIGHT_PX },
+          style: {
+            display: "flex",
+            flexDirection: "column",
+            width: "100%",
+            minHeight: "400px",
+            position: "relative",
+            backgroundColor: "#ffffff",
+          },
+          insertIndex: 0,
+        },
+        description: "Add default section",
+      });
+    }
     setDeleteConfirmNodeId(null);
-  }, [deleteConfirmNodeId, dispatch]);
+  }, [deleteConfirmNodeId, dispatch, document.nodes, document.rootNodeId, sectionNodes]);
 
   const handleCanvasConfigChange = useCallback(
     (key: keyof CanvasConfig, value: unknown) => {

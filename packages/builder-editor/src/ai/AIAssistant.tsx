@@ -1,9 +1,8 @@
 /**
- * AIAssistant — chat dialog for interacting with AI providers.
+ * AIAssistant — prompt dialog for AI-powered canvas generation.
  *
- * Renders a conversational interface where users can ask AI to
- * generate, modify, or explain builder components. AI suggestions
- * can be applied to the document via the command engine.
+ * Flow: user types prompt → Generate → loading/streaming indicator
+ * → commands parsed → applied to canvas → dialog closes automatically.
  */
 import React, { useCallback, useRef, useState, useEffect } from "react";
 import {
@@ -12,15 +11,13 @@ import {
   DialogHeader,
   DialogTitle,
   Button,
-  Input,
   ScrollArea,
   Badge,
-  Separator,
 } from "@ui-builder/ui";
-import { Settings } from "lucide-react";
+import { Settings, Sparkles, Zap, Loader2 } from "lucide-react";
 import { useBuilder } from "@ui-builder/builder-react";
-import type { AIConfig, AIMessage, AIConversation, AICommandSuggestion, AIBuilderContext } from "./types";
-import { sendAIMessage } from "./AIService";
+import type { AIConfig, AIMessage, AIBuilderContext, AIResponse, AICommandSuggestion } from "./types";
+import { sendAIMessage, streamAIMessage, parseAIResponse } from "./AIService";
 import { AIConfigPanel } from "./AIConfig";
 import { useTranslation } from "react-i18next";
 
@@ -34,8 +31,81 @@ const ALLOWED_AI_COMMANDS = new Set([
   "RENAME_NODE",
   "DUPLICATE_NODE",
   "UPDATE_CANVAS_CONFIG",
-  "UPDATE_NODE_INTERACTIONS",
+  "UPDATE_INTERACTIONS",
 ]);
+
+// ── Command normalisation ───────────────────────────────────────────────
+// Transforms raw AI commands into the shape the CommandEngine expects:
+//  1. Remap payload.type → payload.componentType for ADD_NODE (model compat)
+//  2. Resolve temporary IDs (temp-*) to real UUIDs so nested ADD_NODE chains work
+//  3. Extract payload.name → follow-up RENAME_NODE commands
+
+function normalizeAICommands(
+  suggestions: AICommandSuggestion[],
+  rootNodeId: string,
+): AICommandSuggestion[] {
+  // Map temp-id → real UUID
+  // Pre-seed common root aliases so the AI can use "root" as parentId
+  const idMap = new Map<string, string>();
+  idMap.set("root", rootNodeId);
+  idMap.set("ROOT", rootNodeId);
+  idMap.set("root-node", rootNodeId);
+
+  const resolveId = (id: string | undefined | null): string | undefined => {
+    if (!id) return undefined;
+    if (idMap.has(id)) return idMap.get(id)!;
+    return id;
+  };
+
+  const normalized: AICommandSuggestion[] = [];
+
+  for (const s of suggestions) {
+    const payload = { ...s.payload };
+
+    if (s.type === "ADD_NODE") {
+      // ── Fix field name: payload.type → payload.componentType ──
+      if (!payload.componentType && payload.type) {
+        payload.componentType = payload.type;
+        delete payload.type;
+      }
+
+      // ── Resolve temp parentId → real UUID ──
+      if (typeof payload.parentId === "string") {
+        payload.parentId = resolveId(payload.parentId) ?? payload.parentId;
+      }
+
+      // ── Assign real UUID, track temp → real mapping ──
+      const realId = crypto.randomUUID();
+      const tempId = payload.nodeId as string | undefined;
+      if (tempId) {
+        idMap.set(tempId, realId);
+      }
+      payload.nodeId = realId;
+
+      // ── Extract name → follow-up RENAME_NODE ──
+      const nodeName = payload.name as string | undefined;
+      delete payload.name;
+
+      normalized.push({ ...s, payload });
+
+      if (nodeName) {
+        normalized.push({
+          type: "RENAME_NODE",
+          payload: { nodeId: realId, name: nodeName },
+          description: `Rename → ${nodeName}`,
+        });
+      }
+    } else {
+      // For all other commands, resolve any nodeId that references a temp ID
+      if (typeof payload.nodeId === "string") {
+        payload.nodeId = resolveId(payload.nodeId) ?? payload.nodeId;
+      }
+      normalized.push({ ...s, payload });
+    }
+  }
+
+  return normalized;
+}
 
 // ── Props ───────────────────────────────────────────────────────────────
 
@@ -52,38 +122,80 @@ export interface AIAssistantProps {
 export function AIAssistant({ open, onOpenChange, config, onConfigChange, context }: AIAssistantProps) {
   const { t } = useTranslation();
   const { dispatch } = useBuilder();
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const abortRef = useRef(false);
+  const streamScrollRef = useRef<HTMLPreElement>(null);
 
-  const [view, setView] = useState<"chat" | "settings">("chat");
-  const [conversation, setConversation] = useState<AIConversation>({
-    messages: [],
-    isLoading: false,
-    error: null,
-  });
-  const [input, setInput] = useState("");
+  const [view, setView] = useState<"generate" | "settings">("generate");
+  const [prompt, setPrompt] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [streamingText, setStreamingText] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  // Auto-scroll to bottom on new messages
+  // Reset all state when dialog closes
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [conversation.messages]);
-
-  // Focus input when dialog opens
-  useEffect(() => {
-    if (open) {
-      setTimeout(() => inputRef.current?.focus(), 100);
+    if (!open) {
+      setPrompt("");
+      setError(null);
+      setIsLoading(false);
+      setStreamingText("");
+      setView("generate");
+      abortRef.current = false;
     }
   }, [open]);
 
-  const handleSend = useCallback(async () => {
-    const text = input.trim();
-    if (!text || conversation.isLoading) return;
+  // Focus textarea when dialog opens and is in idle state
+  useEffect(() => {
+    if (open && view === "generate" && !isLoading) {
+      setTimeout(() => textareaRef.current?.focus(), 100);
+    }
+  }, [open, view, isLoading]);
+
+  // Auto-scroll streaming text to bottom as tokens arrive
+  useEffect(() => {
+    if (streamScrollRef.current) {
+      streamScrollRef.current.scrollTop = streamScrollRef.current.scrollHeight;
+    }
+  }, [streamingText]);
+
+  const applyAndClose = useCallback(
+    (response: AIResponse) => {
+      if (abortRef.current) return;
+      if (response.suggestions && response.suggestions.length > 0) {
+        const commands = normalizeAICommands(response.suggestions, context.document.rootNodeId);
+        const errors: string[] = [];
+        for (const s of commands) {
+          if (!ALLOWED_AI_COMMANDS.has(s.type)) continue;
+          try {
+            dispatch({ type: s.type, payload: s.payload } as never);
+          } catch (err) {
+            errors.push(`${s.type}: ${err instanceof Error ? err.message : "unknown error"}`);
+          }
+        }
+        if (errors.length > 0) {
+          console.warn(`[AI] ${errors.length} command(s) failed:`, errors);
+          setError(`${errors.length} command(s) failed to apply. Check console for details.`);
+          // Don't auto-close so the user sees the error
+          return;
+        }
+      }
+      onOpenChange(false);
+    },
+    [dispatch, onOpenChange, context.document.rootNodeId],
+  );
+
+  const handleGenerate = useCallback(async () => {
+    const text = prompt.trim();
+    if (!text || isLoading) return;
     if (!config.apiKey) {
-      setConversation((c) => ({ ...c, error: t("ai.apiKeyNotConfigured") }));
+      setError(t("ai.apiKeyNotConfigured"));
       return;
     }
+
+    setIsLoading(true);
+    setStreamingText("");
+    setError(null);
+    abortRef.current = false;
 
     const userMessage: AIMessage = {
       id: crypto.randomUUID(),
@@ -92,244 +204,206 @@ export function AIAssistant({ open, onOpenChange, config, onConfigChange, contex
       timestamp: Date.now(),
     };
 
-    setInput("");
-    setConversation((c) => ({
-      messages: [...c.messages, userMessage],
-      isLoading: true,
-      error: null,
-    }));
-
     try {
-      const allMessages = [...conversation.messages, userMessage];
-      const response = await sendAIMessage(allMessages, context, config);
-
-      const assistantMessage: AIMessage = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: response.message || "(no response)",
-        timestamp: Date.now(),
-      };
-
-      setConversation((c) => ({
-        messages: [
-          ...c.messages,
-          {
-            ...assistantMessage,
-            // Stash suggestions in a non-serialised property
-            content:
-              assistantMessage.content +
-              (response.suggestions
-                ? `\n__SUGGESTIONS__${JSON.stringify(response.suggestions)}`
-                : ""),
+      if (config.streamingEnabled === true) {
+        // ── Streaming mode ──
+        await streamAIMessage([userMessage], context, config, {
+          onToken: (token) => {
+            if (abortRef.current) return;
+            setStreamingText((prev) => prev + token);
           },
-        ],
-        isLoading: false,
-        error: null,
-      }));
+          onComplete: (fullText) => {
+            if (abortRef.current) return;
+            setIsLoading(false);
+            applyAndClose(parseAIResponse(fullText));
+          },
+          onError: (err) => {
+            if (abortRef.current) return;
+            setIsLoading(false);
+            setStreamingText("");
+            setError(err.message);
+          },
+        });
+      } else {
+        // ── Non-streaming mode ──
+        const response = await sendAIMessage([userMessage], context, config);
+        if (!abortRef.current) {
+          setIsLoading(false);
+          applyAndClose(response);
+        }
+      }
     } catch (err) {
-      setConversation((c) => ({
-        ...c,
-        isLoading: false,
-        error: err instanceof Error ? err.message : "Unknown error",
-      }));
+      if (!abortRef.current) {
+        setIsLoading(false);
+        setStreamingText("");
+        setError(err instanceof Error ? err.message : "Unknown error");
+      }
     }
-  }, [input, conversation, config, context, t]);
+  }, [prompt, isLoading, config, context, t, applyAndClose]);
+
+  const handleCancel = useCallback(() => {
+    abortRef.current = true;
+    setIsLoading(false);
+    setStreamingText("");
+    onOpenChange(false);
+  }, [onOpenChange]);
 
   const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Enter" && !e.shiftKey) {
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        void handleSend();
+        void handleGenerate();
       }
     },
-    [handleSend],
+    [handleGenerate],
   );
 
-  const applySuggestion = useCallback(
-    (suggestion: AICommandSuggestion) => {
-      if (!ALLOWED_AI_COMMANDS.has(suggestion.type)) return;
-      try {
-        dispatch({ type: suggestion.type, payload: suggestion.payload } as never);
-      } catch {
-        // Command may not match — ignore
-      }
-    },
-    [dispatch],
-  );
-
-  const clearChat = useCallback(() => {
-    setConversation({ messages: [], isLoading: false, error: null });
-  }, []);
+  const isStreaming = config.streamingEnabled === true;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[540px] max-h-[80vh] flex flex-col p-0 gap-0">
-        {/* Header with tabs */}
-        <DialogHeader className="px-4 py-3 border-b shrink-0">
+    <Dialog open={open} onOpenChange={(v) => { if (!isLoading) onOpenChange(v); }}>
+      <DialogContent className="sm:max-w-[560px] flex flex-col p-0 gap-0">
+        {/* Header */}
+        <DialogHeader className="px-5 py-3.5 border-b shrink-0">
           <div className="flex items-center justify-between gap-4">
-            <div className="flex-1">
-              <DialogTitle className="text-sm font-medium">{t("ai.title")}</DialogTitle>
-            </div>
+            <DialogTitle className="text-sm font-medium">{t("ai.title")}</DialogTitle>
             <div className="flex items-center gap-2 pr-8">
+              {isStreaming && (
+                <Badge variant="secondary" className="text-[10px] gap-1">
+                  <Zap className="h-2.5 w-2.5" />
+                  Streaming
+                </Badge>
+              )}
               <Badge variant="outline" className="text-[10px]">
                 {config.provider}
               </Badge>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0"
-                onClick={() => setView(view === "chat" ? "settings" : "chat")}
-                title={view === "chat" ? "Settings" : "Chat"}
-              >
-                <Settings className="h-4 w-4" />
-              </Button>
+              {!isLoading && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                  onClick={() => setView(view === "generate" ? "settings" : "generate")}
+                  title={view === "generate" ? "Settings" : "Back"}
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           </div>
         </DialogHeader>
 
-        {/* Content based on view */}
-        {view === "chat" ? (
-          <>
-            {/* Message list */}
-            <ScrollArea className="flex-1 min-h-0 px-4" ref={scrollRef}>
-              <div className="py-3 space-y-3">
-                {conversation.messages.length === 0 && !conversation.isLoading && (
-                  <p className="text-xs text-muted-foreground text-center py-8">
-                    {t("ai.placeholder")}
-                  </p>
+        {/* Generate view */}
+        {view === "generate" && (
+          <div className="px-5 py-5 flex flex-col gap-4">
+            {!isLoading ? (
+              <>
+                {/* Description */}
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {t("ai.generateDescription")}
+                </p>
+
+                {/* Prompt textarea */}
+                <textarea
+                  ref={textareaRef}
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={t("ai.placeholder")}
+                  rows={5}
+                  className="w-full rounded-md border bg-transparent px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+                />
+
+                {/* Error */}
+                {error && <p className="text-xs text-destructive">{error}</p>}
+
+                {/* Actions */}
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onOpenChange(false)}
+                  >
+                    {t("common.cancel")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => void handleGenerate()}
+                    disabled={!prompt.trim()}
+                    className="gap-1.5"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    {t("ai.generate")}
+                  </Button>
+                </div>
+              </>
+            ) : (
+              /* Loading / streaming state */
+              <div className="flex flex-col gap-4 py-2">
+                {/* Status row */}
+                <div className="flex items-center gap-3">
+                  {isStreaming ? (
+                    <>
+                      <span className="flex gap-0.5 shrink-0">
+                        {[0, 1, 2].map((i) => (
+                          <span
+                            key={i}
+                            className="inline-block w-1.5 h-1.5 rounded-full bg-primary animate-bounce"
+                            style={{ animationDelay: `${i * 0.15}s` }}
+                          />
+                        ))}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        {t("ai.generating")}
+                      </span>
+                      <Badge variant="secondary" className="text-[10px] gap-1 ml-auto">
+                        <Zap className="h-2.5 w-2.5 animate-pulse" />
+                        Streaming
+                      </Badge>
+                    </>
+                  ) : (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin shrink-0 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
+                        {t("ai.generating")}
+                      </span>
+                    </>
+                  )}
+                </div>
+
+                {/* Live streaming text preview */}
+                {isStreaming && streamingText && (
+                  <pre
+                    ref={streamScrollRef}
+                    className="text-[11px] font-mono text-muted-foreground whitespace-pre-wrap leading-relaxed bg-muted/40 rounded-md px-3 py-2 max-h-[160px] overflow-y-auto"
+                  >
+                    {streamingText}
+                    <span className="animate-pulse">▌</span>
+                  </pre>
                 )}
 
-                {conversation.messages.map((msg) => (
-                  <MessageBubble
-                    key={msg.id}
-                    message={msg}
-                    onApplySuggestion={applySuggestion}
-                  />
-                ))}
-
-                {conversation.isLoading && (
-                  <div className="flex gap-1 items-center text-xs text-muted-foreground py-2">
-                    <span className="animate-pulse">●</span>
-                    <span className="animate-pulse delay-100">●</span>
-                    <span className="animate-pulse delay-200">●</span>
-                    <span className="ml-1">Thinking…</span>
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
-
-            {/* Error */}
-            {conversation.error && (
-              <div className="px-4 py-2 bg-destructive/10 text-destructive text-xs border-t">
-                {conversation.error}
+                {/* Cancel */}
+                <div className="flex justify-end">
+                  <Button variant="outline" size="sm" onClick={handleCancel}>
+                    {t("common.cancel")}
+                  </Button>
+                </div>
               </div>
             )}
+          </div>
+        )}
 
-            <Separator />
-
-            {/* Input */}
-            <div className="px-4 py-3 flex gap-2 shrink-0">
-              <Input
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Ask AI to help…"
-                disabled={conversation.isLoading}
-                className="text-sm"
-              />
-              <Button
-                size="sm"
-                onClick={() => void handleSend()}
-                disabled={!input.trim() || conversation.isLoading}
-              >
-                Send
-              </Button>
-            </div>
-
-            {/* Clear button at bottom */}
-            {conversation.messages.length > 0 && (
-              <div className="px-4 py-2 border-t">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full text-xs h-8"
-                  onClick={clearChat}
-                >
-                  Clear Conversation
-                </Button>
-              </div>
-            )}
-          </>
-        ) : (
-          <>
-            {/* Settings panel */}
-            <ScrollArea className="flex-1 min-h-0">
-              <AIConfigPanel 
-                config={config} 
-                onChange={(newConfig) => {
-                  onConfigChange?.(newConfig);
-                }}
-              />
-            </ScrollArea>
-          </>
+        {/* Settings view */}
+        {view === "settings" && (
+          <ScrollArea className="max-h-[70vh]">
+            <AIConfigPanel
+              config={config}
+              onChange={(newConfig) => {
+                onConfigChange?.(newConfig);
+              }}
+            />
+          </ScrollArea>
         )}
       </DialogContent>
     </Dialog>
-  );
-}
-
-// ── Message bubble ──────────────────────────────────────────────────────
-
-function MessageBubble({
-  message,
-  onApplySuggestion,
-}: {
-  message: AIMessage;
-  onApplySuggestion: (s: AICommandSuggestion) => void;
-}) {
-  const isUser = message.role === "user";
-
-  // Extract suggestions from tail marker
-  let displayContent = message.content;
-  let suggestions: AICommandSuggestion[] = [];
-  const idx = message.content.indexOf("__SUGGESTIONS__");
-  if (idx !== -1) {
-    displayContent = message.content.slice(0, idx).trim();
-    try {
-      suggestions = JSON.parse(message.content.slice(idx + "__SUGGESTIONS__".length));
-    } catch {
-      // ignore
-    }
-  }
-
-  return (
-    <div className={`flex flex-col ${isUser ? "items-end" : "items-start"}`}>
-      <div
-        className={`rounded-lg px-3 py-2 text-sm max-w-[85%] whitespace-pre-wrap ${
-          isUser
-            ? "bg-primary text-primary-foreground"
-            : "bg-muted text-foreground"
-        }`}
-      >
-        {displayContent || "(empty)"}
-      </div>
-
-      {suggestions.length > 0 && (
-        <div className="mt-1 flex flex-wrap gap-1 max-w-[85%]">
-          {suggestions.map((s, i) => (
-            <Button
-              key={i}
-              variant="outline"
-              size="sm"
-              className="h-6 text-[10px]"
-              onClick={() => onApplySuggestion(s)}
-            >
-              Apply: {s.description}
-            </Button>
-          ))}
-        </div>
-      )}
-    </div>
   );
 }

@@ -3,11 +3,22 @@
  * for the AI assistant to reason about.
  */
 import type { BuilderState, ComponentDefinition } from "@ui-builder/builder-core";
-import type { AIBuilderContext } from "./types";
+import type { AIBuilderContext, AIPageNode } from "./types";
+
+export interface BuildAIContextOptions {
+  /**
+   * When true, include a full map of all page nodes in the context snapshot.
+   * Enables the AI to reference existing node IDs for targeted edits.
+   * Can significantly increase token usage for large documents.
+   * Default: false
+   */
+  includePageContext?: boolean;
+}
 
 export function buildAIContext(
   state: BuilderState,
   components: ComponentDefinition[],
+  options: BuildAIContextOptions = {},
 ): AIBuilderContext {
   const doc = state.document;
   const selectedId = state.editor.selectedNodeIds[0] ?? null;
@@ -15,6 +26,22 @@ export function buildAIContext(
   const selectedDef = selectedNode
     ? components.find((c) => c.type === selectedNode.type) ?? null
     : null;
+
+  let pageNodes: Record<string, AIPageNode> | undefined;
+  if (options.includePageContext) {
+    pageNodes = {};
+    for (const node of Object.values(doc.nodes)) {
+      pageNodes[node.id] = {
+        id: node.id,
+        type: node.type,
+        name: node.name,
+        parentId: node.parentId,
+        order: node.order,
+        props: node.props,
+        style: node.style as Record<string, unknown>,
+      };
+    }
+  }
 
   return {
     document: {
@@ -51,5 +78,6 @@ export function buildAIContext(
         .map((s) => ({ key: s.key, label: s.label, type: s.type })),
     })),
     activeBreakpoint: state.editor.activeBreakpoint,
+    pageNodes,
   };
 }
