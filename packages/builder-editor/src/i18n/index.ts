@@ -19,12 +19,24 @@ export const defaultResources = {
  * - First call performs full initialization with the given options (or defaults).
  * - Subsequent calls with a `language` option switch the active language without
  *   re-initializing, which avoids i18next double-init warnings.
+ *
+ * @param options.keySeparator - Separator for nested keys (default: '.'). 
+ *   Set to '.' to support both flat ("toolbar.undo") and nested ({ toolbar: { undo: "..." } }) formats.
+ *   Set to false to disable key nesting entirely (only flat keys allowed).
  */
 export function initI18n(options?: {
   language?: string;
   resources?: Record<string, { translation: Record<string, unknown> }>;
+  /** Key separator for nested translation keys. Default: '.' (supports both flat and nested) */
+  keySeparator?: string | false;
 }) {
   if (i18n.isInitialized) {
+    // Add any new resource bundles even after initialization
+    if (options?.resources) {
+      for (const [lng, { translation }] of Object.entries(options.resources)) {
+        i18n.addResourceBundle(lng, "translation", translation, true, true);
+      }
+    }
     if (options?.language) i18n.changeLanguage(options.language);
     return i18n;
   }
@@ -37,6 +49,7 @@ export function initI18n(options?: {
     resources,
     lng: options?.language ?? "en",
     fallbackLng: "en",
+    keySeparator: options?.keySeparator ?? '.', // Default '.' supports both flat & nested
     interpolation: {
       escapeValue: false, // React already handles XSS
     },

@@ -71,6 +71,7 @@ import { AIConfigPanel } from "./ai/AIConfig";
 import { buildAIContext } from "./ai/buildAIContext";
 import { AIConfigProvider } from "./ai/AIConfigContext";
 import type { AIConfig } from "./ai/types";
+import { initI18n, type SupportedLocale } from "./i18n";
 
 // ── Inner editor (must be inside BuilderProvider) ─────────────────────────
 
@@ -1123,9 +1124,26 @@ export interface BuilderEditorProps {
   className?: string;
   /** Optional GroupRegistry for 2-level component palette (Group → SubGroup → component) */
   groupRegistry?: GroupRegistry;
+  /** Locale for i18n (e.g., "en", "vi") */
+  locale?: SupportedLocale | string;
+  /** Additional i18n resources to merge with built-in translations */
+  i18nResources?: Record<string, { translation: Record<string, unknown> }>;
+  /** Key separator for i18n. Default: '.' (supports both flat "toolbar.undo" and nested formats). Set to false to disable nesting. */
+  i18nKeySeparator?: string | false;
 }
 
-export function BuilderEditor({ builder, config, className, groupRegistry }: BuilderEditorProps) {
+export function BuilderEditor({ builder, config, className, groupRegistry, locale, i18nResources, i18nKeySeparator }: BuilderEditorProps) {
+  // Initialize or update i18n with provided locale and resources
+  React.useEffect(() => {
+    if (locale || i18nResources || i18nKeySeparator !== undefined) {
+      initI18n({ 
+        language: locale, 
+        resources: i18nResources,
+        keySeparator: i18nKeySeparator,
+      });
+    }
+  }, [locale, i18nResources, i18nKeySeparator]);
+
   return (
     <BuilderProvider builder={builder} config={config}>
       <div className={cn("h-full w-full", className)}>

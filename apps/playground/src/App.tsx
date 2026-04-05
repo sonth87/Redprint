@@ -1,13 +1,16 @@
 import React, { useState } from "react";
-import { BuilderEditor } from "@ui-builder/builder-editor";
+import { BuilderEditor, i18n } from "@ui-builder/builder-editor";
 import { RuntimeRenderer } from "@ui-builder/builder-renderer";
 import { ComponentRegistry } from "@ui-builder/builder-core";
 import { Button } from "@ui-builder/ui";
-import { Pen, Eye, Code, Github } from "lucide-react";
+import { Pen, Eye, Code, Github, Languages } from "lucide-react";
 import { useBuilderSetup } from "./hooks/useBuilderSetup";
 import { SAMPLE_COMPONENTS } from "./components/sample-components";
+import koTranslations from "./i18n/ko.json";
+import koFlatTranslations from "./i18n/ko-flat.json";
 
 type Tab = "editor" | "preview" | "json";
+type Locale = "en" | "vi" | "ko" | "ko-flat";
 
 /**
  * Playground App — dual-mode editor + preview + JSON inspector.
@@ -19,6 +22,26 @@ type Tab = "editor" | "preview" | "json";
 export function App() {
   const { builder, groupRegistry } = useBuilderSetup();
   const [activeTab, setActiveTab] = useState<Tab>("editor");
+  const [locale, setLocale] = useState<Locale>("en");
+
+  const toggleLocale = () => {
+    const next: Locale = 
+      locale === "en" ? "vi" : 
+      locale === "vi" ? "ko" : 
+      locale === "ko" ? "ko-flat" :
+      "en";
+    i18n.changeLanguage(next === "ko-flat" ? "ko" : next);
+    setLocale(next);
+  };
+
+  // Demo: Support both nested (ko.json) and flat (ko-flat.json) formats
+  // The flat format uses keys like "toolbar.undo" instead of { toolbar: { undo: "..." } }
+  const i18nResources = React.useMemo(
+    () => ({
+      ko: { translation: locale === "ko-flat" ? koFlatTranslations : koTranslations },
+    }),
+    [locale]
+  );
 
   // Build a registry for the runtime renderer (same components)
   const runtimeRegistry = React.useMemo(() => {
@@ -72,15 +95,33 @@ export function App() {
           ))}
         </div>
 
-        <a
-          href="https://github.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-muted-foreground hover:text-foreground transition-colors"
-          aria-label="GitHub"
-        >
-          <Github className="h-4 w-4" />
-        </a>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={toggleLocale}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium border border-border bg-background hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+            title={
+              locale === "en"
+                ? "Switch to Tiếng Việt"
+                : locale === "vi"
+                ? "Switch to 한국어 (nested)"
+                : locale === "ko"
+                ? "Switch to 한국어 (flat)"
+                : "Switch to English"
+            }
+          >
+            <Languages className="h-3.5 w-3.5" />
+            {locale === "en" ? "EN" : locale === "vi" ? "VI" : locale === "ko" ? "KO" : "KO*"}
+          </button>
+          <a
+            href="https://github.com/sonth87/Redprint"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="GitHub"
+          >
+            <Github className="h-4 w-4" />
+          </a>
+        </div>
       </header>
 
       {/* ── Content area ── */}
@@ -91,6 +132,8 @@ export function App() {
           <BuilderEditor
             builder={builder}
             groupRegistry={groupRegistry}
+            locale={locale}
+            i18nResources={i18nResources}
             className="h-full"
           />
         )}
