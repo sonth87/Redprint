@@ -69,6 +69,7 @@ import { useSectionResize } from "./hooks/useSectionResize";
 import { AIAssistant } from "./ai/AIAssistant";
 import { AIConfigPanel } from "./ai/AIConfig";
 import { buildAIContext } from "./ai/buildAIContext";
+import { AIConfigProvider } from "./ai/AIConfigContext";
 import type { AIConfig } from "./ai/types";
 
 // ── Inner editor (must be inside BuilderProvider) ─────────────────────────
@@ -597,6 +598,7 @@ function EditorInner({ groupRegistry }: { groupRegistry?: GroupRegistry }) {
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
+    <AIConfigProvider config={aiConfig}>
     <div
       className="bg-background relative flex h-full w-full flex-col overflow-hidden"
       ref={canvasContainerRef}
@@ -1109,6 +1111,7 @@ function EditorInner({ groupRegistry }: { groupRegistry?: GroupRegistry }) {
         )}
       </div>
     </div>
+    </AIConfigProvider>
   );
 }
 

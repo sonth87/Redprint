@@ -99,8 +99,8 @@ export function App() {
         {activeTab === "preview" && (
           <div className="h-full overflow-auto bg-muted/40 flex items-start justify-center p-8">
             <div
-              className="bg-white rounded-xl overflow-auto w-full"
-              style={{ maxWidth: 1280, minHeight: 400 }}
+              // className="bg-white rounded-xl overflow-auto w-full"
+              // style={{ maxWidth: 1280, minHeight: 400 }}
             >
               <RuntimeRenderer
                 document={state.document}

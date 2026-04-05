@@ -141,6 +141,10 @@ export interface ComponentCapabilities {
    * prop with type "richtext".
    */
   inlineEditable?: boolean;
+  /** Enables AI text-generation tools (rewrite, shorten, expand…) on the contextual toolbar */
+  aiTextGeneration?: boolean;
+  /** Enables AI image-generation tools (generate, style transfer…) on the contextual toolbar */
+  aiImageGeneration?: boolean;
 }
 
 // ── Editor config ─────────────────────────────────────────────────────────

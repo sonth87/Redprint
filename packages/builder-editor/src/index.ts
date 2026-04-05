@@ -96,6 +96,7 @@ export { AIConfigPanel } from "./ai/AIConfig";
 export type { AIConfigPanelProps } from "./ai/AIConfig";
 export { sendAIMessage, getAIAdapter } from "./ai/AIService";
 export { buildAIContext } from "./ai/buildAIContext";
+export { AIConfigProvider, useAIConfig } from "./ai/AIConfigContext";
 export type {
   AIProvider,
   AIConfig,
@@ -106,3 +107,26 @@ export type {
   AIResponse,
   AIProviderAdapter,
 } from "./ai/types";
+
+// AI Tools (contextual toolbar)
+export { AIToolsPopover } from "./ai/ai-tools/AIToolsPopover";
+export type { AIToolsPopoverProps } from "./ai/ai-tools/AIToolsPopover";
+export { executeAIToolsAction } from "./ai/ai-tools/ai-tools-service";
+export {
+  AI_TONES,
+  AI_TEXT_ACTIONS,
+  AI_IMAGE_ACTIONS,
+  AI_CUSTOM_SUGGESTIONS,
+  AI_REGENERATE_COOLDOWN_SECONDS,
+} from "./ai/ai-tools/ai-tools-config";
+export type {
+  AIToolsMode,
+  AITone,
+  AIToolsAction,
+  AICustomSuggestion,
+  AIToolsRequest,
+  AIToolsResponse,
+  AIToolsStrategy,
+  AIToolsState,
+  AIToolsView,
+} from "./ai/ai-tools/types";

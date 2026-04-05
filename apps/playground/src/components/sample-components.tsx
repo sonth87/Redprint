@@ -26,6 +26,7 @@ export const TextComponent: ComponentDefinition = {
     canBeHidden: true,
     canBeLocked: true,
     inlineEditable: true,
+    aiTextGeneration: true,
   },
   propSchema: [
     {

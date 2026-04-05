@@ -317,5 +317,49 @@
     "done": "Done",
     "exitHint": "Press Escape to finish editing",
     "enterHint": "Double-click to edit text"
+  },
+  "aiTools": {
+    "title": "AI Actions",
+    "transformTitle": "Transform content",
+    "previewTitle": "AI Preview",
+    "buttonTooltip": "AI Tools",
+    "noApiKey": "AI API key not configured. Open AI settings to get started.",
+    "tonesLabel": "Tone",
+    "tones": {
+      "friendly": "Friendly",
+      "formal": "Formal",
+      "humorous": "Humorous",
+      "urgent": "Urgent",
+      "expert": "Expert"
+    },
+    "textActions": {
+      "rewrite": "Rewrite more engagingly",
+      "shorten": "Shorten",
+      "expand": "Expand content",
+      "boost": "Boost conversion",
+      "translate": "Translate to another language",
+      "translateBadge": "multi-language",
+      "transform": "Transform content…"
+    },
+    "imageActions": {
+      "generate": "Generate image from prompt",
+      "removeBackground": "Remove background",
+      "upscale": "Upscale & enhance",
+      "styleTransfer": "Apply artistic style",
+      "variations": "Create variations"
+    },
+    "suggestions": {
+      "addFomo": "Add FOMO",
+      "genZ": "Gen Z style",
+      "addStats": "Add statistics",
+      "shorter": "Make shorter",
+      "storytelling": "Storytelling",
+      "seo": "SEO optimized"
+    },
+    "transformPlaceholder": "Enter any request…",
+    "confirm": "Apply",
+    "regenerate": "Regenerate",
+    "cancel": "Discard",
+    "cooldown": "Wait"
   }
 }

@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Copy, Trash2, ArrowUp, ArrowDown, GripVertical } from "lucide-react";
-import { useDocument } from "@ui-builder/builder-react";
+import { useDocument, useBuilder } from "@ui-builder/builder-react";
 import { Button, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@ui-builder/ui";
 import { TOOLTIP_DELAY_MS } from "@ui-builder/shared";
+import { AIToolsPopover } from "../ai/ai-tools/AIToolsPopover";
+import { useAIConfig } from "../ai/AIConfigContext";
 
 export interface ContextualToolbarProps {
   nodeId: string;
@@ -19,10 +21,41 @@ export interface ContextualToolbarProps {
 
 export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, rect, zoom, panOffset, onDelete, onDuplicate, onMoveUp, onMoveDown, onDragHandlePointerDown }) => {
   const { document } = useDocument();
+  const { builder, dispatch } = useBuilder();
   const { t } = useTranslation();
   const node = document.nodes[nodeId];
+  const aiConfig = useAIConfig();
 
   if (!node) return null;
+
+  // Resolve component definition to check AI capabilities
+  const registry = builder?.registry;
+  const definition = registry ? registry.getComponent(node.type) : null;
+  const hasAIText = definition?.capabilities.aiTextGeneration === true;
+  const hasAIImage = definition?.capabilities.aiImageGeneration === true;
+  const hasAI = hasAIText || hasAIImage;
+  const aiMode = hasAIImage ? "image" : "text";
+
+  // Derive current content for AI (richtext prop or image src)
+  const richTextProp = definition?.propSchema.find((p) => p.type === "richtext");
+  const imageProp = definition?.propSchema.find((p) => p.type === "image");
+  const currentAIContent: string = hasAIImage
+    ? String(node.props[imageProp?.key ?? "src"] ?? "")
+    : String(node.props[richTextProp?.key ?? "content"] ?? node.props.text ?? node.props.content ?? "");
+
+  const handleAIConfirm = useCallback(
+    (newContent: string) => {
+      const targetKey = hasAIImage
+        ? (imageProp?.key ?? "src")
+        : (richTextProp?.key ?? "content");
+      dispatch({
+        type: "UPDATE_PROPS",
+        payload: { nodeId, props: { [targetKey]: newContent } },
+        description: "AI Tools — apply content",
+      });
+    },
+    [hasAIImage, imageProp, richTextProp, nodeId, dispatch],
+  );
 
   const wrap = (fn: () => void) => (e: React.MouseEvent) => { e.stopPropagation(); fn(); };
 
@@ -87,6 +120,19 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
           </TooltipTrigger>
           <TooltipContent side="top">{t("contextToolbar.duplicate")}</TooltipContent>
         </Tooltip>
+
+        {hasAI && (
+          <>
+            <div className="w-px h-4 bg-border mx-0.5" />
+            <AIToolsPopover
+              mode={aiMode}
+              currentContent={currentAIContent}
+              componentType={node.type.toLowerCase()}
+              aiConfig={aiConfig}
+              onConfirm={handleAIConfirm}
+            />
+          </>
+        )}
 
         <div className="w-px h-4 bg-border mx-0.5" />
 

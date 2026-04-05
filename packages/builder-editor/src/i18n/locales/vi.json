@@ -317,5 +317,49 @@
     "done": "Xong",
     "exitHint": "Nhấn Escape để hoàn tất chỉnh sửa",
     "enterHint": "Nhấp đúp để chỉnh sửa văn bản"
+  },
+  "aiTools": {
+    "title": "AI Actions",
+    "transformTitle": "Biến hoá nội dung",
+    "previewTitle": "Xem trước AI",
+    "buttonTooltip": "AI Tools",
+    "noApiKey": "Chưa cấu hình API key AI. Vui lòng mở cài đặt AI để bắt đầu.",
+    "tonesLabel": "Giọng điệu",
+    "tones": {
+      "friendly": "Thân thiện",
+      "formal": "Trang trọng",
+      "humorous": "Hài hước",
+      "urgent": "Khẩn cấp",
+      "expert": "Chuyên gia"
+    },
+    "textActions": {
+      "rewrite": "Viết lại hấp dẫn hơn",
+      "shorten": "Rút gọn",
+      "expand": "Mở rộng văn bản",
+      "boost": "Tăng tính chuyển đổi/bán hàng",
+      "translate": "Dịch sang ngôn ngữ khác",
+      "translateBadge": "đa ngôn ngữ",
+      "transform": "Biến hoá nội dung…"
+    },
+    "imageActions": {
+      "generate": "Tạo ảnh từ mô tả",
+      "removeBackground": "Xóa nền ảnh",
+      "upscale": "Nâng cấp & làm nét",
+      "styleTransfer": "Chuyển phong cách nghệ thuật",
+      "variations": "Tạo biến thể ảnh"
+    },
+    "suggestions": {
+      "addFomo": "Thêm FOMO",
+      "genZ": "Viết kiểu Gen Z",
+      "addStats": "Thêm số liệu",
+      "shorter": "Ngắn gọn hơn",
+      "storytelling": "Kể chuyện",
+      "seo": "Tối ưu SEO"
+    },
+    "transformPlaceholder": "Nhập yêu cầu bất kỳ…",
+    "confirm": "Áp dụng",
+    "regenerate": "Tạo lại",
+    "cancel": "Huỷ bỏ",
+    "cooldown": "Đợi"
   }
 }
