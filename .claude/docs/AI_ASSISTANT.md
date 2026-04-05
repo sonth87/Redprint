@@ -49,7 +49,7 @@ BuilderEditor
 interface AIConfig {
   provider: AIProvider;       // "openai" | "gemini" | "claude"
   apiKey: string;
-  model?: string;             // e.g. "gpt-4o-mini", "gemini-2.0-flash"
+  model?: string;             // e.g. "gpt-5", "gemini-3-flash-preview", "claude-4-sonnet"
   temperature?: number;       // 0–2, default 0.7
   maxTokens?: number;         // default 2048
   systemPrompt?: string;      // overrides the default system prompt
@@ -132,19 +132,19 @@ interface AIProviderAdapter {
 
 - Endpoint: `https://api.openai.com/v1/chat/completions`
 - Auth: `Authorization: Bearer {apiKey}`
-- Default model: `gpt-4o-mini`
+- Default model: `gpt-5`
 
 ### Gemini
 
 - Endpoint: `https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={apiKey}`
 - Uses `contents` array with `user`/`model` roles
-- Default model: `gemini-2.0-flash`
+- Default model: `gemini-3-flash-preview`
 
 ### Claude (Anthropic)
 
 - Endpoint: `https://api.anthropic.com/v1/messages`
 - Auth: `x-api-key: {apiKey}` + `anthropic-version: 2023-06-01`
-- Default model: `claude-sonnet-4-20250514`
+- Default model: `claude-4-sonnet-20260215`
 - **Note**: No `anthropic-dangerous-direct-browser-access` header — callers must proxy through a
   backend to use Claude in production.
 

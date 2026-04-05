@@ -39,7 +39,7 @@ const openaiAdapter: AIProviderAdapter = {
         Authorization: `Bearer ${config.apiKey}`,
       },
       body: JSON.stringify({
-        model: config.model || "gpt-4o-mini",
+        model: config.model || "gpt-5",
         messages: apiMessages,
         temperature: config.temperature ?? 0.7,
         max_tokens: config.maxTokens ?? 2048,
@@ -67,7 +67,7 @@ const geminiAdapter: AIProviderAdapter = {
     config: AIConfig,
   ): Promise<AIResponse> {
     const systemMessage = buildSystemMessage(config, context);
-    const model = config.model || "gemini-2.0-flash";
+    const model = config.model || "gemini-3-flash-preview";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${config.apiKey}`;
 
     const contents = [
@@ -133,7 +133,7 @@ const claudeAdapter: AIProviderAdapter = {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: config.model || "claude-sonnet-4-20250514",
+        model: config.model || "claude-4-sonnet-20260215",
         max_tokens: config.maxTokens ?? 2048,
         system: systemMessage,
         messages: apiMessages,
