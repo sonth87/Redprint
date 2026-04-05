@@ -21,6 +21,12 @@ export interface RichtextToolbarConfig {
   link?: boolean;
   list?: boolean;
   align?: boolean;
+  /** Enable font-size selector in the toolbar */
+  fontSize?: boolean;
+  /** Enable text (foreground) colour picker */
+  color?: boolean;
+  /** Enable text-highlight (background) colour picker */
+  highlight?: boolean;
 }
 
 export type PropSchema =
@@ -75,6 +81,38 @@ export interface ContainerConfig {
   emptyStateConfig?: EmptyStateConfig;
 }
 
+// ── Component Group / Sub-group ───────────────────────────────────────────
+
+/**
+ * A top-level group in the component palette (e.g. "Văn bản", "Nút bấm", "Ảnh").
+ * Declared via defineComponentGroup() or GroupRegistry.registerGroup().
+ */
+export interface ComponentGroup {
+  /** Unique identifier, e.g. "text", "button", "media" */
+  id: string;
+  /** Display label (fallback when i18n key not found) */
+  label: string;
+  /** SVG string or lucide icon name */
+  icon?: string;
+  /** Ordering weight — lower values appear first */
+  order: number;
+  /** i18n key for the label, e.g. "groups.text" */
+  i18nKey?: string;
+}
+
+/**
+ * A sub-group nested under a ComponentGroup.
+ * e.g. "Tiêu đề", "Đoạn văn", "Danh sách" inside "Văn bản".
+ */
+export interface ComponentSubGroup {
+  id: string;
+  parentGroupId: string;
+  label: string;
+  icon?: string;
+  order: number;
+  i18nKey?: string;
+}
+
 // ── Component Capabilities ────────────────────────────────────────────────
 
 export interface ComponentCapabilities {
@@ -97,6 +135,12 @@ export interface ComponentCapabilities {
   isDragDisabled?: boolean;
   /** Disables dropping into this node */
   isDropDisabled?: boolean;
+  /**
+   * When true, double-clicking this component on the canvas enters inline
+   * rich-text editing mode (tiptap). The component must have at least one
+   * prop with type "richtext".
+   */
+  inlineEditable?: boolean;
 }
 
 // ── Editor config ─────────────────────────────────────────────────────────
@@ -168,11 +212,29 @@ export type ComponentRenderer = (props: {
 
 // ── ComponentDefinition ───────────────────────────────────────────────────
 
+/**
+ * Per-locale display strings for a component. Keyed by locale code.
+ * @example { en: { name: "Text", description: "A text block" }, vi: { name: "Văn bản" } }
+ */
+export type ComponentI18nMap = Record<string, { name?: string; description?: string }>;
+
 export interface ComponentDefinition {
   /** Unique type key, e.g. "text-block" */
   type: string;
   name: string;
   category: string;
+  /**
+   * The top-level group id this component belongs to (e.g. "text", "button").
+   * Maps to ComponentGroup.id in GroupRegistry.
+   */
+  group?: string;
+  /**
+   * The sub-group id within the group (e.g. "heading", "paragraph").
+   * Maps to ComponentSubGroup.id in GroupRegistry.
+   */
+  subGroup?: string;
+  /** Per-locale display overrides. Falls back to `name`/`description` fields. */
+  i18n?: ComponentI18nMap;
   /** semver */
   version: string;
   /** SVG string or icon key */

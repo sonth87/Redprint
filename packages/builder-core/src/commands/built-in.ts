@@ -38,6 +38,10 @@ export const CMD_LOAD_COMPONENT = "LOAD_COMPONENT" as const;
 // Editor UI
 export const CMD_SET_CANVAS_MODE = "SET_CANVAS_MODE" as const;
 
+// Inline text editing (no undo/redo — pure UI state)
+export const CMD_ENTER_TEXT_EDIT = "ENTER_TEXT_EDIT" as const;
+export const CMD_EXIT_TEXT_EDIT  = "EXIT_TEXT_EDIT"  as const;
+
 // ── Payload Types ─────────────────────────────────────────────────────────
 
 import type { StyleConfig, CanvasConfig } from "../document/types";
@@ -158,4 +162,18 @@ export interface ResetResponsiveStylePayload {
 
 export interface SetCanvasModePayload {
   canvasMode: import("../state/types").CanvasMode;
+}
+
+export interface EnterTextEditPayload {
+  nodeId: string;
+  /** The prop key to edit inline. If omitted the engine picks the first richtext prop. */
+  propKey?: string;
+}
+
+export interface ExitTextEditPayload {
+  /** Optional — the final rich-text HTML to commit to the node's prop. */
+  content?: string;
+  /** Prop key that was being edited (required when content is provided). */
+  propKey?: string;
+  nodeId?: string;
 }

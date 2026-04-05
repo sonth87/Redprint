@@ -13,6 +13,8 @@ export const TextComponent: ComponentDefinition = {
   type: "Text",
   name: "Text",
   category: "content",
+  group: "text",
+  subGroup: "paragraph",
   description: "A text block with configurable content and typography.",
   version: "1.0.0",
   tags: ["typography", "content", "label"],
@@ -23,15 +25,21 @@ export const TextComponent: ComponentDefinition = {
     canBindData: true,
     canBeHidden: true,
     canBeLocked: true,
+    inlineEditable: true,
   },
   propSchema: [
     {
       key: "text",
       label: "Content",
-      type: "string",
-      default: "Hello World",
-      multiline: true,
-      required: true,
+      type: "richtext",
+      toolbar: {
+        bold: true,
+        italic: true,
+        underline: true,
+        strikethrough: true,
+        link: true,
+        align: true,
+      },
     },
     {
       key: "tag",
@@ -48,26 +56,29 @@ export const TextComponent: ComponentDefinition = {
       default: "p",
     },
   ],
-  defaultProps: { text: "Hello World", tag: "p" },
+  defaultProps: { text: "<p>Hello World</p>", tag: "p" },
   defaultStyle: { fontSize: "16px", color: "#111827", lineHeight: "1.6" },
   editorRenderer: ({ node, style }) => {
     const Tag = (node.props.tag ?? "p") as keyof React.JSX.IntrinsicElements;
+    const html = String(node.props.text ?? "<p>Text</p>");
     return (
       <Tag
         data-node-id={node.id}
         style={style as React.CSSProperties}
-        className="select-none outline-none"
-      >
-        {String(node.props.text ?? "Text")}
-      </Tag>
+        className="outline-none"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
     );
   },
   runtimeRenderer: ({ node, style }) => {
     const Tag = (node.props.tag ?? "p") as keyof React.JSX.IntrinsicElements;
     return (
-      <Tag style={style as React.CSSProperties}>
-        {String(node.props.text ?? "Text")}
-      </Tag>
+      <Tag
+        style={style as React.CSSProperties}
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: String(node.props.text ?? "") }}
+      />
     );
   },
 };
@@ -78,6 +89,8 @@ export const ButtonComponent: ComponentDefinition = {
   type: "Button",
   name: "Button",
   category: "interactive",
+  group: "button",
+  subGroup: "button-single",
   description: "A clickable button element.",
   version: "1.0.0",
   tags: ["button", "action", "cta"],
@@ -88,9 +101,15 @@ export const ButtonComponent: ComponentDefinition = {
     canBindData: false,
     canBeHidden: true,
     canBeLocked: true,
+    inlineEditable: true,
   },
   propSchema: [
-    { key: "label", label: "Label", type: "string", default: "Click me", required: true },
+    {
+      key: "label",
+      label: "Label",
+      type: "richtext",
+      toolbar: { bold: true, italic: false, underline: false, strikethrough: false, link: false, align: false },
+    },
     {
       key: "variant",
       label: "Variant",
@@ -117,7 +136,7 @@ export const ButtonComponent: ComponentDefinition = {
     },
     { key: "disabled", label: "Disabled", type: "boolean", default: false },
   ],
-  defaultProps: { label: "Click me", variant: "primary", size: "md", disabled: false },
+  defaultProps: { label: "<p>Click me</p>", variant: "primary", size: "md", disabled: false },
   defaultStyle: {
     display: "inline-flex",
     alignItems: "center",
@@ -137,17 +156,17 @@ export const ButtonComponent: ComponentDefinition = {
       style={style as React.CSSProperties}
       disabled={Boolean(node.props.disabled)}
       className="select-none"
-    >
-      {String(node.props.label ?? "Button")}
-    </button>
+      // eslint-disable-next-line react/no-danger
+      dangerouslySetInnerHTML={{ __html: String(node.props.label ?? "<p>Button</p>") }}
+    />
   ),
   runtimeRenderer: ({ node, style }) => (
     <button
       style={style as React.CSSProperties}
       disabled={Boolean(node.props.disabled)}
-    >
-      {String(node.props.label ?? "Button")}
-    </button>
+      // eslint-disable-next-line react/no-danger
+      dangerouslySetInnerHTML={{ __html: String(node.props.label ?? "<p>Button</p>") }}
+    />
   ),
 };
 
@@ -157,6 +176,7 @@ export const ContainerComponent: ComponentDefinition = {
   type: "Container",
   name: "Container",
   category: "layout",
+  group: "container",
   description: "A flexible container that can hold any child components.",
   version: "1.0.0",
   tags: ["layout", "box", "div", "flex", "container"],
@@ -261,6 +281,7 @@ export const ImageComponent: ComponentDefinition = {
   type: "Image",
   name: "Image",
   category: "media",
+  group: "image",
   description: "An image element with configurable src and alt text.",
   version: "1.0.0",
   tags: ["image", "photo", "media", "asset"],
@@ -326,6 +347,7 @@ export const DividerComponent: ComponentDefinition = {
   type: "Divider",
   name: "Divider",
   category: "layout",
+  group: "divider",
   description: "A horizontal or vertical rule separator.",
   version: "1.0.0",
   tags: ["divider", "separator", "rule", "hr"],
@@ -384,6 +406,7 @@ export const SectionComponent: ComponentDefinition = {
   type: "Section",
   name: "Section",
   category: "layout",
+  group: "layout",
   description: "A full-width page section. Sections stack vertically and can be resized.",
   version: "1.0.0",
   tags: ["section", "page", "layout", "block"],

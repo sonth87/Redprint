@@ -101,6 +101,14 @@ export interface EditorState {
   clipboard: ClipboardData | null;
   /** Display mode: single canvas (switching device) or dual side-by-side */
   canvasMode: CanvasMode;
+  /**
+   * When set, the editor is in inline text-edit mode for this node.
+   * The ContextualToolbar is hidden and the TextEditToolbar + InlineTextEditor
+   * are shown instead.
+   */
+  editingNodeId: string | null;
+  /** The prop key being edited inline (defaults to the first richtext prop). */
+  editingPropKey: string | null;
 }
 
 // ── Interaction state ─────────────────────────────────────────────────────

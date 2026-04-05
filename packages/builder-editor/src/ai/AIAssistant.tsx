@@ -170,7 +170,7 @@ export function AIAssistant({ open, onOpenChange, config, onConfigChange, contex
             <div className="flex-1">
               <DialogTitle className="text-sm font-medium">{t("ai.title")}</DialogTitle>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 pr-8">
               <Badge variant="outline" className="text-[10px]">
                 {config.provider}
               </Badge>

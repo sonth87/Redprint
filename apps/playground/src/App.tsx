@@ -17,7 +17,7 @@ type Tab = "editor" | "preview" | "json";
  * Tab "JSON" → raw document JSON inspector
  */
 export function App() {
-  const builder = useBuilderSetup();
+  const { builder, groupRegistry } = useBuilderSetup();
   const [activeTab, setActiveTab] = useState<Tab>("editor");
 
   // Build a registry for the runtime renderer (same components)
@@ -90,6 +90,7 @@ export function App() {
         {activeTab === "editor" && (
           <BuilderEditor
             builder={builder}
+            groupRegistry={groupRegistry}
             className="h-full"
           />
         )}

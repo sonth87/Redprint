@@ -273,5 +273,49 @@
     "showLayer": "Hiện",
     "lockLayer": "Khóa",
     "unlockLayer": "Mở khóa"
+  },
+  "groups": {
+    "text": "Văn bản",
+    "button": "Nút bấm",
+    "image": "Ảnh",
+    "gallery": "Thư viện ảnh",
+    "container": "Hình hộp",
+    "icon": "Biểu tượng",
+    "divider": "Đường kẻ",
+    "form": "Biểu mẫu",
+    "product": "Sản phẩm",
+    "video": "Video",
+    "collection": "Danh sách",
+    "carousel": "Băng chuyền",
+    "tabs": "Thẻ",
+    "frame": "Khung",
+    "accordion": "Accordion",
+    "table": "Bảng",
+    "survey": "Khảo sát",
+    "menu": "Menu",
+    "html": "Mã HTML",
+    "layout": "Bố cục",
+    "other": "Khác"
+  },
+  "subGroups": {
+    "heading": "Tiêu đề",
+    "paragraph": "Đoạn văn",
+    "list": "Danh sách",
+    "buttonSingle": "Nút bấm đơn",
+    "buttonGroup": "Nhóm nút"
+  },
+  "textEdit": {
+    "bold": "Đậm",
+    "italic": "Nghiêng",
+    "underline": "Gạch chân",
+    "strikethrough": "Gạch ngang",
+    "alignLeft": "Căn trái",
+    "alignCenter": "Căn giữa",
+    "alignRight": "Căn phải",
+    "alignJustify": "Căn đều",
+    "link": "Liên kết",
+    "done": "Xong",
+    "exitHint": "Nhấn Escape để hoàn tất chỉnh sửa",
+    "enterHint": "Nhấp đúp để chỉnh sửa văn bản"
   }
 }

@@ -1,14 +1,14 @@
 import { useMemo, useEffect } from "react";
-import { createBuilder } from "@ui-builder/builder-core";
+import { createBuilder, GroupRegistry, BUILT_IN_GROUPS, BUILT_IN_SUB_GROUPS } from "@ui-builder/builder-core";
 import type { BuilderAPI } from "@ui-builder/builder-core";
 import { SAMPLE_COMPONENTS } from "../components/sample-components";
 import { FIXTURE_DOCUMENT } from "../fixtures/fixture-document";
 
 /**
  * Creates a BuilderAPI instance pre-loaded with sample components and
- * the fixture document.
+ * the fixture document, plus a GroupRegistry for the 2-level component palette.
  */
-export function useBuilderSetup(): BuilderAPI {
+export function useBuilderSetup(): { builder: BuilderAPI; groupRegistry: GroupRegistry } {
   const builder = useMemo(() => {
     const b = createBuilder({
       document: FIXTURE_DOCUMENT,
@@ -30,6 +30,13 @@ export function useBuilderSetup(): BuilderAPI {
     return b;
   }, []);
 
+  const groupRegistry = useMemo(() => {
+    const gr = new GroupRegistry();
+    for (const g of BUILT_IN_GROUPS) gr.registerGroup(g);
+    for (const sg of BUILT_IN_SUB_GROUPS) gr.registerSubGroup(sg);
+    return gr;
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -37,5 +44,5 @@ export function useBuilderSetup(): BuilderAPI {
     };
   }, [builder]);
 
-  return builder;
+  return { builder, groupRegistry };
 }

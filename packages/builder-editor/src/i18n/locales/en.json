@@ -273,5 +273,49 @@
     "showLayer": "Show",
     "lockLayer": "Lock",
     "unlockLayer": "Unlock"
+  },
+  "groups": {
+    "text": "Text",
+    "button": "Button",
+    "image": "Image",
+    "gallery": "Gallery",
+    "container": "Container",
+    "icon": "Icon",
+    "divider": "Divider",
+    "form": "Form",
+    "product": "Product",
+    "video": "Video",
+    "collection": "Collection List",
+    "carousel": "Carousel",
+    "tabs": "Tabs",
+    "frame": "Frame",
+    "accordion": "Accordion",
+    "table": "Table",
+    "survey": "Survey",
+    "menu": "Menu",
+    "html": "HTML Code",
+    "layout": "Layout",
+    "other": "Other"
+  },
+  "subGroups": {
+    "heading": "Heading",
+    "paragraph": "Paragraph",
+    "list": "List",
+    "buttonSingle": "Button",
+    "buttonGroup": "Button Group"
+  },
+  "textEdit": {
+    "bold": "Bold",
+    "italic": "Italic",
+    "underline": "Underline",
+    "strikethrough": "Strikethrough",
+    "alignLeft": "Align Left",
+    "alignCenter": "Align Center",
+    "alignRight": "Align Right",
+    "alignJustify": "Justify",
+    "link": "Link",
+    "done": "Done",
+    "exitHint": "Press Escape to finish editing",
+    "enterHint": "Double-click to edit text"
   }
 }

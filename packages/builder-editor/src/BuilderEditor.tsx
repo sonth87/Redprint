@@ -16,7 +16,11 @@ import {
   type CanvasConfig,
   type CanvasMode,
   type ComponentDefinition,
+  type GroupRegistry,
+  CMD_ENTER_TEXT_EDIT,
+  CMD_EXIT_TEXT_EDIT,
 } from "@ui-builder/builder-core";
+import type { Editor as TiptapEditor } from "@tiptap/react";
 import {
   MIN_ZOOM,
   FIT_TO_SCREEN_PADDING,
@@ -33,6 +37,8 @@ import { SectionOverlay } from "./overlay/SectionOverlay";
 import { SectionToolbar } from "./overlay/SectionToolbar";
 import { EditorToolbar } from "./toolbar/EditorToolbar";
 import { ComponentPalette } from "./panels/left/ComponentPalette";
+import { TextEditToolbar } from "./toolbar/TextEditToolbar";
+import { InlineTextEditor } from "./canvas/InlineTextEditor";
 import { LayerTree } from "./panels/bottom/LayerTree";
 import { PropertyPanel } from "./panels/right/PropertyPanel";
 import { PageSettings } from "./panels/right/PageSettings";
@@ -67,7 +73,7 @@ import type { AIConfig } from "./ai/types";
 
 // ── Inner editor (must be inside BuilderProvider) ─────────────────────────
 
-function EditorInner() {
+function EditorInner({ groupRegistry }: { groupRegistry?: GroupRegistry }) {
   const { builder, state, dispatch } = useBuilder();
   const { selectedNodeIds, select, clearSelection } = useSelection();
   const { document } = useDocument();
@@ -75,6 +81,21 @@ function EditorInner() {
   const { undo, redo, canUndo, canRedo } = useHistory();
 
   const canvasMode: CanvasMode = state.editor.canvasMode ?? "single";
+
+  // ── Inline text edit state ────────────────────────────────────────────────
+  const editingNodeId  = state.editor.editingNodeId  ?? null;
+  const editingPropKey = state.editor.editingPropKey ?? null;
+  const [tiptapEditor, setTiptapEditor] = useState<TiptapEditor | null>(null);
+  /** Live canvas-space rect updated by InlineTextEditor's ResizeObserver */
+  const [editingOverrideRect, setEditingOverrideRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+
+  // Clear overrides when exiting text edit mode
+  useEffect(() => {
+    if (!editingNodeId) {
+      setTiptapEditor(null);
+      setEditingOverrideRect(null);
+    }
+  }, [editingNodeId]);
 
   // ── AI assistant state ────────────────────────────────────────────────────
   const [aiOpen, setAiOpen] = useState(false);
@@ -266,7 +287,7 @@ function EditorInner() {
   });
 
   // ── DOM observation hooks ────────────────────────────────────────────────
-  const { selectionRect, currentRotation } = useSelectionRect({
+  const { selectionRect: selectionRectRaw, currentRotation } = useSelectionRect({
     selectedNodeIds,
     zoom,
     panOffset,
@@ -274,6 +295,12 @@ function EditorInner() {
     canvasFrameRef,
     nodeQueryRef: activeFrameRef,
   });
+
+  // While inline editing, use the live rect from ResizeObserver so handles
+  // track content-height changes; otherwise use the normal computed rect.
+  const selectionRect = editingNodeId
+    ? (editingOverrideRect ?? selectionRectRaw)
+    : selectionRectRaw;
 
   const { hoverRect, handleMouseOver, handleMouseOut } = useHoverRect({
     selectedNodeIds,
@@ -323,6 +350,51 @@ function EditorInner() {
       });
     },
     [dispatch],
+  );
+
+  // ── Inline text edit handlers ────────────────────────────────────────────
+  const handleInlineCommit = useCallback(
+    (html: string) => {
+      if (!editingNodeId || !editingPropKey) return;
+      dispatch({
+        type: "UPDATE_PROPS",
+        payload: { nodeId: editingNodeId, props: { [editingPropKey]: html } },
+        description: `Update ${editingPropKey}`,
+      });
+    },
+    [editingNodeId, editingPropKey, dispatch],
+  );
+
+  const handleInlineExit = useCallback(() => {
+    setTiptapEditor(null);
+    dispatch({
+      type: CMD_EXIT_TEXT_EDIT,
+      payload: {},
+      description: "Exit text edit",
+    });
+  }, [dispatch]);
+
+  const handleCanvasDoubleClick = useCallback(
+    (e: React.MouseEvent) => {
+      if (editingNodeId) return; // already editing
+      const target = e.target as HTMLElement;
+      const el = target.closest("[data-node-id]") as HTMLElement | null;
+      if (!el) return;
+      const nodeId = el.dataset.nodeId!;
+      const node = document.nodes[nodeId];
+      if (!node) return;
+      const def = registry?.getComponent(node.type);
+      if (!def?.capabilities.inlineEditable) return;
+      const richtextProp = def.propSchema.find((p) => p.type === "richtext");
+      if (!richtextProp) return;
+      e.stopPropagation();
+      dispatch({
+        type: CMD_ENTER_TEXT_EDIT,
+        payload: { nodeId, propKey: richtextProp.key },
+        description: "Enter text edit",
+      });
+    },
+    [editingNodeId, document.nodes, registry, dispatch],
   );
 
   const { onMoveUp, onMoveDown } = useZIndexHandlers({
@@ -559,7 +631,7 @@ function EditorInner() {
 
       <FloatingPanel id="components" title="Components" defaultPosition={DEFAULT_COMPONENTS_PANEL_POS}>
         <div className="h-[40vh] min-h-[300px] overflow-hidden">
-          <ComponentPalette components={allComponents} onDragStart={handleDragStart} />
+          <ComponentPalette components={allComponents} onDragStart={handleDragStart} groupRegistry={groupRegistry} />
         </div>
       </FloatingPanel>
 
@@ -704,6 +776,7 @@ function EditorInner() {
                       setBreakpoint("desktop");
                       handlePointerDown(e);
                     }}
+                    onDoubleClick={handleCanvasDoubleClick}
                     onMouseOver={handleMouseOver}
                     onMouseOut={handleMouseOut}
                     onDragEnter={handleDragEnter}
@@ -740,6 +813,7 @@ function EditorInner() {
                     transition: `width ${TRANSITION_MID_CSS} ease, min-height ${TRANSITION_MID_CSS} ease, box-shadow ${TRANSITION_FAST_CSS} ease`,
                   }}
                   onPointerDown={handlePointerDown}
+                  onDoubleClick={handleCanvasDoubleClick}
                   onMouseOver={handleMouseOver}
                   onMouseOut={handleMouseOut}
                   onDragEnter={handleDragEnter}
@@ -845,6 +919,7 @@ function EditorInner() {
                       setBreakpoint("mobile");
                       handlePointerDown(e);
                     }}
+                    onDoubleClick={handleCanvasDoubleClick}
                     onMouseOver={handleMouseOver}
                     onMouseOut={handleMouseOut}
                     onDragEnter={handleDragEnter}
@@ -948,7 +1023,7 @@ function EditorInner() {
           />
         )}
 
-        {selectedNodeId && selectionRect && !selectedSectionNode && (
+        {selectedNodeId && selectionRect && !selectedSectionNode && !editingNodeId && (
           <ContextualToolbar
             nodeId={selectedNodeId}
             rect={selectionRect}
@@ -978,6 +1053,49 @@ function EditorInner() {
           />
         )}
 
+        {/* ── Inline text editor + toolbar ─────────────────────────────── */}
+        {editingNodeId && editingPropKey && (() => {
+          const editingNode = document.nodes[editingNodeId];
+          const editingDef = editingNode && registry ? registry.getComponent(editingNode.type) : null;
+          const richtextSchema = editingDef?.propSchema.find(
+            (p) => p.type === "richtext" && p.key === editingPropKey,
+          );
+          const toolbarConfig =
+            richtextSchema && richtextSchema.type === "richtext"
+              ? richtextSchema.toolbar
+              : undefined;
+          const initialContent = editingNode
+            ? String(editingNode.props[editingPropKey] ?? "")
+            : "";
+
+          return (
+            <>
+              <InlineTextEditor
+                nodeId={editingNodeId}
+                initialContent={initialContent}
+                toolbarConfig={toolbarConfig}
+                canvasFrameRef={canvasFrameRef}
+                zoom={zoom}
+                panOffset={panOffset}
+                onCommit={handleInlineCommit}
+                onExit={handleInlineExit}
+                onEditorReady={(ed) => setTiptapEditor(ed)}
+                onBoundsChange={setEditingOverrideRect}
+              />
+              {selectionRect && (
+                <TextEditToolbar
+                  editor={tiptapEditor}
+                  toolbarConfig={toolbarConfig}
+                  rect={selectionRect}
+                  zoom={zoom}
+                  panOffset={panOffset}
+                  onExit={handleInlineExit}
+                />
+              )}
+            </>
+          );
+        })()}
+
         {rotating !== null && selectionRect && (
           <div
             className="bg-background/90 pointer-events-none absolute z-50 rounded border px-2 py-0.5 font-mono text-xs"
@@ -1000,13 +1118,15 @@ export interface BuilderEditorProps {
   builder?: BuilderAPI;
   config?: BuilderConfig;
   className?: string;
+  /** Optional GroupRegistry for 2-level component palette (Group → SubGroup → component) */
+  groupRegistry?: GroupRegistry;
 }
 
-export function BuilderEditor({ builder, config, className }: BuilderEditorProps) {
+export function BuilderEditor({ builder, config, className, groupRegistry }: BuilderEditorProps) {
   return (
     <BuilderProvider builder={builder} config={config}>
       <div className={cn("h-full w-full", className)}>
-        <EditorInner />
+        <EditorInner groupRegistry={groupRegistry} />
       </div>
     </BuilderProvider>
   );

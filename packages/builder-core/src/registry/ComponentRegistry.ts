@@ -93,6 +93,20 @@ export class ComponentRegistry {
   }
 
   /**
+   * Returns all components that belong to the given group id.
+   */
+  getByGroup(groupId: string): ComponentDefinition[] {
+    return Array.from(this.components.values()).filter((d) => d.group === groupId);
+  }
+
+  /**
+   * Returns all components that belong to the given sub-group id.
+   */
+  getBySubGroup(subGroupId: string): ComponentDefinition[] {
+    return Array.from(this.components.values()).filter((d) => d.subGroup === subGroupId);
+  }
+
+  /**
    * Checks whether a type key is registered.
    *
    * @param type - Component type key to check

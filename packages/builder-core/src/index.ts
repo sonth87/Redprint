@@ -57,9 +57,18 @@ export type {
 
 // ── Registry ───────────────────────────────────────────────────────────────
 export { ComponentRegistry } from "./registry/ComponentRegistry";
+export { GroupRegistry } from "./registry/GroupRegistry";
+export type { GroupTreeNode } from "./registry/GroupRegistry";
+export { defineComponent, defineComponentGroup, defineComponentSubGroup } from "./registry/defineComponent";
+export type { ComponentConfig } from "./registry/defineComponent";
+export { BUILT_IN_GROUPS, BUILT_IN_SUB_GROUPS } from "./registry/built-in-groups";
 export type {
   ComponentDefinition,
+  ComponentGroup,
+  ComponentSubGroup,
+  ComponentI18nMap,
   PropSchema,
+  RichtextToolbarConfig,
   ComponentCapabilities,
   ContainerConfig,
   SlotConfig,
@@ -105,6 +114,8 @@ export {
   CMD_UPDATE_RESPONSIVE_PROPS,
   CMD_RESET_RESPONSIVE_STYLE,
   CMD_SET_CANVAS_MODE,
+  CMD_ENTER_TEXT_EDIT,
+  CMD_EXIT_TEXT_EDIT,
 } from "./commands/built-in";
 export type {
   AddNodePayload,
@@ -122,6 +133,8 @@ export type {
   UpdateResponsivePropsPayload,
   ResetResponsiveStylePayload,
   SetCanvasModePayload,
+  EnterTextEditPayload,
+  ExitTextEditPayload,
 } from "./commands/built-in";
 
 // ── History ────────────────────────────────────────────────────────────────

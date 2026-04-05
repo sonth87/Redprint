@@ -87,6 +87,8 @@ export function createBuilder(config: BuilderConfig = {}): IBuilderAPI {
       panOffset: { x: 0, y: 0 },
       clipboard: null,
       canvasMode: "single",
+      editingNodeId: null,
+      editingPropKey: null,
     },
     interaction: {
       dragOperation: null,

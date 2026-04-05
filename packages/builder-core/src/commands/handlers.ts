@@ -38,6 +38,8 @@ import {
   CMD_UPDATE_RESPONSIVE_PROPS,
   CMD_RESET_RESPONSIVE_STYLE,
   CMD_SET_CANVAS_MODE,
+  CMD_ENTER_TEXT_EDIT,
+  CMD_EXIT_TEXT_EDIT,
   type AddNodePayload,
   type RemoveNodePayload,
   type DuplicateNodePayload,
@@ -57,6 +59,8 @@ import {
   type UpdateResponsivePropsPayload,
   type ResetResponsiveStylePayload,
   type SetCanvasModePayload,
+  type EnterTextEditPayload,
+  type ExitTextEditPayload,
 } from "./built-in";
 
 // ── Editor-only command types (no undo/redo) ─────────────────────────────
@@ -1074,5 +1078,53 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
       ...state,
       editor: { ...state.editor, canvasMode: payload.canvasMode },
     }),
+  );
+
+  // ── ENTER_TEXT_EDIT (editor-only, no undo/redo) ──────────────────────────
+  engine.registerHandler<EnterTextEditPayload>(
+    CMD_ENTER_TEXT_EDIT,
+    (state, payload) => ({
+      ...state,
+      editor: {
+        ...state.editor,
+        editingNodeId: payload.nodeId,
+        editingPropKey: payload.propKey ?? null,
+        // Auto-select the node when entering edit mode
+        selectedNodeIds: [payload.nodeId],
+      },
+    }),
+  );
+
+  // ── EXIT_TEXT_EDIT (editor-only — optionally commits content) ────────────
+  engine.registerHandler<ExitTextEditPayload>(
+    CMD_EXIT_TEXT_EDIT,
+    (state, payload) => {
+      const baseEditor = { ...state.editor, editingNodeId: null, editingPropKey: null };
+
+      // If a content update was bundled, apply it to the node's props
+      if (payload.content !== undefined && payload.propKey && payload.nodeId) {
+        const node = state.document.nodes[payload.nodeId];
+        if (node) {
+          return {
+            ...state,
+            editor: baseEditor,
+            document: {
+              ...state.document,
+              updatedAt: now(),
+              nodes: {
+                ...state.document.nodes,
+                [payload.nodeId]: {
+                  ...node,
+                  props: { ...node.props, [payload.propKey]: payload.content },
+                  metadata: updateMeta(node.metadata),
+                },
+              },
+            },
+          };
+        }
+      }
+
+      return { ...state, editor: baseEditor };
+    },
   );
 }

@@ -43,6 +43,12 @@ export { ToolbarButton } from "./toolbar/ToolbarButton";
 export type { ToolbarButtonProps } from "./toolbar/ToolbarButton";
 export { ToolbarToggle } from "./toolbar/ToolbarToggle";
 export type { ToolbarToggleProps } from "./toolbar/ToolbarToggle";
+export { TextEditToolbar } from "./toolbar/TextEditToolbar";
+export type { TextEditToolbarProps } from "./toolbar/TextEditToolbar";
+
+// Inline text editor
+export { InlineTextEditor } from "./canvas/InlineTextEditor";
+export type { InlineTextEditorProps } from "./canvas/InlineTextEditor";
 
 // Snap + shortcuts
 export { SnapEngine } from "./snap/SnapEngine";
