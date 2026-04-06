@@ -2,7 +2,8 @@
 
 ## Documentation
 
-Read the following files **in order** for full project context:
+> **VS Code Copilot**: Core context is pre-loaded via `.github/copilot-instructions.md` — no need to read additional files for routine tasks.
+> **Claude Code CLI**: Read the following files in order for full project context:
 
 1. **`.claude/ARCHITECTURE.md`** — Project-specific architecture & type contracts (always read first)
 2. **`.claude/RULES.md`** — Baseline rules & conventions (shared across all projects)

@@ -53,6 +53,8 @@ interface AIConfig {
   temperature?: number;       // 0–2, default 0.7
   maxTokens?: number;         // default 2048
   systemPrompt?: string;      // overrides the default system prompt
+  streamingEnabled?: boolean; // stream tokens in real-time, default false
+  includePageContext?: boolean; // include full page node tree in context
 }
 ```
 
@@ -89,6 +91,7 @@ interface AIBuilderContext {
     propSchema?: Array<{ key: string; label: string; type: string }>;
   }>;
   activeBreakpoint: string;
+  pageNodes?: AIPageNode[]; // full node tree, only when includePageContext = true
 }
 ```
 
@@ -125,6 +128,12 @@ interface AIProviderAdapter {
     context: AIBuilderContext,
     config: AIConfig,
   ): Promise<AIResponse>;
+  streamMessage(
+    messages: AIMessage[],
+    context: AIBuilderContext,
+    config: AIConfig,
+    callbacks: AIStreamCallbacks,
+  ): Promise<void>;
 }
 ```
 
@@ -178,11 +187,11 @@ const ALLOWED_AI_COMMANDS = new Set([
   "RENAME_NODE",
   "DUPLICATE_NODE",
   "UPDATE_CANVAS_CONFIG",
-  "UPDATE_NODE_INTERACTIONS",
+  "UPDATE_INTERACTIONS",
 ]);
 ```
 
-Destructive commands (`DELETE_NODE`, `MOVE_NODE`, `IMPORT_DOCUMENT`) are excluded.
+Destructive commands (`REMOVE_NODE`, `MOVE_NODE`) are excluded.
 
 ---
 

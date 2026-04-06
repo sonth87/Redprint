@@ -34,7 +34,7 @@ interface ReversibleCommand<T = unknown> extends Command<T> {
 | -------------------- | ------------------------------------------------------------ | ------------------------ |
 | `ADD_NODE`           | `{ parentId, componentType, props?, style?, position? }`     | Add new node             |
 | `REMOVE_NODE`        | `{ nodeId }`                                                 | Delete node + descendants|
-| `MOVE_NODE`          | `{ nodeId, targetParentId, position, insertIndex? }`         | Move to different parent |
+| `MOVE_NODE`          | `{ nodeId, targetParentId, position: 'before'\|'after'\|'inside'\|'slot', slotName?, insertIndex? }` | Move to different parent |
 | `REORDER_NODE`       | `{ nodeId, insertIndex }`                                    | Reorder within parent    |
 | `DUPLICATE_NODE`     | `{ nodeId, offset? }`                                        | Duplicate node           |
 | `UPDATE_PROPS`       | `{ nodeId, props }`                                          | Update properties       |
@@ -50,8 +50,17 @@ interface ReversibleCommand<T = unknown> extends Command<T> {
 | `UNGROUP_NODES`      | `{ nodeId }`                                                 | Ungroup container       |
 | `SET_VARIABLE`       | `{ key, value }`                                             | Set document variable   |
 | `UPDATE_CANVAS_CONFIG` | `{ config }`                                               | Update canvas settings  |
-| `LOAD_COMPONENT`     | `{ manifestUrl, componentType }`                             | Load remote component   |
-
+| `LOAD_COMPONENT`     | `{ manifestUrl, componentType }`                             | Load remote component   || `TOGGLE_RESPONSIVE_HIDDEN` | `{ nodeId, breakpoint }`                                           | Toggle hidden at breakpoint |
+| `UPDATE_RESPONSIVE_PROPS` | `{ nodeId, breakpoint, props }`                                     | Breakpoint-specific props override |
+| `RESET_RESPONSIVE_STYLE` | `{ nodeId, breakpoint }`                                             | Clear all breakpoint style overrides |
+| `ENTER_TEXT_EDIT`    | `{ nodeId }`                                                                 | Enter inline text edit mode (no undo) |
+| `EXIT_TEXT_EDIT`     | `{ nodeId }`                                                                 | Exit inline text edit mode (no undo) |
+| `SET_CANVAS_MODE`    | `{ mode }`                                                                   | Set canvas edit mode (no undo) |
+| `SELECT_NODE`        | `{ nodeId, multi? }`                                                         | Select node (editor-only, no undo) |
+| `DESELECT_NODE`      | `{ nodeId }`                                                                 | Deselect node (editor-only, no undo) |
+| `CLEAR_SELECTION`    | `{}`                                                                         | Clear all selection (editor-only, no undo) |
+| `SET_CLIPBOARD`      | `{ data }`                                                                   | Set clipboard data (editor-only, no undo) |
+| `COMPONENT_RENDER_ERROR` | `{ nodeId, error }`                                                      | Record render error (no undo) |
 ---
 
 ## State Model
