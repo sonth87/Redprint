@@ -16,6 +16,7 @@ import type {
   AIStreamCallbacks,
   AIProviderAdapter,
   AIProvider,
+  AICommandSuggestion,
 } from "./types";
 
 // ── System prompt builder ───────────────────────────────────────────────
@@ -162,45 +163,113 @@ Always respond in the same language the user uses in their prompt.`;
 
 // ── Response parser ─────────────────────────────────────────────────────
 
+/**
+ * Extracts the first balanced JSON object from a string that may have
+ * trailing garbage (e.g. Gemini appending ",\"opacity\":\"0.3\"}}" after
+ * the valid payload). Handles escaped characters and string contents.
+ */
+function extractFirstJSON(text: string): string | null {
+  const start = text.indexOf("{");
+  if (start === -1) return null;
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i];
+    if (escape) { escape = false; continue; }
+    if (ch === "\\") { escape = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (ch === "{") depth++;
+    else if (ch === "}") {
+      depth--;
+      if (depth === 0) return text.slice(start, i + 1);
+    }
+  }
+  return null;
+}
+
+function parseCommandsFromObject(obj: Record<string, unknown>): { message: string; suggestions: AICommandSuggestion[] | undefined } {
+  const message = typeof obj.message === "string" ? obj.message : "";
+  const commandsRaw = Array.isArray(obj.commands) ? obj.commands : [];
+
+  const suggestions = (commandsRaw as unknown[])
+    .map((c, idx) => {
+      if (!c || typeof c !== "object") {
+        console.warn(`[parseAIResponse] Command ${idx} is not an object:`, typeof c);
+        return null;
+      }
+      const cmd = c as Record<string, unknown>;
+      const cmdType =
+        (cmd.type as string) ||
+        (typeof cmd.payload === "object" && cmd.payload
+          ? ((cmd.payload as Record<string, unknown>).type as string)
+          : undefined);
+      if (!cmdType) {
+        console.warn(`[parseAIResponse] Command ${idx} has no type field:`, Object.keys(cmd));
+        return null;
+      }
+      return {
+        type: cmdType,
+        payload: (cmd.payload as Record<string, unknown>) ?? {},
+        description: (cmd.description as string) || cmdType,
+      };
+    })
+    .filter((s): s is AICommandSuggestion => s !== null);
+
+  return { message, suggestions: suggestions.length > 0 ? suggestions : undefined };
+}
+
 export function parseAIResponse(text: string): AIResponse {
   const trimmed = text.trim();
+  if (!trimmed) return { message: "" };
 
-  // Primary: parse structured { message, commands } JSON object
+  // ── Attempt 1: Direct JSON.parse of the full text ──────────────────────
   try {
     const parsed = JSON.parse(trimmed) as unknown;
     if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-      const obj = parsed as Record<string, unknown>;
-      const message = typeof obj.message === "string" ? obj.message : "";
-      const commandsRaw = Array.isArray(obj.commands) ? obj.commands : [];
-      const suggestions = (commandsRaw as unknown[])
+      const { message, suggestions } = parseCommandsFromObject(parsed as Record<string, unknown>);
+      console.log(`[parseAIResponse] Attempt 1 (direct) OK: ${suggestions?.length ?? 0} commands`);
+      if (suggestions || message) return { message, suggestions };
+    }
+    if (Array.isArray(parsed)) {
+      const suggestions = (parsed as unknown[])
         .filter((c): c is Record<string, unknown> => Boolean(c) && typeof c === "object" && "type" in (c as object))
         .map((c) => ({
           type: c.type as string,
           payload: (c.payload as Record<string, unknown>) ?? {},
           description: (c.description as string) || (c.type as string),
         }));
-      return { message, suggestions: suggestions.length > 0 ? suggestions : undefined };
-    }
-    // Bare array fallback (old format)
-    if (Array.isArray(parsed)) {
-      const suggestions = (parsed as unknown[])
-        .filter((c): c is Record<string, unknown> => Boolean(c) && typeof c === "object" && "type" in (c as object) && "payload" in (c as object))
-        .map((c) => ({
-          type: c.type as string,
-          payload: c.payload as Record<string, unknown>,
-          description: (c.description as string) || (c.type as string),
-        }));
       return { message: "", suggestions: suggestions.length > 0 ? suggestions : undefined };
     }
   } catch {
-    // fall through to markdown extraction
+    // fall through
   }
 
-  // Fallback: extract from ```json ... ``` block (model didn't follow JSON-only instruction)
+  // ── Attempt 2: Balanced bracket extraction (handles trailing garbage) ──
+  const extracted = extractFirstJSON(trimmed);
+  if (extracted && extracted !== trimmed) {
+    try {
+      const parsed = JSON.parse(extracted) as unknown;
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        const { message, suggestions } = parseCommandsFromObject(parsed as Record<string, unknown>);
+        console.log(`[parseAIResponse] Attempt 2 (bracket-extract) OK: ${suggestions?.length ?? 0} commands`);
+        if (suggestions || message) return { message, suggestions };
+      }
+    } catch {
+      // fall through
+    }
+  }
+
+  // ── Attempt 3: ```json ... ``` code block ──────────────────────────────
   const jsonMatch = trimmed.match(/```json\s*([\s\S]*?)```/);
   if (jsonMatch?.[1]) {
     try {
       const parsed = JSON.parse(jsonMatch[1]) as unknown;
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        const { message, suggestions } = parseCommandsFromObject(parsed as Record<string, unknown>);
+        if (suggestions || message) return { message, suggestions };
+      }
       if (Array.isArray(parsed)) {
         const suggestions = (parsed as unknown[])
           .filter((c): c is Record<string, unknown> => Boolean(c) && typeof c === "object" && "type" in (c as object))

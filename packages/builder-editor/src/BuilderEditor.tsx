@@ -159,6 +159,11 @@ function EditorInner({
     selectedNodeId && document.nodes[selectedNodeId]?.type === "Section"
       ? document.nodes[selectedNodeId]
       : null;
+  const currentSectionChildIds = selectedSectionNode
+    ? Object.values(document.nodes)
+        .filter((n) => n.parentId === selectedSectionNode.id)
+        .map((n) => n.id)
+    : [];
 
   const aiContext = useMemo(
     () => buildAIContext(state, allComponents, {
@@ -539,6 +544,9 @@ function EditorInner({
               canvasMode={canvasMode} activeBreakpoint={breakpoint}
               desktopFrameWidth={document.canvasConfig.width ?? DEVICE_VIEWPORT_PRESETS.desktop.width}
               mobileFramePos={mobileFramePos} onDelete={handleDeleteNode}
+              aiConfig={aiConfig} undo={undo}
+              currentChildIds={currentSectionChildIds}
+              availableComponentTypes={allComponents.map((c) => c.type)}
             />
           )}
 

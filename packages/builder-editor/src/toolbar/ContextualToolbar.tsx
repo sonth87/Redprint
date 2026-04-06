@@ -5,6 +5,7 @@ import { useDocument, useBuilder } from "@ui-builder/builder-react";
 import { Button, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@ui-builder/ui";
 import { TOOLTIP_DELAY_MS } from "@ui-builder/shared";
 import { AIToolsPopover } from "../ai/ai-tools/AIToolsPopover";
+import { AISectionPopover } from "../ai/ai-section/AISectionPopover";
 import { useAIConfig } from "../ai/AIConfigContext";
 
 export interface ContextualToolbarProps {
@@ -33,6 +34,18 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
   const hasAIImage = definition?.capabilities.aiImageGeneration === true;
   const hasAI = hasAIText || hasAIImage;
   const aiMode = hasAIImage ? "image" : "text";
+
+  // Section AI Assistant
+  const isSection = node?.type === "Section";
+  const currentChildIds = isSection
+    ? Object.values(document.nodes)
+        .filter((n) => n.parentId === nodeId)
+        .map((n) => n.id)
+    : [];
+  const availableComponentTypes = registry
+    ? registry.listComponents().map((d) => d.type)
+    : [];
+  const handleUndo = useCallback(() => { builder.undo(); }, [builder]);
 
   // Derive current content for AI (richtext prop or image src)
   const richTextProp = definition?.propSchema.find((p) => p.type === "richtext");
@@ -130,6 +143,20 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
               componentType={node.type.toLowerCase()}
               aiConfig={aiConfig}
               onConfirm={handleAIConfirm}
+            />
+          </>
+        )}
+
+        {isSection && (
+          <>
+            <div className="w-px h-4 bg-border mx-0.5" />
+            <AISectionPopover
+              sectionNodeId={nodeId}
+              currentChildIds={currentChildIds}
+              availableComponentTypes={availableComponentTypes}
+              aiConfig={aiConfig}
+              dispatch={dispatch}
+              undo={handleUndo}
             />
           </>
         )}

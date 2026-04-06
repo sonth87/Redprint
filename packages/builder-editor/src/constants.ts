@@ -44,10 +44,11 @@ export const TOOLBAR_BTN_GAP = 2 as const;
 export const TOOLBAR_PADDING = 4 as const;
 
 /**
- * Number of buttons in section toolbar (8 buttons).
- * Determines toolbar height: 8 × 28px + 7 × 2px gap + 2 × 4px padding = 238px.
+ * Number of buttons in section toolbar (9 buttons).
+ * Determines toolbar height: 9 × 28px + 8 × 2px gap + 2 × 4px padding = 276px.
+ * Includes the AI section builder button (Sparkles).
  */
-export const NUM_TOOLBAR_BUTTONS = 8 as const;
+export const NUM_TOOLBAR_BUTTONS = 9 as const;
 
 /**
  * Section hover zone height (32px).

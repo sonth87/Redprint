@@ -367,6 +367,30 @@
     "cancel": "Discard",
     "cooldown": "Wait"
   },
+  "aiSection": {
+    "title": "AI Section Builder",
+    "customTitle": "Custom Prompt",
+    "previewTitle": "AI Preview",
+    "buttonTooltip": "Generate section with AI",
+    "noApiKey": "AI API key not configured. Open AI settings to get started.",
+    "customPlaceholder": "Describe the section you want to generate…",
+    "generate": "Generate",
+    "generating": "Generating section…",
+    "accept": "Use this",
+    "regenerate": "Regenerate",
+    "cancel": "Cancel",
+    "previewHint": "The section has been applied to the canvas. Accept to keep it, or cancel to revert.",
+    "actions": {
+      "hero": "Hero section",
+      "header": "Header / Navigation",
+      "features": "Features section",
+      "stats": "Stats / Numbers section",
+      "testimonials": "Testimonials section",
+      "cta": "Call to Action section",
+      "footer": "Footer",
+      "custom": "Custom prompt…"
+    }
+  },
   "palette": {
     "title": "Add Elements",
     "search": "Search",

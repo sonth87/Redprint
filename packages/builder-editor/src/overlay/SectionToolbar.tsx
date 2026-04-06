@@ -28,6 +28,8 @@ import {
   DUAL_GAP_PX,
   TOOLBAR_LEFT_OFFSET,
 } from "../constants";
+import { AISectionPopover } from "../ai/ai-section";
+import type { AIConfig } from "../ai/types";
 
 export interface SectionToolbarProps {
   node: BuilderNode;
@@ -47,6 +49,11 @@ export interface SectionToolbarProps {
    * Allows BuilderEditor to show a confirmation dialog before deletion.
    */
   onDelete?: (nodeId: string) => void;
+  /** AI Section Builder — optional. When provided, shows an AI Sparkles button. */
+  aiConfig?: AIConfig;
+  undo?: () => void;
+  currentChildIds?: string[];
+  availableComponentTypes?: string[];
 }
 
 /**
@@ -67,6 +74,10 @@ export const SectionToolbar = memo(function SectionToolbar({
   desktopFrameWidth = 0,
   mobileFramePos,
   onDelete,
+  aiConfig,
+  undo,
+  currentChildIds = [],
+  availableComponentTypes = [],
 }: SectionToolbarProps) {
   const currentIdx = sectionNodes.findIndex((s) => s.id === node.id);
   const isFirst = currentIdx === 0;
@@ -134,7 +145,9 @@ export const SectionToolbar = memo(function SectionToolbar({
   };
 
   // ── Screen-space positioning ────────────────────────────────────────────
-  const toolbarHeight = NUM_TOOLBAR_BUTTONS * BTN_SIZE + (NUM_TOOLBAR_BUTTONS - 1) * TOOLBAR_BTN_GAP + TOOLBAR_PADDING * 2;
+  const showAIButton = !!(aiConfig && undo);
+  const effectiveButtonCount = showAIButton ? NUM_TOOLBAR_BUTTONS : NUM_TOOLBAR_BUTTONS - 1;
+  const toolbarHeight = effectiveButtonCount * BTN_SIZE + (effectiveButtonCount - 1) * TOOLBAR_BTN_GAP + TOOLBAR_PADDING * 2;
 
   // Use actual DOM position of the section element (accounts for content-driven height).
   // Fallback to cumulative minHeight estimate if the DOM isn't available yet.
@@ -221,7 +234,8 @@ export const SectionToolbar = memo(function SectionToolbar({
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
       >
-        {buttons.map((btn, i) => (
+        {/* First N-1 buttons (everything except Trash) */}
+        {buttons.slice(0, -1).map((btn, i) => (
           <Tooltip key={i}>
             <TooltipTrigger asChild>
               <button
@@ -231,10 +245,38 @@ export const SectionToolbar = memo(function SectionToolbar({
                   "flex h-7 w-7 items-center justify-center rounded transition-colors",
                   btn.disabled
                     ? "cursor-not-allowed text-muted-foreground/40"
-                    : btn.danger
-                      ? "text-destructive hover:bg-destructive/10 cursor-pointer"
-                      : "text-foreground hover:bg-accent cursor-pointer",
+                    : "text-foreground hover:bg-accent cursor-pointer",
                 ].join(" ")}
+              >
+                {btn.icon}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="text-xs">
+              {btn.tooltip}
+            </TooltipContent>
+          </Tooltip>
+        ))}
+
+        {/* AI Section Builder button */}
+        {showAIButton && (
+          <AISectionPopover
+            sectionNodeId={node.id}
+            currentChildIds={currentChildIds}
+            availableComponentTypes={availableComponentTypes}
+            aiConfig={aiConfig!}
+            dispatch={dispatch}
+            undo={undo!}
+          />
+        )}
+
+        {/* Trash (danger) button — always last */}
+        {buttons.slice(-1).map((btn, i) => (
+          <Tooltip key={`last-${i}`}>
+            <TooltipTrigger asChild>
+              <button
+                disabled={btn.disabled}
+                onClick={btn.onClick}
+                className="text-destructive hover:bg-destructive/10 flex h-7 w-7 cursor-pointer items-center justify-center rounded transition-colors"
               >
                 {btn.icon}
               </button>

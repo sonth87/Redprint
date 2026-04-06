@@ -367,6 +367,30 @@
     "cancel": "Huỷ bỏ",
     "cooldown": "Đợi"
   },
+  "aiSection": {
+    "title": "AI Section Builder",
+    "customTitle": "Tuỳ chỉnh",
+    "previewTitle": "Xem trước AI",
+    "buttonTooltip": "Tạo section bằng AI",
+    "noApiKey": "Chưa cấu hình API key AI. Mở cài đặt AI để bắt đầu.",
+    "customPlaceholder": "Mô tả section bạn muốn tạo…",
+    "generate": "Tạo",
+    "generating": "Đang tạo section…",
+    "accept": "Dùng cái này",
+    "regenerate": "Tạo lại",
+    "cancel": "Huỷ",
+    "previewHint": "Section đã được áp dụng lên canvas. Chấp nhận để giữ lại, hoặc huỷ để quay về.",
+    "actions": {
+      "hero": "Section Hero",
+      "header": "Header / Điều hướng",
+      "features": "Section tính năng",
+      "stats": "Section số liệu / thống kê",
+      "testimonials": "Section đánh giá / nhận xét",
+      "cta": "Section kêu gọi hành động",
+      "footer": "Footer",
+      "custom": "Tuỳ chỉnh prompt…"
+    }
+  },
   "palette": {
     "title": "Thêm phần tử",
     "search": "Tìm kiếm",

@@ -19,6 +19,7 @@ import { useBuilder } from "@ui-builder/builder-react";
 import type { AIConfig, AIMessage, AIBuilderContext, AIResponse, AICommandSuggestion } from "./types";
 import { sendAIMessage, streamAIMessage, parseAIResponse } from "./AIService";
 import { AIConfigPanel } from "./AIConfig";
+import { normalizeAICommands } from "./normalizeAICommands";
 import { useTranslation } from "react-i18next";
 
 // Commands the AI is allowed to dispatch — destructive/system commands are excluded
@@ -33,79 +34,6 @@ const ALLOWED_AI_COMMANDS = new Set([
   "UPDATE_CANVAS_CONFIG",
   "UPDATE_INTERACTIONS",
 ]);
-
-// ── Command normalisation ───────────────────────────────────────────────
-// Transforms raw AI commands into the shape the CommandEngine expects:
-//  1. Remap payload.type → payload.componentType for ADD_NODE (model compat)
-//  2. Resolve temporary IDs (temp-*) to real UUIDs so nested ADD_NODE chains work
-//  3. Extract payload.name → follow-up RENAME_NODE commands
-
-function normalizeAICommands(
-  suggestions: AICommandSuggestion[],
-  rootNodeId: string,
-): AICommandSuggestion[] {
-  // Map temp-id → real UUID
-  // Pre-seed common root aliases so the AI can use "root" as parentId
-  const idMap = new Map<string, string>();
-  idMap.set("root", rootNodeId);
-  idMap.set("ROOT", rootNodeId);
-  idMap.set("root-node", rootNodeId);
-
-  const resolveId = (id: string | undefined | null): string | undefined => {
-    if (!id) return undefined;
-    if (idMap.has(id)) return idMap.get(id)!;
-    return id;
-  };
-
-  const normalized: AICommandSuggestion[] = [];
-
-  for (const s of suggestions) {
-    const payload = { ...s.payload };
-
-    if (s.type === "ADD_NODE") {
-      // ── Fix field name: payload.type → payload.componentType ──
-      if (!payload.componentType && payload.type) {
-        payload.componentType = payload.type;
-        delete payload.type;
-      }
-
-      // ── Resolve temp parentId → real UUID ──
-      if (typeof payload.parentId === "string") {
-        payload.parentId = resolveId(payload.parentId) ?? payload.parentId;
-      }
-
-      // ── Assign real UUID, track temp → real mapping ──
-      const realId = crypto.randomUUID();
-      const tempId = payload.nodeId as string | undefined;
-      if (tempId) {
-        idMap.set(tempId, realId);
-      }
-      payload.nodeId = realId;
-
-      // ── Extract name → follow-up RENAME_NODE ──
-      const nodeName = payload.name as string | undefined;
-      delete payload.name;
-
-      normalized.push({ ...s, payload });
-
-      if (nodeName) {
-        normalized.push({
-          type: "RENAME_NODE",
-          payload: { nodeId: realId, name: nodeName },
-          description: `Rename → ${nodeName}`,
-        });
-      }
-    } else {
-      // For all other commands, resolve any nodeId that references a temp ID
-      if (typeof payload.nodeId === "string") {
-        payload.nodeId = resolveId(payload.nodeId) ?? payload.nodeId;
-      }
-      normalized.push({ ...s, payload });
-    }
-  }
-
-  return normalized;
-}
 
 // ── Props ───────────────────────────────────────────────────────────────
 
