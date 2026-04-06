@@ -34,6 +34,8 @@ export interface EditorToolbarProps {
   canvasMode: CanvasMode;
   onBreakpointChange: (bp: Breakpoint) => void;
   onZoomChange: (zoom: number) => void;
+  onZoomInFromCenter?: () => void;
+  onZoomOutFromCenter?: () => void;
   onGridToggle: () => void;
   onUndo: () => void;
   onRedo: () => void;
@@ -56,6 +58,8 @@ export const EditorToolbar = memo(function EditorToolbar({
   canvasMode,
   onBreakpointChange,
   onZoomChange,
+  onZoomInFromCenter,
+  onZoomOutFromCenter,
   onGridToggle,
   onUndo,
   onRedo,
@@ -74,14 +78,22 @@ export const EditorToolbar = memo(function EditorToolbar({
   ];
 
   const zoomIn = useCallback(() => {
-    const next = ZOOM_LEVELS.find((z) => z > zoom);
-    if (next) onZoomChange(next);
-  }, [zoom, onZoomChange]);
+    if (onZoomInFromCenter) {
+      onZoomInFromCenter();
+    } else {
+      const next = ZOOM_LEVELS.find((z) => z > zoom);
+      if (next) onZoomChange(next);
+    }
+  }, [zoom, onZoomChange, onZoomInFromCenter]);
 
   const zoomOut = useCallback(() => {
-    const prev = [...ZOOM_LEVELS].reverse().find((z) => z < zoom);
-    if (prev) onZoomChange(prev);
-  }, [zoom, onZoomChange]);
+    if (onZoomOutFromCenter) {
+      onZoomOutFromCenter();
+    } else {
+      const prev = [...ZOOM_LEVELS].reverse().find((z) => z < zoom);
+      if (prev) onZoomChange(prev);
+    }
+  }, [zoom, onZoomChange, onZoomOutFromCenter]);
 
   return (
     <TooltipProvider delayDuration={TOOLTIP_DELAY_EXTENDED_MS}>

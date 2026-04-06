@@ -26,11 +26,9 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
   const node = document.nodes[nodeId];
   const aiConfig = useAIConfig();
 
-  if (!node) return null;
-
   // Resolve component definition to check AI capabilities
   const registry = builder?.registry;
-  const definition = registry ? registry.getComponent(node.type) : null;
+  const definition = node && registry ? registry.getComponent(node.type) : null;
   const hasAIText = definition?.capabilities.aiTextGeneration === true;
   const hasAIImage = definition?.capabilities.aiImageGeneration === true;
   const hasAI = hasAIText || hasAIImage;
@@ -39,9 +37,9 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
   // Derive current content for AI (richtext prop or image src)
   const richTextProp = definition?.propSchema.find((p) => p.type === "richtext");
   const imageProp = definition?.propSchema.find((p) => p.type === "image");
-  const currentAIContent: string = hasAIImage
+  const currentAIContent: string = node && hasAIImage
     ? String(node.props[imageProp?.key ?? "src"] ?? "")
-    : String(node.props[richTextProp?.key ?? "content"] ?? node.props.text ?? node.props.content ?? "");
+    : String(node?.props[richTextProp?.key ?? "content"] ?? node?.props.text ?? node?.props.content ?? "");
 
   const handleAIConfirm = useCallback(
     (newContent: string) => {
@@ -58,6 +56,8 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
   );
 
   const wrap = (fn: () => void) => (e: React.MouseEvent) => { e.stopPropagation(); fn(); };
+
+  if (!node) return null;
 
   const TOOLBAR_HEIGHT = 40;
   // Convert canvas-space rect to viewport-space (accounting for zoom + panOffset)

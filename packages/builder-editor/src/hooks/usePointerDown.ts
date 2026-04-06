@@ -71,6 +71,9 @@ export function usePointerDown({
             description: "Select",
           });
 
+          // Sections stack vertically — select only, no free drag
+          if (node?.type === "Section") return;
+
           const style = nodes[id]?.style || {};
           const el = target.closest("[data-node-id]") as HTMLElement;
 

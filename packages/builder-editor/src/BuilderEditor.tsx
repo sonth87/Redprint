@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useMemo, useRef } from "react";
 import {
   BuilderProvider,
   useBuilder,
@@ -13,28 +13,29 @@ import {
   DEVICE_VIEWPORT_PRESETS,
   type BuilderAPI,
   type BuilderConfig,
-  type CanvasConfig,
   type CanvasMode,
   type ComponentDefinition,
   type GroupRegistry,
   type PaletteCatalog,
-  type PaletteItem,
-  CMD_ENTER_TEXT_EDIT,
-  CMD_EXIT_TEXT_EDIT,
 } from "@ui-builder/builder-core";
-import type { Editor as TiptapEditor } from "@tiptap/react";
 import {
-  MIN_ZOOM,
-  FIT_TO_SCREEN_PADDING,
-  CANVAS_CENTER_OFFSET,
-  VERTICAL_CENTER_DIVISOR,
   DEFAULT_SECTION_HEIGHT_PX,
   TRANSITION_FAST_CSS,
   TRANSITION_MID_CSS,
 } from "@ui-builder/shared";
 import { Monitor, Smartphone, GripVertical, LocateFixed } from "lucide-react";
+import { v4 as uuidv4 } from "uuid";
+import { cn } from "@ui-builder/ui";
+
 import { CanvasRoot } from "./canvas/CanvasRoot";
-import { SelectionOverlay, SnapGuides, CanvasHelperLines, HoverOutline, DistanceGuides, LiveDimensionsDisplay, FlowDropPlaceholder } from "./overlay/EditorOverlay";
+import {
+  SelectionOverlay,
+  SnapGuides,
+  HoverOutline,
+  DistanceGuides,
+  LiveDimensionsDisplay,
+  FlowDropPlaceholder,
+} from "./overlay/EditorOverlay";
 import { SectionOverlay } from "./overlay/SectionOverlay";
 import { SectionToolbar } from "./overlay/SectionToolbar";
 import { EditorToolbar } from "./toolbar/EditorToolbar";
@@ -46,16 +47,16 @@ import { InlineTextEditor } from "./canvas/InlineTextEditor";
 import { LayerTree } from "./panels/bottom/LayerTree";
 import { PropertyPanel } from "./panels/right/PropertyPanel";
 import { PageSettings } from "./panels/right/PageSettings";
-import { cn, Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription, Button } from "@ui-builder/ui";
 import { FloatingPanel } from "./panels/FloatingPanel";
 import { ContextualToolbar } from "./toolbar/ContextualToolbar";
+import { DeleteConfirmDialog } from "./panels/DeleteConfirmDialog";
 import { SnapEngine } from "./snap/SnapEngine";
-import { v4 as uuidv4 } from "uuid";
-import {
-  DEFAULT_COMPONENTS_PANEL_POS,
-  DEFAULT_LAYERS_PANEL_POS,
-  DEFAULT_PROPERTIES_PANEL_POS,
-} from "./constants";
+import { AIAssistant } from "./ai/AIAssistant";
+import { AIConfigPanel } from "./ai/AIConfig";
+import { buildAIContext } from "./ai/buildAIContext";
+import { AIConfigProvider } from "./ai/AIConfigContext";
+import { initI18n, type SupportedLocale } from "./i18n";
+import { useTranslation } from "react-i18next";
 
 import { useViewport } from "./hooks/useViewport";
 import { useResizeGesture } from "./hooks/useResizeGesture";
@@ -72,17 +73,38 @@ import { usePointerDown } from "./hooks/usePointerDown";
 import { useZIndexHandlers } from "./hooks/useZIndexHandlers";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useSectionResize } from "./hooks/useSectionResize";
-import { AIAssistant } from "./ai/AIAssistant";
-import { AIConfigPanel } from "./ai/AIConfig";
-import { buildAIContext } from "./ai/buildAIContext";
-import { AIConfigProvider } from "./ai/AIConfigContext";
-import type { AIConfig } from "./ai/types";
-import { initI18n, type SupportedLocale } from "./i18n";
-import { useTranslation } from "react-i18next";
+import { useZoomFromCenter } from "./hooks/useZoomFromCenter";
+
+// ── New extracted hooks ───────────────────────────────────────────────────
+import { usePaletteState } from "./hooks/usePaletteState";
+import { useLayersPanel } from "./hooks/useLayersPanel";
+import { useAIConfig } from "./hooks/useAIConfig";
+import { useCanvasDimensions } from "./hooks/useCanvasDimensions";
+import { useAutoFitCanvas } from "./hooks/useAutoFitCanvas";
+import { useInlineTextEdit } from "./hooks/useInlineTextEdit";
+import { useDeleteConfirm } from "./hooks/useDeleteConfirm";
+import { useMobileFrame } from "./hooks/useMobileFrame";
+import { useNodeHandlers } from "./hooks/useNodeHandlers";
+import { useDragHandleGesture } from "./hooks/useDragHandleGesture";
+
+import {
+  DEFAULT_COMPONENTS_PANEL_POS,
+  DEFAULT_PROPERTIES_PANEL_POS,
+} from "./constants";
+
+import type { BuilderNode } from "@ui-builder/builder-core";
 
 // ── Inner editor (must be inside BuilderProvider) ─────────────────────────
 
-function EditorInner({ groupRegistry, paletteCatalog, locale }: { groupRegistry?: GroupRegistry; paletteCatalog?: PaletteCatalog; locale?: string }) {
+function EditorInner({
+  groupRegistry,
+  paletteCatalog,
+  locale,
+}: {
+  groupRegistry?: GroupRegistry;
+  paletteCatalog?: PaletteCatalog;
+  locale?: string;
+}) {
   const { t } = useTranslation();
   const { builder, state, dispatch } = useBuilder();
   const { selectedNodeIds, select, clearSelection } = useSelection();
@@ -91,190 +113,53 @@ function EditorInner({ groupRegistry, paletteCatalog, locale }: { groupRegistry?
   const { undo, redo, canUndo, canRedo } = useHistory();
 
   const canvasMode: CanvasMode = state.editor.canvasMode ?? "single";
-
-  // ── Inline text edit state ────────────────────────────────────────────────
   const editingNodeId  = state.editor.editingNodeId  ?? null;
   const editingPropKey = state.editor.editingPropKey ?? null;
-  const [tiptapEditor, setTiptapEditor] = useState<TiptapEditor | null>(null);
-  /** Live canvas-space rect updated by InlineTextEditor's ResizeObserver */
-  const [editingOverrideRect, setEditingOverrideRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
 
-  // Clear overrides when exiting text edit mode
-  useEffect(() => {
-    if (!editingNodeId) {
-      setTiptapEditor(null);
-      setEditingOverrideRect(null);
-    }
-  }, [editingNodeId]);
+  // ── Panel state ──────────────────────────────────────────────────────────
+  const { paletteMode, activePaletteGroupId, setActivePaletteGroupId, handleGroupSelect, handlePaletteClose } =
+    usePaletteState();
+  const { layersOpen, layersPanelPos, handleLayersToggle } = useLayersPanel();
+  const { aiOpen, setAiOpen, aiConfig, handleAIConfigChange } = useAIConfig();
 
-  // ── Palette state ─────────────────────────────────────────────────────────
-  const [paletteMode, setPaletteMode] = useState<"floating" | "docked">("floating");
-  const [activePaletteGroupId, setActivePaletteGroupId] = useState<string | null>(null);
+  // ── Canvas geometry ──────────────────────────────────────────────────────
+  const { canvasWidth, canvasMinHeight, sectionNodes } = useCanvasDimensions({ document, breakpoint });
 
-  const handleGroupSelect = useCallback(
-    (groupId: string) => {
-      setActivePaletteGroupId(groupId);
-      setPaletteMode("docked");
-    },
-    [],
-  );
+  // ── Viewport (zoom / pan / tool) ─────────────────────────────────────────
+  const { zoom, setZoom, panOffset, setPanOffset, activeTool, setActiveTool, showGrid, toggleGrid } = useViewport();
 
-  const handlePaletteClose = useCallback(() => {
-    setPaletteMode("floating");
-    setActivePaletteGroupId(null);
-  }, []);
-
-  // ── Layers panel state ────────────────────────────────────────────────────
-  const [layersOpen, setLayersOpen] = useState(false);
-  const [layersPanelPos, setLayersPanelPos] = useState<{ x: number; y: number }>(DEFAULT_LAYERS_PANEL_POS);
-  const handleLayersToggle = useCallback((pos?: { x: number; y: number }) => {
-    if (pos) setLayersPanelPos(pos);
-    setLayersOpen((v) => !v);
-  }, []);
-
-  // ── AI assistant state ────────────────────────────────────────────────────
-  const [aiOpen, setAiOpen] = useState(false);
-  const DEFAULT_AI_CONFIG: AIConfig = { provider: "openai", apiKey: "", model: "gpt-4o-mini", temperature: 0.7, maxTokens: 8192, streamingEnabled: false, includePageContext: false };
-  const [aiConfig, setAiConfig] = useState<AIConfig>(() => {
-    try {
-      const stored = localStorage.getItem("ui-builder:ai-config");
-      if (stored) return { ...DEFAULT_AI_CONFIG, ...JSON.parse(stored) as AIConfig };
-    } catch {
-      // ignore
-    }
-    return DEFAULT_AI_CONFIG;
-  });
-
-  const handleAIConfigChange = useCallback((config: AIConfig) => {
-    setAiConfig(config);
-    try {
-      localStorage.setItem("ui-builder:ai-config", JSON.stringify(config));
-    } catch {
-      // ignore storage errors
-    }
-  }, []);
-
-  const setCanvasMode = useCallback(
-    (mode: CanvasMode) => {
-      dispatch({
-        type: "SET_CANVAS_MODE",
-        payload: { canvasMode: mode },
-        description: "Toggle canvas mode",
-      });
-    },
-    [dispatch],
-  );
-
-  const toggleCanvasMode = useCallback(
-    () => setCanvasMode(canvasMode === "dual" ? "single" : "dual"),
-    [canvasMode, setCanvasMode],
-  );
-
-  const canvasFrameRef = useRef<HTMLDivElement>(null);
-  const mobileFrameRef = useRef<HTMLDivElement>(null);
-  // Always points to the frame the user is actively editing.
-  // Desktop (canvasFrameRef) doubles as the canvas-space coordinate origin for overlays.
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
+  const canvasFrameRef     = useRef<HTMLDivElement>(null);
+  const mobileFrameRef     = useRef<HTMLDivElement>(null);
   const activeFrameRef = useRef<HTMLDivElement | null>(null);
   activeFrameRef.current =
     canvasMode === "dual" && breakpoint === "mobile" && mobileFrameRef.current
       ? mobileFrameRef.current
       : canvasFrameRef.current;
 
-  // ── Canvas frame dimensions based on active breakpoint ───────────────────
-  const canvasWidth =
-    breakpoint === "desktop"
-      ? (document.canvasConfig.width ?? DEVICE_VIEWPORT_PRESETS.desktop.width)
-      : (DEVICE_VIEWPORT_PRESETS[breakpoint]?.width ?? DEVICE_VIEWPORT_PRESETS.desktop.width);
+  const { handleFitToScreen, isCanvasInViewport } = useAutoFitCanvas({
+    breakpoint, canvasMode, canvasWidth, canvasMinHeight,
+    canvasContainerRef, clearSelection, setZoom, setPanOffset, zoom, panOffset,
+  });
 
-  // Sections drive canvas height: sum of each section's minHeight, fallback to config
-  const sectionNodes = useMemo(
-    () =>
-      Object.values(document.nodes)
-        .filter((n) => n.parentId === document.rootNodeId && n.type === "Section")
-        .sort((a, b) => a.order - b.order),
-    [document.nodes, document.rootNodeId],
-  );
-  const sectionsTotalHeight = useMemo(() => {
-    if (sectionNodes.length === 0) return 0;
-    return sectionNodes.reduce((sum, n) => {
-      const h = typeof n.props.minHeight === "number" ? n.props.minHeight : DEFAULT_SECTION_HEIGHT_PX;
-      return sum + h;
-    }, 0);
-  }, [sectionNodes]);
-  const canvasMinHeight =
-    sectionsTotalHeight > 0
-      ? sectionsTotalHeight
-      : breakpoint === "desktop"
-        ? (document.canvasConfig.height ?? DEVICE_VIEWPORT_PRESETS.desktop.height)
-        : (DEVICE_VIEWPORT_PRESETS[breakpoint]?.height ?? DEVICE_VIEWPORT_PRESETS.desktop.height);
+  // ── Zoom from canvas center ──────────────────────────────────────────────
+  const { handleZoomInFromCenter, handleZoomOutFromCenter } = useZoomFromCenter({
+    canvasContainerRef, zoom, panOffset, setZoom, setPanOffset,
+  });
 
-  // ── Viewport ─────────────────────────────────────────────────────────────
-  const {
-    zoom,
-    setZoom,
-    panOffset,
-    setPanOffset,
-    activeTool,
-    setActiveTool,
-    showGrid,
-    toggleGrid,
-  } = useViewport();
+  const { mobileFramePos, handleMobileFrameGripDown } = useMobileFrame({ zoom });
 
-  // Auto-fit zoom when switching to a narrower device
-  const prevBreakpointRef = useRef<string>(breakpoint);
-  const canvasContainerRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (prevBreakpointRef.current === breakpoint) return;
-    prevBreakpointRef.current = breakpoint;
-    clearSelection();
-    // Don't auto-fit in dual mode — both artboards are fixed-size side-by-side
-    if (canvasMode === "dual") return;
-    if (canvasContainerRef.current) {
-      const containerWidth = canvasContainerRef.current.offsetWidth;
-      const containerHeight = canvasContainerRef.current.offsetHeight;
-      const fitZoom = Math.min((containerWidth - FIT_TO_SCREEN_PADDING) / canvasWidth, 1);
-      const actualZoom = Math.max(MIN_ZOOM, parseFloat(fitZoom.toFixed(2)));
-      setZoom(actualZoom);
-      const centeredX = Math.max(CANVAS_CENTER_OFFSET, (containerWidth - canvasWidth * actualZoom) / 2);
-      const centeredY = Math.max(CANVAS_CENTER_OFFSET, (containerHeight - canvasMinHeight * actualZoom) / VERTICAL_CENTER_DIVISOR);
-      setPanOffset({ x: centeredX, y: centeredY });
-    }
-  // setZoom/setPanOffset are stable useState setters — adding them satisfies exhaustive-deps
-  }, [breakpoint, canvasWidth, canvasMinHeight, canvasMode, clearSelection, setZoom, setPanOffset]);
-
-  // ── Fit-to-screen ─────────────────────────────────────────────────────────
-  const handleFitToScreen = useCallback(() => {
-    if (!canvasContainerRef.current) return;
-    const containerWidth  = canvasContainerRef.current.offsetWidth;
-    const containerHeight = canvasContainerRef.current.offsetHeight;
-    const fitZoom = Math.min(
-      (containerWidth  - FIT_TO_SCREEN_PADDING) / canvasWidth,
-      (containerHeight - FIT_TO_SCREEN_PADDING) / canvasMinHeight,
-      1,
-    );
-    const actualZoom = Math.max(MIN_ZOOM, parseFloat(fitZoom.toFixed(2)));
-    setZoom(actualZoom);
-    const centeredX = Math.max(CANVAS_CENTER_OFFSET, (containerWidth  - canvasWidth    * actualZoom) / 2);
-    const centeredY = Math.max(CANVAS_CENTER_OFFSET, (containerHeight - canvasMinHeight * actualZoom) / VERTICAL_CENTER_DIVISOR);
-    setPanOffset({ x: centeredX, y: centeredY });
-  }, [canvasWidth, canvasMinHeight, setZoom, setPanOffset]);
-
-  // ── Canvas visibility ────────────────────────────────────────────────────
-  const containerW = canvasContainerRef.current?.offsetWidth  ?? 1000;
-  const containerH = canvasContainerRef.current?.offsetHeight ?? 1000;
-  const isCanvasInViewport =
-    panOffset.x + canvasWidth    * zoom > 0 &&
-    panOffset.x                          < containerW &&
-    panOffset.y + canvasMinHeight * zoom > 0 &&
-    panOffset.y                          < containerH;
-
-  // ── Derived ──────────────────────────────────────────────────────────────
-  const selectedNodeId = selectedNodeIds[0] ?? null;
-  const selectedNode = selectedNodeId ? (document.nodes[selectedNodeId] ?? null) : null;
-  const registry = builder?.registry;
-  const selectedDefinition =
-    selectedNode && registry ? (registry.getComponent(selectedNode.type) ?? null) : null;
+  // ── Derived selection ────────────────────────────────────────────────────
+  const selectedNodeId     = selectedNodeIds[0] ?? null;
+  const selectedNode       = selectedNodeId ? (document.nodes[selectedNodeId] ?? null) : null;
+  const registry           = builder?.registry;
+  const selectedDefinition = selectedNode && registry ? (registry.getComponent(selectedNode.type) ?? null) : null;
   const allComponents: ComponentDefinition[] = registry ? registry.listComponents() : [];
+  const selectedSectionNode =
+    selectedNodeId && document.nodes[selectedNodeId]?.type === "Section"
+      ? document.nodes[selectedNodeId]
+      : null;
+
   const aiContext = useMemo(
     () => buildAIContext(state, allComponents, {
       includePageContext: aiConfig.includePageContext,
@@ -283,451 +168,102 @@ function EditorInner({ groupRegistry, paletteCatalog, locale }: { groupRegistry?
     [state, allComponents, aiConfig.includePageContext, paletteCatalog],
   );
 
-  // ── getContainerConfig — shared by drag and move hooks ─────────────────
+  // ── Snap engine ──────────────────────────────────────────────────────────
   const getContainerConfig = useCallback(
     (componentType: string) => {
       const def = registry?.getComponent(componentType);
       return def?.containerConfig
-        ? {
-            layoutType: def.containerConfig.layoutType,
-            disallowedChildTypes: def.containerConfig.disallowedChildTypes,
-          }
+        ? { layoutType: def.containerConfig.layoutType, disallowedChildTypes: def.containerConfig.disallowedChildTypes }
         : undefined;
     },
     [registry],
   );
 
-  // ── Snap engine ──────────────────────────────────────────────────────────
   const snapEngine = useMemo(
-    () =>
-      new SnapEngine({
-        gridSize: document.canvasConfig.gridSize,
-        snapEnabled: showGrid,
-        snapToGrid: showGrid,
-        snapToComponents: document.canvasConfig.snapToComponents,
-        threshold: document.canvasConfig.snapThreshold,
-        canvasWidth,
-        canvasHeight: canvasMinHeight,
-      }),
+    () => new SnapEngine({
+      gridSize: document.canvasConfig.gridSize, snapEnabled: showGrid, snapToGrid: showGrid,
+      snapToComponents: document.canvasConfig.snapToComponents, threshold: document.canvasConfig.snapThreshold,
+      canvasWidth, canvasHeight: canvasMinHeight,
+    }),
     [document.canvasConfig, showGrid, canvasWidth, canvasMinHeight],
   );
 
   // ── Gesture hooks ────────────────────────────────────────────────────────
-  const {
-    setResizing,
-    snapGuides: resizeSnapGuides,
-    distanceGuides: resizeDistanceGuides,
-    liveDimensions: resizeLiveDimensions,
-  } = useResizeGesture({
-    zoom,
-    breakpoint,
-    showGrid,
-    gridSize: document.canvasConfig.gridSize,
-    snapEngine,
-    nodes: document.nodes,
-    canvasFrameRef,
-    activeFrameRef,
-    dispatch,
-  });
+  const { setResizing, snapGuides: resizeSnapGuides, distanceGuides: resizeDistanceGuides, liveDimensions: resizeLiveDimensions } =
+    useResizeGesture({ zoom, breakpoint, showGrid, gridSize: document.canvasConfig.gridSize, snapEngine, nodes: document.nodes, canvasFrameRef, activeFrameRef, dispatch });
 
-  const { rubberBanding, setRubberBanding, rubberBandRect } = useRubberBand({
-    zoom,
-    canvasFrameRef,
-  });
+  const { rubberBanding, setRubberBanding, rubberBandRect } = useRubberBand({ zoom, canvasFrameRef });
 
-  const {
-    moving,
-    setMoving,
-    dragStartedRef,
-    snapGuides: moveSnapGuides,
-    distanceGuides: moveDistanceGuides,
-    liveDimensions: moveLiveDimensions,
-    flowDragOffset,
-    flowDropTarget,
-  } = useMoveGesture({
-    zoom,
-    breakpoint,
-    snapEnabled: showGrid,
-    snapEngine,
-    nodes: document.nodes,
-    canvasFrameRef,
-    activeFrameRef,
-    dispatch,
-    rootNodeId: document.rootNodeId,
-    getContainerConfig,
-  });
+  const { moving, setMoving, dragStartedRef, snapGuides: moveSnapGuides, distanceGuides: moveDistanceGuides, liveDimensions: moveLiveDimensions, flowDragOffset, flowDropTarget } =
+    useMoveGesture({ zoom, breakpoint, snapEnabled: showGrid, snapEngine, nodes: document.nodes, canvasFrameRef, activeFrameRef, dispatch, rootNodeId: document.rootNodeId, getContainerConfig });
 
-  const snapGuides = moving ? moveSnapGuides : resizeSnapGuides;
+  const { rotating, startRotate } = useRotateGesture({ breakpoint, dispatch });
+  const { sectionResizing, startSectionResize } = useSectionResize({ zoom, showGrid, gridSize: document.canvasConfig.gridSize, breakpoint, dispatch });
+
+  const snapGuides     = moving ? moveSnapGuides     : resizeSnapGuides;
   const distanceGuides = moving ? moveDistanceGuides : resizeDistanceGuides;
   const liveDimensions = moving ? moveLiveDimensions : resizeLiveDimensions;
 
-  const { rotating, startRotate } = useRotateGesture({ breakpoint, dispatch });
-
-  // ── Section resize ───────────────────────────────────────────────────────
-  const { sectionResizing, startSectionResize } = useSectionResize({
-    zoom,
-    showGrid,
-    gridSize: document.canvasConfig.gridSize,
-    breakpoint,
-    dispatch,
-  });
-
-  // ── DOM observation hooks ────────────────────────────────────────────────
+  // ── Overlay hooks ────────────────────────────────────────────────────────
   const { selectionRect: selectionRectRaw, currentRotation } = useSelectionRect({
-    selectedNodeIds,
-    zoom,
-    panOffset,
-    nodes: document.nodes,
-    canvasFrameRef,
-    nodeQueryRef: activeFrameRef,
+    selectedNodeIds, zoom, panOffset, nodes: document.nodes, canvasFrameRef, nodeQueryRef: activeFrameRef,
   });
 
-  // While inline editing, use the live rect from ResizeObserver so handles
-  // track content-height changes; otherwise use the normal computed rect.
-  const selectionRectBase = editingNodeId
-    ? (editingOverrideRect ?? selectionRectRaw)
-    : selectionRectRaw;
+  const { hoverRect, handleMouseOver, handleMouseOut } = useHoverRect({
+    selectedNodeIds, rootNodeId: document.rootNodeId, zoom, panOffset, nodes: document.nodes, canvasFrameRef, nodeQueryRef: activeFrameRef,
+  });
 
-  // During a flow/grid-mode drag, the element is moved visually via an imperative
-  // CSS transform (no node state dispatch until mouseup). useSelectionRect only
-  // re-runs when `nodes` changes, so the overlay would otherwise sit at the
-  // element's original grid position. Shift the rect by the accumulated drag
-  // offset so SelectionOverlay and ContextualToolbar track the cursor in real-time.
-  const selectionRect = selectionRectBase && flowDragOffset
+  useDimensionCapture({ nodes: document.nodes, breakpoint, canvasFrameRef, dispatch });
+
+  // ── Interaction hooks ────────────────────────────────────────────────────
+  const { handleDragStart, handlePaletteDragStart, handleDrop, handleDragOver, handleDragEnter } =
+    useDragHandlers({ rootNodeId: document.rootNodeId, zoom, canvasFrameRef, dispatch, nodes: document.nodes, getContainerConfig });
+
+  const { addItem: handlePaletteItemClick } = useClickToAdd({ rootNodeId: document.rootNodeId, zoom, panOffset, canvasContainerRef, dispatch });
+
+  const { handlePointerDown } = usePointerDown({
+    activeTool, zoom, rootNodeId: document.rootNodeId, nodes: document.nodes, canvasFrameRef, activeFrameRef,
+    dragStartedRef, dispatch, clearSelection, setMoving, setRubberBanding,
+  });
+
+  const { onMoveUp, onMoveDown } = useZIndexHandlers({ selectedNodeId, nodes: document.nodes, dispatch });
+
+  // ── Node mutation handlers ────────────────────────────────────────────────
+  const { handleToggleHidden, handleToggleLocked, handlePropChange, handleStyleChange, handleCanvasConfigChange } =
+    useNodeHandlers({ selectedNodeId, breakpoint, dispatch, nodes: document.nodes });
+
+  // ── Inline text editing ──────────────────────────────────────────────────
+  const { tiptapEditor, setTiptapEditor, editingOverrideRect, setEditingOverrideRect, handleInlineCommit, handleInlineExit, handleCanvasDoubleClick } =
+    useInlineTextEdit({ editingNodeId, editingPropKey, nodes: document.nodes, registry, dispatch });
+
+  const selectionRectBase = editingNodeId ? (editingOverrideRect ?? selectionRectRaw) : selectionRectRaw;
+  const selectionRect     = selectionRectBase && flowDragOffset
     ? { ...selectionRectBase, x: selectionRectBase.x + flowDragOffset.x, y: selectionRectBase.y + flowDragOffset.y }
     : selectionRectBase;
 
-  const { hoverRect, handleMouseOver, handleMouseOut } = useHoverRect({
-    selectedNodeIds,
-    rootNodeId: document.rootNodeId,
-    zoom,
-    panOffset,
-    nodes: document.nodes,
-    canvasFrameRef,
-    nodeQueryRef: activeFrameRef,
+  // ── Delete with confirmation ──────────────────────────────────────────────
+  const { deleteConfirmNodeId, setDeleteConfirmNodeId, deleteConfirmChildCount, handleDeleteNode, executeConfirmedDelete } =
+    useDeleteConfirm({ nodes: document.nodes, rootNodeId: document.rootNodeId, sectionNodes, registry, dispatch });
+
+  // ── Drag handle gesture ───────────────────────────────────────────────────
+  const { handleDragHandlePointerDown } = useDragHandleGesture({
+    selectedNodeId, nodes: document.nodes, zoom, activeFrameRef, canvasFrameRef, dragStartedRef, setMoving,
   });
 
-  useDimensionCapture({
-    nodes: document.nodes,
-    breakpoint,
-    canvasFrameRef,
-    dispatch,
+  // ── Keyboard shortcuts ────────────────────────────────────────────────────
+  useKeyboardShortcuts({
+    selectedNodeId, rootNodeId: document.rootNodeId, nodes: document.nodes, clipboard: state.editor.clipboard,
+    breakpoint, canvasContainerRef, dispatch, clearSelection, undo, redo, setBreakpoint, onDeleteNode: handleDeleteNode,
   });
 
-  // ── Interaction handlers ─────────────────────────────────────────────────
-  const { handleDragStart, handlePaletteDragStart, handleDrop, handleDragOver, handleDragEnter } = useDragHandlers({
-    rootNodeId: document.rootNodeId,
-    zoom,
-    canvasFrameRef,
-    dispatch,
-    nodes: document.nodes,
-    getContainerConfig,
-  });
-
-  // ── Click-to-add (palette items) ─────────────────────────────────────────
-  const { addItem: handlePaletteItemClick } = useClickToAdd({
-    rootNodeId: document.rootNodeId,
-    zoom,
-    panOffset,
-    canvasContainerRef,
-    dispatch,
-  });
-
-  const { handlePointerDown } = usePointerDown({
-    activeTool,
-    zoom,
-    rootNodeId: document.rootNodeId,
-    nodes: document.nodes,
-    canvasFrameRef,
-    activeFrameRef,
-    dragStartedRef,
-    dispatch,
-    clearSelection,
-    setMoving,
-    setRubberBanding,
-  });
-
-  // ── Delete-with-confirmation ─────────────────────────────────────────────
-  const [deleteConfirmNodeId, setDeleteConfirmNodeId] = useState<string | null>(null);
-
-  const deleteConfirmChildCount = useMemo(() => {
-    if (!deleteConfirmNodeId) return 0;
-    const countDescendants = (id: string): number => {
-      const kids = Object.values(document.nodes).filter((n) => n.parentId === id);
-      return kids.reduce((sum, k) => sum + 1 + countDescendants(k.id), 0);
-    };
-    return countDescendants(deleteConfirmNodeId);
-  }, [deleteConfirmNodeId, document.nodes]);
-
-  const handleDeleteNode = useCallback(
-    (nodeId: string) => {
-      const node = document.nodes[nodeId];
-      if (!node) return;
-
-      const isLastSection = node.type === "Section" && sectionNodes.length === 1;
-
-      const def = registry?.getComponent(node.type);
-      const hasChildren = Object.values(document.nodes).some(
-        (n) => n.parentId === nodeId,
-      );
-      if (def?.capabilities.canContainChildren && hasChildren) {
-        setDeleteConfirmNodeId(nodeId);
-      } else {
-        dispatch({
-          type: "REMOVE_NODE",
-          payload: { nodeId },
-          description: "Delete",
-        });
-        if (isLastSection) {
-          dispatch({
-            type: "ADD_NODE",
-            payload: {
-              nodeId: uuidv4(),
-              parentId: document.rootNodeId,
-              componentType: "Section",
-              props: { minHeight: DEFAULT_SECTION_HEIGHT_PX },
-              style: {
-                display: "flex",
-                flexDirection: "column",
-                width: "100%",
-                minHeight: "400px",
-                position: "relative",
-                backgroundColor: "#ffffff",
-              },
-              insertIndex: 0,
-            },
-            description: "Add default section",
-          });
-        }
-      }
-    },
-    [document.nodes, document.rootNodeId, registry, dispatch, sectionNodes],
-  );
-
-  const executeConfirmedDelete = useCallback(() => {
-    if (!deleteConfirmNodeId) return;
-
-    const node = document.nodes[deleteConfirmNodeId];
-    const isLastSection = node?.type === "Section" && sectionNodes.length === 1;
-
-    dispatch({
-      type: "REMOVE_NODE",
-      payload: { nodeId: deleteConfirmNodeId },
-      description: "Delete",
-    });
-    if (isLastSection) {
-      dispatch({
-        type: "ADD_NODE",
-        payload: {
-          nodeId: uuidv4(),
-          parentId: document.rootNodeId,
-          componentType: "Section",
-          props: { minHeight: DEFAULT_SECTION_HEIGHT_PX },
-          style: {
-            display: "flex",
-            flexDirection: "column",
-            width: "100%",
-            minHeight: "400px",
-            position: "relative",
-            backgroundColor: "#ffffff",
-          },
-          insertIndex: 0,
-        },
-        description: "Add default section",
-      });
-    }
-    setDeleteConfirmNodeId(null);
-  }, [deleteConfirmNodeId, dispatch, document.nodes, document.rootNodeId, sectionNodes]);
-
-  const handleCanvasConfigChange = useCallback(
-    (key: keyof CanvasConfig, value: unknown) => {
-      dispatch({
-        type: "UPDATE_CANVAS_CONFIG",
-        payload: { config: { [key]: value } },
-        description: "Update page settings",
-      });
-    },
+  // ── Canvas mode helpers ──────────────────────────────────────────────────
+  const setCanvasMode = useCallback(
+    (mode: CanvasMode) => dispatch({ type: "SET_CANVAS_MODE", payload: { canvasMode: mode }, description: "Toggle canvas mode" }),
     [dispatch],
   );
-
-  // ── Inline text edit handlers ────────────────────────────────────────────
-  const handleInlineCommit = useCallback(
-    (html: string) => {
-      if (!editingNodeId || !editingPropKey) return;
-      dispatch({
-        type: "UPDATE_PROPS",
-        payload: { nodeId: editingNodeId, props: { [editingPropKey]: html } },
-        description: `Update ${editingPropKey}`,
-      });
-    },
-    [editingNodeId, editingPropKey, dispatch],
-  );
-
-  const handleInlineExit = useCallback(() => {
-    setTiptapEditor(null);
-    dispatch({
-      type: CMD_EXIT_TEXT_EDIT,
-      payload: {},
-      description: "Exit text edit",
-    });
-  }, [dispatch]);
-
-  const handleCanvasDoubleClick = useCallback(
-    (e: React.MouseEvent) => {
-      if (editingNodeId) return; // already editing
-      const target = e.target as HTMLElement;
-      const el = target.closest("[data-node-id]") as HTMLElement | null;
-      if (!el) return;
-      const nodeId = el.dataset.nodeId!;
-      const node = document.nodes[nodeId];
-      if (!node) return;
-      const def = registry?.getComponent(node.type);
-      if (!def?.capabilities.inlineEditable) return;
-      const richtextProp = def.propSchema.find((p) => p.type === "richtext");
-      if (!richtextProp) return;
-      e.stopPropagation();
-      dispatch({
-        type: CMD_ENTER_TEXT_EDIT,
-        payload: { nodeId, propKey: richtextProp.key },
-        description: "Enter text edit",
-      });
-    },
-    [editingNodeId, document.nodes, registry, dispatch],
-  );
-
-  const { onMoveUp, onMoveDown } = useZIndexHandlers({
-    selectedNodeId,
-    nodes: document.nodes,
-    dispatch,
-  });
-
-  useKeyboardShortcuts({
-    selectedNodeId,
-    rootNodeId: document.rootNodeId,
-    nodes: document.nodes,
-    clipboard: state.editor.clipboard,
-    breakpoint,
-    canvasContainerRef,
-    dispatch,
-    clearSelection,
-    undo,
-    redo,
-    setBreakpoint,
-    onDeleteNode: handleDeleteNode,
-  });
-
-  // ── Layer tree handlers ─────────────────────────────────────────────────
-  const handleToggleHidden = useCallback(
-    (nodeId: string) => {
-      const node = document.nodes[nodeId];
-      if (!node) return;
-      dispatch({
-        type: node.hidden ? "SHOW_NODE" : "HIDE_NODE",
-        payload: { nodeId },
-        description: node.hidden ? "Show" : "Hide",
-      });
-    },
-    [document.nodes, dispatch],
-  );
-
-  const handleToggleLocked = useCallback(
-    (nodeId: string) => {
-      const node = document.nodes[nodeId];
-      if (!node) return;
-      dispatch({
-        type: node.locked ? "UNLOCK_NODE" : "LOCK_NODE",
-        payload: { nodeId },
-        description: node.locked ? "Unlock" : "Lock",
-      });
-    },
-    [document.nodes, dispatch],
-  );
-
-  // ── Property change handlers ─────────────────────────────────────────────
-  const handlePropChange = useCallback(
-    (key: string, value: unknown) => {
-      if (!selectedNodeId) return;
-      if (!breakpoint || breakpoint === "desktop") {
-        dispatch({
-          type: "UPDATE_PROPS",
-          payload: { nodeId: selectedNodeId, props: { [key]: value } },
-          description: `Set ${key}`,
-        });
-      } else {
-        dispatch({
-          type: "UPDATE_RESPONSIVE_PROPS",
-          payload: { nodeId: selectedNodeId, breakpoint, props: { [key]: value } },
-          description: `Set ${key}`,
-        });
-      }
-    },
-    [selectedNodeId, breakpoint, dispatch],
-  );
-
-  const handleStyleChange = useCallback(
-    (key: string, value: unknown) => {
-      if (!selectedNodeId) return;
-      dispatch({
-        type: "UPDATE_STYLE",
-        payload: { nodeId: selectedNodeId, style: { [key]: value } as never, breakpoint },
-        description: `Set style.${key}`,
-      });
-    },
-    [selectedNodeId, breakpoint, dispatch],
-  );
-
-  // ── Drag handle from ContextualToolbar ──────────────────────────────────
-  const handleDragHandlePointerDown = useCallback(
-    (e: React.PointerEvent) => {
-      if (!selectedNodeId) return;
-      e.stopPropagation();
-      const n = document.nodes[selectedNodeId];
-      if (!n || n.locked) return;
-      const style = n.style || {};
-      let startLeft: number;
-      let startTop: number;
-      if (style.position === "absolute") {
-        startLeft = parseFloat(String(style.left ?? "0")) || 0;
-        startTop = parseFloat(String(style.top ?? "0")) || 0;
-      } else if (activeFrameRef.current) {
-        const frameEl = activeFrameRef.current;
-        const el = frameEl.querySelector(`[data-node-id="${selectedNodeId}"]`) as HTMLElement;
-        if (el) {
-          const frameRect = frameEl.getBoundingClientRect();
-          const elRect = el.getBoundingClientRect();
-          startLeft = (elRect.left - frameRect.left) / zoom;
-          startTop = (elRect.top - frameRect.top) / zoom;
-        } else {
-          startLeft = 0;
-          startTop = 0;
-        }
-      } else {
-        startLeft = 0;
-        startTop = 0;
-      }
-      const frameEl = activeFrameRef.current ?? canvasFrameRef.current;
-      const el = frameEl?.querySelector(`[data-node-id="${selectedNodeId}"]`) as HTMLElement | null;
-      dragStartedRef.current = false;
-      setMoving({
-        nodeId: selectedNodeId,
-        startPoint: { x: e.clientX, y: e.clientY },
-        startLeft,
-        startTop,
-        startWidth: el?.offsetWidth,
-        startHeight: el?.offsetHeight,
-        wasAbsolute: style.position === "absolute",
-        gestureGroupId: uuidv4(),
-      });
-    },
-    [
-      selectedNodeId,
-      document.nodes,
-      zoom,
-      activeFrameRef,
-      canvasFrameRef,
-      dragStartedRef,
-      setMoving,
-    ],
+  const toggleCanvasMode = useCallback(
+    () => setCanvasMode(canvasMode === "dual" ? "single" : "dual"),
+    [canvasMode, setCanvasMode],
   );
 
   const canvasConfigParams = useMemo(
@@ -735,30 +271,14 @@ function EditorInner({ groupRegistry, paletteCatalog, locale }: { groupRegistry?
     [document.canvasConfig, showGrid],
   );
 
-  // ── Section helpers ──────────────────────────────────────────────────────
-  const selectedSectionNode =
-    selectedNodeId && document.nodes[selectedNodeId]?.type === "Section"
-      ? document.nodes[selectedNodeId]
-      : null;
-
   const handleAddSection = useCallback(
     (afterOrder: number) => {
-      const newId = uuidv4();
       dispatch({
         type: "ADD_NODE",
         payload: {
-          nodeId: newId,
-          parentId: document.rootNodeId,
-          componentType: "Section",
+          nodeId: uuidv4(), parentId: document.rootNodeId, componentType: "Section",
           props: { minHeight: DEFAULT_SECTION_HEIGHT_PX },
-          style: {
-            display: "flex",
-            flexDirection: "column",
-            width: "100%",
-            minHeight: "400px",
-            position: "relative",
-            backgroundColor: "#ffffff",
-          },
+          style: { display: "flex", flexDirection: "column", width: "100%", minHeight: "400px", position: "relative", backgroundColor: "#ffffff" },
           insertIndex: afterOrder + 1,
         },
         description: "Add section",
@@ -767,688 +287,447 @@ function EditorInner({ groupRegistry, paletteCatalog, locale }: { groupRegistry?
     [dispatch, document.rootNodeId],
   );
 
-  // ── Mobile frame drag offset ─────────────────────────────────────────────
-  const [mobileFramePos, setMobileFramePos] = React.useState({ x: 0, y: 0 });
-  const handleMobileFrameGripDown = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const startX = e.clientX;
-      const startY = e.clientY;
-      const startPosX = mobileFramePos.x;
-      const startPosY = mobileFramePos.y;
-      const capturedZoom = zoom;
-      const onMove = (ev: MouseEvent) => {
-        setMobileFramePos({
-          x: startPosX + (ev.clientX - startX) / capturedZoom,
-          y: startPosY + (ev.clientY - startY) / capturedZoom,
-        });
-      };
-      const onUp = () => {
-        window.removeEventListener("mousemove", onMove);
-        window.removeEventListener("mouseup", onUp);
-      };
-      window.addEventListener("mousemove", onMove);
-      window.addEventListener("mouseup", onUp);
-    },
-    [mobileFramePos.x, mobileFramePos.y, zoom],
-  );
+  const frameEventHandlers = {
+    onDoubleClick: handleCanvasDoubleClick,
+    onMouseOver: handleMouseOver,
+    onMouseOut: handleMouseOut,
+    onDragEnter: handleDragEnter,
+    onDragOver: handleDragOver,
+    onDrop: handleDrop,
+  } as const;
 
-  // ── Render ───────────────────────────────────────────────────────────────
+  const sharedSectionOverlayProps = {
+    nodes: document.nodes,
+    rootNodeId: document.rootNodeId,
+    zoom,
+    panOffset,
+    onAddSection: handleAddSection,
+    onResizeStart: (nodeId: string, clientY: number, currentHeightPx: number, gid: string) =>
+      startSectionResize(nodeId, clientY, currentHeightPx, gid),
+    isResizing: sectionResizing !== null,
+  } as const;
+
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <AIConfigProvider config={aiConfig}>
-    <div
-      className="bg-background relative flex h-full w-full flex-col overflow-hidden"
-      ref={canvasContainerRef}
-      tabIndex={0}
-      style={{ outline: "none" }}
-      onDragEnter={handleDragEnter}
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
-    >
-      <EditorToolbar
-        breakpoint={breakpoint}
-        zoom={zoom}
-        showGrid={showGrid}
-        canUndo={canUndo}
-        canRedo={canRedo}
-        activeTool={activeTool}
-        canvasMode={canvasMode}
-        onBreakpointChange={setBreakpoint}
-        onZoomChange={setZoom}
-        onGridToggle={toggleGrid}
-        onUndo={undo}
-        onRedo={redo}
-        onToolChange={(tool) => {
-          setActiveTool(tool);
-          if (tool === "pan") {
-            clearSelection();
-          }
-        }}
-        onCanvasModeToggle={toggleCanvasMode}
-        onFitToScreen={handleFitToScreen}
-        onAIOpen={() => setAiOpen(true)}
-      />
-
-      {/* ── Component palette (new Wix-style or legacy fallback) ───────── */}
-      {paletteCatalog && paletteMode === "floating" && (
-        <FloatingPalette
-          catalog={paletteCatalog}
-          activeGroupId={activePaletteGroupId}
-          onGroupSelect={handleGroupSelect}
-          locale={locale}
-          layersOpen={layersOpen}
-          onLayersToggle={handleLayersToggle}
-        />
-      )}
-      {paletteCatalog && paletteMode === "docked" && (
-        <AddElementsPanel
-          catalog={paletteCatalog}
-          activeGroupId={activePaletteGroupId}
-          onGroupChange={setActivePaletteGroupId}
-          onClose={handlePaletteClose}
-          onItemDragStart={handlePaletteDragStart}
-          onItemClick={handlePaletteItemClick}
-          locale={locale}
-        />
-      )}
-      {!paletteCatalog && (
-        <FloatingPanel id="components" title="Components" defaultPosition={DEFAULT_COMPONENTS_PANEL_POS}>
-          <div className="h-[40vh] min-h-[300px] overflow-hidden">
-            <ComponentPalette components={allComponents} onDragStart={handleDragStart} groupRegistry={groupRegistry} />
-          </div>
-        </FloatingPanel>
-      )}      {layersOpen && (
-        <FloatingPanel
-          id="layers"
-          title="Layers"
-          defaultPosition={layersPanelPos}
-          onClose={handleLayersToggle}
-        >
-          <div className="h-[30vh] min-h-[250px] overflow-hidden">
-            <LayerTree
-              document={document}
-              selectedIds={selectedNodeIds}
-              onSelect={select}
-              onToggleHidden={handleToggleHidden}
-              onToggleLocked={handleToggleLocked}
-            />
-          </div>
-        </FloatingPanel>
-      )}
-
-      <FloatingPanel
-        id="properties"
-        title={selectedNode ? "Properties" : "Page Settings"}
-        defaultPosition={DEFAULT_PROPERTIES_PANEL_POS}
-      >
-        <div className="flex h-[75vh] max-h-[800px] min-h-[500px] flex-col overflow-hidden">
-          {selectedNode ? (
-            <PropertyPanel
-              selectedNode={selectedNode}
-              definition={selectedDefinition}
-              breakpoint={breakpoint}
-              onPropChange={handlePropChange}
-              onStyleChange={handleStyleChange}
-            />
-          ) : (
-            <div className="flex flex-col h-full">
-              <PageSettings document={document} onCanvasConfigChange={handleCanvasConfigChange} />
-              <div className="border-t shrink-0">
-                <AIConfigPanel config={aiConfig} onChange={handleAIConfigChange} />
-              </div>
-            </div>
-          )}
-        </div>
-      </FloatingPanel>
-
-      {/* AI Assistant dialog */}
-      <AIAssistant
-        open={aiOpen}
-        onOpenChange={setAiOpen}
-        config={aiConfig}
-        onConfigChange={handleAIConfigChange}
-        context={aiContext}
-      />
-
       <div
-        className="bg-muted/20 absolute inset-0 z-0 overflow-hidden"
-        onPointerDown={(e) => {
-          const target = e.target as HTMLElement;
-          if (
-            canvasFrameRef.current?.contains(target) ||
-            mobileFrameRef.current?.contains(target) ||
-            target.closest("[data-resize-handle]") ||
-            target.closest("[data-rotation-handle]")
-          )
-            return;
-          clearSelection();
-        }}
+        className="bg-background relative flex h-full w-full flex-col overflow-hidden"
+        ref={canvasContainerRef}
+        tabIndex={0}
+        style={{ outline: "none" }}
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
       >
-        <CanvasRoot
-          canvasConfig={canvasConfigParams}
-          zoom={zoom}
-          panOffset={panOffset}
-          onZoomChange={setZoom}
-          onPanOffsetChange={setPanOffset}
-          activeTool={activeTool}
-          className="h-full w-full"
-        >
-          {/* Both artboards live inside the same transform — share zoom/pan */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "flex-start",
-              gap: canvasMode === "dual" ? 240 : 0,
-            }}
-          >
-            {/* ── Desktop frame (primary in single; always left in dual) ─── */}
-            <div style={{ display: "flex", flexDirection: "column", flexShrink: 0 }}>
-              {canvasMode === "dual" ? (
-                <BreakpointOverrideProvider breakpoint="desktop">
-                  <div style={{ position: "relative" }}>
-                  <div
-                    style={{
-                      position: "absolute",
-                      bottom: "100%",
-                      marginBottom: 8,
-                      fontSize: 11,
-                      color: "hsl(var(--muted-foreground))",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 5,
-                      userSelect: "none",
-                      cursor: "pointer",
-                      whiteSpace: "nowrap",
-                    }}
-                    onClick={() => setBreakpoint("desktop")}
-                  >
-                    <Monitor size={11} />
-                    <span>Desktop</span>
-                    <span style={{ opacity: 0.5 }}>
-                      · {document.canvasConfig.width ?? DEVICE_VIEWPORT_PRESETS.desktop.width}px
-                    </span>
-                    {breakpoint === "desktop" && (
-                      <span
-                        style={{
-                          fontSize: 9,
-                          background: "hsl(221.2 83.2% 53.3% / 0.12)",
-                          color: "hsl(221.2 83.2% 53.3%)",
-                          padding: "1px 5px",
-                          borderRadius: 3,
-                        }}
-                      >
-                        Active
-                      </span>
-                    )}
-                  </div>
-                  <div
-                    ref={canvasFrameRef}
-                    style={{
-                      width: document.canvasConfig.width ?? DEVICE_VIEWPORT_PRESETS.desktop.width,
-                      minHeight:
-                        document.canvasConfig.height ?? DEVICE_VIEWPORT_PRESETS.desktop.height,
-                      backgroundColor: document.canvasConfig.backgroundColor ?? "#ffffff",
-                      position: "relative",
-                      boxShadow:
-                        breakpoint === "desktop"
-                          ? "0 4px 24px rgba(0,0,0,0.12), 0 0 0 2px hsl(221.2 83.2% 53.3%)"
-                          : "0 4px 24px rgba(0,0,0,0.12)",
-                      borderRadius: 4,
-                      transition: `box-shadow ${TRANSITION_FAST_CSS} ease`,
-                    }}
-                    onPointerDown={(e) => {
-                      setBreakpoint("desktop");
-                      handlePointerDown(e);
-                    }}
-                    onDoubleClick={handleCanvasDoubleClick}
-                    onMouseOver={handleMouseOver}
-                    onMouseOut={handleMouseOut}
-                    onDragEnter={handleDragEnter}
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
-                  >
-                    <div className="pointer-events-none absolute inset-y-0 left-1/2 z-0 w-[1200px] -translate-x-1/2 border-x border-dashed border-blue-400/20" />
-                    <NodeRenderer nodeId={document.rootNodeId} />
-                    <SectionOverlay
-                      nodes={document.nodes}
-                      rootNodeId={document.rootNodeId}
-                      zoom={zoom}
-                      panOffset={panOffset}
-                      canvasFrameRef={canvasFrameRef}
-                      onAddSection={handleAddSection}
-                      onResizeStart={(nodeId, clientY, currentHeightPx, gid) =>
-                        startSectionResize(nodeId, clientY, currentHeightPx, gid)
-                      }
-                      isResizing={sectionResizing !== null}
-                    />
-                  </div>
-                  </div>
-                </BreakpointOverrideProvider>
-              ) : (
-                <div
-                  ref={canvasFrameRef}
-                  style={{
-                    width: canvasWidth,
-                    minHeight: canvasMinHeight,
-                    backgroundColor: document.canvasConfig.backgroundColor ?? "#ffffff",
-                    position: "relative",
-                    boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
-                    borderRadius: 4,
-                    transition: `width ${TRANSITION_MID_CSS} ease, min-height ${TRANSITION_MID_CSS} ease, box-shadow ${TRANSITION_FAST_CSS} ease`,
-                  }}
-                  onPointerDown={handlePointerDown}
-                  onDoubleClick={handleCanvasDoubleClick}
-                  onMouseOver={handleMouseOver}
-                  onMouseOut={handleMouseOut}
-                  onDragEnter={handleDragEnter}
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                >
-                  <div className="pointer-events-none absolute inset-y-0 left-1/2 z-0 w-[1200px] -translate-x-1/2 border-x border-dashed border-blue-400/20" />
-                  <NodeRenderer nodeId={document.rootNodeId} />
-                  <SectionOverlay
-                    nodes={document.nodes}
-                    rootNodeId={document.rootNodeId}
-                    zoom={zoom}
-                    panOffset={panOffset}
-                    canvasFrameRef={canvasFrameRef}
-                    onAddSection={handleAddSection}
-                    onResizeStart={(nodeId, clientY, currentHeightPx, gid) =>
-                      startSectionResize(nodeId, clientY, currentHeightPx, gid)
-                    }
-                    isResizing={sectionResizing !== null}
-                  />
-                </div>
-              )}
-            </div>
+        <EditorToolbar
+          breakpoint={breakpoint} zoom={zoom} showGrid={showGrid} canUndo={canUndo} canRedo={canRedo}
+          activeTool={activeTool} canvasMode={canvasMode}
+          onBreakpointChange={setBreakpoint} onZoomChange={setZoom} onZoomInFromCenter={handleZoomInFromCenter} onZoomOutFromCenter={handleZoomOutFromCenter} onGridToggle={toggleGrid}
+          onUndo={undo} onRedo={redo}
+          onToolChange={(tool) => { setActiveTool(tool); if (tool === "pan") clearSelection(); }}
+          onCanvasModeToggle={toggleCanvasMode} onFitToScreen={handleFitToScreen} onAIOpen={() => setAiOpen(true)}
+        />
 
-            {/* ── Mobile frame (always right, dual mode only) ─── */}
-            {canvasMode === "dual" && (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  flexShrink: 0,
-                  position: "relative",
-                  top: mobileFramePos.y,
-                  left: mobileFramePos.x,
-                }}
-              >
-                <div style={{ position: "relative" }}>
-                <div
-                  style={{
-                    position: "absolute",
-                    bottom: "100%",
-                    marginBottom: 8,
-                    fontSize: 11,
-                    color: "hsl(var(--muted-foreground))",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 5,
-                    userSelect: "none",
-                    cursor: "pointer",
-                    whiteSpace: "nowrap",
-                  }}
-                  onClick={() => setBreakpoint("mobile")}
-                >
-                  <div
-                    style={{
-                      cursor: "grab",
-                      display: "flex",
-                      alignItems: "center",
-                      padding: "0 2px",
-                      marginRight: 2,
-                      opacity: 0.5,
-                    }}
-                    onMouseDown={handleMobileFrameGripDown}
-                    onClick={(e) => e.stopPropagation()}
-                    title="Drag to reposition"
-                    className="duration-200 hover:scale-150"
-                  >
-                    <GripVertical size={11} />
-                  </div>
-                  <Smartphone size={11} />
-                  <span>Mobile</span>
-                  <span style={{ opacity: 0.5 }}>· {DEVICE_VIEWPORT_PRESETS.mobile.width}px</span>
-                  {breakpoint === "mobile" && (
-                    <span
-                      style={{
-                        fontSize: 9,
-                        background: "hsl(221.2 83.2% 53.3% / 0.12)",
-                        color: "hsl(221.2 83.2% 53.3%)",
-                        padding: "1px 5px",
-                        borderRadius: 3,
-                      }}
-                    >
-                      Active
-                    </span>
-                  )}
-                </div>
-                <BreakpointOverrideProvider breakpoint="mobile">
-                  <div
-                    ref={mobileFrameRef}
-                    style={{
-                      width: DEVICE_VIEWPORT_PRESETS.mobile.width,
-                      minHeight: DEVICE_VIEWPORT_PRESETS.mobile.height,
-                      backgroundColor: document.canvasConfig.backgroundColor ?? "#ffffff",
-                      position: "relative",
-                      boxShadow:
-                        breakpoint === "mobile"
-                          ? "0 4px 24px rgba(0,0,0,0.12), 0 0 0 2px hsl(221.2 83.2% 53.3%)"
-                          : "0 4px 24px rgba(0,0,0,0.12)",
-                      borderRadius: 4,
-                      transition: `box-shadow ${TRANSITION_FAST_CSS} ease`,
-                    }}
-                    onPointerDown={(e) => {
-                      setBreakpoint("mobile");
-                      handlePointerDown(e);
-                    }}
-                    onDoubleClick={handleCanvasDoubleClick}
-                    onMouseOver={handleMouseOver}
-                    onMouseOut={handleMouseOut}
-                    onDragEnter={handleDragEnter}
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
-                  >
-                    <NodeRenderer nodeId={document.rootNodeId} mode="editor" />
-                    <SectionOverlay
-                      nodes={document.nodes}
-                      rootNodeId={document.rootNodeId}
-                      zoom={zoom}
-                      panOffset={panOffset}
-                      canvasFrameRef={mobileFrameRef}
-                      onAddSection={handleAddSection}
-                      onResizeStart={(nodeId, clientY, currentHeightPx, gid) =>
-                        startSectionResize(nodeId, clientY, currentHeightPx, gid)
-                      }
-                      isResizing={sectionResizing !== null}
-                    />
-                  </div>
-                </BreakpointOverrideProvider>
+        {/* Palette */}
+        {paletteCatalog && paletteMode === "floating" && (
+          <FloatingPalette
+            catalog={paletteCatalog} activeGroupId={activePaletteGroupId}
+            onGroupSelect={handleGroupSelect} locale={locale}
+            layersOpen={layersOpen} onLayersToggle={handleLayersToggle}
+          />
+        )}
+        {paletteCatalog && paletteMode === "docked" && (
+          <AddElementsPanel
+            catalog={paletteCatalog} activeGroupId={activePaletteGroupId}
+            onGroupChange={setActivePaletteGroupId} onClose={handlePaletteClose}
+            onItemDragStart={handlePaletteDragStart} onItemClick={handlePaletteItemClick} locale={locale}
+          />
+        )}
+        {!paletteCatalog && (
+          <FloatingPanel id="components" title="Components" defaultPosition={DEFAULT_COMPONENTS_PANEL_POS}>
+            <div className="h-[40vh] min-h-[300px] overflow-hidden">
+              <ComponentPalette components={allComponents} onDragStart={handleDragStart} groupRegistry={groupRegistry} />
+            </div>
+          </FloatingPanel>
+        )}
+
+        {/* Layers */}
+        {layersOpen && (
+          <FloatingPanel id="layers" title="Layers" defaultPosition={layersPanelPos} onClose={handleLayersToggle}>
+            <div className="h-[30vh] min-h-[250px] overflow-hidden">
+              <LayerTree document={document} selectedIds={selectedNodeIds} onSelect={select}
+                onToggleHidden={handleToggleHidden} onToggleLocked={handleToggleLocked} />
+            </div>
+          </FloatingPanel>
+        )}
+
+        {/* Properties / Page settings */}
+        <FloatingPanel id="properties" title={selectedNode ? "Properties" : "Page Settings"} defaultPosition={DEFAULT_PROPERTIES_PANEL_POS}>
+          <div className="flex h-[75vh] max-h-[800px] min-h-[500px] flex-col overflow-hidden">
+            {selectedNode ? (
+              <PropertyPanel selectedNode={selectedNode} definition={selectedDefinition} breakpoint={breakpoint}
+                onPropChange={handlePropChange} onStyleChange={handleStyleChange} />
+            ) : (
+              <div className="flex flex-col h-full">
+                <PageSettings document={document} onCanvasConfigChange={handleCanvasConfigChange} />
+                <div className="border-t shrink-0">
+                  <AIConfigPanel config={aiConfig} onChange={handleAIConfigChange} />
                 </div>
               </div>
             )}
           </div>
+        </FloatingPanel>
 
-          <SelectionOverlay
-            selection={{
-              selectedIds: selectedNodeIds,
-              boundingBox: selectionRect,
-              isRubberBanding: !!rubberBanding,
-              rubberBandRect,
-            }}
-            zoom={zoom}
-            rotation={currentRotation}
-            isSection={!!selectedSectionNode}
-            onResizeStart={(handle, e) => {
-              if (!selectionRect || !selectedNodeId) return;
-              setResizing({
-                handle,
-                nodeId: selectedNodeId,
-                startPoint: { x: e.clientX, y: e.clientY },
-                startRect: { ...selectionRect },
-                gestureGroupId: uuidv4(),
-              });
-            }}
-            onRotateStart={(e) => {
-              if (!selectionRect || !selectedNodeId) return;
-              const queryRoot = activeFrameRef.current ?? canvasFrameRef.current;
-              if (!queryRoot) return;
-              const el = queryRoot.querySelector(
-                `[data-node-id="${selectedNodeId}"]`,
-              ) as HTMLElement;
-              if (!el) return;
-              startRotate({
-                nodeId: selectedNodeId,
-                clientX: e.clientX,
-                clientY: e.clientY,
-                elementRect: el.getBoundingClientRect(),
-                currentRotation,
-                gestureGroupId: uuidv4(),
-              });
-            }}
-          />
+        <AIAssistant open={aiOpen} onOpenChange={setAiOpen} config={aiConfig} onConfigChange={handleAIConfigChange} context={aiContext} />
 
-          {hoverRect && <HoverOutline rect={hoverRect} zoom={zoom} />}
+        {/* Canvas area */}
+        <div
+          className="bg-muted/20 absolute inset-0 z-0 overflow-hidden"
+          onPointerDown={(e) => {
+            const target = e.target as HTMLElement;
+            if (
+              canvasFrameRef.current?.contains(target) ||
+              mobileFrameRef.current?.contains(target) ||
+              target.closest("[data-resize-handle]") ||
+              target.closest("[data-rotation-handle]")
+            ) return;
+            clearSelection();
+          }}
+        >
+          <CanvasRoot canvasConfig={canvasConfigParams} zoom={zoom} panOffset={panOffset}
+            onZoomChange={setZoom} onPanOffsetChange={setPanOffset} activeTool={activeTool} className="h-full w-full">
 
-          <SnapGuides
-            guides={document.canvasConfig.showHelperLines ? snapGuides : []}
-            canvasWidth={canvasWidth}
-            canvasHeight={canvasMinHeight}
-            helperLineColor={document.canvasConfig.helperLineColor}
-          />
-          <DistanceGuides guides={distanceGuides} zoom={zoom} />
-          {selectionRect && liveDimensions && (
-            <LiveDimensionsDisplay
-              bounds={selectionRect}
-              dimensions={liveDimensions}
-              zoom={zoom}
+            <div style={{ display: "flex", alignItems: "flex-start", gap: canvasMode === "dual" ? 240 : 0 }}>
+
+              {/* Desktop frame */}
+              <div style={{ display: "flex", flexDirection: "column", flexShrink: 0 }}>
+                {canvasMode === "dual" ? (
+                  <BreakpointOverrideProvider breakpoint="desktop">
+                    <div style={{ position: "relative" }}>
+                      <ArtboardLabel
+                        icon={<Monitor size={11} />} label="Desktop"
+                        width={document.canvasConfig.width ?? DEVICE_VIEWPORT_PRESETS.desktop.width}
+                        isActive={breakpoint === "desktop"} onClick={() => setBreakpoint("desktop")}
+                      />
+                      <div
+                        ref={canvasFrameRef}
+                        style={{
+                          width: document.canvasConfig.width ?? DEVICE_VIEWPORT_PRESETS.desktop.width,
+                          minHeight: document.canvasConfig.height ?? DEVICE_VIEWPORT_PRESETS.desktop.height,
+                          backgroundColor: document.canvasConfig.backgroundColor ?? "#ffffff",
+                          position: "relative",
+                          boxShadow: breakpoint === "desktop"
+                            ? "0 4px 24px rgba(0,0,0,0.12), 0 0 0 2px hsl(221.2 83.2% 53.3%)"
+                            : "0 4px 24px rgba(0,0,0,0.12)",
+                          borderRadius: 4,
+                          transition: `box-shadow ${TRANSITION_FAST_CSS} ease`,
+                        }}
+                        onPointerDown={(e) => { setBreakpoint("desktop"); handlePointerDown(e); }}
+                        {...frameEventHandlers}
+                      >
+                        <div className="pointer-events-none absolute inset-y-0 left-1/2 z-0 w-[1200px] -translate-x-1/2 border-x border-dashed border-blue-400/20" />
+                        <NodeRenderer nodeId={document.rootNodeId} />
+                        <SectionOverlay {...sharedSectionOverlayProps} canvasFrameRef={canvasFrameRef} />
+                      </div>
+                    </div>
+                  </BreakpointOverrideProvider>
+                ) : (
+                  <div
+                    ref={canvasFrameRef}
+                    style={{
+                      width: canvasWidth, minHeight: canvasMinHeight,
+                      backgroundColor: document.canvasConfig.backgroundColor ?? "#ffffff",
+                      position: "relative", boxShadow: "0 4px 24px rgba(0,0,0,0.12)", borderRadius: 4,
+                      transition: `width ${TRANSITION_MID_CSS} ease, min-height ${TRANSITION_MID_CSS} ease, box-shadow ${TRANSITION_FAST_CSS} ease`,
+                    }}
+                    onPointerDown={handlePointerDown}
+                    {...frameEventHandlers}
+                  >
+                    <div className="pointer-events-none absolute inset-y-0 left-1/2 z-0 w-[1200px] -translate-x-1/2 border-x border-dashed border-blue-400/20" />
+                    <NodeRenderer nodeId={document.rootNodeId} />
+                    <SectionOverlay {...sharedSectionOverlayProps} canvasFrameRef={canvasFrameRef} />
+                  </div>
+                )}
+              </div>
+
+              {/* Mobile frame (dual mode only) */}
+              {canvasMode === "dual" && (
+                <div style={{ display: "flex", flexDirection: "column", flexShrink: 0, position: "relative", top: mobileFramePos.y, left: mobileFramePos.x }}>
+                  <div style={{ position: "relative" }}>
+                    <ArtboardLabel
+                      icon={<Smartphone size={11} />} label="Mobile"
+                      width={DEVICE_VIEWPORT_PRESETS.mobile.width}
+                      isActive={breakpoint === "mobile"} onClick={() => setBreakpoint("mobile")}
+                      gripProps={{ onMouseDown: handleMobileFrameGripDown }}
+                    />
+                    <BreakpointOverrideProvider breakpoint="mobile">
+                      <div
+                        ref={mobileFrameRef}
+                        style={{
+                          width: DEVICE_VIEWPORT_PRESETS.mobile.width,
+                          minHeight: DEVICE_VIEWPORT_PRESETS.mobile.height,
+                          backgroundColor: document.canvasConfig.backgroundColor ?? "#ffffff",
+                          position: "relative",
+                          boxShadow: breakpoint === "mobile"
+                            ? "0 4px 24px rgba(0,0,0,0.12), 0 0 0 2px hsl(221.2 83.2% 53.3%)"
+                            : "0 4px 24px rgba(0,0,0,0.12)",
+                          borderRadius: 4, transition: `box-shadow ${TRANSITION_FAST_CSS} ease`,
+                        }}
+                        onPointerDown={(e) => { setBreakpoint("mobile"); handlePointerDown(e); }}
+                        onDoubleClick={handleCanvasDoubleClick} onMouseOver={handleMouseOver} onMouseOut={handleMouseOut}
+                        onDragEnter={handleDragEnter} onDragOver={handleDragOver} onDrop={handleDrop}
+                      >
+                        <NodeRenderer nodeId={document.rootNodeId} mode="editor" />
+                        <SectionOverlay {...sharedSectionOverlayProps} canvasFrameRef={mobileFrameRef} />
+                      </div>
+                    </BreakpointOverrideProvider>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Overlays */}
+            <SelectionOverlay
+              selection={{ selectedIds: selectedNodeIds, boundingBox: selectionRect, isRubberBanding: !!rubberBanding, rubberBandRect }}
+              zoom={zoom} rotation={currentRotation} isSection={!!selectedSectionNode}
+              onResizeStart={(handle, e) => {
+                if (!selectionRect || !selectedNodeId) return;
+                setResizing({
+                  handle, nodeId: selectedNodeId,
+                  startPoint: { x: e.clientX, y: e.clientY },
+                  startRect: { ...selectionRect },
+                  gestureGroupId: uuidv4(),
+                });
+              }}
+              onRotateStart={(e) => {
+                if (!selectionRect || !selectedNodeId) return;
+                const queryRoot = activeFrameRef.current ?? canvasFrameRef.current;
+                if (!queryRoot) return;
+                const el = queryRoot.querySelector(`[data-node-id="${selectedNodeId}"]`) as HTMLElement;
+                if (!el) return;
+                startRotate({
+                  nodeId: selectedNodeId, clientX: e.clientX, clientY: e.clientY,
+                  elementRect: el.getBoundingClientRect(), currentRotation, gestureGroupId: uuidv4(),
+                });
+              }}
+            />
+
+            {hoverRect && <HoverOutline rect={hoverRect} zoom={zoom} />}
+
+            <SnapGuides
+              guides={document.canvasConfig.showHelperLines ? snapGuides : []}
+              canvasWidth={canvasWidth} canvasHeight={canvasMinHeight}
+              helperLineColor={document.canvasConfig.helperLineColor}
+            />
+            <DistanceGuides guides={distanceGuides} zoom={zoom} />
+            {selectionRect && liveDimensions && (
+              <LiveDimensionsDisplay bounds={selectionRect} dimensions={liveDimensions} zoom={zoom} />
+            )}
+
+            <FlowDropPlaceholderLayer
+              flowDropTarget={flowDropTarget} moving={moving}
+              activeFrameRef={activeFrameRef} canvasFrameRef={canvasFrameRef}
+              nodes={document.nodes} zoom={zoom} panOffset={panOffset}
+            />
+          </CanvasRoot>
+
+          {/* Section toolbar (screen-space) */}
+          {selectedSectionNode && (
+            <SectionToolbar
+              node={selectedSectionNode} sectionNodes={sectionNodes} zoom={zoom} panOffset={panOffset}
+              canvasFrameRef={canvasFrameRef} dispatch={dispatch} newNodeId={uuidv4}
+              canvasMode={canvasMode} activeBreakpoint={breakpoint}
+              desktopFrameWidth={document.canvasConfig.width ?? DEVICE_VIEWPORT_PRESETS.desktop.width}
+              mobileFramePos={mobileFramePos} onDelete={handleDeleteNode}
             />
           )}
 
-          {/* Section overlays are now rendered inside each frame div */}
+          {selectedNodeId && selectionRect && !selectedSectionNode && !editingNodeId && (
+            <ContextualToolbar
+              nodeId={selectedNodeId} rect={selectionRect} zoom={zoom} panOffset={panOffset}
+              onDelete={() => handleDeleteNode(selectedNodeId)}
+              onDuplicate={() => dispatch({
+                type: "DUPLICATE_NODE",
+                payload: { nodeId: selectedNodeId, offset: { x: 20, y: 20 }, newNodeId: uuidv4() },
+                description: "Duplicate",
+              })}
+              onMoveUp={onMoveUp} onMoveDown={onMoveDown}
+              onDragHandlePointerDown={handleDragHandlePointerDown}
+            />
+          )}
 
-          {/* ── Flow drop placeholder ──────────────────────────────────── */}
-          {(() => {
-            if (!flowDropTarget || !moving) return null;
-            const frameEl = activeFrameRef.current ?? canvasFrameRef.current;
-            if (!frameEl) return null;
-            const containerEl = frameEl.querySelector(
-              `[data-node-id="${flowDropTarget.containerId}"]`,
-            ) as HTMLElement | null;
-            if (!containerEl) return null;
-            const fr = frameEl.getBoundingClientRect();
-            const cRect = containerEl.getBoundingClientRect();
-            const containerRect = {
-              x: (cRect.left - fr.left) / zoom + panOffset.x / zoom,
-              y: (cRect.top - fr.top) / zoom + panOffset.y / zoom,
-              width: cRect.width / zoom,
-              height: cRect.height / zoom,
-            };
-            // Siblings in insert order (excluding the dragged node)
-            const siblings = Object.values(document.nodes)
-              .filter((n) => n.parentId === flowDropTarget.containerId && n.id !== moving.nodeId)
-              .sort((a, b) => a.order - b.order);
-            const getSibRect = (n: (typeof siblings)[0]) => {
-              const el = frameEl.querySelector(`[data-node-id="${n.id}"]`) as HTMLElement | null;
-              if (!el) return null;
-              const r = el.getBoundingClientRect();
-              return {
-                x: (r.left - fr.left) / zoom + panOffset.x / zoom,
-                y: (r.top - fr.top) / zoom + panOffset.y / zoom,
-                width: r.width / zoom,
-                height: r.height / zoom,
-              };
-            };
-            const idx = flowDropTarget.insertIndex;
-            const prevSib = idx > 0 ? (siblings[idx - 1] ?? null) : null;
-            const nextSib = siblings[idx] ?? null;
-            const prevSiblingRect = prevSib ? getSibRect(prevSib) : null;
-            const nextSiblingRect = nextSib ? getSibRect(nextSib) : null;
-
-            // For grid containers: compute the canvas-space cell rect
-            let gridCellRect: { x: number; y: number; width: number; height: number } | undefined;
-            if (flowDropTarget.gridCell) {
-              const cellClient = getGridCellClientRect(
-                containerEl,
-                flowDropTarget.gridCell.col,
-                flowDropTarget.gridCell.row,
-              );
-              if (cellClient) {
-                gridCellRect = {
-                  x: (cellClient.left - fr.left) / zoom + panOffset.x / zoom,
-                  y: (cellClient.top - fr.top) / zoom + panOffset.y / zoom,
-                  width: cellClient.width / zoom,
-                  height: cellClient.height / zoom,
-                };
-              }
-            }
-
+          {/* Inline text editor + toolbar */}
+          {editingNodeId && editingPropKey && (() => {
+            const editingNode    = document.nodes[editingNodeId];
+            const editingDef     = editingNode && registry ? registry.getComponent(editingNode.type) : null;
+            const richtextSchema = editingDef?.propSchema.find((p) => p.type === "richtext" && p.key === editingPropKey);
+            const toolbarConfig  = richtextSchema?.type === "richtext" ? richtextSchema.toolbar : undefined;
+            const initialContent = editingNode ? String(editingNode.props[editingPropKey] ?? "") : "";
             return (
-              <FlowDropPlaceholder
-                containerRect={containerRect}
-                prevSiblingRect={prevSiblingRect}
-                nextSiblingRect={nextSiblingRect}
-                gridCellRect={gridCellRect}
-                zoom={zoom}
-              />
+              <>
+                <InlineTextEditor
+                  nodeId={editingNodeId} initialContent={initialContent} toolbarConfig={toolbarConfig}
+                  canvasFrameRef={canvasFrameRef} zoom={zoom} panOffset={panOffset}
+                  onCommit={handleInlineCommit} onExit={handleInlineExit}
+                  onEditorReady={(ed) => setTiptapEditor(ed)} onBoundsChange={setEditingOverrideRect}
+                />
+                {selectionRect && (
+                  <TextEditToolbar editor={tiptapEditor} toolbarConfig={toolbarConfig} rect={selectionRect}
+                    zoom={zoom} panOffset={panOffset} onExit={handleInlineExit} />
+                )}
+              </>
             );
           })()}
 
+          {/* Rotation readout */}
+          {rotating !== null && selectionRect && (
+            <div
+              className="bg-background/90 pointer-events-none absolute z-50 rounded border px-2 py-0.5 font-mono text-xs"
+              style={{
+                left: (selectionRect.x + selectionRect.width  / 2) * zoom + panOffset.x - 20,
+                top:  (selectionRect.y + selectionRect.height)     * zoom + panOffset.y + 28,
+              }}
+            >
+              {currentRotation}&#176;
+            </div>
+          )}
 
-        </CanvasRoot>
-
-        {/* ── Section toolbar: left-side action bar for selected section (screen-space) ── */}
-        {selectedSectionNode && (
-          <SectionToolbar
-            node={selectedSectionNode}
-            sectionNodes={sectionNodes}
-            zoom={zoom}
-            panOffset={panOffset}
-            canvasFrameRef={canvasFrameRef}
-            dispatch={dispatch}
-            newNodeId={uuidv4}
-            canvasMode={canvasMode}
-            activeBreakpoint={breakpoint}
-            desktopFrameWidth={document.canvasConfig.width ?? DEVICE_VIEWPORT_PRESETS.desktop.width}
-            mobileFramePos={mobileFramePos}
-            onDelete={handleDeleteNode}
-          />
-        )}
-
-        {selectedNodeId && selectionRect && !selectedSectionNode && !editingNodeId && (
-          <ContextualToolbar
-            nodeId={selectedNodeId}
-            rect={selectionRect}
-            zoom={zoom}
-            panOffset={panOffset}
-            onDelete={() => handleDeleteNode(selectedNodeId)}
-            onDuplicate={() =>
-              dispatch({
-                type: "DUPLICATE_NODE",
-                payload: {
-                  nodeId: selectedNodeId,
-                  offset: { x: 20, y: 20 },
-                  newNodeId: uuidv4(),
-                },
-                description: "Duplicate",
-              })
-            }
-            onMoveUp={onMoveUp}
-            onMoveDown={onMoveDown}
-            onDragHandlePointerDown={handleDragHandlePointerDown}
-          />
-        )}
-
-        {/* ── Inline text editor + toolbar ─────────────────────────────── */}
-        {editingNodeId && editingPropKey && (() => {
-          const editingNode = document.nodes[editingNodeId];
-          const editingDef = editingNode && registry ? registry.getComponent(editingNode.type) : null;
-          const richtextSchema = editingDef?.propSchema.find(
-            (p) => p.type === "richtext" && p.key === editingPropKey,
-          );
-          const toolbarConfig =
-            richtextSchema && richtextSchema.type === "richtext"
-              ? richtextSchema.toolbar
-              : undefined;
-          const initialContent = editingNode
-            ? String(editingNode.props[editingPropKey] ?? "")
-            : "";
-
-          return (
-            <>
-              <InlineTextEditor
-                nodeId={editingNodeId}
-                initialContent={initialContent}
-                toolbarConfig={toolbarConfig}
-                canvasFrameRef={canvasFrameRef}
-                zoom={zoom}
-                panOffset={panOffset}
-                onCommit={handleInlineCommit}
-                onExit={handleInlineExit}
-                onEditorReady={(ed) => setTiptapEditor(ed)}
-                onBoundsChange={setEditingOverrideRect}
-              />
-              {selectionRect && (
-                <TextEditToolbar
-                  editor={tiptapEditor}
-                  toolbarConfig={toolbarConfig}
-                  rect={selectionRect}
-                  zoom={zoom}
-                  panOffset={panOffset}
-                  onExit={handleInlineExit}
-                />
-              )}
-            </>
-          );
-        })()}
-
-        {rotating !== null && selectionRect && (
-          <div
-            className="bg-background/90 pointer-events-none absolute z-50 rounded border px-2 py-0.5 font-mono text-xs"
-            style={{
-              left: (selectionRect.x + selectionRect.width / 2) * zoom + panOffset.x - 20,
-              top: (selectionRect.y + selectionRect.height) * zoom + panOffset.y + 28,
-            }}
-          >
-            {currentRotation}°
-          </div>
-        )}
-
-        {/* ── Return to Canvas button: shown when canvas is completely out of view ─ */}
-        {!isCanvasInViewport && (
-          <button
-            onClick={handleFitToScreen}
-            className="absolute bottom-[4.5rem] left-1/2 z-40 -translate-x-1/2
-                       flex items-center gap-1.5 rounded-full
-                       bg-primary px-4 py-2 text-[13px] font-semibold text-primary-foreground
-                       shadow-lg ring-1 ring-primary/20
-                       hover:bg-primary/90 active:scale-95 transition-all"
-          >
-            <LocateFixed size={14} />
-            {t("toolbar.returnToCanvas")}
-          </button>
-        )}
+          {/* Return-to-canvas button */}
+          {!isCanvasInViewport && (
+            <button
+              onClick={handleFitToScreen}
+              className="absolute bottom-[4.5rem] left-1/2 z-40 -translate-x-1/2
+                         flex items-center gap-1.5 rounded-full
+                         bg-primary px-4 py-2 text-[13px] font-semibold text-primary-foreground
+                         shadow-lg ring-1 ring-primary/20
+                         hover:bg-primary/90 active:scale-95 transition-all"
+            >
+              <LocateFixed size={14} />
+              {t("toolbar.returnToCanvas")}
+            </button>
+          )}
+        </div>
       </div>
-    </div>
-    {/* ── Delete confirmation dialog ─────────────────────────────────────── */}
-    <Dialog
-      open={!!deleteConfirmNodeId}
-      onOpenChange={(open) => {
-        if (!open) setDeleteConfirmNodeId(null);
-      }}
-    >
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Xóa component?</DialogTitle>
-          <DialogDescription>
-            Component này chứa{" "}
-            <strong>{deleteConfirmChildCount}</strong> component con bên trong.
-            Tất cả sẽ bị xóa vĩnh viễn. Bạn có chắc không?
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setDeleteConfirmNodeId(null)}>
-            Hủy
-          </Button>
-          <Button variant="destructive" onClick={executeConfirmedDelete}>
-            Xóa tất cả
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+
+      <DeleteConfirmDialog
+        nodeId={deleteConfirmNodeId}
+        childCount={deleteConfirmChildCount}
+        onConfirm={executeConfirmedDelete}
+        onCancel={() => setDeleteConfirmNodeId(null)}
+      />
     </AIConfigProvider>
   );
 }
 
-// ── Public BuilderEditor ──────────────────────────────────────────────────
+// ── ArtboardLabel ──────────────────────────────────────────────────────────
+
+interface ArtboardLabelProps {
+  icon: React.ReactNode;
+  label: string;
+  width: number;
+  isActive: boolean;
+  onClick: () => void;
+  gripProps?: React.HTMLAttributes<HTMLDivElement>;
+}
+
+function ArtboardLabel({ icon, label, width, isActive, onClick, gripProps }: ArtboardLabelProps) {
+  return (
+    <div
+      style={{
+        position: "absolute", bottom: "100%", marginBottom: 8,
+        fontSize: 11, color: "hsl(var(--muted-foreground))",
+        display: "flex", alignItems: "center", gap: 5,
+        userSelect: "none", cursor: "pointer", whiteSpace: "nowrap",
+      }}
+      onClick={onClick}
+    >
+      {gripProps && (
+        <div
+          style={{ cursor: "grab", display: "flex", alignItems: "center", padding: "0 2px", marginRight: 2, opacity: 0.5 }}
+          onClick={(e) => e.stopPropagation()}
+          title="Drag to reposition"
+          className="duration-200 hover:scale-150"
+          {...gripProps}
+        >
+          <GripVertical size={11} />
+        </div>
+      )}
+      {icon}
+      <span>{label}</span>
+      <span style={{ opacity: 0.5 }}>&#183; {width}px</span>
+      {isActive && (
+        <span style={{ fontSize: 9, background: "hsl(221.2 83.2% 53.3% / 0.12)", color: "hsl(221.2 83.2% 53.3%)", padding: "1px 5px", borderRadius: 3 }}>
+          Active
+        </span>
+      )}
+    </div>
+  );
+}
+
+// ── FlowDropPlaceholderLayer ───────────────────────────────────────────────
+
+interface FlowDropPlaceholderLayerProps {
+  flowDropTarget: { containerId: string; insertIndex: number; gridCell?: { col: number; row: number } } | null;
+  moving: { nodeId: string } | null;
+  activeFrameRef: React.RefObject<HTMLDivElement | null>;
+  canvasFrameRef: React.RefObject<HTMLDivElement | null>;
+  nodes: Record<string, BuilderNode>;
+  zoom: number;
+  panOffset: { x: number; y: number };
+}
+
+function FlowDropPlaceholderLayer({ flowDropTarget, moving, activeFrameRef, canvasFrameRef, nodes, zoom, panOffset }: FlowDropPlaceholderLayerProps) {
+  if (!flowDropTarget || !moving) return null;
+  const frameEl = activeFrameRef.current ?? canvasFrameRef.current;
+  if (!frameEl) return null;
+
+  const containerEl = frameEl.querySelector(`[data-node-id="${flowDropTarget.containerId}"]`) as HTMLElement | null;
+  if (!containerEl) return null;
+
+  const fr    = frameEl.getBoundingClientRect();
+  const cRect = containerEl.getBoundingClientRect();
+  const toRect = (r: DOMRect): { x: number; y: number; width: number; height: number } => ({
+    x: (r.left - fr.left) / zoom + panOffset.x / zoom,
+    y: (r.top  - fr.top)  / zoom + panOffset.y / zoom,
+    width:  r.width  / zoom,
+    height: r.height / zoom,
+  });
+
+  const containerRect = toRect(cRect);
+  const siblings = Object.values(nodes)
+    .filter((n) => n.parentId === flowDropTarget.containerId && n.id !== moving.nodeId)
+    .sort((a, b) => a.order - b.order);
+
+  const getSibRect = (sibId: string) => {
+    const el = frameEl.querySelector(`[data-node-id="${sibId}"]`) as HTMLElement | null;
+    return el ? toRect(el.getBoundingClientRect()) : null;
+  };
+
+  const idx             = flowDropTarget.insertIndex;
+  const prevSiblingRect = idx > 0 ? getSibRect(siblings[idx - 1]?.id ?? "") : null;
+  const nextSiblingRect = getSibRect(siblings[idx]?.id ?? "");
+
+  let gridCellRect: { x: number; y: number; width: number; height: number } | undefined;
+  if (flowDropTarget.gridCell) {
+    const cellClient = getGridCellClientRect(containerEl, flowDropTarget.gridCell.col, flowDropTarget.gridCell.row);
+    if (cellClient) gridCellRect = toRect(cellClient as unknown as DOMRect);
+  }
+
+  return (
+    <FlowDropPlaceholder
+      containerRect={containerRect} prevSiblingRect={prevSiblingRect}
+      nextSiblingRect={nextSiblingRect} gridCellRect={gridCellRect} zoom={zoom}
+    />
+  );
+}
+
+// ── Public BuilderEditor ───────────────────────────────────────────────────
 
 export interface BuilderEditorProps {
   builder?: BuilderAPI;
   config?: BuilderConfig;
   className?: string;
-  /** Optional GroupRegistry for 2-level component palette (Group → SubGroup → component) */
+  /** Optional GroupRegistry for 2-level component palette (Group -> SubGroup -> component) */
   groupRegistry?: GroupRegistry;
   /**
    * Optional palette catalog (JSON-driven "Add Elements" panel).
@@ -1459,19 +738,16 @@ export interface BuilderEditorProps {
   locale?: SupportedLocale | string;
   /** Additional i18n resources to merge with built-in translations */
   i18nResources?: Record<string, { translation: Record<string, unknown> }>;
-  /** Key separator for i18n. Default: '.' (supports both flat "toolbar.undo" and nested formats). Set to false to disable nesting. */
+  /** Key separator for i18n. Default: "." Set to false to disable nesting. */
   i18nKeySeparator?: string | false;
 }
 
-export function BuilderEditor({ builder, config, className, groupRegistry, paletteCatalog, locale, i18nResources, i18nKeySeparator }: BuilderEditorProps) {
-  // Initialize or update i18n with provided locale and resources
+export function BuilderEditor({
+  builder, config, className, groupRegistry, paletteCatalog, locale, i18nResources, i18nKeySeparator,
+}: BuilderEditorProps) {
   React.useEffect(() => {
     if (locale || i18nResources || i18nKeySeparator !== undefined) {
-      initI18n({ 
-        language: locale, 
-        resources: i18nResources,
-        keySeparator: i18nKeySeparator,
-      });
+      initI18n({ language: locale, resources: i18nResources, keySeparator: i18nKeySeparator });
     }
   }, [locale, i18nResources, i18nKeySeparator]);
 

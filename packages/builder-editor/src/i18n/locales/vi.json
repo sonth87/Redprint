@@ -415,5 +415,10 @@
       "containerBoxes": "Hộp chứa",
       "styledBoxes": "Hộp có kiểu dáng"
     }
+  },
+  "deleteConfirm": {
+    "title": "Xóa component?",
+    "description": "Component này chứa <1>{{count}}</1> component con bên trong. Tất cả sẽ bị xóa vĩnh viễn. Bạn có chắc không?",
+    "confirm": "Xóa tất cả"
   }
 }

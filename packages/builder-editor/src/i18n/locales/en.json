@@ -415,5 +415,10 @@
       "containerBoxes": "Container Boxes",
       "styledBoxes": "Styled Boxes"
     }
+  },
+  "deleteConfirm": {
+    "title": "Delete component?",
+    "description": "This component contains <1>{{count}}</1> nested component(s). All will be permanently deleted. Are you sure?",
+    "confirm": "Delete all"
   }
 }
