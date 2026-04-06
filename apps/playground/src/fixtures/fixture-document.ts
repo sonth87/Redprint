@@ -4,6 +4,7 @@
  */
 import type { BuilderDocument } from "@ui-builder/builder-core";
 import { CURRENT_SCHEMA_VERSION } from "@ui-builder/builder-core";
+import { GRID_UNIT_PX } from "@ui-builder/shared";
 
 export const FIXTURE_DOCUMENT: BuilderDocument = {
   id: "fixture-doc-03",
@@ -1060,7 +1061,7 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
     height: 1200,
     backgroundColor: "#f8fafc",
     showGrid: true,
-    gridSize: 8,
+    gridSize: GRID_UNIT_PX,
     snapEnabled: true,
     snapToGrid: true,
     snapToComponents: true,

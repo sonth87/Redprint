@@ -64,7 +64,7 @@ export function createBuilder(config: BuilderConfig = {}): IBuilderAPI {
     plugins: [],
     canvasConfig: {
       showGrid: true,
-      gridSize: 8,
+      gridSize: GRID_UNIT_PX,
       snapEnabled: true,
       snapThreshold: 6,
       snapToGrid: true,

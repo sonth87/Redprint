@@ -159,7 +159,7 @@ export const VERTICAL_CENTER_DIVISOR: number = 4;
  * Design: 8px = 1 unit on typical 96 DPI displays.
  * Usage: All dimensions are multiples of 8 (4, 8, 16, 24, 32, 40, 48, 56, 64, 72).
  */
-export const GRID_UNIT_PX: number = 8;
+export const GRID_UNIT_PX: number = 4;
 
 /**
  * Default section/container minimum height (400px).

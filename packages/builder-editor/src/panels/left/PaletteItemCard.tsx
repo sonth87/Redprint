@@ -156,8 +156,7 @@ export const PaletteItemCard: React.FC<PaletteItemCardProps> = ({
         }}
         className={cn(
           "min-h-12 flex items-center justify-center rounded-lg overflow-hidden cursor-grab active:cursor-grabbing",
-          "border border-border/30 hover:scale-105 transition-all",
-          "bg-white dark:bg-zinc-950",
+          "hover:scale-105 transition-all",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring select-none group",
         )}
         title={displayName}
