@@ -17,6 +17,8 @@ import {
   type CanvasMode,
   type ComponentDefinition,
   type GroupRegistry,
+  type PaletteCatalog,
+  type PaletteItem,
   CMD_ENTER_TEXT_EDIT,
   CMD_EXIT_TEXT_EDIT,
 } from "@ui-builder/builder-core";
@@ -37,6 +39,8 @@ import { SectionOverlay } from "./overlay/SectionOverlay";
 import { SectionToolbar } from "./overlay/SectionToolbar";
 import { EditorToolbar } from "./toolbar/EditorToolbar";
 import { ComponentPalette } from "./panels/left/ComponentPalette";
+import { FloatingPalette } from "./panels/left/FloatingPalette";
+import { AddElementsPanel } from "./panels/left/AddElementsPanel";
 import { TextEditToolbar } from "./toolbar/TextEditToolbar";
 import { InlineTextEditor } from "./canvas/InlineTextEditor";
 import { LayerTree } from "./panels/bottom/LayerTree";
@@ -63,6 +67,7 @@ import { useSelectionRect } from "./hooks/useSelectionRect";
 import { useHoverRect } from "./hooks/useHoverRect";
 import { useDimensionCapture } from "./hooks/useDimensionCapture";
 import { useDragHandlers } from "./hooks/useDragHandlers";
+import { useClickToAdd } from "./hooks/useClickToAdd";
 import { usePointerDown } from "./hooks/usePointerDown";
 import { useZIndexHandlers } from "./hooks/useZIndexHandlers";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
@@ -77,7 +82,7 @@ import { useTranslation } from "react-i18next";
 
 // ── Inner editor (must be inside BuilderProvider) ─────────────────────────
 
-function EditorInner({ groupRegistry }: { groupRegistry?: GroupRegistry }) {
+function EditorInner({ groupRegistry, paletteCatalog, locale }: { groupRegistry?: GroupRegistry; paletteCatalog?: PaletteCatalog; locale?: string }) {
   const { t } = useTranslation();
   const { builder, state, dispatch } = useBuilder();
   const { selectedNodeIds, select, clearSelection } = useSelection();
@@ -101,6 +106,31 @@ function EditorInner({ groupRegistry }: { groupRegistry?: GroupRegistry }) {
       setEditingOverrideRect(null);
     }
   }, [editingNodeId]);
+
+  // ── Palette state ─────────────────────────────────────────────────────────
+  const [paletteMode, setPaletteMode] = useState<"floating" | "docked">("floating");
+  const [activePaletteGroupId, setActivePaletteGroupId] = useState<string | null>(null);
+
+  const handleGroupSelect = useCallback(
+    (groupId: string) => {
+      setActivePaletteGroupId(groupId);
+      setPaletteMode("docked");
+    },
+    [],
+  );
+
+  const handlePaletteClose = useCallback(() => {
+    setPaletteMode("floating");
+    setActivePaletteGroupId(null);
+  }, []);
+
+  // ── Layers panel state ────────────────────────────────────────────────────
+  const [layersOpen, setLayersOpen] = useState(false);
+  const [layersPanelPos, setLayersPanelPos] = useState<{ x: number; y: number }>(DEFAULT_LAYERS_PANEL_POS);
+  const handleLayersToggle = useCallback((pos?: { x: number; y: number }) => {
+    if (pos) setLayersPanelPos(pos);
+    setLayersOpen((v) => !v);
+  }, []);
 
   // ── AI assistant state ────────────────────────────────────────────────────
   const [aiOpen, setAiOpen] = useState(false);
@@ -246,8 +276,11 @@ function EditorInner({ groupRegistry }: { groupRegistry?: GroupRegistry }) {
     selectedNode && registry ? (registry.getComponent(selectedNode.type) ?? null) : null;
   const allComponents: ComponentDefinition[] = registry ? registry.listComponents() : [];
   const aiContext = useMemo(
-    () => buildAIContext(state, allComponents, { includePageContext: aiConfig.includePageContext }),
-    [state, allComponents, aiConfig.includePageContext],
+    () => buildAIContext(state, allComponents, {
+      includePageContext: aiConfig.includePageContext,
+      paletteCatalog: paletteCatalog ?? undefined,
+    }),
+    [state, allComponents, aiConfig.includePageContext, paletteCatalog],
   );
 
   // ── getContainerConfig — shared by drag and move hooks ─────────────────
@@ -382,13 +415,22 @@ function EditorInner({ groupRegistry }: { groupRegistry?: GroupRegistry }) {
   });
 
   // ── Interaction handlers ─────────────────────────────────────────────────
-  const { handleDragStart, handleDrop, handleDragOver, handleDragEnter } = useDragHandlers({
+  const { handleDragStart, handlePaletteDragStart, handleDrop, handleDragOver, handleDragEnter } = useDragHandlers({
     rootNodeId: document.rootNodeId,
     zoom,
     canvasFrameRef,
     dispatch,
     nodes: document.nodes,
     getContainerConfig,
+  });
+
+  // ── Click-to-add (palette items) ─────────────────────────────────────────
+  const { addItem: handlePaletteItemClick } = useClickToAdd({
+    rootNodeId: document.rootNodeId,
+    zoom,
+    panOffset,
+    canvasContainerRef,
+    dispatch,
   });
 
   const { handlePointerDown } = usePointerDown({
@@ -788,28 +830,52 @@ function EditorInner({ groupRegistry }: { groupRegistry?: GroupRegistry }) {
         onAIOpen={() => setAiOpen(true)}
       />
 
-      <FloatingPanel id="components" title="Components" defaultPosition={DEFAULT_COMPONENTS_PANEL_POS}>
-        <div className="h-[40vh] min-h-[300px] overflow-hidden">
-          <ComponentPalette components={allComponents} onDragStart={handleDragStart} groupRegistry={groupRegistry} />
-        </div>
-      </FloatingPanel>
-
-      <FloatingPanel
-        id="layers"
-        title="Layers"
-        defaultPosition={DEFAULT_LAYERS_PANEL_POS}
-        defaultExpanded={false}
-      >
-        <div className="h-[30vh] min-h-[250px] overflow-hidden">
-          <LayerTree
-            document={document}
-            selectedIds={selectedNodeIds}
-            onSelect={select}
-            onToggleHidden={handleToggleHidden}
-            onToggleLocked={handleToggleLocked}
-          />
-        </div>
-      </FloatingPanel>
+      {/* ── Component palette (new Wix-style or legacy fallback) ───────── */}
+      {paletteCatalog && paletteMode === "floating" && (
+        <FloatingPalette
+          catalog={paletteCatalog}
+          activeGroupId={activePaletteGroupId}
+          onGroupSelect={handleGroupSelect}
+          locale={locale}
+          layersOpen={layersOpen}
+          onLayersToggle={handleLayersToggle}
+        />
+      )}
+      {paletteCatalog && paletteMode === "docked" && (
+        <AddElementsPanel
+          catalog={paletteCatalog}
+          activeGroupId={activePaletteGroupId}
+          onGroupChange={setActivePaletteGroupId}
+          onClose={handlePaletteClose}
+          onItemDragStart={handlePaletteDragStart}
+          onItemClick={handlePaletteItemClick}
+          locale={locale}
+        />
+      )}
+      {!paletteCatalog && (
+        <FloatingPanel id="components" title="Components" defaultPosition={DEFAULT_COMPONENTS_PANEL_POS}>
+          <div className="h-[40vh] min-h-[300px] overflow-hidden">
+            <ComponentPalette components={allComponents} onDragStart={handleDragStart} groupRegistry={groupRegistry} />
+          </div>
+        </FloatingPanel>
+      )}      {layersOpen && (
+        <FloatingPanel
+          id="layers"
+          title="Layers"
+          defaultPosition={layersPanelPos}
+          onClose={handleLayersToggle}
+        >
+          <div className="h-[30vh] min-h-[250px] overflow-hidden">
+            <LayerTree
+              document={document}
+              selectedIds={selectedNodeIds}
+              onSelect={select}
+              onToggleHidden={handleToggleHidden}
+              onToggleLocked={handleToggleLocked}
+            />
+          </div>
+        </FloatingPanel>
+      )}
 
       <FloatingPanel
         id="properties"
@@ -1384,6 +1450,11 @@ export interface BuilderEditorProps {
   className?: string;
   /** Optional GroupRegistry for 2-level component palette (Group → SubGroup → component) */
   groupRegistry?: GroupRegistry;
+  /**
+   * Optional palette catalog (JSON-driven "Add Elements" panel).
+   * When provided, replaces the legacy ComponentPalette with the new Wix-style palette.
+   */
+  paletteCatalog?: PaletteCatalog;
   /** Locale for i18n (e.g., "en", "vi") */
   locale?: SupportedLocale | string;
   /** Additional i18n resources to merge with built-in translations */
@@ -1392,7 +1463,7 @@ export interface BuilderEditorProps {
   i18nKeySeparator?: string | false;
 }
 
-export function BuilderEditor({ builder, config, className, groupRegistry, locale, i18nResources, i18nKeySeparator }: BuilderEditorProps) {
+export function BuilderEditor({ builder, config, className, groupRegistry, paletteCatalog, locale, i18nResources, i18nKeySeparator }: BuilderEditorProps) {
   // Initialize or update i18n with provided locale and resources
   React.useEffect(() => {
     if (locale || i18nResources || i18nKeySeparator !== undefined) {
@@ -1407,7 +1478,7 @@ export function BuilderEditor({ builder, config, className, groupRegistry, local
   return (
     <BuilderProvider builder={builder} config={config}>
       <div className={cn("h-full w-full", className)}>
-        <EditorInner groupRegistry={groupRegistry} />
+        <EditorInner groupRegistry={groupRegistry} paletteCatalog={paletteCatalog} locale={locale} />
       </div>
     </BuilderProvider>
   );

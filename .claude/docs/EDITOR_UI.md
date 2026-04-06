@@ -331,19 +331,64 @@ interface PanelContext {
 }
 ```
 
-### Left Panel — Component Palette
+### Left Panel — Add Elements (Palette System)
 
-Search & filter components from:
-- Base components (built-in)
-- Custom components (remote)
-- Plugin components
+The palette system is a **JSON-driven, 3-level hierarchy**: Group → Type → Item (preset).  
+It replaces the old static `ComponentPalette` when `paletteCatalog` is passed to `<BuilderEditor>`.
 
-- Search by name, tag, category
-- Drag entries onto canvas to create
-- Double-click to add to root
-- Loading state for remote components
-- Error state if service unavailable
-- Favourite marking capability
+#### Components
+
+| Component | File | Purpose |
+|---|---|---|
+| `FloatingPalette` | `panels/left/FloatingPalette.tsx` | Draggable icon strip (docked to left edge). Persists position in `localStorage["ui-builder:palette-position"]`. |
+| `AddElementsPanel` | `panels/left/AddElementsPanel.tsx` | Full-height docked panel (380px). Group icon rail on left + searchable content area on right. |
+| `PaletteItemCard` | `panels/left/PaletteItemCard.tsx` | Individual item card. Supports `layout: "grid"` (vertical card) or `layout: "list"` (horizontal row). |
+
+#### Mode switching
+
+```
+paletteCatalog passed?
+  YES → paletteMode = "floating"  → <FloatingPalette>  (draggable icon strip)
+              ↓ click group
+        paletteMode = "docked"   → <AddElementsPanel>  (full panel)
+              ↓ click X
+        paletteMode = "floating"  (back to strip)
+  NO  → legacy <FloatingPanel> + <ComponentPalette>  (backward compat)
+```
+
+#### Item layout per type
+
+Each `PaletteType` in the catalog has an optional `layout` field:
+
+| Value | Appearance | Best for |
+|---|---|---|
+| `"grid"` (default) | 2-column grid, vertical cards with preview area | Images, shapes, containers |
+| `"list"` | Single column, horizontal rows | Text, buttons, galleries, menus — label is primary |
+
+For `Text`-type components with `layout: "list"`, the entire row renders as the **styled text itself** (scaled font-size/weight/family/color) — no separate preview thumbnail.
+
+#### Adding items — two modes
+
+| Mode | Hook | Behaviour |
+|---|---|---|
+| Drag-to-canvas | `useDragHandlers.handlePaletteDragStart` | Sets `dataTransfer` with `PaletteDragData` JSON; `handleDrop` parses it and dispatches `ADD_NODE` + responsive overrides |
+| Click-to-add | `useClickToAdd` (`hooks/useClickToAdd.ts`) | Computes canvas-centre from `panOffset`/`zoom`/`containerRef`; dispatches `ADD_NODE` + responsive overrides at that position |
+
+#### Data flow
+
+```
+PaletteCatalog (JSON)
+  → loaded by consumer (e.g. useBuilderSetup → palette-catalog.json)
+  → passed as prop to <BuilderEditor paletteCatalog={...}>
+  → EditorInner → FloatingPalette / AddElementsPanel
+  → PaletteItem click/drag → ADD_NODE command (with preset props + style)
+```
+
+**Search** filters across `item.name`, `item.tags`, and `item.i18n[locale].name` in real time.
+
+#### i18n
+
+All palette chrome strings (`"Add Elements"`, `"Search…"`, group/type labels from catalog) use the `palette.*` namespace in `en.json` / `vi.json`. Item names inside catalog items travel with the JSON via their own `i18n` field.
 
 ### Right Panel — Property Panel
 

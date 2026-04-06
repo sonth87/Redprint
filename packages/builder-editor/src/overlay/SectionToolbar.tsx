@@ -59,6 +59,7 @@ export const SectionToolbar = memo(function SectionToolbar({
   sectionNodes,
   zoom,
   panOffset,
+  canvasFrameRef,
   dispatch,
   newNodeId,
   canvasMode,
@@ -135,11 +136,24 @@ export const SectionToolbar = memo(function SectionToolbar({
   // ── Screen-space positioning ────────────────────────────────────────────
   const toolbarHeight = NUM_TOOLBAR_BUTTONS * BTN_SIZE + (NUM_TOOLBAR_BUTTONS - 1) * TOOLBAR_BTN_GAP + TOOLBAR_PADDING * 2;
 
-  // Sections stack vertically from y=0, x=0 in canvas-space
-  const canvasTop = sectionNodes
+  // Use actual DOM position of the section element (accounts for content-driven height).
+  // Fallback to cumulative minHeight estimate if the DOM isn't available yet.
+  let canvasTop = sectionNodes
     .slice(0, currentIdx)
     .reduce((sum, s) => sum + ((s.props?.minHeight as number) ?? 0), 0);
-  const canvasHeight = (node.props?.minHeight as number) ?? 400;
+  let canvasHeight = (node.props?.minHeight as number) ?? 400;
+
+  const frame = canvasFrameRef.current;
+  if (frame) {
+    const frameRect = frame.getBoundingClientRect();
+    const el = frame.querySelector(`[data-node-id="${node.id}"]`) as HTMLElement | null;
+    if (el) {
+      const r = el.getBoundingClientRect();
+      // Convert viewport coords → canvas-space (same as SectionOverlay / useSelectionRect)
+      canvasTop = (r.top - frameRect.top) / zoom;
+      canvasHeight = r.height / zoom;
+    }
+  }
 
   const isOnMobile = canvasMode === "dual" && activeBreakpoint === "mobile";
   const mobileXOffset = isOnMobile

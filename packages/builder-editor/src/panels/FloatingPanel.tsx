@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { Move, Minus, Plus } from "lucide-react";
+import { Move, Minus, Plus, X } from "lucide-react";
 import { cn } from "@ui-builder/ui";
 
 export interface FloatingPanelProps {
@@ -9,6 +9,11 @@ export interface FloatingPanelProps {
   defaultPosition: { x?: number; y: number; right?: number };
   width?: number;
   defaultExpanded?: boolean;
+  /**
+   * When provided, replaces the collapse toggle with a close (X) button.
+   * The panel is always fully expanded — no collapse state.
+   */
+  onClose?: () => void;
 }
 
 export const FloatingPanel: React.FC<FloatingPanelProps> = ({
@@ -17,6 +22,7 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
   defaultPosition,
   width = 280,
   defaultExpanded = true,
+  onClose,
 }) => {
   // Committed position — used only for initial style. Updated to React state once on pointerup.
   const [position, setPosition] = useState({ x: 0, y: defaultPosition.y });
@@ -33,7 +39,7 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
     positionRef.current = initial;
   }, [defaultPosition.right, defaultPosition.x, defaultPosition.y, width]);
 
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const [isExpanded, setIsExpanded] = useState(onClose ? true : defaultExpanded);
   const [isDragging, setIsDragging] = useState(false);
 
   const handlePointerDown = useCallback(
@@ -81,7 +87,7 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
     <div
       ref={panelRef}
       className={cn(
-        "fixed z-40 flex flex-col bg-background/10 backdrop-blur-xl rounded-lg border shadow-lg overflow-hidden select-none",
+        "fixed z-40 flex flex-col bg-background/50 backdrop-blur-md rounded-lg border shadow-lg overflow-hidden select-none",
         isDragging && "shadow-xl select-none bg-background/0 backdrop-blur-md",
       )}
       style={{
@@ -102,13 +108,24 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
           </span>
         </div>
         <div className="flex items-center gap-1">
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1 hover:bg-muted rounded text-muted-foreground"
-            onPointerDown={(e) => e.stopPropagation()}
-          >
-            {isExpanded ? <Minus className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-          </button>
+          {onClose ? (
+            <button
+              onClick={onClose}
+              className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground"
+              onPointerDown={(e) => e.stopPropagation()}
+              title="Close"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          ) : (
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="p-1 hover:bg-muted rounded text-muted-foreground"
+              onPointerDown={(e) => e.stopPropagation()}
+            >
+              {isExpanded ? <Minus className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+            </button>
+          )}
         </div>
       </div>
 

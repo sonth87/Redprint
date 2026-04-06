@@ -252,7 +252,7 @@ export const DEFAULT_COMPONENTS_PANEL_POS = { x: 16, y: 64 } as const;
  * Initial x, y position in screen-space when editor first loads.
  * Design: x:16, y:480 = left side, stacked below Components panel.
  */
-export const DEFAULT_LAYERS_PANEL_POS = { x: 16, y: 480 } as const;
+export const DEFAULT_LAYERS_PANEL_POS = { x: 80, y: 120 } as const;
 
 /**
  * Default position for Properties panel.

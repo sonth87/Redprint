@@ -177,6 +177,10 @@ interface ComponentDefinition {
 | Selection/resize/snap overlays | `packages/builder-editor/src/overlay/` |
 | Snap engine | `packages/builder-editor/src/snap/` |
 | Property panel | `packages/builder-editor/src/panels/` |
+| Add Elements palette (floating + docked) | `packages/builder-editor/src/panels/left/` (FloatingPalette, AddElementsPanel, PaletteItemCard) |
+| Palette catalog data types | `packages/builder-core/src/presets/palette-types.ts` |
+| Palette catalog JSON (mock) | `apps/playground/src/fixtures/palette-catalog.json` |
+| Click-to-add hook | `packages/builder-editor/src/hooks/useClickToAdd.ts` |
 | Context (quick action) toolbar | `packages/builder-editor/src/toolbar/` |
 | Keyboard shortcuts | `packages/builder-editor/src/shortcuts/` |
 | Design system components | `packages/ui/src/components/` |
@@ -250,6 +254,14 @@ Never declare done based on code review alone.
 - [ ] Registered in component registry
 - [ ] At least one preset created (recommended)
 
+### New Palette Group, Type, or Preset Item
+- [ ] Add entry to `apps/playground/src/fixtures/palette-catalog.json` (or relevant catalog)
+- [ ] Set `layout: "grid"` or `layout: "list"` on the `PaletteType` as appropriate
+- [ ] `componentType` must match a registered `ComponentDefinition.type`
+- [ ] Add i18n keys for group/type labels to **both** `en.json` and `vi.json`
+- [ ] Verify item renders correctly in `PaletteItemCard` (live preview or thumbnail)
+- [ ] If `paletteCatalog` changes shape, rebuild `builder-core` before typechecking dependents
+
 ### New AI Provider or Model
 - [ ] Add provider to `AIProvider` type union in `packages/builder-editor/src/ai/types.ts`
 - [ ] Implement fetch-based adapter in `AIService.ts` (no SDK — raw `fetch` only)
@@ -290,10 +302,17 @@ When adding a feature, update the corresponding `.claude/docs/` file:
 
 ## Code Review Checklist (Every Change)
 
+> **After every feature or non-trivial change, always update these 3 things:**
+> 1. **i18n** — add keys to `en.json` + `vi.json` for any new user-facing string
+> 2. **AI Assistant** — if new component types, palette items, or context fields were added, verify `buildAIContext` / `AIService.ts` system prompt reflects them
+> 3. **Docs** — update the relevant `.claude/docs/*.md` file (see Documentation Update Rules above)
+
 | Item | Check |
 |---|---|
+| **i18n** | New UI text? Add keys to **both** `en.json` and `vi.json` |
+| **AI Assistant** | New component/preset/catalog change? Update `buildAIContext` + `AIService.ts` prompt |
+| **Docs** | Any new feature/type/behavior? Update corresponding `.claude/docs/*.md` |
 | Shared logic duplication | Same logic in 2+ places? Extract to shared hook |
-| i18n | New UI text? Add keys to both locale files |
 | Type contracts | Interface changed? Check all usages |
 | Event emissions | State changed? Emit corresponding EventBus event |
 | Undo/redo support | New command? Inverse command implemented? |
@@ -331,6 +350,7 @@ Before starting any task, read **only** the files listed for that task type.
 | Fix responsive/breakpoint behavior | `responsive/resolver.ts`, `responsive/types.ts`, `commands/handlers.ts` (`UPDATE_STYLE` handler) |
 | Add/change AI provider or model | `ai/types.ts`, `ai/AIService.ts`, `ai/AIConfig.tsx`, `i18n/en.json`, `i18n/vi.json` |
 | Fix AI suggestion/context | `ai/buildAIContext.ts`, `ai/AIService.ts` |
+| Add/edit palette catalog or preset items | `presets/palette-types.ts`, `fixtures/palette-catalog.json`, `panels/left/PaletteItemCard.tsx` |
 | Add a React hook | `builder-react/src/hooks/`, `builder-react/src/index.ts` |
 | Add a component to the registry | `registry/ComponentRegistry.ts`, `components/sample-components.tsx` (playground) |
 | Add a preset | `presets/PresetRegistry.ts`, `presets/types.ts` |
@@ -349,6 +369,7 @@ All 7 packages build cleanly. Phases completed:
 - **Canvas interactions**: selection, drag-drop, snap, resize, rotate, keyboard shortcuts, auto-pan
 - **Property system**: PropertyDescriptor, useNodeProperty, PropertyControls (11 controls), PropertyPanel (5 tabs)
 - **Panel system**: PresetPalette, LeftSidebar (4 tabs), MediaManager
-- **i18n**: i18next, en.json + vi.json (~300 keys each)
-- **AI Assistant**: AIService (OpenAI/Gemini/Claude), AIAssistant chat UI, AIConfig panel
+- **Add Elements palette**: FloatingPalette (draggable icon strip) + AddElementsPanel (docked, 380px) + PaletteItemCard (grid/list layouts); JSON-driven PaletteCatalog (Group → Type → Item); drag-to-canvas + click-to-add; Text items render as styled live preview in list mode
+- **i18n**: i18next, en.json + vi.json (~350 keys each, includes `palette.*` namespace)
+- **AI Assistant**: AIService (OpenAI/Gemini/Claude), AIAssistant chat UI, AIConfig panel; `buildAIContext` now accepts `paletteCatalog` → emits `availablePresets` block so AI knows all named presets with exact props/styles
 - **Responsive**: 3-tier breakpoints (desktop/tablet/mobile), per-breakpoint style overrides

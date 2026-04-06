@@ -42,6 +42,32 @@ function buildSystemMessage(config: AIConfig, context: AIBuilderContext): string
     ? `\n## Full Page Node Tree\nAll existing nodes with their real UUIDs — use these IDs in commands:\n${JSON.stringify(context.pageNodes, null, 2)}\n`
     : "";
 
+  const presetsBlock = context.availablePresets
+    ? `\n## Available Presets (Palette Catalog)\nWhen the user asks to add a specific element, prefer using these preset props/styles directly in ADD_NODE instead of bare defaults. Each item has an id, componentType, props, style, and optional tags.\n${context.availablePresets
+        .map(
+          (g) =>
+            `### ${g.group}\n` +
+            g.types
+              .map(
+                (t) =>
+                  `#### ${t.type}\n` +
+                  t.items
+                    .map(
+                      (item) =>
+                        `  - id: "${item.id}", name: "${item.name}", componentType: "${item.componentType}"` +
+                        (item.tags?.length ? `, tags: [${item.tags.join(", ")}]` : "") +
+                        `\n    props: ${JSON.stringify(item.props)}` +
+                        (item.style && Object.keys(item.style).length
+                          ? `\n    style: ${JSON.stringify(item.style)}`
+                          : ""),
+                    )
+                    .join("\n"),
+              )
+              .join("\n"),
+        )
+        .join("\n")}\n`
+    : "";
+
   return `${base}
 
 ## Current Builder State
@@ -51,7 +77,7 @@ ${selectedNodeBlock}
 
 ## Available Components
 ${componentList}
-${pageContextBlock}
+${pageContextBlock}${presetsBlock}
 ## Command Reference
 
 ### ADD_NODE — Add a new component to the canvas

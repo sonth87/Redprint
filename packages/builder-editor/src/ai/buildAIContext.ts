@@ -2,8 +2,8 @@
  * buildAIContext — creates a serialisable snapshot of the builder state
  * for the AI assistant to reason about.
  */
-import type { BuilderState, ComponentDefinition } from "@ui-builder/builder-core";
-import type { AIBuilderContext, AIPageNode } from "./types";
+import type { BuilderState, ComponentDefinition, PaletteCatalog } from "@ui-builder/builder-core";
+import type { AIBuilderContext, AIPageNode, AIPresetGroup } from "./types";
 
 export interface BuildAIContextOptions {
   /**
@@ -13,6 +13,14 @@ export interface BuildAIContextOptions {
    * Default: false
    */
   includePageContext?: boolean;
+  /**
+   * Palette catalog to include as a preset reference.
+   * When provided, the AI context will include an `availablePresets` block
+   * listing every named preset variant (e.g. "Heading 1", "Classic Nav")
+   * with its componentType, props, and style — so the AI can suggest or
+   * generate precise ADD_NODE payloads using real presets.
+   */
+  paletteCatalog?: PaletteCatalog;
 }
 
 export function buildAIContext(
@@ -41,6 +49,32 @@ export function buildAIContext(
         style: node.style as Record<string, unknown>,
       };
     }
+  }
+
+  // Build a slim preset reference from the palette catalog so the AI knows
+  // every named variant and its exact props/style to use in ADD_NODE payloads.
+  let availablePresets: AIPresetGroup[] | undefined;
+  if (options.paletteCatalog) {
+    availablePresets = options.paletteCatalog.groups
+      .slice()
+      .sort((a, b) => a.order - b.order)
+      .map((group) => ({
+        group: group.label,
+        types: group.types
+          .slice()
+          .sort((a, b) => a.order - b.order)
+          .map((t) => ({
+            type: t.label,
+            items: t.items.map((item) => ({
+              id: item.id,
+              name: item.name,
+              componentType: item.componentType,
+              props: item.props,
+              style: item.style as Record<string, unknown> | undefined,
+              tags: item.tags,
+            })),
+          })),
+      }));
   }
 
   return {
@@ -79,5 +113,6 @@ export function buildAIContext(
     })),
     activeBreakpoint: state.editor.activeBreakpoint,
     pageNodes,
+    availablePresets,
   };
 }

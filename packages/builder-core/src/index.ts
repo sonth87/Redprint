@@ -188,3 +188,10 @@ export type {
   ComponentPreset,
   PresetChildNode,
 } from "./presets/types";
+export type {
+  PaletteCatalog,
+  PaletteGroup,
+  PaletteType,
+  PaletteItem,
+  PaletteDragData,
+} from "./presets/palette-types";

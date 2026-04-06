@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import type { Point } from "@ui-builder/shared";
-import type { BuilderNode } from "@ui-builder/builder-core";
+import type { BuilderNode, PaletteDragData, Breakpoint } from "@ui-builder/builder-core";
 import { v4 as uuidv4 } from "uuid";
 import { resolveContainerDropPosition } from "./useDropSlotResolver";
 
@@ -8,7 +8,7 @@ interface UseDragHandlersOptions {
   rootNodeId: string;
   zoom: number;
   canvasFrameRef: React.RefObject<HTMLDivElement | null>;
-  dispatch: (action: { type: string; payload: unknown; description?: string }) => void;
+  dispatch: (action: { type: string; payload: unknown; description?: string; groupId?: string }) => void;
   /** Flat nodes map — used for parent layout-type resolution */
   nodes?: Record<string, BuilderNode>;
   /**
@@ -23,6 +23,7 @@ interface UseDragHandlersOptions {
 
 export interface UseDragHandlersReturn {
   handleDragStart: (componentType: string, e: React.DragEvent) => void;
+  handlePaletteDragStart: (item: import("@ui-builder/builder-core").PaletteItem, e: React.DragEvent) => void;
   handleDrop: (e: React.DragEvent) => void;
   handleDragOver: (e: React.DragEvent) => void;
   handleDragEnter: (e: React.DragEvent) => void;
@@ -43,16 +44,42 @@ export function useDragHandlers({
     [],
   );
 
+  const handlePaletteDragStart = useCallback(
+    (item: import("@ui-builder/builder-core").PaletteItem, e: React.DragEvent) => {
+      const dragData: PaletteDragData = {
+        source: "palette-item",
+        componentType: item.componentType,
+        presetData: {
+          props: item.props ?? {},
+          style: item.style,
+          responsiveStyle: item.responsiveStyle,
+          responsiveProps: item.responsiveProps,
+        },
+      };
+      e.dataTransfer?.setData("text/plain", JSON.stringify(dragData));
+      e.dataTransfer?.setData("application/builder-component-type", item.componentType);
+    },
+    [],
+  );
+
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
 
-      // ── 1. Extract component type ────────────────────────────────────────
+      // ── 1. Extract component type + optional preset data ─────────────────
       let componentType = "";
+      let presetData: PaletteDragData["presetData"] | undefined;
       try {
-        const data = JSON.parse(e.dataTransfer?.getData("text/plain") || "{}");
-        componentType = data.type;
+        const raw = e.dataTransfer?.getData("text/plain") || "{}";
+        const data = JSON.parse(raw) as Record<string, unknown>;
+        if (data.source === "palette-item") {
+          const pdd = data as unknown as PaletteDragData;
+          componentType = pdd.componentType;
+          presetData = pdd.presetData;
+        } else {
+          componentType = String(data.type ?? "");
+        }
       } catch {
         componentType =
           e.dataTransfer?.getData("application/builder-component-type") || "";
@@ -143,11 +170,45 @@ export function useDragHandlers({
 
       // ── 6. Dispatch ADD_NODE ─────────────────────────────────────────────
       const nodeId = uuidv4();
+      const groupId = presetData ? uuidv4() : undefined;
       dispatch({
         type: "ADD_NODE",
-        payload: { nodeId, parentId, componentType, position, insertIndex },
+        payload: {
+          nodeId,
+          parentId,
+          componentType,
+          position,
+          insertIndex,
+          ...(presetData?.props ? { props: presetData.props } : {}),
+          ...(presetData?.style ? { style: { ...presetData.style, ...(position ? { position: "absolute", left: `${position.x}px`, top: `${position.y}px` } : {}) } } : {}),
+        },
         description: `Add ${componentType}`,
+        groupId,
       });
+
+      // ── 7. Apply preset responsive overrides ─────────────────────────────
+      if (presetData?.responsiveStyle) {
+        for (const [bp, style] of Object.entries(presetData.responsiveStyle)) {
+          if (!style) continue;
+          dispatch({
+            type: "UPDATE_RESPONSIVE_STYLE",
+            payload: { nodeId, breakpoint: bp as Breakpoint, style },
+            description: `Set responsive style (${bp})`,
+            groupId,
+          });
+        }
+      }
+      if (presetData?.responsiveProps) {
+        for (const [bp, props] of Object.entries(presetData.responsiveProps)) {
+          if (!props) continue;
+          dispatch({
+            type: "UPDATE_RESPONSIVE_PROPS",
+            payload: { nodeId, breakpoint: bp as Breakpoint, props },
+            description: `Set responsive props (${bp})`,
+            groupId,
+          });
+        }
+      }
     },
     [rootNodeId, dispatch, zoom, canvasFrameRef, nodes, getContainerConfig],
   );
@@ -163,6 +224,6 @@ export function useDragHandlers({
     e.stopPropagation();
   }, []);
 
-  return { handleDragStart, handleDrop, handleDragOver, handleDragEnter };
+  return { handleDragStart, handlePaletteDragStart, handleDrop, handleDragOver, handleDragEnter };
 }
 

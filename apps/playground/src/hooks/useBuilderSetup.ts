@@ -1,14 +1,15 @@
 import { useMemo, useEffect } from "react";
 import { createBuilder, GroupRegistry, BUILT_IN_GROUPS, BUILT_IN_SUB_GROUPS } from "@ui-builder/builder-core";
-import type { BuilderAPI } from "@ui-builder/builder-core";
+import type { BuilderAPI, PaletteCatalog } from "@ui-builder/builder-core";
 import { SAMPLE_COMPONENTS } from "../components/sample-components";
 import { FIXTURE_DOCUMENT } from "../fixtures/fixture-document";
+import paletteCatalogJson from "../fixtures/palette-catalog.json";
 
 /**
  * Creates a BuilderAPI instance pre-loaded with sample components and
  * the fixture document, plus a GroupRegistry for the 2-level component palette.
  */
-export function useBuilderSetup(): { builder: BuilderAPI; groupRegistry: GroupRegistry } {
+export function useBuilderSetup(): { builder: BuilderAPI; groupRegistry: GroupRegistry; paletteCatalog: PaletteCatalog } {
   const builder = useMemo(() => {
     const b = createBuilder({
       document: FIXTURE_DOCUMENT,
@@ -37,6 +38,11 @@ export function useBuilderSetup(): { builder: BuilderAPI; groupRegistry: GroupRe
     return gr;
   }, []);
 
+  const paletteCatalog = useMemo<PaletteCatalog>(
+    () => paletteCatalogJson as PaletteCatalog,
+    [],
+  );
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -44,5 +50,5 @@ export function useBuilderSetup(): { builder: BuilderAPI; groupRegistry: GroupRe
     };
   }, [builder]);
 
-  return { builder, groupRegistry };
+  return { builder, groupRegistry, paletteCatalog };
 }

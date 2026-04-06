@@ -91,11 +91,51 @@ interface AIBuilderContext {
     propSchema?: Array<{ key: string; label: string; type: string }>;
   }>;
   activeBreakpoint: string;
-  pageNodes?: AIPageNode[]; // full node tree, only when includePageContext = true
+  pageNodes?: Record<string, AIPageNode>; // full node tree, only when includePageContext = true
+  availablePresets?: AIPresetGroup[];     // palette catalog summary, only when paletteCatalog is passed
 }
 ```
 
-Context is built by `buildAIContext(state, components)` in `buildAIContext.ts`.
+`availablePresets` is a slim, AI-readable summary of the entire `PaletteCatalog`:
+
+```ts
+interface AIPresetGroup {
+  group: string;            // e.g. "Text"
+  types: AIPresetType[];
+}
+interface AIPresetType {
+  type: string;             // e.g. "Titles"
+  items: AIPresetItem[];
+}
+interface AIPresetItem {
+  id: string;               // e.g. "text-h1"
+  name: string;             // e.g. "Heading 1"
+  componentType: string;    // the registered component key
+  props: Record<string, unknown>;
+  style?: Record<string, unknown>;
+  tags?: string[];
+}
+```
+
+Context is built by `buildAIContext(state, components, options)` in `buildAIContext.ts`.
+
+### `BuildAIContextOptions`
+
+```ts
+interface BuildAIContextOptions {
+  /** Include full page node tree. Increases token cost. Default: false */
+  includePageContext?: boolean;
+  /**
+   * When provided, extract all palette presets into `availablePresets`.
+   * The AI will then reference preset props/styles when generating ADD_NODE commands
+   * instead of using bare empty defaults.
+   */
+  paletteCatalog?: PaletteCatalog;
+}
+```
+
+When `paletteCatalog` is passed to `<BuilderEditor>`, it is automatically forwarded to
+`buildAIContext` — no additional configuration needed.
 
 ### `AIResponse`
 

@@ -71,6 +71,7 @@ export interface StyleConfig {
   overflow?: string;
   overflowX?: string;
   overflowY?: string;
+  whiteSpace?: string;
   cursor?: string;
   pointerEvents?: string;
   objectFit?: string;

@@ -402,3 +402,89 @@ interface QuickAction {
 
 _For command execution, state management, and history tracking, see `COMMAND_SYSTEM.md`._
 _For rendering pipeline and runtime behavior, see `RUNTIME.md`._
+
+---
+
+## PaletteCatalog
+
+JSON-serialisable catalog that drives the **Add Elements** panel. Designed to be loaded from a
+static file today and a remote API endpoint in the future.
+
+**File:** `packages/builder-core/src/presets/palette-types.ts`
+
+### Type hierarchy
+
+```
+PaletteCatalog
+  └── PaletteGroup[]          (e.g. "Text", "Image", "Button")
+        └── PaletteType[]     (e.g. "Titles", "Paragraphs")
+              └── PaletteItem[] (named presets — different props/style combos of the same componentType)
+```
+
+```ts
+interface PaletteCatalog {
+  version: string;          // semver e.g. "1.0.0"
+  groups: PaletteGroup[];
+}
+
+interface PaletteGroup {
+  id: string;               // matches a ComponentGroup.id e.g. "text"
+  label: string;            // fallback label
+  icon: string;             // Lucide icon name (kebab-case) e.g. "type"
+  order: number;
+  i18n?: Record<string, string>;
+  types: PaletteType[];
+}
+
+interface PaletteType {
+  id: string;               // unique within group e.g. "titles"
+  label: string;
+  icon?: string;
+  order: number;
+  /**
+   * Controls item layout in the panel.
+   * "grid" (default): 2-column grid, vertical cards — suits thumbnails.
+   * "list": single column, horizontal rows — suits text-heavy items.
+   */
+  layout?: "grid" | "list";
+  description?: string;
+  i18n?: Record<string, string>;
+  items: PaletteItem[];
+}
+
+interface PaletteItem {
+  id: string;               // unique within type, used as React key
+  componentType: string;    // must match a registered ComponentDefinition.type
+  name: string;             // fallback display name
+  description?: string;
+  thumbnail?: string | null;  // URL or data-URI; null = use live preview
+  i18n?: Record<string, { name?: string; description?: string }>;
+  props: Record<string, unknown>;         // merged onto component defaultProps on ADD_NODE
+  style?: Partial<StyleConfig>;           // merged onto component defaultStyle
+  responsiveStyle?: Partial<Record<Breakpoint, Partial<StyleConfig>>>;
+  responsiveProps?: Partial<Record<Breakpoint, Record<string, unknown>>>;
+  children?: PresetChildNode[];           // for container presets
+  tags?: string[];                        // used for cross-group search
+}
+```
+
+### PaletteDragData
+
+Serialised payload placed in `dataTransfer` when dragging a palette item onto the canvas.
+Also used internally by `useClickToAdd`.
+
+```ts
+interface PaletteDragData {
+  source: "palette-item";
+  componentType: string;
+  presetData: {
+    props?: Record<string, unknown>;
+    style?: Partial<StyleConfig>;
+    responsiveStyle?: Partial<Record<Breakpoint, Partial<StyleConfig>>>;
+    responsiveProps?: Partial<Record<Breakpoint, Record<string, unknown>>>;
+  };
+}
+```
+
+`handleDrop` in `useDragHandlers` distinguishes palette drags (source `"palette-item"`) from
+legacy component-type drags (`"application/builder-component-type"` MIME type).

@@ -67,6 +67,32 @@ export interface AIBuilderContext {
   activeBreakpoint: string;
   /** Full page node map. Only present when config.includePageContext is enabled. */
   pageNodes?: Record<string, AIPageNode>;
+  /**
+   * Palette catalog summary — groups → types → preset items.
+   * Only present when paletteCatalog is passed to buildAIContext.
+   * Gives the AI concrete, named presets to reference instead of raw component types.
+   */
+  availablePresets?: AIPresetGroup[];
+}
+
+/** Slim representation of a palette group for the AI context */
+export interface AIPresetGroup {
+  group: string;
+  types: AIPresetType[];
+}
+
+export interface AIPresetType {
+  type: string;
+  items: AIPresetItem[];
+}
+
+export interface AIPresetItem {
+  id: string;
+  name: string;
+  componentType: string;
+  props: Record<string, unknown>;
+  style?: Record<string, unknown>;
+  tags?: string[];
 }
 
 export interface AICommandSuggestion {

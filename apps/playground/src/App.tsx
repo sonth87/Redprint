@@ -20,7 +20,7 @@ type Locale = "en" | "vi" | "ko" | "ko-flat";
  * Tab "JSON" → raw document JSON inspector
  */
 export function App() {
-  const { builder, groupRegistry } = useBuilderSetup();
+  const { builder, groupRegistry, paletteCatalog } = useBuilderSetup();
   const [activeTab, setActiveTab] = useState<Tab>("editor");
   const [locale, setLocale] = useState<Locale>("en");
 
@@ -132,6 +132,7 @@ export function App() {
           <BuilderEditor
             builder={builder}
             groupRegistry={groupRegistry}
+            paletteCatalog={paletteCatalog}
             locale={locale}
             i18nResources={i18nResources}
             className="h-full"
