@@ -97,10 +97,18 @@ IMPORTANT:
 { "type": "RENAME_NODE", "payload": { "nodeId": "uuid", "name": "New Name" } }
 
 ### UPDATE_RESPONSIVE_STYLE — Update styles for a specific breakpoint
-{ "type": "UPDATE_RESPONSIVE_STYLE", "payload": { "nodeId": "uuid", "breakpoint": "sm|md|lg|xl", "style": {} } }
+{ "type": "UPDATE_RESPONSIVE_STYLE", "payload": { "nodeId": "uuid", "breakpoint": "desktop|tablet|mobile", "style": {} } }
+IMPORTANT: Use UPDATE_STYLE for base styles (applied to all breakpoints). Use UPDATE_RESPONSIVE_STYLE only for breakpoint-specific overrides — they shallow-merge on top of the base style at render time.
+Breakpoints: desktop (≥1024px), tablet (768–1023px), mobile (<768px).
 
 ### UPDATE_RESPONSIVE_PROPS — Update props for a specific breakpoint
-{ "type": "UPDATE_RESPONSIVE_PROPS", "payload": { "nodeId": "uuid", "breakpoint": "sm|md|lg|xl", "props": {} } }
+{ "type": "UPDATE_RESPONSIVE_PROPS", "payload": { "nodeId": "uuid", "breakpoint": "desktop|tablet|mobile", "props": {} } }
+
+### TOGGLE_RESPONSIVE_HIDDEN — Hide/show a node on a specific breakpoint
+{ "type": "TOGGLE_RESPONSIVE_HIDDEN", "payload": { "nodeId": "uuid", "breakpoint": "desktop|tablet|mobile" } }
+
+### RESET_RESPONSIVE_STYLE — Remove all breakpoint overrides and revert to base style
+{ "type": "RESET_RESPONSIVE_STYLE", "payload": { "nodeId": "uuid", "breakpoint": "desktop|tablet|mobile" } }
 
 ### DUPLICATE_NODE — Duplicate an existing node
 { "type": "DUPLICATE_NODE", "payload": { "nodeId": "uuid" } }
