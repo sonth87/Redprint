@@ -6,7 +6,7 @@
  * all parentId aliases ("root", "section") resolve to the real section nodeId.
  */
 
-import type { AIConfig, AICommandSuggestion } from "../types";
+import type { AIConfig, AICommandSuggestion, AIBuilderContext } from "../types";
 import { sendAIMessage } from "../AIService";
 import { normalizeAICommands } from "../normalizeAICommands";
 import { AI_SECTION_ACTIONS } from "./ai-section-config";
@@ -22,6 +22,8 @@ export interface GenerateSectionRequest {
   availableComponentTypes: string[];
   /** AI provider config */
   aiConfig: AIConfig;
+  /** The full builder context with page nodes and component defs */
+  builderContext: AIBuilderContext;
 }
 
 // ── Prompt builder ──────────────────────────────────────────────────────
@@ -44,9 +46,10 @@ function buildSectionPrompt(request: GenerateSectionRequest): string {
     `- NO markdown, NO code blocks, NO line breaks, NO preamble.`,
     `- ONLY use ADD_NODE commands.`,
     `- Available component types (use ONLY these): ${availableComponentList}`,
-    `- Container components (can have children): Section, Container, Grid, Column`,
+    `- Container components (can have children): Container, Grid, Column (DO NOT use Section)`,
     `- Leaf components (no children): Text, Button, Image, Divider`,
-    `- The section node already exists with nodeId "root". Add children INTO it using parentId "root".`,
+    `- The target Section node already exists with nodeId "root". Add children INTO it using parentId "root".`,
+    `- DO NOT generate a "Section" component. Use "Container" or "Grid" as your highest-level wrapper.`,
     ``,
     `CRITICAL - NODEIDS FOR CONTAINERS:`,
     `- ALWAYS provide a UNIQUE "nodeId" for EVERY container component (Section, Container, Grid, Column).`,
@@ -56,14 +59,15 @@ function buildSectionPrompt(request: GenerateSectionRequest): string {
     `- NEVER reuse the same nodeId.`,
     ``,
     `- Build rich, complete layouts: multiple rows, proper typography, spacing, and colours.`,
+    `- MAKE IT RESPONSIVE: Provide "responsiveStyle", "responsiveProps", or "responsiveHidden" alongside standard "style"/"props" to adapt the layout for mobile and tablet limits. Example: stack columns into a list on mobile by setting flex-direction to column, or use shorter text on mobile via responsiveProps.`,
     `- Respond in English regardless of the user's language.`,
     ``,
     `COMMAND FORMAT (each line is one ADD_NODE):`,
-    `{"type":"ADD_NODE","payload":{"componentType":"Container","parentId":"root","nodeId":"temp-main","props":{},"style":{}}}`,
-    `{"type":"ADD_NODE","payload":{"componentType":"Text","parentId":"temp-main","props":{"text":"Title","tag":"h1"},"style":{"fontSize":"32px"}}}`,
+    `{"type":"ADD_NODE","payload":{"componentType":"Container","parentId":"root","nodeId":"temp-main","props":{},"style":{},"responsiveStyle":{"mobile":{"padding":"20px"}}}}`,
+    `{"type":"ADD_NODE","payload":{"componentType":"Text","parentId":"temp-main","props":{"text":"Long Title on Desktop","tag":"h1"},"style":{"fontSize":"32px"},"responsiveProps":{"mobile":{"text":"Short Title"}}}}`,
     ``,
-    `EXAMPLE - Full response with 3 levels:`,
-    `{"message":"Footer with 4 columns","commands":[{"type":"ADD_NODE","payload":{"componentType":"Grid","parentId":"root","nodeId":"temp-grid","props":{},"style":{"display":"grid","gridTemplateColumns":"2fr 1fr 1fr 1fr","gap":"40px"}}},{"type":"ADD_NODE","payload":{"componentType":"Column","parentId":"temp-grid","nodeId":"temp-col-1","props":{},"style":{"display":"flex","flexDirection":"column"}}},{"type":"ADD_NODE","payload":{"componentType":"Text","parentId":"temp-col-1","props":{"text":"Products","tag":"h4"},"style":{"fontSize":"16px","fontWeight":"600"}}},{"type":"ADD_NODE","payload":{"componentType":"Text","parentId":"temp-col-1","props":{"text":"Feature A","tag":"p"},"style":{"fontSize":"14px"}}}]}`,
+    `EXAMPLE - Full response with 3 levels and responsive behavior:`,
+    `{"message":"Responsive feature section","commands":[{"type":"ADD_NODE","payload":{"componentType":"Grid","parentId":"root","nodeId":"temp-grid","props":{},"style":{"display":"grid","gridTemplateColumns":"1fr 1fr","gap":"40px"},"responsiveStyle":{"mobile":{"gridTemplateColumns":"1fr","gap":"20px"}}}},{"type":"ADD_NODE","payload":{"componentType":"Column","parentId":"temp-grid","nodeId":"temp-col","props":{},"style":{"display":"flex"}}},{"type":"ADD_NODE","payload":{"componentType":"Button","parentId":"temp-col","props":{"label":"Learn more about this product"},"style":{"padding":"16px"},"responsiveProps":{"mobile":{"label":"Learn More"}}}]}`,
     ``,
   ].join("\n");
 }
@@ -91,17 +95,8 @@ export async function generateSectionContent(
         timestamp: Date.now(),
       },
     ],
-    // Pass full component list so AI knows what's available
-    {
-      document: { name: "", nodeCount: 0, rootNodeId: "" },
-      selectedNode: null,
-      availableComponents: request.availableComponentTypes.map((t) => ({
-        type: t,
-        name: t,
-        category: "custom",
-      })),
-      activeBreakpoint: "desktop",
-    },
+    // Pass the full injected builder context, not standard dummy context
+    request.builderContext,
     {
       ...request.aiConfig,
       // Use full system prompt with detailed command format (don't override)
@@ -113,12 +108,8 @@ export async function generateSectionContent(
   // message string as JSON, which always returns 0 commands.)
   const rawCommands = response.suggestions ?? [];
 
-  console.log("[generateSectionContent] Raw commands from response:", rawCommands.length);
-
   // Normalize: resolve "root"/"section" aliases to the real section nodeId
   const commands = normalizeAICommands(rawCommands, request.sectionNodeId);
-
-  console.log("[generateSectionContent] After normalization:", { rawCount: rawCommands.length, normalizedCount: commands.length });
 
   return {
     message: response.message,

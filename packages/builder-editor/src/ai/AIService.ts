@@ -82,11 +82,12 @@ ${pageContextBlock}${presetsBlock}
 ## Command Reference
 
 ### ADD_NODE — Add a new component to the canvas
-{ "type": "ADD_NODE", "payload": { "componentType": "ComponentType", "parentId": "root", "nodeId": "temp-unique-id", "props": {}, "style": {} } }
+{ "type": "ADD_NODE", "payload": { "componentType": "ComponentType", "parentId": "root", "nodeId": "temp-unique-id", "props": {}, "style": {}, "responsiveStyle": { "mobile": { "flexDirection": "column" } }, "responsiveProps": { "mobile": { "label": "Short" } }, "responsiveHidden": { "tablet": true } } }
 IMPORTANT:
 - The payload field MUST be "componentType" (NOT "type").
 - Use "root" as parentId for top-level sections/containers.
 - To build NESTED layouts, assign a temporary "nodeId" (e.g. "temp-hero", "temp-grid-1") in each ADD_NODE, then use that same ID as "parentId" in child ADD_NODE commands. The system resolves all IDs to real UUIDs automatically.
+- For RESPONSIVE DESIGN: Use "responsiveStyle", "responsiveProps", or "responsiveHidden" mapped by breakpoint ("desktop" | "tablet" | "mobile"). E.g., stacking grids vertically on mobile by passing "responsiveStyle": { "mobile": { "gridTemplateColumns": "1fr" } } or changing a button's text via "responsiveProps": { "mobile": { "label": "Buy" } }.
 
 ### UPDATE_STYLE — Update CSS styles on an existing node
 { "type": "UPDATE_STYLE", "payload": { "nodeId": "uuid", "style": { "backgroundColor": "#fff", "fontSize": "16px" } } }

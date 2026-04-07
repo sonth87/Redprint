@@ -215,13 +215,15 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
         order,
         props: { ...(def?.defaultProps ?? {}), ...(payload.props ?? {}) },
         style: { ...(def?.defaultStyle ?? {}), ...(payload.style ?? {}) },
-        responsiveStyle: {},
+        responsiveStyle: payload.responsiveStyle ?? {},
         interactions: [],
         hidden: false,
         locked: false,
         name: def?.name ?? payload.componentType,
         metadata: { createdAt: timestamp, updatedAt: timestamp },
         ...(payload.slotName ? { slot: payload.slotName } : {}),
+        ...(payload.responsiveHidden ? { responsiveHidden: payload.responsiveHidden } : {}),
+        ...(payload.responsiveProps ? { responsiveProps: payload.responsiveProps } : {}),
       };
 
       // Apply absolute positioning if position provided

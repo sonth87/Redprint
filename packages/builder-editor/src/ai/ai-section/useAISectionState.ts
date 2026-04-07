@@ -10,7 +10,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { AIConfig, AICommandSuggestion } from "../types";
+import type { AIConfig, AICommandSuggestion, AIBuilderContext } from "../types";
 import { generateSectionContent } from "./ai-section-service";
 import { AI_SECTION_REGENERATE_COOLDOWN_SECONDS } from "./ai-section-config";
 import type { Command } from "@ui-builder/builder-core";
@@ -27,8 +27,8 @@ export interface AISectionState {
   undoCount: number;
   /** How many REMOVE_NODE commands were dispatched before the AI commands */
   removeCount: number;
-  /** The last request — used for Regenerate */
-  lastRequest: { actionId: string; customPrompt?: string } | null;
+  /** The last request — used for Regenerate so we remember exactly which children to remove again */
+  lastRequest: { actionId: string; customPrompt?: string; childIdsToRemove: string[] } | null;
   cooldownRemaining: number;
 }
 
@@ -41,6 +41,7 @@ export interface UseAISectionStateOptions {
   dispatch: (command: Command) => void;
   undo: () => void;
   onClose: () => void;
+  getBuilderContext: () => AIBuilderContext;
 }
 
 export interface UseAISectionStateReturn {
@@ -82,7 +83,7 @@ const INITIAL_STATE: AISectionState = {
 };
 
 export function useAISectionState(options: UseAISectionStateOptions): UseAISectionStateReturn {
-  const { sectionNodeId, availableComponentTypes, aiConfig, dispatch, undo, onClose } = options;
+  const { sectionNodeId, availableComponentTypes, aiConfig, dispatch, undo, onClose, getBuilderContext } = options;
 
   const [state, setState] = useState<AISectionState>(INITIAL_STATE);
 
@@ -136,6 +137,7 @@ export function useAISectionState(options: UseAISectionStateOptions): UseAISecti
           customPrompt,
           availableComponentTypes,
           aiConfig,
+          builderContext: getBuilderContext(),
         });
       } catch (err) {
         setState((prev) => ({
@@ -148,21 +150,13 @@ export function useAISectionState(options: UseAISectionStateOptions): UseAISecti
       }
 
       // Filter to only ADD_NODE commands (safety — the AI should only return ADD_NODE)
-      console.log("[useAISectionState] Received result.commands:", {
-        total: result.commands.length,
-        types: result.commands.map((c) => c.type),
-        firstCommand: result.commands[0] ? { type: result.commands[0].type, payloadKeys: Object.keys(result.commands[0].payload) } : null,
-      });
-      
       const safeCommands: AICommandSuggestion[] = result.commands.filter(
         (c) => c.type === "ADD_NODE" || c.type === "RENAME_NODE",
       );
 
-      console.log("[useAISectionState] After filtering to ADD_NODE/RENAME_NODE:", safeCommands.length);
-
       if (safeCommands.length === 0) {
         const debugInfo = result.commands.length > 0 
-          ? `(found ${result.commands.length} non-ADD_NODE commands: ${result.commands.map((c) => c.type).join(", ")})`
+          ? `(found ${result.commands.length} non-ADD_NODE commands)`
           : "(no commands received)";
         setState((prev) => ({
           ...prev,
@@ -193,13 +187,13 @@ export function useAISectionState(options: UseAISectionStateOptions): UseAISecti
         aiMessage: result.message,
         undoCount: addCount,
         removeCount,
-        lastRequest: { actionId, customPrompt },
+        lastRequest: { actionId, customPrompt, childIdsToRemove },
         cooldownRemaining: AI_SECTION_REGENERATE_COOLDOWN_SECONDS,
       });
 
       startCooldown();
     },
-    [sectionNodeId, availableComponentTypes, aiConfig, dispatch, startCooldown],
+    [sectionNodeId, availableComponentTypes, aiConfig, dispatch, startCooldown, getBuilderContext],
   );
 
   // ── Navigation ─────────────────────────────────────────────────────────
@@ -259,11 +253,12 @@ export function useAISectionState(options: UseAISectionStateOptions): UseAISecti
       undo();
     }
 
-    // Re-run with the same request (currentChildIds will be restored after undo)
-    const { actionId, customPrompt } = state.lastRequest;
+    // Re-run with the same request, explicitly using the explicitly saved original child IDs
+    const { actionId, customPrompt, childIdsToRemove } = state.lastRequest;
+    
     // Give React one tick to process the undo dispatches before reading document
     await new Promise<void>((resolve) => setTimeout(resolve, 0));
-    await applyCommands(actionId, customPrompt, currentChildIdsRef.current);
+    await applyCommands(actionId, customPrompt, childIdsToRemove);
   }, [state.lastRequest, state.undoCount, state.removeCount, state.cooldownRemaining, undo, applyCommands]);
 
   const setCustomPrompt = useCallback((v: string) => {

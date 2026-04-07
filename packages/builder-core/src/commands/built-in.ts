@@ -60,6 +60,9 @@ export interface AddNodePayload {
   insertIndex?: number;
   /** Named slot to assign the new node to (for slot-based containers) */
   slotName?: string;
+  responsiveStyle?: Partial<Record<Breakpoint, Partial<StyleConfig>>>;
+  responsiveHidden?: Partial<Record<Breakpoint, boolean>>;
+  responsiveProps?: Partial<Record<Breakpoint, Record<string, unknown>>>;
 }
 
 export interface RemoveNodePayload {

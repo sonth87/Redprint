@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Copy, Trash2, ArrowUp, ArrowDown, GripVertical } from "lucide-react";
+import { Copy, Trash2, ArrowUp, ArrowDown, GripVertical, CornerLeftUp } from "lucide-react";
 import { useDocument, useBuilder } from "@ui-builder/builder-react";
 import { Button, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@ui-builder/ui";
 import { TOOLTIP_DELAY_MS } from "@ui-builder/shared";
@@ -83,6 +83,15 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
 
   const xPos = viewportX;
 
+  // Breadcrumbs string
+  let breadcrumb = node.name || node.type;
+  if (node.parentId && node.parentId !== "root") {
+    const pNode = document.nodes[node.parentId];
+    if (pNode) {
+      breadcrumb = `${pNode.name || pNode.type} > ${breadcrumb}`;
+    }
+  }
+
   return (
     <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
       <div
@@ -102,10 +111,21 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
           title={t("contextToolbar.dragToMove")}
         >
           <GripVertical className="h-3 w-3 text-muted-foreground" />
-          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider select-none truncate max-w-[100px]">
-            {node.name || node.type}
+          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider select-none truncate max-w-[150px]">
+            {breadcrumb}
           </span>
         </div>
+
+        {node.parentId && node.parentId !== "root" && !isSection && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon-sm" className="h-6 w-6 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50" onClick={wrap(() => dispatch({ type: "SELECT_NODE", payload: { nodeId: node.parentId } }))}>
+                <CornerLeftUp className="h-3 w-3" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top">Select Parent</TooltipContent>
+          </Tooltip>
+        )}
 
         <Tooltip>
           <TooltipTrigger asChild>

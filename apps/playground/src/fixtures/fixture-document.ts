@@ -45,1405 +45,2060 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
       "hidden": false,
       "locked": false
     },
-    "header-section": {
-      "id": "header-section",
+    "66d8727b-4951-4087-af2b-4f868606d1a8": {
+      "id": "66d8727b-4951-4087-af2b-4f868606d1a8",
       "type": "Section",
-      "name": "Header Section",
       "parentId": "root",
       "order": 0,
       "props": {
-        "minHeight": 70
-      },
-      "style": {
-        "display": "flex",
-        "flexDirection": "row",
-        "alignItems": "center",
-        "justifyContent": "space-between",
-        "width": "100%",
-        "padding": "0 48px",
-        "height": "80px",
-        "backgroundColor": "#ffffff",
-        "borderBottom": "1px solid #f3f4f6"
-      },
-      "responsiveStyle": {
-        "mobile": {
-          "padding": "0 24px"
-        }
-      },
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "header-logo": {
-      "id": "header-logo",
-      "type": "Text",
-      "name": "Logo",
-      "parentId": "header-section",
-      "order": 0,
-      "props": {
-        "text": "Creatify.",
-        "tag": "div"
-      },
-      "style": {
-        "fontSize": "24px",
-        "fontWeight": "800",
-        "color": "#2563eb",
-        "letterSpacing": "-0.03em",
-        "margin": "0"
-      },
-      "responsiveStyle": {},
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "header-nav": {
-      "id": "header-nav",
-      "type": "Container",
-      "name": "Navigation Group",
-      "parentId": "header-section",
-      "order": 1,
-      "props": {
-        "display": "flex",
-        "direction": "row",
-        "gap": 32,
-        "padding": 0
-      },
-      "style": {
-        "display": "flex",
-        "flexDirection": "row",
-        "gap": "32px",
-        "alignItems": "center"
-      },
-      "responsiveStyle": {
-        "tablet": {
-          "display": "none"
-        },
-        "mobile": {
-          "display": "none"
-        }
-      },
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "nav-home": {
-      "id": "nav-home",
-      "type": "Text",
-      "name": "Nav Item Home",
-      "parentId": "header-nav",
-      "order": 0,
-      "props": {
-        "text": "Home",
-        "tag": "span"
-      },
-      "style": {
-        "fontSize": "15px",
-        "fontWeight": "600",
-        "color": "#111827",
-        "cursor": "pointer",
-        "margin": "0"
-      },
-      "responsiveStyle": {},
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "nav-services": {
-      "id": "nav-services",
-      "type": "Text",
-      "name": "Nav Item Services",
-      "parentId": "header-nav",
-      "order": 1,
-      "props": {
-        "text": "Services",
-        "tag": "span"
-      },
-      "style": {
-        "fontSize": "15px",
-        "fontWeight": "500",
-        "color": "#6b7280",
-        "cursor": "pointer",
-        "margin": "0"
-      },
-      "responsiveStyle": {},
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "nav-about": {
-      "id": "nav-about",
-      "type": "Text",
-      "name": "Nav Item About",
-      "parentId": "header-nav",
-      "order": 2,
-      "props": {
-        "text": "About Us",
-        "tag": "span"
-      },
-      "style": {
-        "fontSize": "15px",
-        "fontWeight": "500",
-        "color": "#6b7280",
-        "cursor": "pointer",
-        "margin": "0"
-      },
-      "responsiveStyle": {},
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "header-actions": {
-      "id": "header-actions",
-      "type": "Container",
-      "name": "Header Actions",
-      "parentId": "header-section",
-      "order": 2,
-      "props": {
-        "display": "flex",
-        "direction": "row",
-        "gap": 16,
-        "padding": 0
-      },
-      "style": {
-        "display": "flex",
-        "alignItems": "center"
-      },
-      "responsiveStyle": {},
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "btn-login": {
-      "id": "btn-login",
-      "type": "Button",
-      "name": "Login Button",
-      "parentId": "header-actions",
-      "order": 0,
-      "props": {
-        "label": "Login",
-        "variant": "ghost",
-        "size": "md",
-        "disabled": false
-      },
-      "style": {
-        "padding": "8px 16px",
-        "backgroundColor": "transparent",
-        "color": "#374151",
-        "border": "none",
-        "fontWeight": "600",
-        "cursor": "pointer"
-      },
-      "responsiveStyle": {
-        "mobile": {
-          "display": "none"
-        }
-      },
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "btn-get-started": {
-      "id": "btn-get-started",
-      "type": "Button",
-      "name": "Get Started Button",
-      "parentId": "header-actions",
-      "order": 1,
-      "props": {
-        "label": "<p>Start Free Trial</p>",
-        "variant": "primary",
-        "size": "md",
-        "disabled": false
-      },
-      "style": {
-        "padding": "10px 20px",
-        "backgroundColor": "#2563eb",
-        "color": "#ffffff",
-        "borderRadius": "6px",
-        "border": "none",
-        "fontWeight": "600",
-        "lineHeight": "1.2",
-        "cursor": "pointer",
-        "boxShadow": "0 4px 6px -1px rgba(37, 99, 235, 0.2)"
-      },
-      "responsiveStyle": {
-        "mobile": {
-          "position": "absolute",
-          "left": "420px",
-          "top": "-8px",
-          "width": "74px",
-          "height": "83px"
-        }
-      },
-      "interactions": [],
-      "hidden": false,
-      "locked": false,
-      "metadata": {
-        "createdAt": "2026-04-07T03:07:30.304Z",
-        "updatedAt": "2026-04-07T03:09:34.307Z"
-      }
-    },
-    "hero-section": {
-      "id": "hero-section",
-      "type": "Section",
-      "name": "Hero Section",
-      "parentId": "root",
-      "order": 1,
-      "props": {
-        "minHeight": 600
-      },
-      "style": {
-        "display": "flex",
-        "flexDirection": "row",
-        "width": "100%",
-        "padding": "64px 48px",
-        "backgroundColor": "#f8fafc",
-        "alignItems": "center"
-      },
-      "responsiveStyle": {
-        "tablet": {
-          "flexDirection": "column",
-          "padding": "48px 32px"
-        },
-        "mobile": {
-          "flexDirection": "column",
-          "padding": "40px 24px"
-        }
-      },
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "hero-content": {
-      "id": "hero-content",
-      "type": "Container",
-      "name": "Hero Content Left",
-      "parentId": "hero-section",
-      "order": 0,
-      "props": {
-        "display": "flex",
-        "direction": "column",
-        "gap": 24,
-        "padding": 0
+        "minHeight": 700
       },
       "style": {
         "display": "flex",
         "flexDirection": "column",
-        "flex": "1",
-        "gap": "24px",
-        "padding": "0 40px 0 0"
-      },
-      "responsiveStyle": {
-        "tablet": {
-          "padding": "0",
-          "alignItems": "center",
-          "textAlign": "center",
-          "margin": "0 0 48px 0"
-        }
-      },
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "hero-badge": {
-      "id": "hero-badge",
-      "type": "Container",
-      "name": "Hero Badge",
-      "parentId": "hero-content",
-      "order": 0,
-      "props": {
-        "display": "flex",
-        "direction": "row",
-        "gap": 0,
-        "padding": 0
-      },
-      "style": {
-        "display": "inline-flex",
-        "alignSelf": "flex-start",
-        "padding": "6px 16px",
-        "backgroundColor": "#e0e7ff",
-        "borderRadius": "999px"
-      },
-      "responsiveStyle": {
-        "tablet": {
-          "alignSelf": "center"
-        }
-      },
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "hero-badge-text": {
-      "id": "hero-badge-text",
-      "type": "Text",
-      "name": "Badge Text",
-      "parentId": "hero-badge",
-      "order": 0,
-      "props": {
-        "text": "🌟 Introducing New Features",
-        "tag": "span"
-      },
-      "style": {
-        "fontSize": "14px",
-        "fontWeight": "600",
-        "color": "#4f46e5",
-        "margin": "0"
+        "width": "100%",
+        "minHeight": "400px",
+        "position": "relative",
+        "alignItems": "center",
+        "justifyContent": "center",
+        "padding": "80px 20px",
+        "backgroundColor": "#fff9f0",
+        "backgroundImage": "radial-gradient(#ffdfba 1px, transparent 1px)",
+        "backgroundSize": "40px 40px"
       },
       "responsiveStyle": {},
       "interactions": [],
       "hidden": false,
-      "locked": false
+      "locked": false,
+      "name": "Hero Cún Miêu",
+      "metadata": {
+        "createdAt": "2026-04-07T09:21:17.582Z",
+        "updatedAt": "2026-04-07T09:21:17.584Z"
+      }
     },
-    "hero-title": {
-      "id": "hero-title",
+    "2907d524-db96-4fc6-b424-93d2e711bfdc": {
+      "id": "2907d524-db96-4fc6-b424-93d2e711bfdc",
+      "type": "Shape",
+      "parentId": "66d8727b-4951-4087-af2b-4f868606d1a8",
+      "order": 0,
+      "props": {
+        "shape": "blob",
+        "fill": "#ffcfd2",
+        "stroke": "transparent",
+        "strokeWidth": 0
+      },
+      "style": {
+        "width": "200px",
+        "height": "200px",
+        "display": "block",
+        "position": "absolute",
+        "top": "10%",
+        "left": "5%",
+        "opacity": "0.5",
+        "zIndex": "0"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Shape",
+      "metadata": {
+        "createdAt": "2026-04-07T09:21:17.584Z",
+        "updatedAt": "2026-04-07T09:21:17.584Z"
+      }
+    },
+    "94d575a7-d4dc-4cc0-a5e0-0f67acdaee2f": {
+      "id": "94d575a7-d4dc-4cc0-a5e0-0f67acdaee2f",
       "type": "Text",
-      "name": "Hero Main Title",
-      "parentId": "hero-content",
+      "parentId": "66d8727b-4951-4087-af2b-4f868606d1a8",
       "order": 1,
       "props": {
-        "text": "Build beautiful digital experiences in minutes.",
+        "text": "<h1>Bạn Đồng Hành <br/><span style='color: #ff8c94'>Đáng Yêu Nhất!</span></h1>",
         "tag": "h1"
       },
       "style": {
-        "fontSize": "56px",
-        "fontWeight": "800",
-        "color": "#0f172a",
-        "margin": "0",
-        "lineHeight": "1.1",
-        "letterSpacing": "-0.02em"
+        "fontSize": "64px",
+        "color": "#4a4a4a",
+        "lineHeight": "1.2",
+        "fontWeight": "900",
+        "textAlign": "center",
+        "marginBottom": "24px",
+        "zIndex": "1"
       },
-      "responsiveStyle": {
-        "desktop": {
-          "fontSize": "64px"
-        },
-        "tablet": {
-          "fontSize": "48px"
-        },
-        "mobile": {
-          "fontSize": "36px"
-        }
-      },
+      "responsiveStyle": {},
       "interactions": [],
       "hidden": false,
-      "locked": false
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T09:21:17.584Z",
+        "updatedAt": "2026-04-07T09:21:17.584Z"
+      }
     },
-    "hero-description": {
-      "id": "hero-description",
+    "829221d3-bd4f-4a45-b58c-78890257f9a1": {
+      "id": "829221d3-bd4f-4a45-b58c-78890257f9a1",
       "type": "Text",
-      "name": "Hero Description",
-      "parentId": "hero-content",
+      "parentId": "66d8727b-4951-4087-af2b-4f868606d1a8",
       "order": 2,
       "props": {
-        "text": "Empower your creative team to build, scale, and deliver stunning websites without writing complex code. Fast, reliable, and entirely visual.",
+        "text": "<p>Nơi chia sẻ tình yêu thương và những khoảnh khắc tuyệt vời cùng những người bạn bốn chân của bạn.</p>",
         "tag": "p"
       },
       "style": {
         "fontSize": "20px",
-        "color": "#475569",
-        "margin": "0",
+        "color": "#7a7a7a",
         "lineHeight": "1.6",
-        "maxWidth": "540px"
-      },
-      "responsiveStyle": {
-        "mobile": {
-          "fontSize": "16px"
-        }
-      },
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "hero-button-group": {
-      "id": "hero-button-group",
-      "type": "Container",
-      "name": "Hero Buttons",
-      "parentId": "hero-content",
-      "order": 3,
-      "props": {
-        "display": "flex",
-        "direction": "row",
-        "gap": 16,
-        "padding": 0
-      },
-      "style": {
-        "display": "flex",
-        "flexDirection": "row",
-        "gap": "16px",
-        "margin": "16px 0 0 0"
-      },
-      "responsiveStyle": {
-        "mobile": {
-          "flexDirection": "column",
-          "width": "100%"
-        }
-      },
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "btn-hero-primary": {
-      "id": "btn-hero-primary",
-      "type": "Button",
-      "name": "Explore Button",
-      "parentId": "hero-button-group",
-      "order": 0,
-      "props": {
-        "label": "Explore Platform",
-        "variant": "primary",
-        "size": "lg",
-        "disabled": false
-      },
-      "style": {
-        "padding": "16px 32px",
-        "backgroundColor": "#2563eb",
-        "color": "#ffffff",
-        "borderRadius": "8px",
-        "border": "none",
-        "fontWeight": "600",
-        "fontSize": "16px",
-        "cursor": "pointer",
-        "boxShadow": "0 10px 15px -3px rgba(37, 99, 235, 0.3)"
-      },
-      "responsiveStyle": {
-        "mobile": {
-          "width": "100%"
-        }
-      },
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "btn-hero-secondary": {
-      "id": "btn-hero-secondary",
-      "type": "Button",
-      "name": "Book Demo Button",
-      "parentId": "hero-button-group",
-      "order": 1,
-      "props": {
-        "label": "Book a Demo",
-        "variant": "outline",
-        "size": "lg",
-        "disabled": false
-      },
-      "style": {
-        "padding": "16px 32px",
-        "backgroundColor": "transparent",
-        "color": "#334155",
-        "borderRadius": "8px",
-        "border": "2px solid #cbd5e1",
-        "fontWeight": "600",
-        "fontSize": "16px",
-        "cursor": "pointer"
-      },
-      "responsiveStyle": {
-        "mobile": {
-          "width": "100%"
-        }
-      },
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "hero-image-container": {
-      "id": "hero-image-container",
-      "type": "Container",
-      "name": "Hero Image Wrapper",
-      "parentId": "hero-section",
-      "order": 1,
-      "props": {
-        "display": "flex",
-        "direction": "column",
-        "gap": 0,
-        "padding": 0
-      },
-      "style": {
-        "display": "flex",
-        "flex": "1",
-        "justifyContent": "center",
-        "alignItems": "center",
-        "width": "100%"
-      },
-      "responsiveStyle": {},
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "hero-main-image": {
-      "id": "hero-main-image",
-      "type": "Image",
-      "name": "Hero Image",
-      "parentId": "hero-image-container",
-      "order": 0,
-      "props": {
-        "src": "https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
-        "alt": "Creative team working in office",
-        "objectFit": "cover"
-      },
-      "style": {
-        "width": "100%",
-        "maxWidth": "600px",
-        "height": "auto",
-        "borderRadius": "16px",
-        "boxShadow": "0 25px 50px -12px rgba(0, 0, 0, 0.15)"
-      },
-      "responsiveStyle": {},
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "stats-section": {
-      "id": "stats-section",
-      "type": "Section",
-      "name": "Stats Section",
-      "parentId": "root",
-      "order": 2,
-      "props": {
-        "minHeight": 120
-      },
-      "style": {
-        "display": "flex",
-        "flexDirection": "row",
-        "justifyContent": "center",
-        "width": "100%",
-        "padding": "64px 48px",
-        "backgroundColor": "#ffffff",
-        "borderBottom": "1px solid #f1f5f9"
-      },
-      "responsiveStyle": {
-        "mobile": {
-          "padding": "40px 24px"
-        }
-      },
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "stats-grid": {
-      "id": "stats-grid",
-      "type": "Container",
-      "name": "Stats Container",
-      "parentId": "stats-section",
-      "order": 0,
-      "props": {
-        "display": "flex",
-        "direction": "row",
-        "gap": 48,
-        "padding": 0
-      },
-      "style": {
-        "display": "flex",
-        "flexDirection": "row",
-        "justifyContent": "space-around",
-        "width": "100%",
-        "maxWidth": "1000px",
-        "flexWrap": "wrap",
-        "gap": "48px"
-      },
-      "responsiveStyle": {
-        "mobile": {
-          "flexDirection": "column",
-          "alignItems": "center",
-          "gap": "32px"
-        }
-      },
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "stat-item-1": {
-      "id": "stat-item-1",
-      "type": "Container",
-      "name": "Stat Box 1",
-      "parentId": "stats-grid",
-      "order": 0,
-      "props": {
-        "display": "flex",
-        "direction": "column",
-        "gap": 8,
-        "padding": 0
-      },
-      "style": {
-        "display": "flex",
-        "flexDirection": "column",
-        "alignItems": "center"
-      },
-      "responsiveStyle": {},
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "stat-number-1": {
-      "id": "stat-number-1",
-      "type": "Text",
-      "name": "Stat Number 1",
-      "parentId": "stat-item-1",
-      "order": 0,
-      "props": {
-        "text": "1.2M+",
-        "tag": "h3"
-      },
-      "style": {
-        "fontSize": "40px",
-        "fontWeight": "800",
-        "color": "#1e293b",
-        "margin": "0",
-        "lineHeight": "1"
-      },
-      "responsiveStyle": {},
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "stat-label-1": {
-      "id": "stat-label-1",
-      "type": "Text",
-      "name": "Stat Label 1",
-      "parentId": "stat-item-1",
-      "order": 1,
-      "props": {
-        "text": "Active Users",
-        "tag": "p"
-      },
-      "style": {
-        "fontSize": "16px",
-        "fontWeight": "500",
-        "color": "#64748b",
-        "margin": "0"
-      },
-      "responsiveStyle": {},
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "stat-item-2": {
-      "id": "stat-item-2",
-      "type": "Container",
-      "name": "Stat Box 2",
-      "parentId": "stats-grid",
-      "order": 1,
-      "props": {
-        "display": "flex",
-        "direction": "column",
-        "gap": 8,
-        "padding": 0
-      },
-      "style": {
-        "display": "flex",
-        "flexDirection": "column",
-        "alignItems": "center"
-      },
-      "responsiveStyle": {},
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "stat-number-2": {
-      "id": "stat-number-2",
-      "type": "Text",
-      "name": "Stat Number 2",
-      "parentId": "stat-item-2",
-      "order": 0,
-      "props": {
-        "text": "99.9%",
-        "tag": "h3"
-      },
-      "style": {
-        "fontSize": "40px",
-        "fontWeight": "800",
-        "color": "#1e293b",
-        "margin": "0",
-        "lineHeight": "1"
-      },
-      "responsiveStyle": {},
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "stat-label-2": {
-      "id": "stat-label-2",
-      "type": "Text",
-      "name": "Stat Label 2",
-      "parentId": "stat-item-2",
-      "order": 1,
-      "props": {
-        "text": "Uptime Guaranteed",
-        "tag": "p"
-      },
-      "style": {
-        "fontSize": "16px",
-        "fontWeight": "500",
-        "color": "#64748b",
-        "margin": "0"
-      },
-      "responsiveStyle": {},
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "stat-item-3": {
-      "id": "stat-item-3",
-      "type": "Container",
-      "name": "Stat Box 3",
-      "parentId": "stats-grid",
-      "order": 2,
-      "props": {
-        "display": "flex",
-        "direction": "column",
-        "gap": 8,
-        "padding": 0
-      },
-      "style": {
-        "display": "flex",
-        "flexDirection": "column",
-        "alignItems": "center"
-      },
-      "responsiveStyle": {},
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "stat-number-3": {
-      "id": "stat-number-3",
-      "type": "Text",
-      "name": "Stat Number 3",
-      "parentId": "stat-item-3",
-      "order": 0,
-      "props": {
-        "text": "24/7",
-        "tag": "h3"
-      },
-      "style": {
-        "fontSize": "40px",
-        "fontWeight": "800",
-        "color": "#1e293b",
-        "margin": "0",
-        "lineHeight": "1"
-      },
-      "responsiveStyle": {},
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "stat-label-3": {
-      "id": "stat-label-3",
-      "type": "Text",
-      "name": "Stat Label 3",
-      "parentId": "stat-item-3",
-      "order": 1,
-      "props": {
-        "text": "Customer Support",
-        "tag": "p"
-      },
-      "style": {
-        "fontSize": "16px",
-        "fontWeight": "500",
-        "color": "#64748b",
-        "margin": "0"
-      },
-      "responsiveStyle": {},
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "details-section": {
-      "id": "details-section",
-      "type": "Section",
-      "name": "Features Info Section",
-      "parentId": "root",
-      "order": 3,
-      "props": {
-        "minHeight": 600
-      },
-      "style": {
-        "display": "flex",
-        "flexDirection": "column",
-        "width": "100%",
-        "padding": "96px 48px",
-        "backgroundColor": "#ffffff",
-        "alignItems": "center"
-      },
-      "responsiveStyle": {
-        "mobile": {
-          "padding": "64px 24px"
-        }
-      },
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "details-header": {
-      "id": "details-header",
-      "type": "Container",
-      "name": "Section Heading Center",
-      "parentId": "details-section",
-      "order": 0,
-      "props": {
-        "display": "flex",
-        "direction": "column",
-        "gap": 16,
-        "padding": 0
-      },
-      "style": {
-        "display": "flex",
-        "flexDirection": "column",
-        "alignItems": "center",
         "textAlign": "center",
-        "margin": "0 0 64px 0",
-        "maxWidth": "700px"
+        "maxWidth": "600px",
+        "marginBottom": "40px",
+        "zIndex": "1"
       },
       "responsiveStyle": {},
       "interactions": [],
       "hidden": false,
-      "locked": false
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T09:21:17.584Z",
+        "updatedAt": "2026-04-07T09:21:17.584Z"
+      }
     },
-    "details-subtitle": {
-      "id": "details-subtitle",
-      "type": "Text",
-      "name": "Subtitle Text",
-      "parentId": "details-header",
-      "order": 0,
-      "props": {
-        "text": "POWERFUL CAPABILITIES",
-        "tag": "h4"
-      },
-      "style": {
-        "fontSize": "14px",
-        "fontWeight": "700",
-        "color": "#2563eb",
-        "letterSpacing": "0.1em",
-        "margin": "0"
-      },
-      "responsiveStyle": {},
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "details-title": {
-      "id": "details-title",
-      "type": "Text",
-      "name": "Main Title",
-      "parentId": "details-header",
-      "order": 1,
-      "props": {
-        "text": "Everything you need to succeed online.",
-        "tag": "h2"
-      },
-      "style": {
-        "fontSize": "40px",
-        "fontWeight": "800",
-        "color": "#0f172a",
-        "margin": "0",
-        "lineHeight": "1.2",
-        "letterSpacing": "-0.01em"
-      },
-      "responsiveStyle": {
-        "mobile": {
-          "fontSize": "32px"
-        }
-      },
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "feature-row-1": {
-      "id": "feature-row-1",
+    "b27594d7-f528-474e-8679-bef4866b8057": {
+      "id": "b27594d7-f528-474e-8679-bef4866b8057",
       "type": "Container",
-      "name": "Feature Row 1",
-      "parentId": "details-section",
-      "order": 1,
+      "parentId": "66d8727b-4951-4087-af2b-4f868606d1a8",
+      "order": 3,
       "props": {
         "display": "flex",
         "direction": "row",
-        "gap": 64,
-        "padding": 0
-      },
-      "style": {
-        "display": "flex",
-        "flexDirection": "row",
-        "alignItems": "center",
-        "width": "100%",
-        "maxWidth": "1100px",
-        "margin": "0 0 96px 0"
-      },
-      "responsiveStyle": {
-        "tablet": {
-          "flexDirection": "column",
-          "gap": "40px"
-        }
-      },
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "feature-image-box-1": {
-      "id": "feature-image-box-1",
-      "type": "Container",
-      "name": "Feature Image Container 1",
-      "parentId": "feature-row-1",
-      "order": 0,
-      "props": {
-        "display": "flex",
-        "direction": "column",
-        "gap": 0,
-        "padding": 0
-      },
-      "style": {
-        "flex": "1",
-        "width": "100%"
-      },
-      "responsiveStyle": {},
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "feature-image-1": {
-      "id": "feature-image-1",
-      "type": "Image",
-      "name": "Feature Photo 1",
-      "parentId": "feature-image-box-1",
-      "order": 0,
-      "props": {
-        "src": "https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-        "alt": "Writing code on laptop",
-        "objectFit": "cover"
-      },
-      "style": {
-        "width": "100%",
-        "borderRadius": "16px",
-        "boxShadow": "0 20px 25px -5px rgba(0, 0, 0, 0.1)"
-      },
-      "responsiveStyle": {},
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "feature-text-box-1": {
-      "id": "feature-text-box-1",
-      "type": "Container",
-      "name": "Feature Info Container 1",
-      "parentId": "feature-row-1",
-      "order": 1,
-      "props": {
-        "display": "flex",
-        "direction": "column",
-        "gap": 24,
-        "padding": 0
+        "gap": "20",
+        "padding": "16px",
+        "showPlaceholder": true
       },
       "style": {
         "display": "flex",
         "flexDirection": "column",
-        "flex": "1",
-        "padding": "0 0 0 16px"
-      },
-      "responsiveStyle": {
-        "tablet": {
-          "padding": "0"
-        }
-      },
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "feature-title-1": {
-      "id": "feature-title-1",
-      "type": "Text",
-      "name": "Feature Heading 1",
-      "parentId": "feature-text-box-1",
-      "order": 0,
-      "props": {
-        "text": "Seamless Integrations",
-        "tag": "h3"
-      },
-      "style": {
-        "fontSize": "32px",
-        "fontWeight": "700",
-        "color": "#0f172a",
-        "margin": "0"
-      },
-      "responsiveStyle": {},
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "feature-desc-1": {
-      "id": "feature-desc-1",
-      "type": "Text",
-      "name": "Feature Detail 1",
-      "parentId": "feature-text-box-1",
-      "order": 1,
-      "props": {
-        "text": "Connect your favorite tools with just a few clicks. Our platform supports over 200+ native integrations ensuring your workflow remains uninterrupted and highly productive. Data flows securely and instantly.",
-        "tag": "p"
-      },
-      "style": {
-        "fontSize": "18px",
-        "color": "#475569",
-        "lineHeight": "1.6",
-        "margin": "0"
-      },
-      "responsiveStyle": {},
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "feature-bullets": {
-      "id": "feature-bullets",
-      "type": "Container",
-      "name": "Bullets List",
-      "parentId": "feature-text-box-1",
-      "order": 2,
-      "props": {
-        "display": "flex",
-        "direction": "column",
-        "gap": 12,
-        "padding": 0
-      },
-      "style": {
-        "display": "flex",
-        "flexDirection": "column",
-        "gap": "12px",
-        "margin": "8px 0 0 0"
-      },
-      "responsiveStyle": {},
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "bullet-1": {
-      "id": "bullet-1",
-      "type": "Text",
-      "name": "List Item 1",
-      "parentId": "feature-bullets",
-      "order": 0,
-      "props": {
-        "text": "✓ API access for custom connections",
-        "tag": "span"
-      },
-      "style": {
-        "fontSize": "16px",
-        "fontWeight": "500",
-        "color": "#1e293b",
-        "margin": "0"
-      },
-      "responsiveStyle": {},
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "bullet-2": {
-      "id": "bullet-2",
-      "type": "Text",
-      "name": "List Item 2",
-      "parentId": "feature-bullets",
-      "order": 1,
-      "props": {
-        "text": "✓ No-code automated workflows",
-        "tag": "span"
-      },
-      "style": {
-        "fontSize": "16px",
-        "fontWeight": "500",
-        "color": "#1e293b",
-        "margin": "0"
-      },
-      "responsiveStyle": {},
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "feature-row-2": {
-      "id": "feature-row-2",
-      "type": "Container",
-      "name": "Feature Row 2",
-      "parentId": "details-section",
-      "order": 2,
-      "props": {
-        "display": "flex",
-        "direction": "row",
-        "gap": 64,
-        "padding": 0
-      },
-      "style": {
-        "display": "flex",
-        "flexDirection": "row",
-        "alignItems": "center",
+        "gap": "20px",
+        "padding": "16px",
         "width": "100%",
-        "maxWidth": "1100px"
-      },
-      "responsiveStyle": {
-        "tablet": {
-          "flexDirection": "column-reverse",
-          "gap": "40px"
-        }
-      },
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "feature-text-box-2": {
-      "id": "feature-text-box-2",
-      "type": "Container",
-      "name": "Feature Info Container 2",
-      "parentId": "feature-row-2",
-      "order": 0,
-      "props": {
-        "display": "flex",
-        "direction": "column",
-        "gap": 24,
-        "padding": 0
-      },
-      "style": {
-        "display": "flex",
-        "flexDirection": "column",
-        "flex": "1",
-        "padding": "0 16px 0 0"
-      },
-      "responsiveStyle": {
-        "tablet": {
-          "padding": "0"
-        }
-      },
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "feature-title-2": {
-      "id": "feature-title-2",
-      "type": "Text",
-      "name": "Feature Heading 2",
-      "parentId": "feature-text-box-2",
-      "order": 0,
-      "props": {
-        "text": "Advanced Analytics",
-        "tag": "h3"
-      },
-      "style": {
-        "fontSize": "32px",
-        "fontWeight": "700",
-        "color": "#0f172a",
-        "margin": "0"
+        "position": "relative",
+        "zIndex": "1"
       },
       "responsiveStyle": {},
       "interactions": [],
       "hidden": false,
-      "locked": false
+      "locked": false,
+      "name": "Container",
+      "metadata": {
+        "createdAt": "2026-04-07T09:21:17.584Z",
+        "updatedAt": "2026-04-07T09:21:17.584Z"
+      }
     },
-    "feature-desc-2": {
-      "id": "feature-desc-2",
-      "type": "Text",
-      "name": "Feature Detail 2",
-      "parentId": "feature-text-box-2",
-      "order": 1,
-      "props": {
-        "text": "Gain deep insights into your business performance. Our dashboard provides real-time data visualization, predictive modeling, and customizable reports so you can make data-driven decisions swiftly.",
-        "tag": "p"
-      },
-      "style": {
-        "fontSize": "18px",
-        "color": "#475569",
-        "lineHeight": "1.6",
-        "margin": "0"
-      },
-      "responsiveStyle": {},
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "feature-button": {
-      "id": "feature-button",
+    "0a2b3a62-c246-41b1-92e4-21cd1922ba27": {
+      "id": "0a2b3a62-c246-41b1-92e4-21cd1922ba27",
       "type": "Button",
-      "name": "Learn More Button",
-      "parentId": "feature-text-box-2",
-      "order": 2,
+      "parentId": "b27594d7-f528-474e-8679-bef4866b8057",
+      "order": 0,
       "props": {
-        "label": "Learn more about analytics →",
-        "variant": "outline",
+        "label": "<p>Tìm Bạn Mới 🐾</p>",
+        "variant": "primary",
         "size": "md",
         "disabled": false
       },
       "style": {
-        "alignSelf": "flex-start",
-        "padding": "12px 24px",
-        "backgroundColor": "transparent",
-        "color": "#2563eb",
-        "border": "1px solid #2563eb",
-        "borderRadius": "8px",
-        "fontWeight": "600",
-        "margin": "8px 0 0 0",
-        "cursor": "pointer"
+        "display": "inline-flex",
+        "alignItems": "center",
+        "justifyContent": "center",
+        "borderRadius": "50px",
+        "cursor": "pointer",
+        "fontWeight": "700",
+        "fontSize": "18px",
+        "border": "none",
+        "backgroundColor": "#ff8c94",
+        "color": "#ffffff",
+        "padding": "15px 40px",
+        "boxShadow": "0 10px 20px rgba(255, 140, 148, 0.3)"
       },
       "responsiveStyle": {},
       "interactions": [],
       "hidden": false,
-      "locked": false
+      "locked": false,
+      "name": "Button",
+      "metadata": {
+        "createdAt": "2026-04-07T09:21:17.584Z",
+        "updatedAt": "2026-04-07T09:21:17.584Z"
+      }
     },
-    "feature-image-box-2": {
-      "id": "feature-image-box-2",
-      "type": "Container",
-      "name": "Feature Image Container 2",
-      "parentId": "feature-row-2",
-      "order": 1,
-      "props": {
-        "display": "flex",
-        "direction": "column",
-        "gap": 0,
-        "padding": 0
-      },
-      "style": {
-        "flex": "1",
-        "width": "100%"
-      },
-      "responsiveStyle": {},
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "feature-image-2": {
-      "id": "feature-image-2",
-      "type": "Image",
-      "name": "Feature Photo 2",
-      "parentId": "feature-image-box-2",
-      "order": 0,
-      "props": {
-        "src": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-        "alt": "Data charts on a screen",
-        "objectFit": "cover"
-      },
-      "style": {
-        "width": "100%",
-        "borderRadius": "16px",
-        "boxShadow": "0 20px 25px -5px rgba(0, 0, 0, 0.1)"
-      },
-      "responsiveStyle": {},
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "cta-section": {
-      "id": "cta-section",
+    "d7d6da9a-066f-489a-a915-35cb31357640": {
+      "id": "d7d6da9a-066f-489a-a915-35cb31357640",
       "type": "Section",
-      "name": "CTA Footer Section",
       "parentId": "root",
-      "order": 4,
+      "order": 2,
       "props": {
-        "minHeight": 300
+        "minHeight": 516
       },
       "style": {
         "display": "flex",
         "flexDirection": "column",
         "width": "100%",
-        "padding": "96px 48px",
-        "backgroundColor": "#2563eb",
-        "alignItems": "center",
-        "justifyContent": "center"
-      },
-      "responsiveStyle": {
-        "mobile": {
-          "padding": "64px 24px"
-        }
-      },
-      "interactions": [],
-      "hidden": false,
-      "locked": false
-    },
-    "cta-content": {
-      "id": "cta-content",
-      "type": "Container",
-      "name": "CTA Content Wrappper",
-      "parentId": "cta-section",
-      "order": 0,
-      "props": {
-        "display": "flex",
-        "direction": "column",
-        "gap": 24,
-        "padding": 0
-      },
-      "style": {
-        "display": "flex",
-        "flexDirection": "column",
-        "alignItems": "center",
-        "textAlign": "center",
-        "maxWidth": "600px"
+        "minHeight": "516px",
+        "position": "relative",
+        "padding": "100px 48px",
+        "backgroundColor": "#ffffff"
       },
       "responsiveStyle": {},
       "interactions": [],
       "hidden": false,
-      "locked": false
+      "locked": false,
+      "name": "Section",
+      "metadata": {
+        "createdAt": "2026-04-07T09:21:17.584Z",
+        "updatedAt": "2026-04-07T10:15:28.835Z"
+      }
     },
-    "cta-heading": {
-      "id": "cta-heading",
+    "c979f00b-3a54-4e19-ad99-11e707070c67": {
+      "id": "c979f00b-3a54-4e19-ad99-11e707070c67",
       "type": "Text",
-      "name": "CTA Title",
-      "parentId": "cta-content",
+      "parentId": "d7d6da9a-066f-489a-a915-35cb31357640",
       "order": 0,
       "props": {
-        "text": "Ready to scale your business?",
+        "text": "<h2>Những Gương Mặt Nổi Bật</h2>",
         "tag": "h2"
       },
       "style": {
-        "fontSize": "40px",
+        "fontSize": "36px",
+        "color": "#4a4a4a",
+        "lineHeight": "1.6",
         "fontWeight": "800",
-        "color": "#ffffff",
-        "margin": "0",
-        "letterSpacing": "-0.01em"
+        "textAlign": "center",
+        "marginBottom": "48px"
       },
-      "responsiveStyle": {
-        "mobile": {
-          "fontSize": "32px"
-        }
-      },
+      "responsiveStyle": {},
       "interactions": [],
       "hidden": false,
-      "locked": false
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T09:21:17.584Z",
+        "updatedAt": "2026-04-07T09:21:17.584Z"
+      }
     },
-    "cta-desc": {
-      "id": "cta-desc",
-      "type": "Text",
-      "name": "CTA Details",
-      "parentId": "cta-content",
+    "dff73ea6-a323-4ead-a20e-12063d38ff99": {
+      "id": "dff73ea6-a323-4ead-a20e-12063d38ff99",
+      "type": "GalleryGrid",
+      "parentId": "d7d6da9a-066f-489a-a915-35cb31357640",
       "order": 1,
       "props": {
-        "text": "Join thousands of teams who are already building faster and delivering better results.",
+        "columns": 3,
+        "gap": 20,
+        "aspectRatio": "1/1",
+        "images": [
+          {
+            "src": "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=800&q=80",
+            "alt": "Cute Cat"
+          },
+          {
+            "src": "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800&q=80",
+            "alt": "Happy Dog"
+          },
+          {
+            "src": "https://images.unsplash.com/photo-1517849845537-4d257902454a?w=800&q=80",
+            "alt": "Cute Puppy"
+          }
+        ]
+      },
+      "style": {
+        "width": "100%",
+        "padding": "16px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Gallery Grid",
+      "metadata": {
+        "createdAt": "2026-04-07T09:21:17.584Z",
+        "updatedAt": "2026-04-07T09:21:17.584Z"
+      }
+    },
+    "94364802-4f4d-4f88-9ef8-ce49a897b4b6": {
+      "id": "94364802-4f4d-4f88-9ef8-ce49a897b4b6",
+      "type": "Section",
+      "parentId": "root",
+      "order": 4,
+      "props": {
+        "minHeight": 400
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "width": "100%",
+        "minHeight": "400px",
+        "position": "relative",
+        "padding": "80px 48px",
+        "backgroundColor": "#f0f7ff"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Section",
+      "metadata": {
+        "createdAt": "2026-04-07T09:21:17.584Z",
+        "updatedAt": "2026-04-07T09:21:17.584Z"
+      }
+    },
+    "0d75bd5b-bb6b-4187-b17d-c240405b13f7": {
+      "id": "0d75bd5b-bb6b-4187-b17d-c240405b13f7",
+      "type": "Repeater",
+      "parentId": "94364802-4f4d-4f88-9ef8-ce49a897b4b6",
+      "order": 0,
+      "props": {
+        "count": 3,
+        "columns": 3,
+        "gap": 30
+      },
+      "style": {
+        "width": "100%",
+        "padding": "16px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Repeater",
+      "metadata": {
+        "createdAt": "2026-04-07T09:21:17.584Z",
+        "updatedAt": "2026-04-07T09:21:17.584Z"
+      }
+    },
+    "3885bd42-29b5-4262-9171-80bf6aa8ab10": {
+      "id": "3885bd42-29b5-4262-9171-80bf6aa8ab10",
+      "type": "Container",
+      "parentId": "0d75bd5b-bb6b-4187-b17d-c240405b13f7",
+      "order": 0,
+      "props": {
+        "display": "flex",
+        "direction": "column",
+        "gap": "8px",
+        "padding": "16px",
+        "showPlaceholder": true
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "8px",
+        "padding": "32px",
+        "width": "100%",
+        "position": "relative",
+        "backgroundColor": "#ffffff",
+        "borderRadius": "24px",
+        "alignItems": "center",
+        "textAlign": "center",
+        "boxShadow": "0 4px 12px rgba(0,0,0,0.05)"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Container",
+      "metadata": {
+        "createdAt": "2026-04-07T09:21:17.584Z",
+        "updatedAt": "2026-04-07T09:21:17.584Z"
+      }
+    },
+    "c747c73d-9571-4ff2-ba75-b00c169e1387": {
+      "id": "c747c73d-9571-4ff2-ba75-b00c169e1387",
+      "type": "Shape",
+      "parentId": "3885bd42-29b5-4262-9171-80bf6aa8ab10",
+      "order": 0,
+      "props": {
+        "shape": "circle",
+        "fill": "#b9fbc0",
+        "stroke": "transparent",
+        "strokeWidth": 0
+      },
+      "style": {
+        "width": "60px",
+        "height": "60px",
+        "display": "block",
+        "marginBottom": "20px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Shape",
+      "metadata": {
+        "createdAt": "2026-04-07T09:21:17.584Z",
+        "updatedAt": "2026-04-07T09:21:17.584Z"
+      }
+    },
+    "da8a4cfb-5a79-4396-af3d-e295efadfc7a": {
+      "id": "da8a4cfb-5a79-4396-af3d-e295efadfc7a",
+      "type": "Text",
+      "parentId": "3885bd42-29b5-4262-9171-80bf6aa8ab10",
+      "order": 1,
+      "props": {
+        "text": "<h3>Spa & Grooming</h3>",
+        "tag": "h3"
+      },
+      "style": {
+        "fontSize": "22px",
+        "color": "#4a4a4a",
+        "lineHeight": "1.6",
+        "fontWeight": "700",
+        "marginBottom": "12px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T09:21:17.584Z",
+        "updatedAt": "2026-04-07T09:21:17.584Z"
+      }
+    },
+    "5e6700dc-d88f-428d-b2e9-6900e2830edb": {
+      "id": "5e6700dc-d88f-428d-b2e9-6900e2830edb",
+      "type": "Text",
+      "parentId": "3885bd42-29b5-4262-9171-80bf6aa8ab10",
+      "order": 2,
+      "props": {
+        "text": "<p>Chăm sóc sắc đẹp chuyên nghiệp cho thú cưng của bạn.</p>",
         "tag": "p"
       },
       "style": {
-        "fontSize": "18px",
-        "color": "#bfdbfe",
-        "margin": "0",
+        "fontSize": "15px",
+        "color": "#7a7a7a",
         "lineHeight": "1.6"
       },
       "responsiveStyle": {},
       "interactions": [],
       "hidden": false,
-      "locked": false
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T09:21:17.584Z",
+        "updatedAt": "2026-04-07T09:21:17.584Z"
+      }
     },
-    "cta-btn": {
-      "id": "cta-btn",
-      "type": "Button",
-      "name": "Final Signup Button",
-      "parentId": "cta-content",
-      "order": 2,
+    "608d3d8a-b8f2-4015-b913-40507904455c": {
+      "id": "608d3d8a-b8f2-4015-b913-40507904455c",
+      "type": "Section",
+      "parentId": "root",
+      "order": 1,
       "props": {
-        "label": "Create Free Account",
-        "variant": "primary",
-        "size": "lg",
-        "disabled": false
+        "minHeight": 100
       },
       "style": {
-        "margin": "16px 0 0 0",
-        "padding": "16px 40px",
-        "backgroundColor": "#ffffff",
-        "color": "#2563eb",
-        "border": "none",
-        "borderRadius": "8px",
-        "fontWeight": "700",
-        "fontSize": "16px",
-        "cursor": "pointer",
-        "boxShadow": "0 10px 15px -3px rgba(0, 0, 0, 0.1)"
+        "display": "flex",
+        "flexDirection": "column",
+        "width": "100%",
+        "minHeight": "100px",
+        "position": "relative",
+        "backgroundColor": "#ffffff"
       },
       "responsiveStyle": {},
       "interactions": [],
       "hidden": false,
-      "locked": false
+      "locked": false,
+      "name": "Section",
+      "metadata": {
+        "createdAt": "2026-04-07T10:14:43.698Z",
+        "updatedAt": "2026-04-07T10:15:25.435Z"
+      }
+    },
+    "7da845f6-7935-4bdc-8ccd-6c3cf47ecbaa": {
+      "id": "7da845f6-7935-4bdc-8ccd-6c3cf47ecbaa",
+      "type": "Container",
+      "parentId": "608d3d8a-b8f2-4015-b913-40507904455c",
+      "order": 0,
+      "props": {
+        "display": "flex",
+        "direction": "row",
+        "gap": "0",
+        "padding": "0",
+        "showPlaceholder": true
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "row",
+        "gap": "8px",
+        "padding": "20px 48px",
+        "width": "100%",
+        "position": "sticky",
+        "alignItems": "center",
+        "justifyContent": "space-between",
+        "backgroundColor": "#ffffff",
+        "borderBottom": "1px solid #eeeeee",
+        "top": "0",
+        "zIndex": "1000"
+      },
+      "responsiveStyle": {
+        "mobile": {
+          "padding": "15px 20px"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Container",
+      "metadata": {
+        "createdAt": "2026-04-07T10:14:59.558Z",
+        "updatedAt": "2026-04-07T10:14:59.558Z"
+      }
+    },
+    "c2437a8b-24d8-4243-81d3-ff46ed2033bf": {
+      "id": "c2437a8b-24d8-4243-81d3-ff46ed2033bf",
+      "type": "Container",
+      "parentId": "7da845f6-7935-4bdc-8ccd-6c3cf47ecbaa",
+      "order": 0,
+      "props": {
+        "display": "flex",
+        "direction": "row",
+        "gap": "8px",
+        "padding": "16px",
+        "showPlaceholder": true
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "12px",
+        "padding": "16px",
+        "width": "100%",
+        "position": "relative",
+        "alignItems": "center"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Container",
+      "metadata": {
+        "createdAt": "2026-04-07T10:14:59.558Z",
+        "updatedAt": "2026-04-07T10:14:59.558Z"
+      }
+    },
+    "9cacb2e3-a09b-4831-941d-b3468ed62bc2": {
+      "id": "9cacb2e3-a09b-4831-941d-b3468ed62bc2",
+      "type": "Shape",
+      "parentId": "c2437a8b-24d8-4243-81d3-ff46ed2033bf",
+      "order": 0,
+      "props": {
+        "shape": "circle",
+        "fill": "#ff8c94",
+        "stroke": "transparent",
+        "strokeWidth": 0
+      },
+      "style": {
+        "width": "32px",
+        "height": "32px",
+        "display": "block"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Shape",
+      "metadata": {
+        "createdAt": "2026-04-07T10:14:59.558Z",
+        "updatedAt": "2026-04-07T10:14:59.558Z"
+      }
+    },
+    "86f0ec1f-ffdd-439e-9a1a-7465a643ff72": {
+      "id": "86f0ec1f-ffdd-439e-9a1a-7465a643ff72",
+      "type": "Text",
+      "parentId": "c2437a8b-24d8-4243-81d3-ff46ed2033bf",
+      "order": 1,
+      "props": {
+        "text": "Cún Miêu",
+        "tag": "h4"
+      },
+      "style": {
+        "fontSize": "20px",
+        "color": "#4a4a4a",
+        "lineHeight": "1.6",
+        "fontWeight": "800",
+        "margin": "0"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T10:14:59.558Z",
+        "updatedAt": "2026-04-07T10:14:59.558Z"
+      }
+    },
+    "9e2730a8-2b10-4b96-aa89-73fe916e15f1": {
+      "id": "9e2730a8-2b10-4b96-aa89-73fe916e15f1",
+      "type": "NavigationMenu",
+      "parentId": "7da845f6-7935-4bdc-8ccd-6c3cf47ecbaa",
+      "order": 1,
+      "props": {
+        "items": [
+          {
+            "label": "Trang Chủ",
+            "link": "/"
+          },
+          {
+            "label": "Dịch Vụ",
+            "link": "/services"
+          },
+          {
+            "label": "Thú Cưng",
+            "link": "/pets"
+          },
+          {
+            "label": "Cửa Hàng",
+            "link": "/shop"
+          },
+          {
+            "label": "Liên Hệ",
+            "link": "/contact"
+          }
+        ],
+        "layout": "horizontal",
+        "textColor": "#4a4a4a",
+        "activeColor": "#ff8c94",
+        "fontSize": "16px",
+        "gap": 32
+      },
+      "style": {
+        "width": "100%",
+        "padding": "0 16px",
+        "display": "flex",
+        "alignItems": "center"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Navigation Menu",
+      "metadata": {
+        "createdAt": "2026-04-07T10:14:59.558Z",
+        "updatedAt": "2026-04-07T10:14:59.558Z"
+      },
+      "responsiveHidden": {
+        "mobile": true,
+        "tablet": true
+      }
+    },
+    "53ea7c22-e13e-4b2f-afd7-021dfefa3a96": {
+      "id": "53ea7c22-e13e-4b2f-afd7-021dfefa3a96",
+      "type": "Container",
+      "parentId": "7da845f6-7935-4bdc-8ccd-6c3cf47ecbaa",
+      "order": 2,
+      "props": {
+        "display": "flex",
+        "direction": "column",
+        "gap": "8px",
+        "padding": "16px",
+        "showPlaceholder": true
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "8px",
+        "padding": "16px",
+        "width": "100%",
+        "position": "relative",
+        "alignItems": "center"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Container",
+      "metadata": {
+        "createdAt": "2026-04-07T10:14:59.558Z",
+        "updatedAt": "2026-04-07T10:14:59.558Z"
+      }
+    },
+    "6b1751f5-a021-4cc4-a4ea-bc4ee5322162": {
+      "id": "6b1751f5-a021-4cc4-a4ea-bc4ee5322162",
+      "type": "Button",
+      "parentId": "53ea7c22-e13e-4b2f-afd7-021dfefa3a96",
+      "order": 0,
+      "props": {
+        "label": "Đặt Lịch Ngay",
+        "variant": "primary",
+        "size": "md",
+        "disabled": false
+      },
+      "style": {
+        "display": "inline-flex",
+        "alignItems": "center",
+        "justifyContent": "center",
+        "borderRadius": "50px",
+        "cursor": "pointer",
+        "fontWeight": "600",
+        "fontSize": "14px",
+        "border": "none",
+        "backgroundColor": "#ff8c94",
+        "color": "#ffffff",
+        "padding": "10px 24px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Button",
+      "metadata": {
+        "createdAt": "2026-04-07T10:14:59.558Z",
+        "updatedAt": "2026-04-07T10:14:59.558Z"
+      },
+      "responsiveProps": {
+        "mobile": {
+          "label": "Đặt Lịch"
+        }
+      }
+    },
+    "c87d9ea8-d214-4bb8-a0d9-325df53e5ba9": {
+      "id": "c87d9ea8-d214-4bb8-a0d9-325df53e5ba9",
+      "type": "Section",
+      "parentId": "root",
+      "order": 3,
+      "props": {
+        "minHeight": 112
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "width": "100%",
+        "minHeight": "112px",
+        "position": "relative",
+        "backgroundColor": "#ffffff"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Section",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:03.177Z",
+        "updatedAt": "2026-04-07T10:15:32.769Z"
+      }
+    },
+    "728ee19a-1af3-42d1-95b4-179ae0a6f295": {
+      "id": "728ee19a-1af3-42d1-95b4-179ae0a6f295",
+      "type": "Container",
+      "parentId": "c87d9ea8-d214-4bb8-a0d9-325df53e5ba9",
+      "order": 0,
+      "props": {
+        "display": "flex",
+        "direction": "row",
+        "gap": "30px",
+        "padding": "60px 40px",
+        "showPlaceholder": true
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "row",
+        "gap": "40px",
+        "padding": "80px 20px",
+        "width": "100%",
+        "position": "relative",
+        "justifyContent": "space-around",
+        "alignItems": "center",
+        "backgroundColor": "#ffffff"
+      },
+      "responsiveStyle": {
+        "mobile": {
+          "flexDirection": "column",
+          "gap": "48px"
+        },
+        "tablet": {
+          "flexWrap": "wrap"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Container",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:13.737Z",
+        "updatedAt": "2026-04-07T10:15:13.737Z"
+      }
+    },
+    "00fe2f68-0281-4895-93be-f6807425377e": {
+      "id": "00fe2f68-0281-4895-93be-f6807425377e",
+      "type": "Column",
+      "parentId": "728ee19a-1af3-42d1-95b4-179ae0a6f295",
+      "order": 0,
+      "props": {
+        "gap": 8,
+        "padding": 16,
+        "alignItems": "center"
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "8px",
+        "padding": "16px",
+        "width": "100%",
+        "minHeight": "80px",
+        "position": "relative",
+        "alignItems": "center",
+        "textAlign": "center",
+        "flex": "1"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Column",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:13.738Z",
+        "updatedAt": "2026-04-07T10:15:13.738Z"
+      }
+    },
+    "ca9a4b49-13a4-4ccc-a000-5141564d43bc": {
+      "id": "ca9a4b49-13a4-4ccc-a000-5141564d43bc",
+      "type": "Text",
+      "parentId": "00fe2f68-0281-4895-93be-f6807425377e",
+      "order": 0,
+      "props": {
+        "text": "15k+",
+        "tag": "h2"
+      },
+      "style": {
+        "fontSize": "48px",
+        "color": "#ff8c94",
+        "lineHeight": "1",
+        "fontWeight": "900",
+        "marginBottom": "8px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:13.738Z",
+        "updatedAt": "2026-04-07T10:15:13.738Z"
+      }
+    },
+    "2ac0d9c0-bdb4-4142-bcbe-db59563e3fee": {
+      "id": "2ac0d9c0-bdb4-4142-bcbe-db59563e3fee",
+      "type": "Text",
+      "parentId": "00fe2f68-0281-4895-93be-f6807425377e",
+      "order": 1,
+      "props": {
+        "text": "Active Users",
+        "tag": "h4"
+      },
+      "style": {
+        "fontSize": "18px",
+        "color": "#4a4a4a",
+        "lineHeight": "1.6",
+        "fontWeight": "700",
+        "marginBottom": "4px",
+        "textTransform": "uppercase",
+        "letterSpacing": "1px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:13.738Z",
+        "updatedAt": "2026-04-07T10:15:13.738Z"
+      }
+    },
+    "f0daf32e-7d7c-431c-a4c0-e10db9953c26": {
+      "id": "f0daf32e-7d7c-431c-a4c0-e10db9953c26",
+      "type": "Text",
+      "parentId": "00fe2f68-0281-4895-93be-f6807425377e",
+      "order": 2,
+      "props": {
+        "text": "Happy pet parents joined our community.",
+        "tag": "p"
+      },
+      "style": {
+        "fontSize": "14px",
+        "color": "#7a7a7a",
+        "lineHeight": "1.6",
+        "maxWidth": "200px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:13.738Z",
+        "updatedAt": "2026-04-07T10:15:13.738Z"
+      }
+    },
+    "3684871a-a2ae-4f1c-a0ca-a5a5c626bf80": {
+      "id": "3684871a-a2ae-4f1c-a0ca-a5a5c626bf80",
+      "type": "Column",
+      "parentId": "728ee19a-1af3-42d1-95b4-179ae0a6f295",
+      "order": 1,
+      "props": {
+        "gap": 8,
+        "padding": 16,
+        "alignItems": "center"
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "8px",
+        "padding": "16px",
+        "width": "100%",
+        "minHeight": "80px",
+        "position": "relative",
+        "alignItems": "center",
+        "textAlign": "center",
+        "flex": "1"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Column",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:13.738Z",
+        "updatedAt": "2026-04-07T10:15:13.738Z"
+      }
+    },
+    "e31cf6f5-e2c3-4581-a7e5-060ccc56b202": {
+      "id": "e31cf6f5-e2c3-4581-a7e5-060ccc56b202",
+      "type": "Text",
+      "parentId": "3684871a-a2ae-4f1c-a0ca-a5a5c626bf80",
+      "order": 0,
+      "props": {
+        "text": "120+",
+        "tag": "h2"
+      },
+      "style": {
+        "fontSize": "48px",
+        "color": "#ff8c94",
+        "lineHeight": "1",
+        "fontWeight": "900",
+        "marginBottom": "8px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:13.738Z",
+        "updatedAt": "2026-04-07T10:15:13.738Z"
+      }
+    },
+    "36ae0e26-8b3a-42e0-b718-b53ac32abfec": {
+      "id": "36ae0e26-8b3a-42e0-b718-b53ac32abfec",
+      "type": "Text",
+      "parentId": "3684871a-a2ae-4f1c-a0ca-a5a5c626bf80",
+      "order": 1,
+      "props": {
+        "text": "Cities",
+        "tag": "h4"
+      },
+      "style": {
+        "fontSize": "18px",
+        "color": "#4a4a4a",
+        "lineHeight": "1.6",
+        "fontWeight": "700",
+        "marginBottom": "4px",
+        "textTransform": "uppercase",
+        "letterSpacing": "1px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:13.738Z",
+        "updatedAt": "2026-04-07T10:15:13.738Z"
+      }
+    },
+    "88650a18-9ffe-4c82-833e-6cbd85ef8b21": {
+      "id": "88650a18-9ffe-4c82-833e-6cbd85ef8b21",
+      "type": "Text",
+      "parentId": "3684871a-a2ae-4f1c-a0ca-a5a5c626bf80",
+      "order": 2,
+      "props": {
+        "text": "Providing care across the entire country.",
+        "tag": "p"
+      },
+      "style": {
+        "fontSize": "14px",
+        "color": "#7a7a7a",
+        "lineHeight": "1.6",
+        "maxWidth": "200px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:13.738Z",
+        "updatedAt": "2026-04-07T10:15:13.738Z"
+      }
+    },
+    "06dd9793-f59b-4359-8964-e14ca3b865fa": {
+      "id": "06dd9793-f59b-4359-8964-e14ca3b865fa",
+      "type": "Column",
+      "parentId": "728ee19a-1af3-42d1-95b4-179ae0a6f295",
+      "order": 2,
+      "props": {
+        "gap": 8,
+        "padding": 16,
+        "alignItems": "center"
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "8px",
+        "padding": "16px",
+        "width": "100%",
+        "minHeight": "80px",
+        "position": "relative",
+        "alignItems": "center",
+        "textAlign": "center",
+        "flex": "1"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Column",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:13.738Z",
+        "updatedAt": "2026-04-07T10:15:13.738Z"
+      }
+    },
+    "ccf650b9-e444-4236-ad7d-c93901b45b4a": {
+      "id": "ccf650b9-e444-4236-ad7d-c93901b45b4a",
+      "type": "Text",
+      "parentId": "06dd9793-f59b-4359-8964-e14ca3b865fa",
+      "order": 0,
+      "props": {
+        "text": "99%",
+        "tag": "h2"
+      },
+      "style": {
+        "fontSize": "48px",
+        "color": "#ff8c94",
+        "lineHeight": "1",
+        "fontWeight": "900",
+        "marginBottom": "8px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:13.738Z",
+        "updatedAt": "2026-04-07T10:15:13.738Z"
+      }
+    },
+    "1efda8d1-0e10-4c5d-a1a8-e7baa1f7901e": {
+      "id": "1efda8d1-0e10-4c5d-a1a8-e7baa1f7901e",
+      "type": "Text",
+      "parentId": "06dd9793-f59b-4359-8964-e14ca3b865fa",
+      "order": 1,
+      "props": {
+        "text": "Satisfaction",
+        "tag": "h4"
+      },
+      "style": {
+        "fontSize": "18px",
+        "color": "#4a4a4a",
+        "lineHeight": "1.6",
+        "fontWeight": "700",
+        "marginBottom": "4px",
+        "textTransform": "uppercase",
+        "letterSpacing": "1px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:13.738Z",
+        "updatedAt": "2026-04-07T10:15:13.738Z"
+      }
+    },
+    "8912e532-e14c-4678-ad4c-c9c168a65a92": {
+      "id": "8912e532-e14c-4678-ad4c-c9c168a65a92",
+      "type": "Text",
+      "parentId": "06dd9793-f59b-4359-8964-e14ca3b865fa",
+      "order": 2,
+      "props": {
+        "text": "Rated 5 stars by our furry friends.",
+        "tag": "p"
+      },
+      "style": {
+        "fontSize": "14px",
+        "color": "#7a7a7a",
+        "lineHeight": "1.6",
+        "maxWidth": "200px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:13.738Z",
+        "updatedAt": "2026-04-07T10:15:13.738Z"
+      }
+    },
+    "f50aa1a8-3f38-4a29-bf68-e8cf70b00065": {
+      "id": "f50aa1a8-3f38-4a29-bf68-e8cf70b00065",
+      "type": "Column",
+      "parentId": "728ee19a-1af3-42d1-95b4-179ae0a6f295",
+      "order": 3,
+      "props": {
+        "gap": 8,
+        "padding": 16,
+        "alignItems": "center"
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "8px",
+        "padding": "16px",
+        "width": "100%",
+        "minHeight": "80px",
+        "position": "relative",
+        "alignItems": "center",
+        "textAlign": "center",
+        "flex": "1"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Column",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:13.738Z",
+        "updatedAt": "2026-04-07T10:15:13.738Z"
+      }
+    },
+    "ed9a019e-120e-4a37-9028-546ea96db338": {
+      "id": "ed9a019e-120e-4a37-9028-546ea96db338",
+      "type": "Text",
+      "parentId": "f50aa1a8-3f38-4a29-bf68-e8cf70b00065",
+      "order": 0,
+      "props": {
+        "text": "24/7",
+        "tag": "h2"
+      },
+      "style": {
+        "fontSize": "48px",
+        "color": "#ff8c94",
+        "lineHeight": "1",
+        "fontWeight": "900",
+        "marginBottom": "8px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:13.738Z",
+        "updatedAt": "2026-04-07T10:15:13.738Z"
+      }
+    },
+    "9a33dc24-291c-46af-99e3-db82e553d4cd": {
+      "id": "9a33dc24-291c-46af-99e3-db82e553d4cd",
+      "type": "Text",
+      "parentId": "f50aa1a8-3f38-4a29-bf68-e8cf70b00065",
+      "order": 1,
+      "props": {
+        "text": "Support",
+        "tag": "h4"
+      },
+      "style": {
+        "fontSize": "18px",
+        "color": "#4a4a4a",
+        "lineHeight": "1.6",
+        "fontWeight": "700",
+        "marginBottom": "4px",
+        "textTransform": "uppercase",
+        "letterSpacing": "1px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:13.738Z",
+        "updatedAt": "2026-04-07T10:15:13.738Z"
+      }
+    },
+    "81e7ed30-625c-4198-9a4e-69dbae47b2d7": {
+      "id": "81e7ed30-625c-4198-9a4e-69dbae47b2d7",
+      "type": "Text",
+      "parentId": "f50aa1a8-3f38-4a29-bf68-e8cf70b00065",
+      "order": 2,
+      "props": {
+        "text": "Always here for your pet's needs.",
+        "tag": "p"
+      },
+      "style": {
+        "fontSize": "14px",
+        "color": "#7a7a7a",
+        "lineHeight": "1.6",
+        "maxWidth": "200px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:13.738Z",
+        "updatedAt": "2026-04-07T10:15:13.738Z"
+      }
+    },
+    "bba59e98-744e-442e-86ed-0b216e0feca0": {
+      "id": "bba59e98-744e-442e-86ed-0b216e0feca0",
+      "type": "Section",
+      "parentId": "root",
+      "order": 5,
+      "props": {
+        "minHeight": 400
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "width": "100%",
+        "minHeight": "400px",
+        "position": "relative",
+        "backgroundColor": "#ffffff"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Section",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:35.464Z",
+        "updatedAt": "2026-04-07T10:15:35.464Z"
+      }
+    },
+    "e9d64b5a-1254-4254-893e-59e88618226d": {
+      "id": "e9d64b5a-1254-4254-893e-59e88618226d",
+      "type": "Container",
+      "parentId": "bba59e98-744e-442e-86ed-0b216e0feca0",
+      "order": 0,
+      "props": {
+        "display": "flex",
+        "direction": "column",
+        "gap": "0",
+        "padding": "0",
+        "showPlaceholder": true
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "8px",
+        "padding": "16px",
+        "width": "100%",
+        "position": "relative",
+        "backgroundColor": "#1a1a1a",
+        "color": "#ffffff",
+        "paddingTop": "80px",
+        "paddingBottom": "40px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Container",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:48.840Z",
+        "updatedAt": "2026-04-07T10:15:48.840Z"
+      }
+    },
+    "e5831fae-7823-4155-ba5d-e2b1352742c3": {
+      "id": "e5831fae-7823-4155-ba5d-e2b1352742c3",
+      "type": "Grid",
+      "parentId": "e9d64b5a-1254-4254-893e-59e88618226d",
+      "order": 0,
+      "props": {
+        "columns": 4,
+        "rows": 1,
+        "columnGap": 40,
+        "rowGap": 40,
+        "padding": 16
+      },
+      "style": {
+        "display": "grid",
+        "columnGap": "16px",
+        "rowGap": "16px",
+        "padding": "16px",
+        "width": "100%",
+        "minHeight": "80px",
+        "paddingLeft": "48px",
+        "paddingRight": "48px",
+        "marginBottom": "60px"
+      },
+      "responsiveStyle": {
+        "tablet": {
+          "gridTemplateColumns": "1fr 1fr"
+        },
+        "mobile": {
+          "gridTemplateColumns": "1fr",
+          "paddingLeft": "24px",
+          "paddingRight": "24px"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Grid",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:48.841Z",
+        "updatedAt": "2026-04-07T10:15:48.841Z"
+      }
+    },
+    "658d77f8-4a3a-4708-87d9-6c6a1a51574f": {
+      "id": "658d77f8-4a3a-4708-87d9-6c6a1a51574f",
+      "type": "Column",
+      "parentId": "e5831fae-7823-4155-ba5d-e2b1352742c3",
+      "order": 0,
+      "props": {
+        "gap": 20,
+        "padding": 16,
+        "alignItems": "flex-start"
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "8px",
+        "padding": "16px",
+        "width": "100%",
+        "minHeight": "80px",
+        "position": "relative"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Column",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:48.841Z",
+        "updatedAt": "2026-04-07T10:15:48.841Z"
+      }
+    },
+    "6d227e35-2068-4998-87c8-d92e99f56b0e": {
+      "id": "6d227e35-2068-4998-87c8-d92e99f56b0e",
+      "type": "Container",
+      "parentId": "658d77f8-4a3a-4708-87d9-6c6a1a51574f",
+      "order": 0,
+      "props": {
+        "display": "flex",
+        "direction": "row",
+        "gap": "12px",
+        "padding": "16px",
+        "showPlaceholder": true
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "8px",
+        "padding": "16px",
+        "width": "100%",
+        "position": "relative",
+        "alignItems": "center",
+        "marginBottom": "16px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Container",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:48.841Z",
+        "updatedAt": "2026-04-07T10:15:48.841Z"
+      }
+    },
+    "f4f23161-6c12-4358-9788-a2cad5aee027": {
+      "id": "f4f23161-6c12-4358-9788-a2cad5aee027",
+      "type": "Shape",
+      "parentId": "6d227e35-2068-4998-87c8-d92e99f56b0e",
+      "order": 0,
+      "props": {
+        "shape": "circle",
+        "fill": "#ff8c94",
+        "stroke": "transparent",
+        "strokeWidth": 0
+      },
+      "style": {
+        "width": "32px",
+        "height": "32px",
+        "display": "block"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Shape",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:48.841Z",
+        "updatedAt": "2026-04-07T10:15:48.841Z"
+      }
+    },
+    "a3866dc5-c475-4e61-b37e-15ee49b60eaf": {
+      "id": "a3866dc5-c475-4e61-b37e-15ee49b60eaf",
+      "type": "Text",
+      "parentId": "6d227e35-2068-4998-87c8-d92e99f56b0e",
+      "order": 1,
+      "props": {
+        "text": "Cún Miêu",
+        "tag": "h3"
+      },
+      "style": {
+        "fontSize": "24px",
+        "color": "#ffffff",
+        "lineHeight": "1.6",
+        "fontWeight": "800",
+        "margin": "0"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:48.841Z",
+        "updatedAt": "2026-04-07T10:15:48.841Z"
+      }
+    },
+    "a64afcbe-fa3e-47c0-b154-6f2aaa8157b3": {
+      "id": "a64afcbe-fa3e-47c0-b154-6f2aaa8157b3",
+      "type": "Text",
+      "parentId": "658d77f8-4a3a-4708-87d9-6c6a1a51574f",
+      "order": 1,
+      "props": {
+        "text": "Providing the best care and products for your furry friends since 2010. Join our community of pet lovers.",
+        "tag": "p"
+      },
+      "style": {
+        "fontSize": "15px",
+        "color": "#a0a0a0",
+        "lineHeight": "1.6",
+        "maxWidth": "260px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:48.841Z",
+        "updatedAt": "2026-04-07T10:15:48.841Z"
+      }
+    },
+    "31ff1192-69c4-4624-a69c-b18c26c396d9": {
+      "id": "31ff1192-69c4-4624-a69c-b18c26c396d9",
+      "type": "Column",
+      "parentId": "e5831fae-7823-4155-ba5d-e2b1352742c3",
+      "order": 1,
+      "props": {
+        "gap": 16,
+        "padding": 16,
+        "alignItems": "flex-start"
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "8px",
+        "padding": "16px",
+        "width": "100%",
+        "minHeight": "80px",
+        "position": "relative"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Column",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:48.841Z",
+        "updatedAt": "2026-04-07T10:15:48.841Z"
+      }
+    },
+    "50ee0595-ed89-4aad-a94b-713ab7ffde3c": {
+      "id": "50ee0595-ed89-4aad-a94b-713ab7ffde3c",
+      "type": "Text",
+      "parentId": "31ff1192-69c4-4624-a69c-b18c26c396d9",
+      "order": 0,
+      "props": {
+        "text": "Products",
+        "tag": "h4"
+      },
+      "style": {
+        "fontSize": "18px",
+        "color": "#ffffff",
+        "lineHeight": "1.6",
+        "fontWeight": "700",
+        "marginBottom": "12px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:48.841Z",
+        "updatedAt": "2026-04-07T10:15:48.841Z"
+      }
+    },
+    "3742d5ab-4e3e-4262-841d-be05f5bc5ff7": {
+      "id": "3742d5ab-4e3e-4262-841d-be05f5bc5ff7",
+      "type": "Button",
+      "parentId": "31ff1192-69c4-4624-a69c-b18c26c396d9",
+      "order": 1,
+      "props": {
+        "label": "Pet Food",
+        "variant": "ghost",
+        "size": "md",
+        "disabled": false
+      },
+      "style": {
+        "display": "inline-flex",
+        "alignItems": "center",
+        "justifyContent": "flex-start",
+        "borderRadius": "6px",
+        "cursor": "pointer",
+        "fontWeight": "500",
+        "fontSize": "15px",
+        "border": "none",
+        "backgroundColor": "#111827",
+        "color": "#a0a0a0",
+        "padding": "0",
+        "textAlign": "left"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Button",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:48.841Z",
+        "updatedAt": "2026-04-07T10:15:48.841Z"
+      }
+    },
+    "1d8e5d25-d24b-4de8-9a77-c9e00d57c0b3": {
+      "id": "1d8e5d25-d24b-4de8-9a77-c9e00d57c0b3",
+      "type": "Button",
+      "parentId": "31ff1192-69c4-4624-a69c-b18c26c396d9",
+      "order": 2,
+      "props": {
+        "label": "Toys & Accessories",
+        "variant": "ghost",
+        "size": "md",
+        "disabled": false
+      },
+      "style": {
+        "display": "inline-flex",
+        "alignItems": "center",
+        "justifyContent": "flex-start",
+        "borderRadius": "6px",
+        "cursor": "pointer",
+        "fontWeight": "500",
+        "fontSize": "15px",
+        "border": "none",
+        "backgroundColor": "#111827",
+        "color": "#a0a0a0",
+        "padding": "0",
+        "textAlign": "left"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Button",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:48.841Z",
+        "updatedAt": "2026-04-07T10:15:48.841Z"
+      }
+    },
+    "1ed4db49-9b95-4c9e-b9a7-745ffe6ba573": {
+      "id": "1ed4db49-9b95-4c9e-b9a7-745ffe6ba573",
+      "type": "Button",
+      "parentId": "31ff1192-69c4-4624-a69c-b18c26c396d9",
+      "order": 3,
+      "props": {
+        "label": "Health Supplies",
+        "variant": "ghost",
+        "size": "md",
+        "disabled": false
+      },
+      "style": {
+        "display": "inline-flex",
+        "alignItems": "center",
+        "justifyContent": "flex-start",
+        "borderRadius": "6px",
+        "cursor": "pointer",
+        "fontWeight": "500",
+        "fontSize": "15px",
+        "border": "none",
+        "backgroundColor": "#111827",
+        "color": "#a0a0a0",
+        "padding": "0",
+        "textAlign": "left"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Button",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:48.841Z",
+        "updatedAt": "2026-04-07T10:15:48.841Z"
+      }
+    },
+    "b934807a-1a87-4255-aa87-8ba26c2668df": {
+      "id": "b934807a-1a87-4255-aa87-8ba26c2668df",
+      "type": "Column",
+      "parentId": "e5831fae-7823-4155-ba5d-e2b1352742c3",
+      "order": 2,
+      "props": {
+        "gap": 16,
+        "padding": 16,
+        "alignItems": "flex-start"
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "8px",
+        "padding": "16px",
+        "width": "100%",
+        "minHeight": "80px",
+        "position": "relative"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Column",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:48.841Z",
+        "updatedAt": "2026-04-07T10:15:48.841Z"
+      }
+    },
+    "1efa47ba-2397-4f9d-a0d4-d9313ee3e0a0": {
+      "id": "1efa47ba-2397-4f9d-a0d4-d9313ee3e0a0",
+      "type": "Text",
+      "parentId": "b934807a-1a87-4255-aa87-8ba26c2668df",
+      "order": 0,
+      "props": {
+        "text": "Company",
+        "tag": "h4"
+      },
+      "style": {
+        "fontSize": "18px",
+        "color": "#ffffff",
+        "lineHeight": "1.6",
+        "fontWeight": "700",
+        "marginBottom": "12px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:48.841Z",
+        "updatedAt": "2026-04-07T10:15:48.841Z"
+      }
+    },
+    "4c8f13f1-0747-4d49-bd94-06976e7bbe12": {
+      "id": "4c8f13f1-0747-4d49-bd94-06976e7bbe12",
+      "type": "Button",
+      "parentId": "b934807a-1a87-4255-aa87-8ba26c2668df",
+      "order": 1,
+      "props": {
+        "label": "About Us",
+        "variant": "ghost",
+        "size": "md",
+        "disabled": false
+      },
+      "style": {
+        "display": "inline-flex",
+        "alignItems": "center",
+        "justifyContent": "flex-start",
+        "borderRadius": "6px",
+        "cursor": "pointer",
+        "fontWeight": "500",
+        "fontSize": "15px",
+        "border": "none",
+        "backgroundColor": "#111827",
+        "color": "#a0a0a0",
+        "padding": "0",
+        "textAlign": "left"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Button",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:48.841Z",
+        "updatedAt": "2026-04-07T10:15:48.841Z"
+      }
+    },
+    "5db5a59f-1dd8-449b-8af9-da36943452e9": {
+      "id": "5db5a59f-1dd8-449b-8af9-da36943452e9",
+      "type": "Button",
+      "parentId": "b934807a-1a87-4255-aa87-8ba26c2668df",
+      "order": 2,
+      "props": {
+        "label": "Careers",
+        "variant": "ghost",
+        "size": "md",
+        "disabled": false
+      },
+      "style": {
+        "display": "inline-flex",
+        "alignItems": "center",
+        "justifyContent": "flex-start",
+        "borderRadius": "6px",
+        "cursor": "pointer",
+        "fontWeight": "500",
+        "fontSize": "15px",
+        "border": "none",
+        "backgroundColor": "#111827",
+        "color": "#a0a0a0",
+        "padding": "0",
+        "textAlign": "left"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Button",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:48.841Z",
+        "updatedAt": "2026-04-07T10:15:48.841Z"
+      }
+    },
+    "7626186e-42b5-481d-b522-26fd9c9c5441": {
+      "id": "7626186e-42b5-481d-b522-26fd9c9c5441",
+      "type": "Button",
+      "parentId": "b934807a-1a87-4255-aa87-8ba26c2668df",
+      "order": 3,
+      "props": {
+        "label": "Contact",
+        "variant": "ghost",
+        "size": "md",
+        "disabled": false
+      },
+      "style": {
+        "display": "inline-flex",
+        "alignItems": "center",
+        "justifyContent": "flex-start",
+        "borderRadius": "6px",
+        "cursor": "pointer",
+        "fontWeight": "500",
+        "fontSize": "15px",
+        "border": "none",
+        "backgroundColor": "#111827",
+        "color": "#a0a0a0",
+        "padding": "0",
+        "textAlign": "left"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Button",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:48.841Z",
+        "updatedAt": "2026-04-07T10:15:48.841Z"
+      }
+    },
+    "97876b79-3e4f-447d-a7da-4d54c83858b6": {
+      "id": "97876b79-3e4f-447d-a7da-4d54c83858b6",
+      "type": "Column",
+      "parentId": "e5831fae-7823-4155-ba5d-e2b1352742c3",
+      "order": 3,
+      "props": {
+        "gap": 16,
+        "padding": 16,
+        "alignItems": "flex-start"
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "8px",
+        "padding": "16px",
+        "width": "100%",
+        "minHeight": "80px",
+        "position": "relative"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Column",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:48.841Z",
+        "updatedAt": "2026-04-07T10:15:48.841Z"
+      }
+    },
+    "80073be5-7b79-4333-8ca9-edb8f61a85b0": {
+      "id": "80073be5-7b79-4333-8ca9-edb8f61a85b0",
+      "type": "Text",
+      "parentId": "97876b79-3e4f-447d-a7da-4d54c83858b6",
+      "order": 0,
+      "props": {
+        "text": "Resources",
+        "tag": "h4"
+      },
+      "style": {
+        "fontSize": "18px",
+        "color": "#ffffff",
+        "lineHeight": "1.6",
+        "fontWeight": "700",
+        "marginBottom": "12px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:48.841Z",
+        "updatedAt": "2026-04-07T10:15:48.841Z"
+      }
+    },
+    "5791bfe2-d3cf-4af7-bf3c-38f3fc56c65d": {
+      "id": "5791bfe2-d3cf-4af7-bf3c-38f3fc56c65d",
+      "type": "Button",
+      "parentId": "97876b79-3e4f-447d-a7da-4d54c83858b6",
+      "order": 1,
+      "props": {
+        "label": "Pet Care Blog",
+        "variant": "ghost",
+        "size": "md",
+        "disabled": false
+      },
+      "style": {
+        "display": "inline-flex",
+        "alignItems": "center",
+        "justifyContent": "flex-start",
+        "borderRadius": "6px",
+        "cursor": "pointer",
+        "fontWeight": "500",
+        "fontSize": "15px",
+        "border": "none",
+        "backgroundColor": "#111827",
+        "color": "#a0a0a0",
+        "padding": "0",
+        "textAlign": "left"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Button",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:48.841Z",
+        "updatedAt": "2026-04-07T10:15:48.841Z"
+      }
+    },
+    "91faff1c-bf56-4348-9740-a626d4f00127": {
+      "id": "91faff1c-bf56-4348-9740-a626d4f00127",
+      "type": "Button",
+      "parentId": "97876b79-3e4f-447d-a7da-4d54c83858b6",
+      "order": 2,
+      "props": {
+        "label": "Help Center",
+        "variant": "ghost",
+        "size": "md",
+        "disabled": false
+      },
+      "style": {
+        "display": "inline-flex",
+        "alignItems": "center",
+        "justifyContent": "flex-start",
+        "borderRadius": "6px",
+        "cursor": "pointer",
+        "fontWeight": "500",
+        "fontSize": "15px",
+        "border": "none",
+        "backgroundColor": "#111827",
+        "color": "#a0a0a0",
+        "padding": "0",
+        "textAlign": "left"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Button",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:48.841Z",
+        "updatedAt": "2026-04-07T10:15:48.841Z"
+      }
+    },
+    "f830a91a-4cd2-4a50-90ab-8ca241f2f1a4": {
+      "id": "f830a91a-4cd2-4a50-90ab-8ca241f2f1a4",
+      "type": "Button",
+      "parentId": "97876b79-3e4f-447d-a7da-4d54c83858b6",
+      "order": 3,
+      "props": {
+        "label": "Privacy Policy",
+        "variant": "ghost",
+        "size": "md",
+        "disabled": false
+      },
+      "style": {
+        "display": "inline-flex",
+        "alignItems": "center",
+        "justifyContent": "flex-start",
+        "borderRadius": "6px",
+        "cursor": "pointer",
+        "fontWeight": "500",
+        "fontSize": "15px",
+        "border": "none",
+        "backgroundColor": "#111827",
+        "color": "#a0a0a0",
+        "padding": "0",
+        "textAlign": "left"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Button",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:48.841Z",
+        "updatedAt": "2026-04-07T10:15:48.841Z"
+      }
+    },
+    "da002e28-bd5f-459b-b283-a274256622a3": {
+      "id": "da002e28-bd5f-459b-b283-a274256622a3",
+      "type": "Divider",
+      "parentId": "e9d64b5a-1254-4254-893e-59e88618226d",
+      "order": 1,
+      "props": {
+        "orientation": "horizontal",
+        "thickness": 1,
+        "color": "#333333"
+      },
+      "style": {
+        "width": "100%",
+        "height": "1px",
+        "backgroundColor": "#e5e7eb",
+        "marginBottom": "32px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Divider",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:48.841Z",
+        "updatedAt": "2026-04-07T10:15:48.841Z"
+      }
+    },
+    "1bee3706-5321-4abe-9007-4a53e510a70b": {
+      "id": "1bee3706-5321-4abe-9007-4a53e510a70b",
+      "type": "Container",
+      "parentId": "e9d64b5a-1254-4254-893e-59e88618226d",
+      "order": 2,
+      "props": {
+        "display": "flex",
+        "direction": "row",
+        "gap": "8px",
+        "padding": "0 48px",
+        "showPlaceholder": true
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "8px",
+        "padding": "16px",
+        "width": "100%",
+        "position": "relative",
+        "justifyContent": "space-between",
+        "alignItems": "center"
+      },
+      "responsiveStyle": {
+        "mobile": {
+          "flexDirection": "column",
+          "gap": "16px",
+          "textAlign": "center"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Container",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:48.841Z",
+        "updatedAt": "2026-04-07T10:15:48.841Z"
+      }
+    },
+    "8de76260-0afa-488c-95ff-98144d08767c": {
+      "id": "8de76260-0afa-488c-95ff-98144d08767c",
+      "type": "Text",
+      "parentId": "1bee3706-5321-4abe-9007-4a53e510a70b",
+      "order": 0,
+      "props": {
+        "text": "© 2024 Cún Miêu Agency. All rights reserved.",
+        "tag": "p"
+      },
+      "style": {
+        "fontSize": "14px",
+        "color": "#666666",
+        "lineHeight": "1.6"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:48.841Z",
+        "updatedAt": "2026-04-07T10:15:48.841Z"
+      }
+    },
+    "c2774b69-1f94-4635-916b-72ef2290508e": {
+      "id": "c2774b69-1f94-4635-916b-72ef2290508e",
+      "type": "Text",
+      "parentId": "1bee3706-5321-4abe-9007-4a53e510a70b",
+      "order": 1,
+      "props": {
+        "text": "Made with ❤️ for Pets",
+        "tag": "p"
+      },
+      "style": {
+        "fontSize": "14px",
+        "color": "#666666",
+        "lineHeight": "1.6"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T10:15:48.841Z",
+        "updatedAt": "2026-04-07T10:15:48.841Z"
+      }
     }
   },
 

@@ -41,6 +41,8 @@ import { useAISectionState } from "./useAISectionState";
 import { AI_SECTION_ACTIONS } from "./ai-section-config";
 import type { AIConfig } from "../types";
 import type { Command } from "@ui-builder/builder-core";
+import { useBuilder } from "@ui-builder/builder-react";
+import { buildAIContext } from "../buildAIContext";
 
 // ── Icon map ──────────────────────────────────────────────────────────────
 
@@ -86,6 +88,11 @@ export function AISectionPopover({
 }: AISectionPopoverProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  const { state: builderState, builder } = useBuilder();
+
+  const getBuilderContext = useCallback(() => {
+    return buildAIContext(builderState, builder.registry.listComponents(), { includePageContext: true });
+  }, [builderState, builder]);
 
   const handleClose = useCallback(() => setOpen(false), []);
 
@@ -107,14 +114,26 @@ export function AISectionPopover({
     dispatch,
     undo,
     onClose: handleClose,
+    getBuilderContext,
   });
+
+  // Reset to main view if popover is closed and we were in custom mode
+  useEffect(() => {
+    if (!open) {
+      if (state.view === "custom") {
+        goToMain();
+      }
+    }
+  }, [open, state.view, goToMain]);
 
   // Esc key navigation
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        if (state.view === "preview") {
+        if (state.isLoading) {
+          e.preventDefault();
+        } else if (state.view === "preview") {
           cancel();
         } else if (state.view === "custom") {
           goToMain();
@@ -125,7 +144,7 @@ export function AISectionPopover({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, state.view, cancel, goToMain, handleClose]);
+  }, [open, state.view, state.isLoading, cancel, goToMain, handleClose]);
 
   const isConfigured = !!aiConfig.apiKey;
 
@@ -159,6 +178,11 @@ export function AISectionPopover({
         align="start"
         data-ai-section-popover
         onOpenAutoFocus={(e) => e.preventDefault()}
+        onInteractOutside={(e) => {
+          if (state.isLoading) {
+            e.preventDefault();
+          }
+        }}
       >
         {/* ── Header ──────────────────────────────────────────────────── */}
         <div className="relative flex items-center justify-between px-3 py-2 border-b">
@@ -441,3 +465,4 @@ function PreviewView({
     </div>
   );
 }
+
