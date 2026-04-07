@@ -7,6 +7,7 @@ export default defineConfig({
     resolve: {
         alias: {
             "@": path.resolve(__dirname, "./src"),
+            "@ui-builder/builder-components": path.resolve(__dirname, "../../packages/builder-components/src/index.ts"),
             "@ui-builder/builder-core": path.resolve(__dirname, "../../packages/builder-core/src/index.ts"),
             "@ui-builder/builder-react": path.resolve(__dirname, "../../packages/builder-react/src/index.ts"),
             "@ui-builder/builder-editor": path.resolve(__dirname, "../../packages/builder-editor/src/index.ts"),
@@ -18,6 +19,15 @@ export default defineConfig({
     server: {
         port: 3000,
         open: true,
+        proxy: {
+            // Proxy Figma API calls to bypass CORS in development.
+            // figmaApiClient.ts calls /figma-api/v1/... → forwarded to https://api.figma.com/v1/...
+            "/figma-api": {
+                target: "https://api.figma.com",
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/figma-api/, ""),
+            },
+        },
     },
     build: {
         outDir: "dist",

@@ -43,32 +43,29 @@ export const ContainerComponent: ComponentDefinition = {
     {
       key: "gap",
       label: "Gap",
-      type: "number",
-      default: 8,
-      min: 0,
-      max: 96,
-      step: 4,
-      unit: "px",
+      type: "string",
+      default: "8px",
     },
     {
       key: "padding",
       label: "Padding",
-      type: "number",
-      default: 16,
-      min: 0,
-      max: 96,
-      step: 4,
-      unit: "px",
+      type: "string",
+      default: "16px",
+    },
+    {
+      key: "showPlaceholder",
+      label: "Show Placeholder",
+      type: "boolean",
+      default: true,
     },
   ],
-  defaultProps: { display: "flex", direction: "column", gap: 8, padding: 16 },
+  defaultProps: { display: "flex", direction: "column", gap: "8px", padding: "16px", showPlaceholder: true },
   defaultStyle: {
     display: "flex",
     flexDirection: "column",
     gap: "8px",
     padding: "16px",
     width: "100%",
-    minHeight: "40px",
     position: "relative",
   },
   editorRenderer: ({ node, children, style }) => (
@@ -78,16 +75,16 @@ export const ContainerComponent: ComponentDefinition = {
         ...(style as React.CSSProperties),
         display: (node.props.display as string) ?? "flex",
         flexDirection: (node.props.direction as "row" | "column") ?? "column",
-        gap: `${node.props.gap ?? 8}px`,
-        padding: `${node.props.padding ?? 16}px`,
-        minHeight: "40px",
+        gap: node.props.gap ? String(node.props.gap) : "8px",
+        padding: node.props.padding ? String(node.props.padding) : "16px",
       }}
     >
-      {(children as React.ReactNode) ?? (
-        <div className="flex items-center justify-center h-10 text-xs text-muted-foreground border-2 border-dashed border-border rounded">
-          Drop components here
-        </div>
-      )}
+      {(children as React.ReactNode) ?? 
+        (node.props.showPlaceholder !== false ? (
+          <div className="flex items-center justify-center h-10 text-xs text-muted-foreground border-2 border-dashed border-border rounded">
+            Drop components here
+          </div>
+        ) : null)}
     </div>
   ),
   runtimeRenderer: ({ node, children, style }) => (
@@ -96,9 +93,8 @@ export const ContainerComponent: ComponentDefinition = {
         ...(style as React.CSSProperties),
         display: (node.props.display as string) ?? "flex",
         flexDirection: (node.props.direction as "row" | "column") ?? "column",
-        gap: `${node.props.gap ?? 8}px`,
-        padding: `${node.props.padding ?? 16}px`,
-        minHeight: "40px",
+        gap: node.props.gap ? String(node.props.gap) : "8px",
+        padding: node.props.padding ? String(node.props.padding) : "16px",
       }}
     >
       {children as React.ReactNode}

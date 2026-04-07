@@ -20,6 +20,17 @@ import {
   Sparkles,
   Maximize2,
 } from "lucide-react";
+
+// Figma logo as a small inline SVG button icon
+const FigmaIcon = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 38 57" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M19 28.5C19 23.8056 22.8056 20 27.5 20C32.1944 20 36 23.8056 36 28.5C36 33.1944 32.1944 37 27.5 37C22.8056 37 19 33.1944 19 28.5Z" fill="#1ABCFE"/>
+    <path d="M2 46.5C2 41.8056 5.80558 38 10.5 38H19V46.5C19 51.1944 15.1944 55 10.5 55C5.80558 55 2 51.1944 2 46.5Z" fill="#0ACF83"/>
+    <path d="M19 2V20H27.5C32.1944 20 36 16.1944 36 11.5C36 6.80558 32.1944 3 27.5 3L19 2Z" fill="#FF7262"/>
+    <path d="M2 11.5C2 16.1944 5.80558 20 10.5 20H19V3H10.5C5.80558 3 2 6.80558 2 11.5Z" fill="#F24E1E"/>
+    <path d="M2 28.5C2 33.1944 5.80558 37 10.5 37H19V20H10.5C5.80558 20 2 23.8056 2 28.5Z" fill="#A259FF"/>
+  </svg>
+);
 import { ZOOM_LEVELS, TOOLTIP_DELAY_EXTENDED_MS } from "@ui-builder/shared";
 import type { EditorTool } from "../types";
 import { ToolbarButton } from "./ToolbarButton";
@@ -43,6 +54,8 @@ export interface EditorToolbarProps {
   onCanvasModeToggle: () => void;
   onFitToScreen?: () => void;
   onAIOpen?: () => void;
+  /** Open the Figma import dialog */
+  onFigmaOpen?: () => void;
 }
 
 /**
@@ -67,6 +80,7 @@ export const EditorToolbar = memo(function EditorToolbar({
   onCanvasModeToggle,
   onFitToScreen,
   onAIOpen,
+  onFigmaOpen,
 }: EditorToolbarProps) {
   const zoomPct = Math.round(zoom * 100);
   const deviceWidth = DEVICE_VIEWPORT_PRESETS[breakpoint]?.width ?? 1280;
@@ -221,17 +235,31 @@ export const EditorToolbar = memo(function EditorToolbar({
           compact
         />
 
-        {onAIOpen && (
+        {(onAIOpen || onFigmaOpen) && (
           <>
             {/* Separator */}
             <div className="bg-border mx-1 h-6 w-px" />
-            <ToolbarButton
-              icon={Sparkles}
-              tooltip={t("toolbar.aiAssistant")}
-              onClick={onAIOpen}
-              aria-label={t("toolbar.aiAssistant")}
-              compact
-            />
+
+            {onFigmaOpen && (
+              <button
+                onClick={onFigmaOpen}
+                aria-label="Import từ Figma"
+                title="Import từ Figma"
+                className="flex h-7 w-7 items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground"
+              >
+                <FigmaIcon size={14} />
+              </button>
+            )}
+
+            {onAIOpen && (
+              <ToolbarButton
+                icon={Sparkles}
+                tooltip={t("toolbar.aiAssistant")}
+                onClick={onAIOpen}
+                aria-label={t("toolbar.aiAssistant")}
+                compact
+              />
+            )}
           </>
         )}
       </div>

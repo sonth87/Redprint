@@ -56,6 +56,7 @@ import { AIAssistant } from "./ai/AIAssistant";
 import { AIConfigPanel } from "./ai/AIConfig";
 import { buildAIContext } from "./ai/buildAIContext";
 import { AIConfigProvider } from "./ai/AIConfigContext";
+import { FigmaImportDialog } from "./figma/FigmaImportDialog";
 import { initI18n, type SupportedLocale } from "./i18n";
 import { useTranslation } from "react-i18next";
 
@@ -122,6 +123,7 @@ function EditorInner({
     usePaletteState();
   const { layersOpen, layersPanelPos, handleLayersToggle } = useLayersPanel();
   const { aiOpen, setAiOpen, aiConfig, handleAIConfigChange } = useAIConfig();
+  const [figmaOpen, setFigmaOpen] = React.useState(false);
 
   // ── Canvas geometry ──────────────────────────────────────────────────────
   const { canvasWidth, canvasMinHeight, sectionNodes } = useCanvasDimensions({ document, breakpoint });
@@ -331,7 +333,9 @@ function EditorInner({
           onBreakpointChange={setBreakpoint} onZoomChange={setZoom} onZoomInFromCenter={handleZoomInFromCenter} onZoomOutFromCenter={handleZoomOutFromCenter} onGridToggle={toggleGrid}
           onUndo={undo} onRedo={redo}
           onToolChange={(tool) => { setActiveTool(tool); if (tool === "pan") clearSelection(); }}
-          onCanvasModeToggle={toggleCanvasMode} onFitToScreen={handleFitToScreen} onAIOpen={() => setAiOpen(true)}
+          onCanvasModeToggle={toggleCanvasMode} onFitToScreen={handleFitToScreen}
+          onAIOpen={() => setAiOpen(true)}
+          onFigmaOpen={() => setFigmaOpen(true)}
         />
 
         {/* Palette */}
@@ -385,6 +389,7 @@ function EditorInner({
         </FloatingPanel>
 
         <AIAssistant open={aiOpen} onOpenChange={setAiOpen} config={aiConfig} onConfigChange={handleAIConfigChange} context={aiContext} />
+        <FigmaImportDialog open={figmaOpen} onOpenChange={setFigmaOpen} />
 
         {/* Canvas area */}
         <div
