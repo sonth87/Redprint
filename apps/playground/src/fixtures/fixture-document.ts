@@ -18,1039 +18,1433 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
     { breakpoint: "tablet", label: "Tablet", minWidth: 768, maxWidth: 1279, icon: "tablet" },
     { breakpoint: "mobile", label: "Mobile", minWidth: 0, maxWidth: 767, icon: "smartphone" },
   ],
-  nodes: {
-    root: {
-      id: "root",
-      type: "Container",
-      name: "Page Root",
-      parentId: null,
-      order: 0,
-      props: { display: "flex", direction: "column", gap: 0, padding: 0 },
-      style: {
-        display: "flex",
-        flexDirection: "column",
-        gap: "0",
-        padding: "0",
-        minHeight: "100%",
-        backgroundColor: "#ffffff",
-        fontFamily: "system-ui, -apple-system, sans-serif",
+  "nodes": {
+    "root": {
+      "id": "root",
+      "type": "Container",
+      "name": "Page Root",
+      "parentId": null,
+      "order": 0,
+      "props": {
+        "display": "flex",
+        "direction": "column",
+        "gap": 0,
+        "padding": 0
       },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "0",
+        "padding": "0",
+        "minHeight": "100%",
+        "backgroundColor": "#ffffff",
+        "fontFamily": "system-ui, -apple-system, sans-serif"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
-    // ── Header Section ──────────────────────────────────────────────────
     "header-section": {
-      id: "header-section",
-      type: "Section",
-      name: "Header Section",
-      parentId: "root",
-      order: 0,
-      props: { minHeight: 70 },
-      style: {
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        width: "100%",
-        padding: "0 48px",
-        height: "80px",
-        backgroundColor: "#ffffff",
-        borderBottom: "1px solid #f3f4f6",
+      "id": "header-section",
+      "type": "Section",
+      "name": "Header Section",
+      "parentId": "root",
+      "order": 0,
+      "props": {
+        "minHeight": 70
       },
-      responsiveStyle: {
-        mobile: { padding: "0 24px" }
+      "style": {
+        "display": "flex",
+        "flexDirection": "row",
+        "alignItems": "center",
+        "justifyContent": "space-between",
+        "width": "100%",
+        "padding": "0 48px",
+        "height": "80px",
+        "backgroundColor": "#ffffff",
+        "borderBottom": "1px solid #f3f4f6"
       },
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "responsiveStyle": {
+        "mobile": {
+          "padding": "0 24px"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-    
     "header-logo": {
-      id: "header-logo",
-      type: "Text",
-      name: "Logo",
-      parentId: "header-section",
-      order: 0,
-      props: { text: "Creatify.", tag: "div" },
-      style: {
-        fontSize: "24px",
-        fontWeight: "800",
-        color: "#2563eb",
-        letterSpacing: "-0.03em",
-        margin: "0",
+      "id": "header-logo",
+      "type": "Text",
+      "name": "Logo",
+      "parentId": "header-section",
+      "order": 0,
+      "props": {
+        "text": "Creatify.",
+        "tag": "div"
       },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "style": {
+        "fontSize": "24px",
+        "fontWeight": "800",
+        "color": "#2563eb",
+        "letterSpacing": "-0.03em",
+        "margin": "0"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "header-nav": {
-      id: "header-nav",
-      type: "Container",
-      name: "Navigation Group",
-      parentId: "header-section",
-      order: 1,
-      props: { display: "flex", direction: "row", gap: 32, padding: 0 },
-      style: {
-        display: "flex",
-        flexDirection: "row",
-        gap: "32px",
-        alignItems: "center",
+      "id": "header-nav",
+      "type": "Container",
+      "name": "Navigation Group",
+      "parentId": "header-section",
+      "order": 1,
+      "props": {
+        "display": "flex",
+        "direction": "row",
+        "gap": 32,
+        "padding": 0
       },
-      responsiveStyle: {
-        tablet: { display: "none" },
-        mobile: { display: "none" }
+      "style": {
+        "display": "flex",
+        "flexDirection": "row",
+        "gap": "32px",
+        "alignItems": "center"
       },
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "responsiveStyle": {
+        "tablet": {
+          "display": "none"
+        },
+        "mobile": {
+          "display": "none"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "nav-home": {
-      id: "nav-home",
-      type: "Text",
-      name: "Nav Item Home",
-      parentId: "header-nav",
-      order: 0,
-      props: { text: "Home", tag: "span" },
-      style: { fontSize: "15px", fontWeight: "600", color: "#111827", cursor: "pointer", margin: "0" },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "id": "nav-home",
+      "type": "Text",
+      "name": "Nav Item Home",
+      "parentId": "header-nav",
+      "order": 0,
+      "props": {
+        "text": "Home",
+        "tag": "span"
+      },
+      "style": {
+        "fontSize": "15px",
+        "fontWeight": "600",
+        "color": "#111827",
+        "cursor": "pointer",
+        "margin": "0"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "nav-services": {
-      id: "nav-services",
-      type: "Text",
-      name: "Nav Item Services",
-      parentId: "header-nav",
-      order: 1,
-      props: { text: "Services", tag: "span" },
-      style: { fontSize: "15px", fontWeight: "500", color: "#6b7280", cursor: "pointer", margin: "0" },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "id": "nav-services",
+      "type": "Text",
+      "name": "Nav Item Services",
+      "parentId": "header-nav",
+      "order": 1,
+      "props": {
+        "text": "Services",
+        "tag": "span"
+      },
+      "style": {
+        "fontSize": "15px",
+        "fontWeight": "500",
+        "color": "#6b7280",
+        "cursor": "pointer",
+        "margin": "0"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-    
     "nav-about": {
-      id: "nav-about",
-      type: "Text",
-      name: "Nav Item About",
-      parentId: "header-nav",
-      order: 2,
-      props: { text: "About Us", tag: "span" },
-      style: { fontSize: "15px", fontWeight: "500", color: "#6b7280", cursor: "pointer", margin: "0" },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "id": "nav-about",
+      "type": "Text",
+      "name": "Nav Item About",
+      "parentId": "header-nav",
+      "order": 2,
+      "props": {
+        "text": "About Us",
+        "tag": "span"
+      },
+      "style": {
+        "fontSize": "15px",
+        "fontWeight": "500",
+        "color": "#6b7280",
+        "cursor": "pointer",
+        "margin": "0"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "header-actions": {
-      id: "header-actions",
-      type: "Container",
-      name: "Header Actions",
-      parentId: "header-section",
-      order: 2,
-      props: { display: "flex", direction: "row", gap: 16, padding: 0 },
-      style: { display: "flex", alignItems: "center" },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "id": "header-actions",
+      "type": "Container",
+      "name": "Header Actions",
+      "parentId": "header-section",
+      "order": 2,
+      "props": {
+        "display": "flex",
+        "direction": "row",
+        "gap": 16,
+        "padding": 0
+      },
+      "style": {
+        "display": "flex",
+        "alignItems": "center"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "btn-login": {
-      id: "btn-login",
-      type: "Button",
-      name: "Login Button",
-      parentId: "header-actions",
-      order: 0,
-      props: { label: "Login", variant: "ghost", size: "md", disabled: false },
-      style: {
-        padding: "8px 16px",
-        backgroundColor: "transparent",
-        color: "#374151",
-        border: "none",
-        fontWeight: "600",
-        cursor: "pointer",
+      "id": "btn-login",
+      "type": "Button",
+      "name": "Login Button",
+      "parentId": "header-actions",
+      "order": 0,
+      "props": {
+        "label": "Login",
+        "variant": "ghost",
+        "size": "md",
+        "disabled": false
       },
-      responsiveStyle: { mobile: { display: "none" } },
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "style": {
+        "padding": "8px 16px",
+        "backgroundColor": "transparent",
+        "color": "#374151",
+        "border": "none",
+        "fontWeight": "600",
+        "cursor": "pointer"
+      },
+      "responsiveStyle": {
+        "mobile": {
+          "display": "none"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "btn-get-started": {
-      id: "btn-get-started",
-      type: "Button",
-      name: "Get Started Button",
-      parentId: "header-actions",
-      order: 1,
-      props: { label: "Start Free Trial", variant: "primary", size: "md", disabled: false },
-      style: {
-        padding: "10px 20px",
-        backgroundColor: "#2563eb",
-        color: "#ffffff",
-        borderRadius: "6px",
-        border: "none",
-        fontWeight: "600",
-        cursor: "pointer",
-        boxShadow: "0 4px 6px -1px rgba(37, 99, 235, 0.2)",
+      "id": "btn-get-started",
+      "type": "Button",
+      "name": "Get Started Button",
+      "parentId": "header-actions",
+      "order": 1,
+      "props": {
+        "label": "<p>Start Free Trial</p>",
+        "variant": "primary",
+        "size": "md",
+        "disabled": false
       },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "style": {
+        "padding": "10px 20px",
+        "backgroundColor": "#2563eb",
+        "color": "#ffffff",
+        "borderRadius": "6px",
+        "border": "none",
+        "fontWeight": "600",
+        "lineHeight": "1.2",
+        "cursor": "pointer",
+        "boxShadow": "0 4px 6px -1px rgba(37, 99, 235, 0.2)"
+      },
+      "responsiveStyle": {
+        "mobile": {
+          "position": "absolute",
+          "left": "420px",
+          "top": "-8px",
+          "width": "74px",
+          "height": "83px"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "metadata": {
+        "createdAt": "2026-04-07T03:07:30.304Z",
+        "updatedAt": "2026-04-07T03:09:34.307Z"
+      }
     },
-
-    // ── Hero Section ──────────────────────────────────────────────────
     "hero-section": {
-      id: "hero-section",
-      type: "Section",
-      name: "Hero Section",
-      parentId: "root",
-      order: 1,
-      props: { minHeight: 600 },
-      style: {
-        display: "flex",
-        flexDirection: "row",
-        width: "100%",
-        padding: "64px 48px",
-        backgroundColor: "#f8fafc",
-        alignItems: "center",
+      "id": "hero-section",
+      "type": "Section",
+      "name": "Hero Section",
+      "parentId": "root",
+      "order": 1,
+      "props": {
+        "minHeight": 600
       },
-      responsiveStyle: {
-        tablet: { flexDirection: "column", padding: "48px 32px" },
-        mobile: { flexDirection: "column", padding: "40px 24px" }
+      "style": {
+        "display": "flex",
+        "flexDirection": "row",
+        "width": "100%",
+        "padding": "64px 48px",
+        "backgroundColor": "#f8fafc",
+        "alignItems": "center"
       },
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "responsiveStyle": {
+        "tablet": {
+          "flexDirection": "column",
+          "padding": "48px 32px"
+        },
+        "mobile": {
+          "flexDirection": "column",
+          "padding": "40px 24px"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "hero-content": {
-      id: "hero-content",
-      type: "Container",
-      name: "Hero Content Left",
-      parentId: "hero-section",
-      order: 0,
-      props: { display: "flex", direction: "column", gap: 24, padding: 0 },
-      style: {
-        display: "flex",
-        flexDirection: "column",
-        flex: "1",
-        gap: "24px",
-        padding: "0 40px 0 0",
+      "id": "hero-content",
+      "type": "Container",
+      "name": "Hero Content Left",
+      "parentId": "hero-section",
+      "order": 0,
+      "props": {
+        "display": "flex",
+        "direction": "column",
+        "gap": 24,
+        "padding": 0
       },
-      responsiveStyle: {
-        tablet: { padding: "0", alignItems: "center", textAlign: "center", margin: "0 0 48px 0" }
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "flex": "1",
+        "gap": "24px",
+        "padding": "0 40px 0 0"
       },
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "responsiveStyle": {
+        "tablet": {
+          "padding": "0",
+          "alignItems": "center",
+          "textAlign": "center",
+          "margin": "0 0 48px 0"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "hero-badge": {
-      id: "hero-badge",
-      type: "Container",
-      name: "Hero Badge",
-      parentId: "hero-content",
-      order: 0,
-      props: { display: "flex", direction: "row", gap: 0, padding: 0 },
-      style: {
-        display: "inline-flex",
-        alignSelf: "flex-start",
-        padding: "6px 16px",
-        backgroundColor: "#e0e7ff",
-        borderRadius: "999px",
+      "id": "hero-badge",
+      "type": "Container",
+      "name": "Hero Badge",
+      "parentId": "hero-content",
+      "order": 0,
+      "props": {
+        "display": "flex",
+        "direction": "row",
+        "gap": 0,
+        "padding": 0
       },
-      responsiveStyle: {
-        tablet: { alignSelf: "center" }
+      "style": {
+        "display": "inline-flex",
+        "alignSelf": "flex-start",
+        "padding": "6px 16px",
+        "backgroundColor": "#e0e7ff",
+        "borderRadius": "999px"
       },
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "responsiveStyle": {
+        "tablet": {
+          "alignSelf": "center"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "hero-badge-text": {
-      id: "hero-badge-text",
-      type: "Text",
-      name: "Badge Text",
-      parentId: "hero-badge",
-      order: 0,
-      props: { text: "🌟 Introducing New Features", tag: "span" },
-      style: { fontSize: "14px", fontWeight: "600", color: "#4f46e5", margin: "0" },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "id": "hero-badge-text",
+      "type": "Text",
+      "name": "Badge Text",
+      "parentId": "hero-badge",
+      "order": 0,
+      "props": {
+        "text": "🌟 Introducing New Features",
+        "tag": "span"
+      },
+      "style": {
+        "fontSize": "14px",
+        "fontWeight": "600",
+        "color": "#4f46e5",
+        "margin": "0"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "hero-title": {
-      id: "hero-title",
-      type: "Text",
-      name: "Hero Main Title",
-      parentId: "hero-content",
-      order: 1,
-      props: { text: "Build beautiful digital experiences in minutes.", tag: "h1" },
-      style: {
-        fontSize: "56px",
-        fontWeight: "800",
-        color: "#0f172a",
-        margin: "0",
-        lineHeight: "1.1",
-        letterSpacing: "-0.02em",
+      "id": "hero-title",
+      "type": "Text",
+      "name": "Hero Main Title",
+      "parentId": "hero-content",
+      "order": 1,
+      "props": {
+        "text": "Build beautiful digital experiences in minutes.",
+        "tag": "h1"
       },
-      responsiveStyle: {
-        desktop: { fontSize: "64px" },
-        tablet: { fontSize: "48px" },
-        mobile: { fontSize: "36px" }
+      "style": {
+        "fontSize": "56px",
+        "fontWeight": "800",
+        "color": "#0f172a",
+        "margin": "0",
+        "lineHeight": "1.1",
+        "letterSpacing": "-0.02em"
       },
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "responsiveStyle": {
+        "desktop": {
+          "fontSize": "64px"
+        },
+        "tablet": {
+          "fontSize": "48px"
+        },
+        "mobile": {
+          "fontSize": "36px"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "hero-description": {
-      id: "hero-description",
-      type: "Text",
-      name: "Hero Description",
-      parentId: "hero-content",
-      order: 2,
-      props: { text: "Empower your creative team to build, scale, and deliver stunning websites without writing complex code. Fast, reliable, and entirely visual.", tag: "p" },
-      style: {
-        fontSize: "20px",
-        color: "#475569",
-        margin: "0",
-        lineHeight: "1.6",
-        maxWidth: "540px",
+      "id": "hero-description",
+      "type": "Text",
+      "name": "Hero Description",
+      "parentId": "hero-content",
+      "order": 2,
+      "props": {
+        "text": "Empower your creative team to build, scale, and deliver stunning websites without writing complex code. Fast, reliable, and entirely visual.",
+        "tag": "p"
       },
-      responsiveStyle: {
-        mobile: { fontSize: "16px" }
+      "style": {
+        "fontSize": "20px",
+        "color": "#475569",
+        "margin": "0",
+        "lineHeight": "1.6",
+        "maxWidth": "540px"
       },
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "responsiveStyle": {
+        "mobile": {
+          "fontSize": "16px"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "hero-button-group": {
-      id: "hero-button-group",
-      type: "Container",
-      name: "Hero Buttons",
-      parentId: "hero-content",
-      order: 3,
-      props: { display: "flex", direction: "row", gap: 16, padding: 0 },
-      style: {
-        display: "flex",
-        flexDirection: "row",
-        gap: "16px",
-        margin: "16px 0 0 0",
+      "id": "hero-button-group",
+      "type": "Container",
+      "name": "Hero Buttons",
+      "parentId": "hero-content",
+      "order": 3,
+      "props": {
+        "display": "flex",
+        "direction": "row",
+        "gap": 16,
+        "padding": 0
       },
-      responsiveStyle: {
-        mobile: { flexDirection: "column", width: "100%" }
+      "style": {
+        "display": "flex",
+        "flexDirection": "row",
+        "gap": "16px",
+        "margin": "16px 0 0 0"
       },
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "responsiveStyle": {
+        "mobile": {
+          "flexDirection": "column",
+          "width": "100%"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "btn-hero-primary": {
-      id: "btn-hero-primary",
-      type: "Button",
-      name: "Explore Button",
-      parentId: "hero-button-group",
-      order: 0,
-      props: { label: "Explore Platform", variant: "primary", size: "lg", disabled: false },
-      style: {
-        padding: "16px 32px",
-        backgroundColor: "#2563eb",
-        color: "#ffffff",
-        borderRadius: "8px",
-        border: "none",
-        fontWeight: "600",
-        fontSize: "16px",
-        cursor: "pointer",
-        boxShadow: "0 10px 15px -3px rgba(37, 99, 235, 0.3)",
+      "id": "btn-hero-primary",
+      "type": "Button",
+      "name": "Explore Button",
+      "parentId": "hero-button-group",
+      "order": 0,
+      "props": {
+        "label": "Explore Platform",
+        "variant": "primary",
+        "size": "lg",
+        "disabled": false
       },
-      responsiveStyle: { mobile: { width: "100%" } },
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "style": {
+        "padding": "16px 32px",
+        "backgroundColor": "#2563eb",
+        "color": "#ffffff",
+        "borderRadius": "8px",
+        "border": "none",
+        "fontWeight": "600",
+        "fontSize": "16px",
+        "cursor": "pointer",
+        "boxShadow": "0 10px 15px -3px rgba(37, 99, 235, 0.3)"
+      },
+      "responsiveStyle": {
+        "mobile": {
+          "width": "100%"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "btn-hero-secondary": {
-      id: "btn-hero-secondary",
-      type: "Button",
-      name: "Book Demo Button",
-      parentId: "hero-button-group",
-      order: 1,
-      props: { label: "Book a Demo", variant: "outline", size: "lg", disabled: false },
-      style: {
-        padding: "16px 32px",
-        backgroundColor: "transparent",
-        color: "#334155",
-        borderRadius: "8px",
-        border: "2px solid #cbd5e1",
-        fontWeight: "600",
-        fontSize: "16px",
-        cursor: "pointer",
+      "id": "btn-hero-secondary",
+      "type": "Button",
+      "name": "Book Demo Button",
+      "parentId": "hero-button-group",
+      "order": 1,
+      "props": {
+        "label": "Book a Demo",
+        "variant": "outline",
+        "size": "lg",
+        "disabled": false
       },
-      responsiveStyle: { mobile: { width: "100%" } },
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "style": {
+        "padding": "16px 32px",
+        "backgroundColor": "transparent",
+        "color": "#334155",
+        "borderRadius": "8px",
+        "border": "2px solid #cbd5e1",
+        "fontWeight": "600",
+        "fontSize": "16px",
+        "cursor": "pointer"
+      },
+      "responsiveStyle": {
+        "mobile": {
+          "width": "100%"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "hero-image-container": {
-      id: "hero-image-container",
-      type: "Container",
-      name: "Hero Image Wrapper",
-      parentId: "hero-section",
-      order: 1,
-      props: { display: "flex", direction: "column", gap: 0, padding: 0 },
-      style: {
-        display: "flex",
-        flex: "1",
-        justifyContent: "center",
-        alignItems: "center",
-        width: "100%",
+      "id": "hero-image-container",
+      "type": "Container",
+      "name": "Hero Image Wrapper",
+      "parentId": "hero-section",
+      "order": 1,
+      "props": {
+        "display": "flex",
+        "direction": "column",
+        "gap": 0,
+        "padding": 0
       },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "style": {
+        "display": "flex",
+        "flex": "1",
+        "justifyContent": "center",
+        "alignItems": "center",
+        "width": "100%"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "hero-main-image": {
-      id: "hero-main-image",
-      type: "Image",
-      name: "Hero Image",
-      parentId: "hero-image-container",
-      order: 0,
-      props: {
-        src: "https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
-        alt: "Creative team working in office",
-        objectFit: "cover",
+      "id": "hero-main-image",
+      "type": "Image",
+      "name": "Hero Image",
+      "parentId": "hero-image-container",
+      "order": 0,
+      "props": {
+        "src": "https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
+        "alt": "Creative team working in office",
+        "objectFit": "cover"
       },
-      style: {
-        width: "100%",
-        maxWidth: "600px",
-        height: "auto",
-        borderRadius: "16px",
-        boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.15)",
+      "style": {
+        "width": "100%",
+        "maxWidth": "600px",
+        "height": "auto",
+        "borderRadius": "16px",
+        "boxShadow": "0 25px 50px -12px rgba(0, 0, 0, 0.15)"
       },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
-    // ── Stats Section ──────────────────────────────────────────────────
     "stats-section": {
-      id: "stats-section",
-      type: "Section",
-      name: "Stats Section",
-      parentId: "root",
-      order: 2,
-      props: { minHeight: 120 },
-      style: {
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "center",
-        width: "100%",
-        padding: "64px 48px",
-        backgroundColor: "#ffffff",
-        borderBottom: "1px solid #f1f5f9",
+      "id": "stats-section",
+      "type": "Section",
+      "name": "Stats Section",
+      "parentId": "root",
+      "order": 2,
+      "props": {
+        "minHeight": 120
       },
-      responsiveStyle: {
-        mobile: { padding: "40px 24px" }
+      "style": {
+        "display": "flex",
+        "flexDirection": "row",
+        "justifyContent": "center",
+        "width": "100%",
+        "padding": "64px 48px",
+        "backgroundColor": "#ffffff",
+        "borderBottom": "1px solid #f1f5f9"
       },
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "responsiveStyle": {
+        "mobile": {
+          "padding": "40px 24px"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "stats-grid": {
-      id: "stats-grid",
-      type: "Container",
-      name: "Stats Container",
-      parentId: "stats-section",
-      order: 0,
-      props: { display: "flex", direction: "row", gap: 48, padding: 0 },
-      style: {
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "space-around",
-        width: "100%",
-        maxWidth: "1000px",
-        flexWrap: "wrap",
-        gap: "48px",
+      "id": "stats-grid",
+      "type": "Container",
+      "name": "Stats Container",
+      "parentId": "stats-section",
+      "order": 0,
+      "props": {
+        "display": "flex",
+        "direction": "row",
+        "gap": 48,
+        "padding": 0
       },
-      responsiveStyle: {
-        mobile: { flexDirection: "column", alignItems: "center", gap: "32px" }
+      "style": {
+        "display": "flex",
+        "flexDirection": "row",
+        "justifyContent": "space-around",
+        "width": "100%",
+        "maxWidth": "1000px",
+        "flexWrap": "wrap",
+        "gap": "48px"
       },
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "responsiveStyle": {
+        "mobile": {
+          "flexDirection": "column",
+          "alignItems": "center",
+          "gap": "32px"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "stat-item-1": {
-      id: "stat-item-1",
-      type: "Container",
-      name: "Stat Box 1",
-      parentId: "stats-grid",
-      order: 0,
-      props: { display: "flex", direction: "column", gap: 8, padding: 0 },
-      style: { display: "flex", flexDirection: "column", alignItems: "center" },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "id": "stat-item-1",
+      "type": "Container",
+      "name": "Stat Box 1",
+      "parentId": "stats-grid",
+      "order": 0,
+      "props": {
+        "display": "flex",
+        "direction": "column",
+        "gap": 8,
+        "padding": 0
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "alignItems": "center"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
     "stat-number-1": {
-      id: "stat-number-1",
-      type: "Text",
-      name: "Stat Number 1",
-      parentId: "stat-item-1",
-      order: 0,
-      props: { text: "1.2M+", tag: "h3" },
-      style: { fontSize: "40px", fontWeight: "800", color: "#1e293b", margin: "0", lineHeight: "1" },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "id": "stat-number-1",
+      "type": "Text",
+      "name": "Stat Number 1",
+      "parentId": "stat-item-1",
+      "order": 0,
+      "props": {
+        "text": "1.2M+",
+        "tag": "h3"
+      },
+      "style": {
+        "fontSize": "40px",
+        "fontWeight": "800",
+        "color": "#1e293b",
+        "margin": "0",
+        "lineHeight": "1"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
     "stat-label-1": {
-      id: "stat-label-1",
-      type: "Text",
-      name: "Stat Label 1",
-      parentId: "stat-item-1",
-      order: 1,
-      props: { text: "Active Users", tag: "p" },
-      style: { fontSize: "16px", fontWeight: "500", color: "#64748b", margin: "0" },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "id": "stat-label-1",
+      "type": "Text",
+      "name": "Stat Label 1",
+      "parentId": "stat-item-1",
+      "order": 1,
+      "props": {
+        "text": "Active Users",
+        "tag": "p"
+      },
+      "style": {
+        "fontSize": "16px",
+        "fontWeight": "500",
+        "color": "#64748b",
+        "margin": "0"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "stat-item-2": {
-      id: "stat-item-2",
-      type: "Container",
-      name: "Stat Box 2",
-      parentId: "stats-grid",
-      order: 1,
-      props: { display: "flex", direction: "column", gap: 8, padding: 0 },
-      style: { display: "flex", flexDirection: "column", alignItems: "center" },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "id": "stat-item-2",
+      "type": "Container",
+      "name": "Stat Box 2",
+      "parentId": "stats-grid",
+      "order": 1,
+      "props": {
+        "display": "flex",
+        "direction": "column",
+        "gap": 8,
+        "padding": 0
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "alignItems": "center"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
     "stat-number-2": {
-      id: "stat-number-2",
-      type: "Text",
-      name: "Stat Number 2",
-      parentId: "stat-item-2",
-      order: 0,
-      props: { text: "99.9%", tag: "h3" },
-      style: { fontSize: "40px", fontWeight: "800", color: "#1e293b", margin: "0", lineHeight: "1" },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "id": "stat-number-2",
+      "type": "Text",
+      "name": "Stat Number 2",
+      "parentId": "stat-item-2",
+      "order": 0,
+      "props": {
+        "text": "99.9%",
+        "tag": "h3"
+      },
+      "style": {
+        "fontSize": "40px",
+        "fontWeight": "800",
+        "color": "#1e293b",
+        "margin": "0",
+        "lineHeight": "1"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
     "stat-label-2": {
-      id: "stat-label-2",
-      type: "Text",
-      name: "Stat Label 2",
-      parentId: "stat-item-2",
-      order: 1,
-      props: { text: "Uptime Guaranteed", tag: "p" },
-      style: { fontSize: "16px", fontWeight: "500", color: "#64748b", margin: "0" },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "id": "stat-label-2",
+      "type": "Text",
+      "name": "Stat Label 2",
+      "parentId": "stat-item-2",
+      "order": 1,
+      "props": {
+        "text": "Uptime Guaranteed",
+        "tag": "p"
+      },
+      "style": {
+        "fontSize": "16px",
+        "fontWeight": "500",
+        "color": "#64748b",
+        "margin": "0"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "stat-item-3": {
-      id: "stat-item-3",
-      type: "Container",
-      name: "Stat Box 3",
-      parentId: "stats-grid",
-      order: 2,
-      props: { display: "flex", direction: "column", gap: 8, padding: 0 },
-      style: { display: "flex", flexDirection: "column", alignItems: "center" },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "id": "stat-item-3",
+      "type": "Container",
+      "name": "Stat Box 3",
+      "parentId": "stats-grid",
+      "order": 2,
+      "props": {
+        "display": "flex",
+        "direction": "column",
+        "gap": 8,
+        "padding": 0
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "alignItems": "center"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
     "stat-number-3": {
-      id: "stat-number-3",
-      type: "Text",
-      name: "Stat Number 3",
-      parentId: "stat-item-3",
-      order: 0,
-      props: { text: "24/7", tag: "h3" },
-      style: { fontSize: "40px", fontWeight: "800", color: "#1e293b", margin: "0", lineHeight: "1" },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "id": "stat-number-3",
+      "type": "Text",
+      "name": "Stat Number 3",
+      "parentId": "stat-item-3",
+      "order": 0,
+      "props": {
+        "text": "24/7",
+        "tag": "h3"
+      },
+      "style": {
+        "fontSize": "40px",
+        "fontWeight": "800",
+        "color": "#1e293b",
+        "margin": "0",
+        "lineHeight": "1"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
     "stat-label-3": {
-      id: "stat-label-3",
-      type: "Text",
-      name: "Stat Label 3",
-      parentId: "stat-item-3",
-      order: 1,
-      props: { text: "Customer Support", tag: "p" },
-      style: { fontSize: "16px", fontWeight: "500", color: "#64748b", margin: "0" },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "id": "stat-label-3",
+      "type": "Text",
+      "name": "Stat Label 3",
+      "parentId": "stat-item-3",
+      "order": 1,
+      "props": {
+        "text": "Customer Support",
+        "tag": "p"
+      },
+      "style": {
+        "fontSize": "16px",
+        "fontWeight": "500",
+        "color": "#64748b",
+        "margin": "0"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
-    // ── Detailed Content / Features Section ──────────────────────────────────
     "details-section": {
-      id: "details-section",
-      type: "Section",
-      name: "Features Info Section",
-      parentId: "root",
-      order: 3,
-      props: { minHeight: 600 },
-      style: {
-        display: "flex",
-        flexDirection: "column",
-        width: "100%",
-        padding: "96px 48px",
-        backgroundColor: "#ffffff",
-        alignItems: "center",
+      "id": "details-section",
+      "type": "Section",
+      "name": "Features Info Section",
+      "parentId": "root",
+      "order": 3,
+      "props": {
+        "minHeight": 600
       },
-      responsiveStyle: {
-        mobile: { padding: "64px 24px" }
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "width": "100%",
+        "padding": "96px 48px",
+        "backgroundColor": "#ffffff",
+        "alignItems": "center"
       },
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "responsiveStyle": {
+        "mobile": {
+          "padding": "64px 24px"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "details-header": {
-      id: "details-header",
-      type: "Container",
-      name: "Section Heading Center",
-      parentId: "details-section",
-      order: 0,
-      props: { display: "flex", direction: "column", gap: 16, padding: 0 },
-      style: {
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        textAlign: "center",
-        margin: "0 0 64px 0",
-        maxWidth: "700px",
+      "id": "details-header",
+      "type": "Container",
+      "name": "Section Heading Center",
+      "parentId": "details-section",
+      "order": 0,
+      "props": {
+        "display": "flex",
+        "direction": "column",
+        "gap": 16,
+        "padding": 0
       },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "alignItems": "center",
+        "textAlign": "center",
+        "margin": "0 0 64px 0",
+        "maxWidth": "700px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "details-subtitle": {
-      id: "details-subtitle",
-      type: "Text",
-      name: "Subtitle Text",
-      parentId: "details-header",
-      order: 0,
-      props: { text: "POWERFUL CAPABILITIES", tag: "h4" },
-      style: { fontSize: "14px", fontWeight: "700", color: "#2563eb", letterSpacing: "0.1em", margin: "0" },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "id": "details-subtitle",
+      "type": "Text",
+      "name": "Subtitle Text",
+      "parentId": "details-header",
+      "order": 0,
+      "props": {
+        "text": "POWERFUL CAPABILITIES",
+        "tag": "h4"
+      },
+      "style": {
+        "fontSize": "14px",
+        "fontWeight": "700",
+        "color": "#2563eb",
+        "letterSpacing": "0.1em",
+        "margin": "0"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "details-title": {
-      id: "details-title",
-      type: "Text",
-      name: "Main Title",
-      parentId: "details-header",
-      order: 1,
-      props: { text: "Everything you need to succeed online.", tag: "h2" },
-      style: { fontSize: "40px", fontWeight: "800", color: "#0f172a", margin: "0", lineHeight: "1.2", letterSpacing: "-0.01em" },
-      responsiveStyle: { mobile: { fontSize: "32px" } },
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "id": "details-title",
+      "type": "Text",
+      "name": "Main Title",
+      "parentId": "details-header",
+      "order": 1,
+      "props": {
+        "text": "Everything you need to succeed online.",
+        "tag": "h2"
+      },
+      "style": {
+        "fontSize": "40px",
+        "fontWeight": "800",
+        "color": "#0f172a",
+        "margin": "0",
+        "lineHeight": "1.2",
+        "letterSpacing": "-0.01em"
+      },
+      "responsiveStyle": {
+        "mobile": {
+          "fontSize": "32px"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
-    // Feature Row 1 (Image Left, Text Right)
     "feature-row-1": {
-      id: "feature-row-1",
-      type: "Container",
-      name: "Feature Row 1",
-      parentId: "details-section",
-      order: 1,
-      props: { display: "flex", direction: "row", gap: 64, padding: 0 },
-      style: {
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        width: "100%",
-        maxWidth: "1100px",
-        margin: "0 0 96px 0",
+      "id": "feature-row-1",
+      "type": "Container",
+      "name": "Feature Row 1",
+      "parentId": "details-section",
+      "order": 1,
+      "props": {
+        "display": "flex",
+        "direction": "row",
+        "gap": 64,
+        "padding": 0
       },
-      responsiveStyle: {
-        tablet: { flexDirection: "column", gap: "40px" }
+      "style": {
+        "display": "flex",
+        "flexDirection": "row",
+        "alignItems": "center",
+        "width": "100%",
+        "maxWidth": "1100px",
+        "margin": "0 0 96px 0"
       },
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "responsiveStyle": {
+        "tablet": {
+          "flexDirection": "column",
+          "gap": "40px"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "feature-image-box-1": {
-      id: "feature-image-box-1",
-      type: "Container",
-      name: "Feature Image Container 1",
-      parentId: "feature-row-1",
-      order: 0,
-      props: { display: "flex", direction: "column", gap: 0, padding: 0 },
-      style: { flex: "1", width: "100%" },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "id": "feature-image-box-1",
+      "type": "Container",
+      "name": "Feature Image Container 1",
+      "parentId": "feature-row-1",
+      "order": 0,
+      "props": {
+        "display": "flex",
+        "direction": "column",
+        "gap": 0,
+        "padding": 0
+      },
+      "style": {
+        "flex": "1",
+        "width": "100%"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "feature-image-1": {
-      id: "feature-image-1",
-      type: "Image",
-      name: "Feature Photo 1",
-      parentId: "feature-image-box-1",
-      order: 0,
-      props: {
-        src: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-        alt: "Writing code on laptop",
-        objectFit: "cover",
+      "id": "feature-image-1",
+      "type": "Image",
+      "name": "Feature Photo 1",
+      "parentId": "feature-image-box-1",
+      "order": 0,
+      "props": {
+        "src": "https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        "alt": "Writing code on laptop",
+        "objectFit": "cover"
       },
-      style: { width: "100%", borderRadius: "16px", boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)" },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "style": {
+        "width": "100%",
+        "borderRadius": "16px",
+        "boxShadow": "0 20px 25px -5px rgba(0, 0, 0, 0.1)"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "feature-text-box-1": {
-      id: "feature-text-box-1",
-      type: "Container",
-      name: "Feature Info Container 1",
-      parentId: "feature-row-1",
-      order: 1,
-      props: { display: "flex", direction: "column", gap: 24, padding: 0 },
-      style: { display: "flex", flexDirection: "column", flex: "1", padding: "0 0 0 16px" },
-      responsiveStyle: { tablet: { padding: "0" } },
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "id": "feature-text-box-1",
+      "type": "Container",
+      "name": "Feature Info Container 1",
+      "parentId": "feature-row-1",
+      "order": 1,
+      "props": {
+        "display": "flex",
+        "direction": "column",
+        "gap": 24,
+        "padding": 0
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "flex": "1",
+        "padding": "0 0 0 16px"
+      },
+      "responsiveStyle": {
+        "tablet": {
+          "padding": "0"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "feature-title-1": {
-      id: "feature-title-1",
-      type: "Text",
-      name: "Feature Heading 1",
-      parentId: "feature-text-box-1",
-      order: 0,
-      props: { text: "Seamless Integrations", tag: "h3" },
-      style: { fontSize: "32px", fontWeight: "700", color: "#0f172a", margin: "0" },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "id": "feature-title-1",
+      "type": "Text",
+      "name": "Feature Heading 1",
+      "parentId": "feature-text-box-1",
+      "order": 0,
+      "props": {
+        "text": "Seamless Integrations",
+        "tag": "h3"
+      },
+      "style": {
+        "fontSize": "32px",
+        "fontWeight": "700",
+        "color": "#0f172a",
+        "margin": "0"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "feature-desc-1": {
-      id: "feature-desc-1",
-      type: "Text",
-      name: "Feature Detail 1",
-      parentId: "feature-text-box-1",
-      order: 1,
-      props: { text: "Connect your favorite tools with just a few clicks. Our platform supports over 200+ native integrations ensuring your workflow remains uninterrupted and highly productive. Data flows securely and instantly.", tag: "p" },
-      style: { fontSize: "18px", color: "#475569", lineHeight: "1.6", margin: "0" },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "id": "feature-desc-1",
+      "type": "Text",
+      "name": "Feature Detail 1",
+      "parentId": "feature-text-box-1",
+      "order": 1,
+      "props": {
+        "text": "Connect your favorite tools with just a few clicks. Our platform supports over 200+ native integrations ensuring your workflow remains uninterrupted and highly productive. Data flows securely and instantly.",
+        "tag": "p"
+      },
+      "style": {
+        "fontSize": "18px",
+        "color": "#475569",
+        "lineHeight": "1.6",
+        "margin": "0"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "feature-bullets": {
-      id: "feature-bullets",
-      type: "Container",
-      name: "Bullets List",
-      parentId: "feature-text-box-1",
-      order: 2,
-      props: { display: "flex", direction: "column", gap: 12, padding: 0 },
-      style: { display: "flex", flexDirection: "column", gap: "12px", margin: "8px 0 0 0" },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "id": "feature-bullets",
+      "type": "Container",
+      "name": "Bullets List",
+      "parentId": "feature-text-box-1",
+      "order": 2,
+      "props": {
+        "display": "flex",
+        "direction": "column",
+        "gap": 12,
+        "padding": 0
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "12px",
+        "margin": "8px 0 0 0"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "bullet-1": {
-      id: "bullet-1",
-      type: "Text",
-      name: "List Item 1",
-      parentId: "feature-bullets",
-      order: 0,
-      props: { text: "✓ API access for custom connections", tag: "span" },
-      style: { fontSize: "16px", fontWeight: "500", color: "#1e293b", margin: "0" },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "id": "bullet-1",
+      "type": "Text",
+      "name": "List Item 1",
+      "parentId": "feature-bullets",
+      "order": 0,
+      "props": {
+        "text": "✓ API access for custom connections",
+        "tag": "span"
+      },
+      "style": {
+        "fontSize": "16px",
+        "fontWeight": "500",
+        "color": "#1e293b",
+        "margin": "0"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-    
     "bullet-2": {
-      id: "bullet-2",
-      type: "Text",
-      name: "List Item 2",
-      parentId: "feature-bullets",
-      order: 1,
-      props: { text: "✓ No-code automated workflows", tag: "span" },
-      style: { fontSize: "16px", fontWeight: "500", color: "#1e293b", margin: "0" },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "id": "bullet-2",
+      "type": "Text",
+      "name": "List Item 2",
+      "parentId": "feature-bullets",
+      "order": 1,
+      "props": {
+        "text": "✓ No-code automated workflows",
+        "tag": "span"
+      },
+      "style": {
+        "fontSize": "16px",
+        "fontWeight": "500",
+        "color": "#1e293b",
+        "margin": "0"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
-    // Feature Row 2 (Text Left, Image Right)
     "feature-row-2": {
-      id: "feature-row-2",
-      type: "Container",
-      name: "Feature Row 2",
-      parentId: "details-section",
-      order: 2,
-      props: { display: "flex", direction: "row", gap: 64, padding: 0 },
-      style: {
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        width: "100%",
-        maxWidth: "1100px",
+      "id": "feature-row-2",
+      "type": "Container",
+      "name": "Feature Row 2",
+      "parentId": "details-section",
+      "order": 2,
+      "props": {
+        "display": "flex",
+        "direction": "row",
+        "gap": 64,
+        "padding": 0
       },
-      responsiveStyle: {
-        tablet: { flexDirection: "column-reverse", gap: "40px" }
+      "style": {
+        "display": "flex",
+        "flexDirection": "row",
+        "alignItems": "center",
+        "width": "100%",
+        "maxWidth": "1100px"
       },
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "responsiveStyle": {
+        "tablet": {
+          "flexDirection": "column-reverse",
+          "gap": "40px"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "feature-text-box-2": {
-      id: "feature-text-box-2",
-      type: "Container",
-      name: "Feature Info Container 2",
-      parentId: "feature-row-2",
-      order: 0,
-      props: { display: "flex", direction: "column", gap: 24, padding: 0 },
-      style: { display: "flex", flexDirection: "column", flex: "1", padding: "0 16px 0 0" },
-      responsiveStyle: { tablet: { padding: "0" } },
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "id": "feature-text-box-2",
+      "type": "Container",
+      "name": "Feature Info Container 2",
+      "parentId": "feature-row-2",
+      "order": 0,
+      "props": {
+        "display": "flex",
+        "direction": "column",
+        "gap": 24,
+        "padding": 0
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "flex": "1",
+        "padding": "0 16px 0 0"
+      },
+      "responsiveStyle": {
+        "tablet": {
+          "padding": "0"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "feature-title-2": {
-      id: "feature-title-2",
-      type: "Text",
-      name: "Feature Heading 2",
-      parentId: "feature-text-box-2",
-      order: 0,
-      props: { text: "Advanced Analytics", tag: "h3" },
-      style: { fontSize: "32px", fontWeight: "700", color: "#0f172a", margin: "0" },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "id": "feature-title-2",
+      "type": "Text",
+      "name": "Feature Heading 2",
+      "parentId": "feature-text-box-2",
+      "order": 0,
+      "props": {
+        "text": "Advanced Analytics",
+        "tag": "h3"
+      },
+      "style": {
+        "fontSize": "32px",
+        "fontWeight": "700",
+        "color": "#0f172a",
+        "margin": "0"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "feature-desc-2": {
-      id: "feature-desc-2",
-      type: "Text",
-      name: "Feature Detail 2",
-      parentId: "feature-text-box-2",
-      order: 1,
-      props: { text: "Gain deep insights into your business performance. Our dashboard provides real-time data visualization, predictive modeling, and customizable reports so you can make data-driven decisions swiftly.", tag: "p" },
-      style: { fontSize: "18px", color: "#475569", lineHeight: "1.6", margin: "0" },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "id": "feature-desc-2",
+      "type": "Text",
+      "name": "Feature Detail 2",
+      "parentId": "feature-text-box-2",
+      "order": 1,
+      "props": {
+        "text": "Gain deep insights into your business performance. Our dashboard provides real-time data visualization, predictive modeling, and customizable reports so you can make data-driven decisions swiftly.",
+        "tag": "p"
+      },
+      "style": {
+        "fontSize": "18px",
+        "color": "#475569",
+        "lineHeight": "1.6",
+        "margin": "0"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "feature-button": {
-      id: "feature-button",
-      type: "Button",
-      name: "Learn More Button",
-      parentId: "feature-text-box-2",
-      order: 2,
-      props: { label: "Learn more about analytics →", variant: "outline", size: "md", disabled: false },
-      style: {
-        alignSelf: "flex-start",
-        padding: "12px 24px",
-        backgroundColor: "transparent",
-        color: "#2563eb",
-        border: "1px solid #2563eb",
-        borderRadius: "8px",
-        fontWeight: "600",
-        margin: "8px 0 0 0",
-        cursor: "pointer",
+      "id": "feature-button",
+      "type": "Button",
+      "name": "Learn More Button",
+      "parentId": "feature-text-box-2",
+      "order": 2,
+      "props": {
+        "label": "Learn more about analytics →",
+        "variant": "outline",
+        "size": "md",
+        "disabled": false
       },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "style": {
+        "alignSelf": "flex-start",
+        "padding": "12px 24px",
+        "backgroundColor": "transparent",
+        "color": "#2563eb",
+        "border": "1px solid #2563eb",
+        "borderRadius": "8px",
+        "fontWeight": "600",
+        "margin": "8px 0 0 0",
+        "cursor": "pointer"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "feature-image-box-2": {
-      id: "feature-image-box-2",
-      type: "Container",
-      name: "Feature Image Container 2",
-      parentId: "feature-row-2",
-      order: 1,
-      props: { display: "flex", direction: "column", gap: 0, padding: 0 },
-      style: { flex: "1", width: "100%" },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "id": "feature-image-box-2",
+      "type": "Container",
+      "name": "Feature Image Container 2",
+      "parentId": "feature-row-2",
+      "order": 1,
+      "props": {
+        "display": "flex",
+        "direction": "column",
+        "gap": 0,
+        "padding": 0
+      },
+      "style": {
+        "flex": "1",
+        "width": "100%"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "feature-image-2": {
-      id: "feature-image-2",
-      type: "Image",
-      name: "Feature Photo 2",
-      parentId: "feature-image-box-2",
-      order: 0,
-      props: {
-        src: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-        alt: "Data charts on a screen",
-        objectFit: "cover",
+      "id": "feature-image-2",
+      "type": "Image",
+      "name": "Feature Photo 2",
+      "parentId": "feature-image-box-2",
+      "order": 0,
+      "props": {
+        "src": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        "alt": "Data charts on a screen",
+        "objectFit": "cover"
       },
-      style: { width: "100%", borderRadius: "16px", boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)" },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "style": {
+        "width": "100%",
+        "borderRadius": "16px",
+        "boxShadow": "0 20px 25px -5px rgba(0, 0, 0, 0.1)"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
-    // ── Call to Action / Footer Section ──────────────────────────────────
     "cta-section": {
-      id: "cta-section",
-      type: "Section",
-      name: "CTA Footer Section",
-      parentId: "root",
-      order: 4,
-      props: { minHeight: 300 },
-      style: {
-        display: "flex",
-        flexDirection: "column",
-        width: "100%",
-        padding: "96px 48px",
-        backgroundColor: "#2563eb",
-        alignItems: "center",
-        justifyContent: "center",
+      "id": "cta-section",
+      "type": "Section",
+      "name": "CTA Footer Section",
+      "parentId": "root",
+      "order": 4,
+      "props": {
+        "minHeight": 300
       },
-      responsiveStyle: {  mobile: { padding: "64px 24px" } },
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "width": "100%",
+        "padding": "96px 48px",
+        "backgroundColor": "#2563eb",
+        "alignItems": "center",
+        "justifyContent": "center"
+      },
+      "responsiveStyle": {
+        "mobile": {
+          "padding": "64px 24px"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "cta-content": {
-      id: "cta-content",
-      type: "Container",
-      name: "CTA Content Wrappper",
-      parentId: "cta-section",
-      order: 0,
-      props: { display: "flex", direction: "column", gap: 24, padding: 0 },
-      style: {
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        textAlign: "center",
-        maxWidth: "600px",
+      "id": "cta-content",
+      "type": "Container",
+      "name": "CTA Content Wrappper",
+      "parentId": "cta-section",
+      "order": 0,
+      "props": {
+        "display": "flex",
+        "direction": "column",
+        "gap": 24,
+        "padding": 0
       },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "alignItems": "center",
+        "textAlign": "center",
+        "maxWidth": "600px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     },
-
     "cta-heading": {
-      id: "cta-heading",
-      type: "Text",
-      name: "CTA Title",
-      parentId: "cta-content",
-      order: 0,
-      props: { text: "Ready to scale your business?", tag: "h2" },
-      style: { fontSize: "40px", fontWeight: "800", color: "#ffffff", margin: "0", letterSpacing: "-0.01em" },
-      responsiveStyle: { mobile: { fontSize: "32px" } },
-      interactions: [],
-      hidden: false,
-      locked: false,
-    },
-
-    "cta-desc": {
-      id: "cta-desc",
-      type: "Text",
-      name: "CTA Details",
-      parentId: "cta-content",
-      order: 1,
-      props: { text: "Join thousands of teams who are already building faster and delivering better results.", tag: "p" },
-      style: { fontSize: "18px", color: "#bfdbfe", margin: "0", lineHeight: "1.6" },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
-    },
-
-    "cta-btn": {
-      id: "cta-btn",
-      type: "Button",
-      name: "Final Signup Button",
-      parentId: "cta-content",
-      order: 2,
-      props: { label: "Create Free Account", variant: "primary", size: "lg", disabled: false },
-      style: {
-        margin: "16px 0 0 0",
-        padding: "16px 40px",
-        backgroundColor: "#ffffff",
-        color: "#2563eb",
-        border: "none",
-        borderRadius: "8px",
-        fontWeight: "700",
-        fontSize: "16px",
-        cursor: "pointer",
-        boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+      "id": "cta-heading",
+      "type": "Text",
+      "name": "CTA Title",
+      "parentId": "cta-content",
+      "order": 0,
+      "props": {
+        "text": "Ready to scale your business?",
+        "tag": "h2"
       },
-      responsiveStyle: {},
-      interactions: [],
-      hidden: false,
-      locked: false,
+      "style": {
+        "fontSize": "40px",
+        "fontWeight": "800",
+        "color": "#ffffff",
+        "margin": "0",
+        "letterSpacing": "-0.01em"
+      },
+      "responsiveStyle": {
+        "mobile": {
+          "fontSize": "32px"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false
+    },
+    "cta-desc": {
+      "id": "cta-desc",
+      "type": "Text",
+      "name": "CTA Details",
+      "parentId": "cta-content",
+      "order": 1,
+      "props": {
+        "text": "Join thousands of teams who are already building faster and delivering better results.",
+        "tag": "p"
+      },
+      "style": {
+        "fontSize": "18px",
+        "color": "#bfdbfe",
+        "margin": "0",
+        "lineHeight": "1.6"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
+    },
+    "cta-btn": {
+      "id": "cta-btn",
+      "type": "Button",
+      "name": "Final Signup Button",
+      "parentId": "cta-content",
+      "order": 2,
+      "props": {
+        "label": "Create Free Account",
+        "variant": "primary",
+        "size": "lg",
+        "disabled": false
+      },
+      "style": {
+        "margin": "16px 0 0 0",
+        "padding": "16px 40px",
+        "backgroundColor": "#ffffff",
+        "color": "#2563eb",
+        "border": "none",
+        "borderRadius": "8px",
+        "fontWeight": "700",
+        "fontSize": "16px",
+        "cursor": "pointer",
+        "boxShadow": "0 10px 15px -3px rgba(0, 0, 0, 0.1)"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false
     }
-
   },
 
   variables: {},

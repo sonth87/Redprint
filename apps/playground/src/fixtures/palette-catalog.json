@@ -414,7 +414,7 @@
               "thumbnail": null,
               "i18n": { "en": { "name": "View More" }, "vi": { "name": "Xem thêm" } },
               "props": { "label": "<p>View More</p>", "variant": "primary", "size": "md" },
-              "style": { "backgroundColor": "#111827", "color": "#ffffff", "borderRadius": "4px", "padding": "10px 24px", "fontSize": "14px", "fontWeight": "500" },
+              "style": { "backgroundColor": "#111827", "color": "#ffffff", "borderRadius": "4px", "width": "160px", "height": "40px", "fontSize": "14px", "fontWeight": "500" },
               "tags": ["button", "view-more", "cta"]
             },
             {
@@ -424,7 +424,7 @@
               "thumbnail": null,
               "i18n": { "en": { "name": "Read More" }, "vi": { "name": "Đọc thêm" } },
               "props": { "label": "<p>Read More</p>", "variant": "outline", "size": "md" },
-              "style": { "backgroundColor": "transparent", "color": "#111827", "border": "1px solid #111827", "borderRadius": "4px", "padding": "10px 24px", "fontSize": "14px" },
+              "style": { "backgroundColor": "transparent", "color": "#111827", "border": "1px solid #111827", "borderRadius": "4px", "width": "160px", "height": "40px", "fontSize": "14px" },
               "tags": ["button", "read-more", "outline"]
             },
             {
@@ -434,7 +434,7 @@
               "thumbnail": null,
               "i18n": { "en": { "name": "Shop →" }, "vi": { "name": "Mua ngay →" } },
               "props": { "label": "<p>SHOP →</p>", "variant": "primary", "size": "md" },
-              "style": { "backgroundColor": "#4d7c6e", "color": "#ffffff", "borderRadius": "24px", "padding": "12px 28px", "fontSize": "13px", "letterSpacing": "0.08em", "fontWeight": "600" },
+              "style": { "backgroundColor": "#4d7c6e", "color": "#ffffff", "borderRadius": "24px", "width": "160px", "height": "40px", "fontSize": "13px", "letterSpacing": "0.08em", "fontWeight": "600" },
               "tags": ["button", "shop", "ecommerce", "pill"]
             },
             {
@@ -444,7 +444,7 @@
               "thumbnail": null,
               "i18n": { "en": { "name": "Send" }, "vi": { "name": "Gửi" } },
               "props": { "label": "<p>SEND</p>", "variant": "primary", "size": "md" },
-              "style": { "backgroundColor": "#111827", "color": "#ffffff", "borderRadius": "2px", "padding": "12px 28px", "fontSize": "13px", "letterSpacing": "0.1em", "fontWeight": "700" },
+              "style": { "backgroundColor": "#111827", "color": "#ffffff", "borderRadius": "2px", "width": "160px", "height": "40px", "fontSize": "13px", "letterSpacing": "0.1em", "fontWeight": "700" },
               "tags": ["button", "send", "form", "submit"]
             },
             {
@@ -454,7 +454,7 @@
               "thumbnail": null,
               "i18n": { "en": { "name": "Join Us" }, "vi": { "name": "Tham gia" } },
               "props": { "label": "<p>JOIN US</p>", "variant": "secondary", "size": "md" },
-              "style": { "backgroundColor": "transparent", "color": "#4f46e5", "border": "2px solid #4f46e5", "borderRadius": "24px", "padding": "10px 24px", "fontSize": "14px", "fontWeight": "600", "letterSpacing": "0.05em" },
+              "style": { "backgroundColor": "transparent", "color": "#4f46e5", "border": "2px solid #4f46e5", "borderRadius": "24px", "width": "160px", "height": "40px", "fontSize": "14px", "fontWeight": "600", "letterSpacing": "0.05em" },
               "tags": ["button", "join", "community", "outline"]
             },
             {
@@ -474,7 +474,7 @@
               "thumbnail": null,
               "i18n": { "en": { "name": "Let's Go" }, "vi": { "name": "Bắt đầu" } },
               "props": { "label": "<p>Let's Go</p>", "variant": "outline", "size": "md" },
-              "style": { "backgroundColor": "transparent", "color": "#4f46e5", "border": "2px solid #4f46e5", "borderRadius": "4px", "padding": "10px 24px", "fontSize": "15px", "fontWeight": "600" },
+              "style": { "backgroundColor": "transparent", "color": "#4f46e5", "border": "2px solid #4f46e5", "borderRadius": "4px", "width": "160px", "height": "40px", "fontSize": "15px", "fontWeight": "600" },
               "tags": ["button", "lets-go", "outline", "indigo"]
             },
             {
@@ -484,7 +484,7 @@
               "thumbnail": null,
               "i18n": { "en": { "name": "Apply Now" }, "vi": { "name": "Ứng tuyển ngay" } },
               "props": { "label": "<p>Apply Now</p>", "variant": "primary", "size": "md" },
-              "style": { "backgroundColor": "#374151", "color": "#ffffff", "borderRadius": "4px", "padding": "12px 28px", "fontSize": "15px", "fontStyle": "italic", "fontWeight": "600" },
+              "style": { "backgroundColor": "#374151", "color": "#ffffff", "borderRadius": "4px", "width": "160px", "height": "40px", "fontSize": "15px", "fontStyle": "italic", "fontWeight": "600" },
               "tags": ["button", "apply", "jobs", "italic"]
             },
             {
@@ -494,7 +494,7 @@
               "thumbnail": null,
               "i18n": { "en": { "name": "Get Started" }, "vi": { "name": "Bắt đầu ngay" } },
               "props": { "label": "<p>Get Started</p>", "variant": "primary", "size": "lg" },
-              "style": { "backgroundColor": "transparent", "color": "#e57330", "border": "2px solid #e57330", "borderRadius": "24px", "padding": "12px 28px", "fontSize": "15px", "fontWeight": "600" },
+              "style": { "backgroundColor": "transparent", "color": "#e57330", "border": "2px solid #e57330", "borderRadius": "24px", "width": "160px", "height": "40px", "fontSize": "15px", "fontWeight": "600" },
               "tags": ["button", "get-started", "orange", "pill"]
             },
             {
@@ -504,7 +504,7 @@
               "thumbnail": null,
               "i18n": { "en": { "name": "Chat Now" }, "vi": { "name": "Nhắn tin ngay" } },
               "props": { "label": "<p>Chat Now 💬</p>", "variant": "primary", "size": "md" },
-              "style": { "backgroundColor": "#f6f4ef", "color": "#111827", "borderRadius": "24px", "padding": "10px 24px", "fontSize": "14px", "fontWeight": "600" },
+              "style": { "backgroundColor": "#f6f4ef", "color": "#111827", "borderRadius": "24px", "width": "160px", "height": "40px", "fontSize": "14px", "fontWeight": "600" },
               "tags": ["button", "chat", "messenger", "pill"]
             }
           ]

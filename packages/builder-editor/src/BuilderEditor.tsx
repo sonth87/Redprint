@@ -11,6 +11,7 @@ import {
 } from "@ui-builder/builder-react";
 import {
   DEVICE_VIEWPORT_PRESETS,
+  resolveProps,
   type BuilderAPI,
   type BuilderConfig,
   type CanvasMode,
@@ -239,7 +240,7 @@ function EditorInner({
 
   // ── Inline text editing ──────────────────────────────────────────────────
   const { tiptapEditor, setTiptapEditor, editingOverrideRect, setEditingOverrideRect, handleInlineCommit, handleInlineExit, handleCanvasDoubleClick } =
-    useInlineTextEdit({ editingNodeId, editingPropKey, nodes: document.nodes, registry, dispatch });
+    useInlineTextEdit({ editingNodeId, editingPropKey, nodes: document.nodes, registry, dispatch, breakpoint });
 
   const selectionRectBase = editingNodeId ? (editingOverrideRect ?? selectionRectRaw) : selectionRectRaw;
   const selectionRect     = selectionRectBase && flowDragOffset
@@ -258,7 +259,7 @@ function EditorInner({
   // ── Keyboard shortcuts ────────────────────────────────────────────────────
   useKeyboardShortcuts({
     selectedNodeId, rootNodeId: document.rootNodeId, nodes: document.nodes, clipboard: state.editor.clipboard,
-    breakpoint, canvasContainerRef, dispatch, clearSelection, undo, redo, setBreakpoint, onDeleteNode: handleDeleteNode,
+    breakpoint, editingNodeId, canvasContainerRef, dispatch, clearSelection, undo, redo, setBreakpoint, onDeleteNode: handleDeleteNode,
   });
 
   // ── Canvas mode helpers ──────────────────────────────────────────────────
@@ -570,12 +571,14 @@ function EditorInner({
             const editingDef     = editingNode && registry ? registry.getComponent(editingNode.type) : null;
             const richtextSchema = editingDef?.propSchema.find((p) => p.type === "richtext" && p.key === editingPropKey);
             const toolbarConfig  = richtextSchema?.type === "richtext" ? richtextSchema.toolbar : undefined;
-            const initialContent = editingNode ? String(editingNode.props[editingPropKey] ?? "") : "";
+            const resolvedProps  = editingNode ? resolveProps(editingNode.props, editingNode.responsiveProps, breakpoint) : {};
+            const initialContent = editingNode ? String(resolvedProps[editingPropKey] ?? "") : "";
             return (
               <>
                 <InlineTextEditor
                   nodeId={editingNodeId} initialContent={initialContent} toolbarConfig={toolbarConfig}
-                  canvasFrameRef={canvasFrameRef} zoom={zoom} panOffset={panOffset}
+                  canvasFrameRef={activeFrameRef} canvasContainerRef={canvasContainerRef}
+                  zoom={zoom} panOffset={panOffset}
                   onCommit={handleInlineCommit} onExit={handleInlineExit}
                   onEditorReady={(ed) => setTiptapEditor(ed)} onBoundsChange={setEditingOverrideRect}
                 />

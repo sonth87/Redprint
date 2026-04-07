@@ -143,7 +143,6 @@ export const ButtonComponent: ComponentDefinition = {
     alignItems: "center",
     justifyContent: "center",
     borderRadius: "6px",
-    padding: "8px 16px",
     cursor: "pointer",
     fontWeight: "500",
     fontSize: "14px",

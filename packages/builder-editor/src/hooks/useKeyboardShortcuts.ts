@@ -15,6 +15,8 @@ interface UseKeyboardShortcutsOptions {
   nodes: Record<string, BuilderNode>;
   clipboard: ClipboardData | null;
   breakpoint: string;
+  /** When set, a node is in inline text-edit mode — arrow keys must not trigger nudge. */
+  editingNodeId: string | null;
   canvasContainerRef: React.RefObject<HTMLElement | null>;
   dispatch: (action: { type: string; payload: unknown; description?: string; groupId?: string }) => void;
   clearSelection: () => void;
@@ -54,6 +56,7 @@ export function useKeyboardShortcuts({
   nodes,
   clipboard,
   breakpoint,
+  editingNodeId,
   canvasContainerRef,
   dispatch,
   clearSelection,
@@ -209,7 +212,13 @@ export function useKeyboardShortcuts({
         }
       }
 
-      if (selectedNodeId && !ctrl) {
+      if (selectedNodeId && !ctrl && !editingNodeId) {
+        const activeEl = globalThis.document?.activeElement;
+        const isTypingInInput =
+          activeEl?.tagName === "INPUT" ||
+          activeEl?.tagName === "TEXTAREA" ||
+          (activeEl as HTMLElement)?.contentEditable === "true";
+        if (isTypingInInput) return;
         const step = e.shiftKey ? 10 : 1;
         let dx = 0;
         let dy = 0;
@@ -260,6 +269,7 @@ export function useKeyboardShortcuts({
     dispatch,
     clearSelection,
     breakpoint,
+    editingNodeId,
     canvasContainerRef,
     setBreakpoint,
     onDeleteNode,

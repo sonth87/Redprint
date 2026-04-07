@@ -11,6 +11,8 @@ interface UseInlineTextEditOptions {
   nodes: Record<string, BuilderNode>;
   registry: ComponentRegistry | null | undefined;
   dispatch: DispatchFn;
+  /** Current active breakpoint — determines whether commit writes base props or responsive override. */
+  breakpoint: string;
 }
 
 export interface UseInlineTextEditReturn {
@@ -33,6 +35,7 @@ export function useInlineTextEdit({
   nodes,
   registry,
   dispatch,
+  breakpoint,
 }: UseInlineTextEditOptions): UseInlineTextEditReturn {
   const [tiptapEditor, setTiptapEditor] = useState<TiptapEditor | null>(null);
   const [editingOverrideRect, setEditingOverrideRect] = useState<{
@@ -53,13 +56,21 @@ export function useInlineTextEdit({
   const handleInlineCommit = useCallback(
     (html: string) => {
       if (!editingNodeId || !editingPropKey) return;
-      dispatch({
-        type: "UPDATE_PROPS",
-        payload: { nodeId: editingNodeId, props: { [editingPropKey]: html } },
-        description: `Update ${editingPropKey}`,
-      });
+      if (breakpoint === "desktop") {
+        dispatch({
+          type: "UPDATE_PROPS",
+          payload: { nodeId: editingNodeId, props: { [editingPropKey]: html } },
+          description: `Update ${editingPropKey}`,
+        });
+      } else {
+        dispatch({
+          type: "UPDATE_RESPONSIVE_PROPS",
+          payload: { nodeId: editingNodeId, breakpoint, props: { [editingPropKey]: html } },
+          description: `Update ${editingPropKey} (${breakpoint})`,
+        });
+      }
     },
-    [editingNodeId, editingPropKey, dispatch],
+    [editingNodeId, editingPropKey, breakpoint, dispatch],
   );
 
   const handleInlineExit = useCallback(() => {

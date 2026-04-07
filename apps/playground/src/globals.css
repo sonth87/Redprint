@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+/* Reset default paragraph/heading margins inside canvas-rendered buttons
+   so Tiptap-generated <p> wrappers don't cause vertical misalignment. */
+button p, button h1, button h2, button h3, button h4, button h5, button h6 {
+  margin: 0;
+  padding: 0;
+}
+
 /* Tailwind v4: explicit source paths for packages outside Vite project root */
 @source "../../../packages/ui/src";
 @source "../../../packages/builder-editor/src";

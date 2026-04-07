@@ -28,8 +28,18 @@ export interface InlineTextEditorProps {
   initialContent: string;
   /** Toolbar feature flags from the prop schema. */
   toolbarConfig?: RichtextToolbarConfig;
-  /** The canvas frame element — used to compute bounding box. */
+  /**
+   * The active canvas frame — used to query the target DOM element.
+   * In dual (side-by-side) mode this should be the frame whose breakpoint
+   * is currently active (desktop or mobile), not always the desktop frame.
+   */
   canvasFrameRef: React.RefObject<HTMLDivElement | null>;
+  /**
+   * The outermost editor container (the element that contains the CanvasRoot
+   * and all overlays).  Used as the coordinate-space origin so that overlay
+   * positions are correct regardless of which frame is active.
+   */
+  canvasContainerRef: React.RefObject<HTMLDivElement | null>;
   /** Zoom level — bounding rect is in DOM pixels; we need to map to overlay pixels. */
   zoom: number;
   /** Pan offset of the canvas. */
@@ -53,6 +63,7 @@ export const InlineTextEditor: React.FC<InlineTextEditorProps> = ({
   initialContent,
   toolbarConfig,
   canvasFrameRef,
+  canvasContainerRef,
   zoom,
   panOffset,
   onCommit,
@@ -102,40 +113,44 @@ export const InlineTextEditor: React.FC<InlineTextEditorProps> = ({
 
   // ── Position the editor over the canvas node ──────────────────────────
   useEffect(() => {
-    if (!canvasFrameRef.current || !containerRef.current) return;
+    if (!canvasFrameRef.current || !containerRef.current || !canvasContainerRef.current) return;
 
     const frameEl = canvasFrameRef.current;
     const el = frameEl.querySelector(`[data-node-id="${nodeId}"]`) as HTMLElement | null;
     if (!el) return;
 
-    const frameRect = frameEl.getBoundingClientRect();
+    const containerRect = canvasContainerRef.current.getBoundingClientRect();
     const elRect = el.getBoundingClientRect();
 
-    // Convert DOM pixels → canvas coordinates → overlay pixels
-    const canvasX = (elRect.left - frameRect.left) / zoom;
-    const canvasY = (elRect.top  - frameRect.top)  / zoom;
-    const canvasW = elRect.width  / zoom;
-    const canvasH = elRect.height / zoom;
-
-    const viewportX = canvasX * zoom + panOffset.x;
-    const viewportY = canvasY * zoom + panOffset.y;
-    const viewportW = canvasW * zoom;
-    const viewportH = canvasH * zoom;
+    // Position the overlay at the element's screen-space origin, then set its
+    // natural (canvas-space) dimensions and apply `transform: scale(zoom)`.
+    // This makes the browser lay out text in exactly the same CSS box as the
+    // original element — same width, same font-size, same padding — then zoom
+    // the rendered result identically to the canvas frame. Manually scaling
+    // individual CSS properties by zoom causes sub-pixel text-reflow differences
+    // that produce inconsistent line-wrapping at fractional zoom levels.
+    const viewportX = elRect.left - containerRect.left;
+    const viewportY = elRect.top  - containerRect.top;
+    const canvasW   = elRect.width  / zoom;
+    const canvasH   = elRect.height / zoom;
 
     const s = containerRef.current.style;
-    s.left   = `${viewportX}px`;
-    s.top    = `${viewportY}px`;
-    s.width  = `${viewportW}px`;
-    s.minHeight = `${viewportH}px`;
+    s.left            = `${viewportX}px`;
+    s.top             = `${viewportY}px`;
+    s.width           = `${canvasW}px`;
+    s.minHeight       = `${canvasH}px`;
+    s.transform       = `scale(${zoom})`;
+    s.transformOrigin = "0 0";
 
-    // Copy computed typography styles from the original element
+    // Copy computed styles as-is — no zoom scaling needed because the
+    // container itself is scaled by the transform above.
     const computed = window.getComputedStyle(el);
-    s.fontFamily    = computed.fontFamily;
-    s.fontSize      = computed.fontSize;
-    s.fontWeight    = computed.fontWeight;
-    s.lineHeight    = computed.lineHeight;
-    s.letterSpacing = computed.letterSpacing;
-    s.textAlign     = computed.textAlign;
+    s.fontFamily      = computed.fontFamily;
+    s.fontSize        = computed.fontSize;
+    s.fontWeight      = computed.fontWeight;
+    s.lineHeight      = computed.lineHeight;
+    s.letterSpacing   = computed.letterSpacing;
+    s.textAlign       = computed.textAlign;
     s.color           = computed.color;
     s.backgroundColor = computed.backgroundColor;
     s.borderRadius    = computed.borderRadius;
@@ -147,7 +162,7 @@ export const InlineTextEditor: React.FC<InlineTextEditorProps> = ({
     return () => {
       el.style.visibility = prevVisibility;
     };
-  }, [nodeId, canvasFrameRef, zoom, panOffset]);
+  }, [nodeId, canvasFrameRef, canvasContainerRef, zoom, panOffset]);
 
   // ── Sync container size → parent selectionRect via ResizeObserver ─────
   useEffect(() => {
@@ -155,12 +170,13 @@ export const InlineTextEditor: React.FC<InlineTextEditorProps> = ({
     const container = containerRef.current;
 
     const notify = () => {
-      if (!canvasFrameRef.current) return;
-      const frameRect = canvasFrameRef.current.getBoundingClientRect();
+      if (!canvasContainerRef.current) return;
+      const containerRect = canvasContainerRef.current.getBoundingClientRect();
       const cRect = container.getBoundingClientRect();
-      // viewport → canvas space
-      const x = (cRect.left - frameRect.left) / zoom;
-      const y = (cRect.top  - frameRect.top)  / zoom;
+      // Convert overlay pixels → canvas-space coordinates (absolute from origin).
+      // Subtract panOffset so the result is independent of scroll/pan position.
+      const x = (cRect.left - containerRect.left - panOffset.x) / zoom;
+      const y = (cRect.top  - containerRect.top  - panOffset.y) / zoom;
       const width  = cRect.width  / zoom;
       const height = cRect.height / zoom;
       onBoundsChange({ x, y, width, height });
@@ -172,7 +188,7 @@ export const InlineTextEditor: React.FC<InlineTextEditorProps> = ({
     notify();
     return () => ro.disconnect();
   // zoom/panOffset change means positions shift — re-attach so first notify uses fresh values
-  }, [onBoundsChange, canvasFrameRef, zoom, panOffset]);
+  }, [onBoundsChange, canvasContainerRef, zoom, panOffset]);
 
   // ── Keyboard: Escape = commit & exit ─────────────────────────────────
   useEffect(() => {
