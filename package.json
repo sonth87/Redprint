@@ -1,7 +1,7 @@
 {
   "name": "ui-builder",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A modular, extensible UI Builder Library — drag-and-drop web interface building platform",
   "scripts": {
     "dev": "turbo dev --filter=@ui-builder/playground",

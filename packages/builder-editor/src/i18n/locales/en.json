@@ -408,7 +408,8 @@
       "decorative": "Decorative",
       "menu": "Menu & Anchor",
       "collection": "List",
-      "container": "Box"
+      "container": "Box",
+      "card": "Cards"
     },
     "types": {
       "themedText": "Themed Text",
@@ -437,7 +438,10 @@
       "hoverRepeaters": "Hover Repeaters",
       "blankRepeaters": "Blank Repeaters",
       "containerBoxes": "Container Boxes",
-      "styledBoxes": "Styled Boxes"
+      "styledBoxes": "Styled Boxes",
+      "testimonial": "Testimonial",
+      "pricing": "Pricing",
+      "heroBanner": "Hero Banner"
     }
   },
   "deleteConfirm": {

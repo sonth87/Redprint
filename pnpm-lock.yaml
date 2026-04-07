@@ -56,6 +56,9 @@ importers:
 
   apps/playground:
     dependencies:
+      '@ui-builder/builder-components':
+        specifier: workspace:*
+        version: link:../../packages/builder-components
       '@ui-builder/builder-core':
         specifier: workspace:*
         version: link:../../packages/builder-core
@@ -114,6 +117,34 @@ importers:
       vite:
         specifier: ^6.0.3
         version: 6.4.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.8.3)
+
+  packages/builder-components:
+    dependencies:
+      '@ui-builder/builder-core':
+        specifier: workspace:*
+        version: link:../builder-core
+      react:
+        specifier: '>=18.0.0'
+        version: 18.3.1
+      react-dom:
+        specifier: '>=18.0.0'
+        version: 18.3.1(react@18.3.1)
+    devDependencies:
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.3(@types/react@19.2.14)
+      '@ui-builder/config':
+        specifier: workspace:*
+        version: link:../config
+      tsup:
+        specifier: ^8.3.0
+        version: 8.5.1(jiti@2.6.1)(postcss@8.5.8)(typescript@5.9.3)(yaml@2.8.3)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
 
   packages/builder-core:
     dependencies:

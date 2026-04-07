@@ -5,7 +5,8 @@ import { ComponentRegistry } from "@ui-builder/builder-core";
 import { Button } from "@ui-builder/ui";
 import { Pen, Eye, Code, Github, Languages } from "lucide-react";
 import { useBuilderSetup } from "./hooks/useBuilderSetup";
-import { SAMPLE_COMPONENTS } from "./components/sample-components";
+import { BASE_COMPONENTS } from "@ui-builder/builder-components";
+import { CUSTOM_COMPONENTS } from "./components/sample-components";
 import koTranslations from "./i18n/ko.json";
 import koFlatTranslations from "./i18n/ko-flat.json";
 
@@ -46,7 +47,10 @@ export function App() {
   // Build a registry for the runtime renderer (same components)
   const runtimeRegistry = React.useMemo(() => {
     const reg = new ComponentRegistry();
-    for (const comp of SAMPLE_COMPONENTS) {
+    for (const comp of BASE_COMPONENTS) {
+      reg.registerComponent(comp);
+    }
+    for (const comp of CUSTOM_COMPONENTS) {
       reg.registerComponent(comp);
     }
     return reg;

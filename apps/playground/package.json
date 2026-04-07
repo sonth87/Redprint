@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ui-builder/builder-components": "workspace:*",
     "@ui-builder/builder-core": "workspace:*",
     "@ui-builder/builder-react": "workspace:*",
     "@ui-builder/builder-editor": "workspace:*",

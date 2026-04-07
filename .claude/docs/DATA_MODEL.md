@@ -488,3 +488,76 @@ interface PaletteDragData {
 
 `handleDrop` in `useDragHandlers` distinguishes palette drags (source `"palette-item"`) from
 legacy component-type drags (`"application/builder-component-type"` MIME type).
+
+---
+
+## Built-in Component Library (`builder-components`)
+
+**Package:** `@ui-builder/builder-components`  
+**Location:** `packages/builder-components/`  
+**Depends on:** `@ui-builder/builder-core` only (no React peer beyond renderer functions)
+
+Provides 17 ready-to-use `ComponentDefinition` objects covering the full base component set. Consumers register them at builder init time.
+
+### Base Components
+
+| Type | Category | Notes |
+|---|---|---|
+| `Section` | layout | Full-width page section, contains children |
+| `Container` | layout | Generic flex/grid container |
+| `Grid` | layout | CSS grid with configurable columns |
+| `Column` | layout | Grid/flex column child |
+| `Text` | content | Paragraph / inline text block |
+| `Button` | content | CTA button with variant + size props |
+| `Image` | media | Responsive image with alt text |
+| `Divider` | content | Horizontal rule / decorative divider |
+| `TextMarquee` | content | Horizontally scrolling ticker text |
+| `CollapsibleText` | content | Expandable read-more paragraph |
+| `TextMask` | content | Text clipped to an image (CSS mask) |
+| `GalleryGrid` | media | Fixed-column photo grid |
+| `GallerySlider` | media | Horizontal scroll photo slider |
+| `Shape` | decoration | SVG shapes (circle, rect, triangle, star…) |
+| `NavigationMenu` | navigation | Horizontal / vertical / hamburger nav |
+| `Repeater` | layout | Template repeater for data lists |
+| `Anchor` | navigation | Invisible scroll-target anchor point |
+
+### Usage
+
+```ts
+import { BASE_COMPONENTS } from "@ui-builder/builder-components";
+
+const builder = createBuilder({ document });
+for (const comp of BASE_COMPONENTS) {
+  builder.registry.registerComponent(comp);
+}
+```
+
+### Extending Components
+
+`extendComponent(base, overrides)` creates a new `ComponentDefinition` by shallow-merging a base
+definition with overrides. The `type` field in overrides is required (must be unique).
+
+```ts
+import { extendComponent, TextComponent } from "@ui-builder/builder-components";
+
+export const HeroBanner = extendComponent(TextComponent, {
+  type: "HeroBanner",
+  name: "Hero Banner",
+  defaultProps: { ...TextComponent.defaultProps, fontSize: "52px", fontWeight: "800" },
+  propSchema: [
+    ...(TextComponent.propSchema ?? []),
+    { key: "gradientFrom", label: "Gradient Start", type: "color", default: "#4f46e5" },
+  ],
+  editorRenderer: ({ node, style }) => <HeroBannerView node={node} style={style} />,
+  runtimeRenderer: ({ node, style }) => <HeroBannerView node={node} style={style} />,
+});
+```
+
+If `propSchema` or `capabilities` are supplied in overrides, they **fully replace** the base
+(no deep merge). All other fields are shallowly merged; overrides win on conflict.
+
+### Adding Project-Specific Components
+
+Register custom components alongside `BASE_COMPONENTS`. See
+`apps/playground/src/components/sample-components.tsx` for a live example that defines
+`TestimonialCardComponent`, `PricingCardComponent`, and `HeroBannerComponent`.

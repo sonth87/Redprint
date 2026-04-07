@@ -21,6 +21,7 @@ This is a **UI Builder Library** — a modular, extensible platform for drag-and
 
 ```
 packages/builder-core       ← Framework-agnostic engine (NO React/DOM deps)
+packages/builder-components ← 17 built-in ComponentDefinitions + extendComponent() (depends on builder-core only)
 packages/builder-react      ← React adapter (hooks, context, provider)
 packages/builder-editor     ← Visual editor (canvas, panels, drag-drop)
 packages/builder-renderer   ← Production runtime renderer (no editor code)

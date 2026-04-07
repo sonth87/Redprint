@@ -1,7 +1,8 @@
 import { useMemo, useEffect } from "react";
 import { createBuilder, GroupRegistry, BUILT_IN_GROUPS, BUILT_IN_SUB_GROUPS } from "@ui-builder/builder-core";
 import type { BuilderAPI, PaletteCatalog } from "@ui-builder/builder-core";
-import { SAMPLE_COMPONENTS } from "../components/sample-components";
+import { BASE_COMPONENTS } from "@ui-builder/builder-components";
+import { CUSTOM_COMPONENTS } from "../components/sample-components";
 import { FIXTURE_DOCUMENT } from "../fixtures/fixture-document";
 import paletteCatalogJson from "../fixtures/palette-catalog.json";
 
@@ -23,8 +24,13 @@ export function useBuilderSetup(): { builder: BuilderAPI; groupRegistry: GroupRe
       },
     });
 
-    // Register all sample components
-    for (const comp of SAMPLE_COMPONENTS) {
+    // Register all base components
+    for (const comp of BASE_COMPONENTS) {
+      b.registry.registerComponent(comp);
+    }
+
+    // Register project-specific custom components (from sample-components.tsx)
+    for (const comp of CUSTOM_COMPONENTS) {
       b.registry.registerComponent(comp);
     }
 

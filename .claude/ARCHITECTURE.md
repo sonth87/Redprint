@@ -3,8 +3,10 @@
 > **This file is project-specific.** It describes the architecture, features, and technical decisions of this project.
 > It may **override or extend** sections from `RULES.md` — see the override mechanism in [Rules Reference](#rules-reference).
 >
-> **Version:** 1.1 | **Last updated:** 2026-03 | **Updated by:** Tech Lead
-> **Changelog:** v1.1 — Expanded with comprehensive type contracts, design principles, command system, panel specs, event catalogue, error boundaries, and keyboard shortcuts from Technical Specification v2.1
+> **Version:** 1.2 | **Last updated:** 2026-04 | **Updated by:** Tech Lead
+> **Changelog:**
+> - v1.2 — Added `builder-components` package (17 built-in ComponentDefinitions, `extendComponent()`, `BASE_COMPONENTS[]`); updated architecture diagram, dependency rules, and package table; added Built-in Component Library section
+> - v1.1 — Expanded with comprehensive type contracts, design principles, command system, panel specs, event catalogue, error boundaries, and keyboard shortcuts from Technical Specification v2.1
 
 ---
 
@@ -101,6 +103,9 @@ These principles govern all architectural decisions in the project:
 │                    builder-react                          │
 │         (React adapter — hooks, context, provider)        │
 ├──────────────────────────────────────────────────────────┤
+│                  builder-components                       │
+│  (17 built-in ComponentDefinitions + extendComponent())   │
+├──────────────────────────────────────────────────────────┤
 │                    builder-core                           │
 │   (Framework-agnostic engine — state, commands, events)   │
 ├──────────────────────────────────────────────────────────┤
@@ -113,21 +118,24 @@ These principles govern all architectural decisions in the project:
 
 ```
 builder-core          ← no dependencies (framework-agnostic)
+builder-components    ← depends on builder-core only (NO React/DOM in runtime)
 builder-react         ← depends on builder-core
-builder-editor        ← depends on builder-core, builder-react, packages/ui
+builder-editor        ← depends on builder-core, builder-react, builder-components, packages/ui
 builder-renderer      ← depends on builder-core, builder-react
 ```
 
-| Package              | Role                                                  | Output           | Peer deps   |
-| -------------------- | ----------------------------------------------------- | ---------------- | ----------- |
-| `builder-core`       | Central engine — framework-agnostic                   | ESM + CJS        | none        |
-| `builder-react`      | React adapter layer                                   | ESM only         | React ≥18   |
-| `builder-editor`     | Visual editor — canvas, panels, drag-drop, toolbar    | ESM + CSS bundle | React ≥18   |
-| `builder-renderer`   | Runtime renderer — production, no editor code         | ESM              | React ≥18   |
-| `packages/ui`        | shadcn-based design system for editor UI components   | ESM              | React ≥18   |
+| Package                | Role                                                        | Output           | Peer deps   |
+| ---------------------- | ----------------------------------------------------------- | ---------------- | ----------- |
+| `builder-core`         | Central engine — framework-agnostic                         | ESM + CJS        | none        |
+| `builder-components`   | 17 built-in ComponentDefinitions + `extendComponent()`      | ESM + CJS        | React ≥18   |
+| `builder-react`        | React adapter layer                                         | ESM only         | React ≥18   |
+| `builder-editor`       | Visual editor — canvas, panels, drag-drop, toolbar          | ESM + CSS bundle | React ≥18   |
+| `builder-renderer`     | Runtime renderer — production, no editor code               | ESM              | React ≥18   |
+| `packages/ui`          | shadcn-based design system for editor UI components         | ESM              | React ≥18   |
 
 **Hard constraints:**
 - `builder-core` MUST NOT have any runtime dependency on React, DOM, or browser APIs
+- `builder-components` depends ONLY on `builder-core` — no DOM or browser APIs in component logic
 - All DOM interaction must go through adapters in `builder-react` or `builder-editor`
 - `builder-renderer` must be independently installable — no editor code in its bundle
 
@@ -170,6 +178,56 @@ Document
 - **Overlay layer** — renders selection boxes, resize handles, hover highlights, snap guides, helper lines, drop indicators. `position: absolute` on top, `pointer-events` managed to not block component interaction.
 
 **Runtime rendering** must: resolve components from registry, merge base + responsive styles, bind interactions, render via `runtimeRenderer`, never include editor code in bundle.
+
+---
+
+## Built-in Component Library (`builder-components`)
+
+Package `@ui-builder/builder-components` provides the official set of base component definitions. It depends only on `builder-core` and exposes:
+
+- **`BASE_COMPONENTS: ComponentDefinition[]`** — aggregate array of all 17 definitions, ready to pass to `builder.registerComponent()`
+- **`extendComponent(base, overrides)`** — shallow-merge utility for deriving a new `ComponentDefinition` from an existing one (overrides fully replace `propSchema` / `capabilities` when provided)
+- **Re-exports `defineComponent`** from `builder-core` for convenience
+
+### Built-in Components (17)
+
+| Type | Category | Can contain children |
+| --- | --- | --- |
+| `section` | Layout | ✓ |
+| `container` | Layout | ✓ |
+| `grid` | Layout | ✓ |
+| `column` | Layout | ✓ |
+| `text` | Content | — |
+| `button` | Content | — |
+| `image` | Media | — |
+| `divider` | Content | — |
+| `text-marquee` | Content | — |
+| `collapsible-text` | Content | — |
+| `text-mask` | Content | — |
+| `gallery-grid` | Media | — |
+| `gallery-slider` | Media | — |
+| `shape` | Decorative | — |
+| `navigation-menu` | Navigation | — |
+| `repeater` | Data | ✓ |
+| `anchor` | Navigation | — |
+
+### Usage Pattern
+
+```ts
+import { BASE_COMPONENTS, extendComponent } from '@ui-builder/builder-components';
+
+// Register all built-in components
+BASE_COMPONENTS.forEach(def => builder.registerComponent(def));
+
+// Extend a built-in to create a custom variant
+const HeroBanner = extendComponent(TextComponent, {
+  type: 'hero-banner',
+  name: 'Hero Banner',
+  defaultProps: { text: 'Welcome', fontSize: 48 },
+});
+```
+
+> Project-specific / playground-only custom components live in `apps/playground/src/components/sample-components.tsx` and follow the same `ComponentDefinition` protocol.
 
 ---
 

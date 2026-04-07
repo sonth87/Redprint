@@ -9,6 +9,7 @@ Full spec: `.claude/ARCHITECTURE.md` (overrides) + `.claude/RULES.md` (baseline)
 
 ```
 builder-core        ← framework-agnostic engine (NO React/DOM/browser APIs)
+builder-components  ← 17 built-in ComponentDefinitions + extendComponent() (depends on builder-core only)
 builder-react       ← React adapter (depends on builder-core)
 builder-editor      ← visual editor (depends on builder-core, builder-react, ui)
 builder-renderer    ← production renderer (depends on builder-core, builder-react)
@@ -180,6 +181,10 @@ interface ComponentDefinition {
 | Add Elements palette (floating + docked) | `packages/builder-editor/src/panels/left/` (FloatingPalette, AddElementsPanel, PaletteItemCard) |
 | Palette catalog data types | `packages/builder-core/src/presets/palette-types.ts` |
 | Palette catalog JSON (mock) | `apps/playground/src/fixtures/palette-catalog.json` |
+| Built-in component definitions (17) | `packages/builder-components/src/components/` |
+| Base components barrel + `BASE_COMPONENTS` | `packages/builder-components/src/index.ts` |
+| `extendComponent()` utility | `packages/builder-components/src/utils/extendComponent.ts` |
+| Custom playground components | `apps/playground/src/components/sample-components.tsx` |
 | Click-to-add hook | `packages/builder-editor/src/hooks/useClickToAdd.ts` |
 | Context (quick action) toolbar | `packages/builder-editor/src/toolbar/` |
 | Keyboard shortcuts | `packages/builder-editor/src/shortcuts/` |
@@ -217,7 +222,7 @@ pnpm lint           # ESLint (must pass before done)
 pnpm test           # Vitest (must pass before done)
 ```
 
-Build order: `shared` → `ui` → `builder-core` → `builder-react` → `builder-editor` + `builder-renderer` → `playground`
+Build order: `shared` → `ui` → `builder-core` → `builder-components` + `builder-react` → `builder-editor` + `builder-renderer` → `playground`
 
 ---
 
@@ -352,7 +357,9 @@ Before starting any task, read **only** the files listed for that task type.
 | Fix AI suggestion/context | `ai/buildAIContext.ts`, `ai/AIService.ts` |
 | Add/edit palette catalog or preset items | `presets/palette-types.ts`, `fixtures/palette-catalog.json`, `panels/left/PaletteItemCard.tsx` |
 | Add a React hook | `builder-react/src/hooks/`, `builder-react/src/index.ts` |
-| Add a component to the registry | `registry/ComponentRegistry.ts`, `components/sample-components.tsx` (playground) |
+| Add a base component (to the library) | `packages/builder-components/src/components/`, `packages/builder-components/src/index.ts` |
+| Add a custom/project-specific component | `apps/playground/src/components/sample-components.tsx`, `apps/playground/src/fixtures/palette-catalog.json` |
+| Extend an existing component type | `extendComponent()` in `packages/builder-components/src/utils/extendComponent.ts` |
 | Add a preset | `presets/PresetRegistry.ts`, `presets/types.ts` |
 | Fix z-index / layer ordering | `BuilderEditor.tsx` (onMoveUp/onMoveDown), `overlay/SelectionOverlay.tsx`, `commands/handlers.ts` (`REORDER_NODE`) |
 | Add/fix keyboard shortcut | `shortcuts/`, `BuilderEditor.tsx` |
@@ -364,12 +371,13 @@ Before starting any task, read **only** the files listed for that task type.
 
 ## Implementation Progress
 
-All 7 packages build cleanly. Phases completed:
+All 8 packages build cleanly. Phases completed:
 - **Core engine**: 30 command handlers, createBuilder with StrictMode resilience
 - **Canvas interactions**: selection, drag-drop, snap, resize, rotate, keyboard shortcuts, auto-pan
 - **Property system**: PropertyDescriptor, useNodeProperty, PropertyControls (11 controls), PropertyPanel (5 tabs)
 - **Panel system**: PresetPalette, LeftSidebar (4 tabs), MediaManager
 - **Add Elements palette**: FloatingPalette (draggable icon strip) + AddElementsPanel (docked, 380px) + PaletteItemCard (grid/list layouts); JSON-driven PaletteCatalog (Group → Type → Item); drag-to-canvas + click-to-add; Text items render as styled live preview in list mode
-- **i18n**: i18next, en.json + vi.json (~350 keys each, includes `palette.*` namespace)
+- **i18n**: i18next, en.json + vi.json (~360 keys each, includes `palette.*` namespace)
 - **AI Assistant**: AIService (OpenAI/Gemini/Claude), AIAssistant chat UI, AIConfig panel; `buildAIContext` now accepts `paletteCatalog` → emits `availablePresets` block so AI knows all named presets with exact props/styles
 - **Responsive**: 3-tier breakpoints (desktop/tablet/mobile), per-breakpoint style overrides
+- **Builder Components** (`@ui-builder/builder-components`): 17 base `ComponentDefinition` objects (Section, Container, Grid, Column, Text, Button, Image, Divider, TextMarquee, CollapsibleText, TextMask, GalleryGrid, GallerySlider, Shape, NavigationMenu, Repeater, Anchor); `BASE_COMPONENTS[]` array; `extendComponent(base, overrides)` utility; re-exports `defineComponent` from builder-core. Playground custom components (`TestimonialCard`, `PricingCard`, `HeroBanner`) show how to extend/add on top.

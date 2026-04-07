@@ -408,7 +408,8 @@
       "decorative": "Trang trí",
       "menu": "Menu & Neo",
       "collection": "Danh sách",
-      "container": "Hộp"
+      "container": "Hộp",
+      "card": "Thẻ"
     },
     "types": {
       "themedText": "Văn bản chủ đề",
@@ -437,7 +438,10 @@
       "hoverRepeaters": "Phần lặp hover",
       "blankRepeaters": "Phần lặp trống",
       "containerBoxes": "Hộp chứa",
-      "styledBoxes": "Hộp có kiểu dáng"
+      "styledBoxes": "Hộp có kiểu dáng",
+      "testimonial": "Đánh giá",
+      "pricing": "Giá cả",
+      "heroBanner": "Banner hero"
     }
   },
   "deleteConfirm": {
