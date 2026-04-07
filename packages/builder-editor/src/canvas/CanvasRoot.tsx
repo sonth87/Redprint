@@ -1,4 +1,4 @@
-import React, { type MouseEvent as RMouseEvent, useRef, useCallback, useEffect, useState } from "react";
+import React, { type MouseEvent as RMouseEvent, useRef, useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { cn } from "@ui-builder/ui";
 import type { CanvasConfig } from "@ui-builder/builder-core";
 import type { Point } from "@ui-builder/shared";
@@ -44,19 +44,28 @@ export function CanvasRoot({
   const MAX_ZOOM = 4;
   const ZOOM_SENSITIVITY = 0.001;
 
-  // ── Disable subpixel rendering on each zoom change to prevent blur ───────
-  useEffect(() => {
+  // ── Apply CSS transform — useLayoutEffect so screen-space overlays (e.g.
+  // SectionToolbar) can read correct getBoundingClientRect in their own
+  // useLayoutEffects during the same commit phase.
+  useLayoutEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
     const canvasDiv = el.querySelector("[style*='transform']") as HTMLElement | null;
     if (canvasDiv) {
-      // Force layout recalculation with crisp rendering
-      canvasDiv.style.transform = "none";
-      void canvasDiv.offsetHeight;
       canvasDiv.style.transform = `translate3d(${panOffset.x}px, ${panOffset.y}px, 0) scale(${zoom})`;
     }
   }, [zoom, panOffset]);
+
+  // ── Subpixel crisp-rendering flush (runs after paint, zoom changes only) ──
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const canvasDiv = el.querySelector("[style*='transform']") as HTMLElement | null;
+    if (canvasDiv) {
+      void canvasDiv.offsetHeight; // force layout recalculation after zoom
+    }
+  }, [zoom]);
 
   // ── Wheel → Zoom or Pan ──────────────────────────────────────────────────
   useEffect(() => {

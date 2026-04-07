@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, { memo, useRef, useLayoutEffect } from "react";
 import {
   Settings,
   Info,
@@ -37,6 +37,8 @@ export interface SectionToolbarProps {
   zoom: number;
   panOffset: Point;
   canvasFrameRef: React.RefObject<HTMLDivElement | null>;
+  /** Ref to the outermost editor container — used for sticky clamping bounds. */
+  canvasContainerRef: React.RefObject<HTMLElement | null>;
   dispatch: (action: { type: string; payload: unknown; groupId?: string; description?: string }) => void;
   newNodeId: () => string;
   /** Dual-mode positioning extras */
@@ -67,6 +69,7 @@ export const SectionToolbar = memo(function SectionToolbar({
   zoom,
   panOffset,
   canvasFrameRef,
+  canvasContainerRef,
   dispatch,
   newNodeId,
   canvasMode,
@@ -149,33 +152,133 @@ export const SectionToolbar = memo(function SectionToolbar({
   const effectiveButtonCount = showAIButton ? NUM_TOOLBAR_BUTTONS : NUM_TOOLBAR_BUTTONS - 1;
   const toolbarHeight = effectiveButtonCount * BTN_SIZE + (effectiveButtonCount - 1) * TOOLBAR_BTN_GAP + TOOLBAR_PADDING * 2;
 
-  // Use actual DOM position of the section element (accounts for content-driven height).
-  // Fallback to cumulative minHeight estimate if the DOM isn't available yet.
-  let canvasTop = sectionNodes
-    .slice(0, currentIdx)
-    .reduce((sum, s) => sum + ((s.props?.minHeight as number) ?? 0), 0);
-  let canvasHeight = (node.props?.minHeight as number) ?? 400;
+  const STICKY_MARGIN = 16; // px gap from the canvas area top/bottom edges
 
-  const frame = canvasFrameRef.current;
-  if (frame) {
-    const frameRect = frame.getBoundingClientRect();
-    const el = frame.querySelector(`[data-node-id="${node.id}"]`) as HTMLElement | null;
-    if (el) {
-      const r = el.getBoundingClientRect();
-      // Convert viewport coords → canvas-space (same as SectionOverlay / useSelectionRect)
-      canvasTop = (r.top - frameRect.top) / zoom;
-      canvasHeight = r.height / zoom;
+  const divRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * Compute the toolbar's screen-space position from live DOM measurements.
+   *
+   * Timing: CanvasRoot applies its CSS transform in a useLayoutEffect, so by
+   * the time this sibling useLayoutEffect runs, getBoundingClientRect() already
+   * reflects the NEW pan/zoom position — no frame lag.
+   *
+   * Sticky behaviour: 
+   * - When section is fully visible: toolbar centers on section, opacity = 1
+   * - When section partially scrolled: toolbar sticks within bounds, opacity fades based on visibility
+   * - When section completely out of view: toolbar hidden (opacity = 0) but still positioned
+   * - Toolbar follows the section's vertical movement instead of getting stuck
+   */
+  useLayoutEffect(() => {
+    const div = divRef.current;
+    const frame = canvasFrameRef.current;
+    if (!div) return;
+
+    // ── 1. Section bounds in viewport coordinates ────────────────────────
+    let sectionViewportTop: number;
+    let sectionViewportHeight: number;
+
+    if (frame) {
+      const el = frame.querySelector(`[data-node-id="${node.id}"]`) as HTMLElement | null;
+      if (el) {
+        const r = el.getBoundingClientRect();
+        sectionViewportTop = r.top;
+        sectionViewportHeight = r.height;
+      } else {
+        // Fallback: estimate from canvas frame position
+        const frameRect = frame.getBoundingClientRect();
+        const fallbackTop = sectionNodes
+          .slice(0, currentIdx)
+          .reduce((sum, s) => sum + ((s.props?.minHeight as number) ?? 0), 0);
+        sectionViewportTop = frameRect.top + fallbackTop * zoom;
+        sectionViewportHeight = ((node.props?.minHeight as number) ?? 400) * zoom;
+      }
+    } else {
+      // No frame yet — place off-screen until next update
+      div.style.top = "-9999px";
+      div.style.left = "-9999px";
+      div.style.opacity = "0";
+      return;
     }
-  }
 
+    // ── 2. Container bounds ───────────────────────────────────────────────
+    const containerEl = canvasContainerRef.current;
+    const containerOriginTop = containerEl ? containerEl.getBoundingClientRect().top : 0;
+    const containerHeight = containerEl ? containerEl.clientHeight : window.innerHeight;
+    const containerBottom = containerOriginTop + containerHeight;
+
+    // ── 3. Compute fade opacity based on visibility ────────────────────────
+    //    Toolbar fades out when section has only ~50px visible in viewport
+    //    Completely transparent when fully scrolled out
+    const sectionBottom = sectionViewportTop + sectionViewportHeight;
+    const FADE_START_THRESHOLD = 100;   // Fade starts when only 100px visible
+    const FADE_DURATION = 100;          // Complete fade over next 50px (0-50px visible)
+
+    let opacityAlpha = 1;
+
+    // Calculate how much of the section is actually visible within container
+    const visibleTop = Math.max(sectionViewportTop, containerOriginTop);
+    const visibleBottom = Math.min(sectionBottom, containerBottom);
+    const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+
+    // If visible height is less than threshold, start fading
+    if (visibleHeight < FADE_START_THRESHOLD) {
+      const fadeProgress = (FADE_START_THRESHOLD - visibleHeight) / FADE_DURATION;
+      opacityAlpha = Math.max(0, Math.min(1, 1 - fadeProgress));
+    }
+
+    // ── 4. Position: try to center on visible part; if section scrolled,
+    //                stick within bounds (follow the section's edge) ────────
+    const idealCenterTop = sectionViewportTop + sectionViewportHeight / 2;
+    let toolbarCenterViewport = idealCenterTop;
+
+    // If section top is above container → stick to container top + margin
+    if (sectionViewportTop < containerOriginTop + STICKY_MARGIN) {
+      toolbarCenterViewport = containerOriginTop + STICKY_MARGIN + toolbarHeight / 2;
+    }
+    // If section bottom is below container → stick to container bottom - margin
+    else if (sectionBottom > containerBottom - STICKY_MARGIN) {
+      toolbarCenterViewport = containerBottom - STICKY_MARGIN - toolbarHeight / 2;
+    }
+
+    const top = toolbarCenterViewport - toolbarHeight / 2 - containerOriginTop;
+
+    // ── 5. Clamp position to container bounds ──────────────────────────────
+    const minTop = STICKY_MARGIN;
+    const maxTop = containerHeight - toolbarHeight - STICKY_MARGIN;
+    const clampedTop = Math.max(minTop, Math.min(maxTop, top));
+
+    // ── 6. Horizontal: left of the canvas frame (dual-mode aware) ────────
+    const isOnMobile = canvasMode === "dual" && activeBreakpoint === "mobile";
+    const mobileXOffset = isOnMobile
+      ? (desktopFrameWidth + DUAL_GAP_PX + (mobileFramePos?.x ?? 0)) * zoom
+      : 0;
+    const left = panOffset.x + mobileXOffset - TOOLBAR_WIDTH - TOOLBAR_LEFT_OFFSET;
+
+    // ── 7. Apply styles with smooth opacity fade ────────────────────────
+    div.style.top = `${clampedTop}px`;
+    div.style.left = `${left}px`;
+    div.style.opacity = String(opacityAlpha);
+    div.style.transition = "opacity 150ms ease-out";
+  }, [
+    zoom, panOffset, node.id, node.props, sectionNodes, currentIdx, canvasFrameRef,
+    canvasContainerRef, canvasMode, activeBreakpoint, desktopFrameWidth, mobileFramePos,
+    toolbarHeight,
+  ]);
+
+  // Initial style for first render (prevents flash at 0,0 before useLayoutEffect fires)
   const isOnMobile = canvasMode === "dual" && activeBreakpoint === "mobile";
   const mobileXOffset = isOnMobile
     ? (desktopFrameWidth + DUAL_GAP_PX + (mobileFramePos?.x ?? 0)) * zoom
     : 0;
+  const fallbackCanvasTop = sectionNodes
+    .slice(0, currentIdx)
+    .reduce((sum, s) => sum + ((s.props?.minHeight as number) ?? 0), 0);
+  const fallbackCanvasHeight = (node.props?.minHeight as number) ?? 400;
   const mobileYOffset = isOnMobile ? (mobileFramePos?.y ?? 0) * zoom : 0;
 
   const toolbarTop =
-    canvasTop * zoom + panOffset.y + mobileYOffset + (canvasHeight * zoom - toolbarHeight) / 2;
+    fallbackCanvasTop * zoom + panOffset.y + mobileYOffset + (fallbackCanvasHeight * zoom - toolbarHeight) / 2;
   const toolbarLeft = panOffset.x + mobileXOffset - TOOLBAR_WIDTH - TOOLBAR_LEFT_OFFSET;
 
   // ── Button definitions ─────────────────────────────────────────────────
@@ -222,6 +325,7 @@ export const SectionToolbar = memo(function SectionToolbar({
   return (
     <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
       <div
+        ref={divRef}
         className="bg-background/95 border-border shadow-md absolute z-30 flex flex-col items-center rounded-md border backdrop-blur-md"
         style={{
           top: toolbarTop,
@@ -229,6 +333,7 @@ export const SectionToolbar = memo(function SectionToolbar({
           width: TOOLBAR_WIDTH,
           padding: TOOLBAR_PADDING,
           gap: TOOLBAR_BTN_GAP,
+          opacity: 1,
         }}
         onPointerDown={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}
