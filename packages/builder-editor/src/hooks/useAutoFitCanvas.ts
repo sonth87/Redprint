@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import type React from "react";
 import { MIN_ZOOM, FIT_TO_SCREEN_PADDING, CANVAS_CENTER_OFFSET, VERTICAL_CENTER_DIVISOR } from "@ui-builder/shared";
 import type { Point } from "@ui-builder/shared";
@@ -63,6 +63,7 @@ export function useAutoFitCanvas({
     if (!canvasContainerRef.current) return;
     const containerWidth  = canvasContainerRef.current.offsetWidth;
     const containerHeight = canvasContainerRef.current.offsetHeight;
+    if (containerWidth === 0 || containerHeight === 0) return;
     const fitZoom = Math.min(
       (containerWidth  - FIT_TO_SCREEN_PADDING) / canvasWidth,
       (containerHeight - FIT_TO_SCREEN_PADDING) / canvasMinHeight,
@@ -74,6 +75,15 @@ export function useAutoFitCanvas({
     const centeredY = Math.max(CANVAS_CENTER_OFFSET, (containerHeight - canvasMinHeight * actualZoom) / VERTICAL_CENTER_DIVISOR);
     setPanOffset({ x: centeredX, y: centeredY });
   }, [canvasContainerRef, canvasWidth, canvasMinHeight, setZoom, setPanOffset]);
+
+  // Fit to screen once on initial mount — useLayoutEffect fires after DOM layout
+  // but before browser paint, so there is no visible flash/flicker.
+  const hasInitialFitRef = useRef(false);
+  useLayoutEffect(() => {
+    if (hasInitialFitRef.current) return;
+    hasInitialFitRef.current = true;
+    handleFitToScreen();
+  }, [handleFitToScreen]);
 
   const containerW = canvasContainerRef.current?.offsetWidth  ?? 1000;
   const containerH = canvasContainerRef.current?.offsetHeight ?? 1000;

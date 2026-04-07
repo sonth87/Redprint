@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { Move, Minus, Plus, X } from "lucide-react";
 import { cn } from "@ui-builder/ui";
 
@@ -24,20 +24,18 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
   defaultExpanded = true,
   onClose,
 }) => {
-  // Committed position — used only for initial style. Updated to React state once on pointerup.
-  const [position, setPosition] = useState({ x: 0, y: defaultPosition.y });
+  // Compute initial position synchronously so the panel renders at the correct
+  // location on the very first paint — no flash from x:0 → x:right-anchored.
+  const [position, setPosition] = useState(() => {
+    const x =
+      defaultPosition.right !== undefined
+        ? window.innerWidth - defaultPosition.right - width
+        : (defaultPosition.x ?? 16);
+    return { x, y: defaultPosition.y };
+  });
   const positionRef = useRef(position);
   // Direct ref to panel DOM node for imperative position updates during drag
   const panelRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const initial =
-      defaultPosition.right !== undefined
-        ? { x: window.innerWidth - defaultPosition.right - width, y: defaultPosition.y }
-        : { x: defaultPosition.x ?? 16, y: defaultPosition.y };
-    setPosition(initial);
-    positionRef.current = initial;
-  }, [defaultPosition.right, defaultPosition.x, defaultPosition.y, width]);
 
   const [isExpanded, setIsExpanded] = useState(onClose ? true : defaultExpanded);
   const [isDragging, setIsDragging] = useState(false);

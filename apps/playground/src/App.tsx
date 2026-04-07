@@ -127,8 +127,8 @@ export function App() {
       {/* ── Content area ── */}
       <div className="flex-1 overflow-hidden">
 
-        {/* Editor tab */}
-        {activeTab === "editor" && (
+        {/* Editor tab - always mounted to preserve zoom/pan/selection state */}
+        <div className="h-full" style={{ display: activeTab === "editor" ? "flex" : "none" }}>
           <BuilderEditor
             builder={builder}
             groupRegistry={groupRegistry}
@@ -137,7 +137,7 @@ export function App() {
             i18nResources={i18nResources}
             className="h-full"
           />
-        )}
+        </div>
 
         {/* Preview tab — RuntimeRenderer */}
         {activeTab === "preview" && (

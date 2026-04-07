@@ -2,6 +2,7 @@ import React, { type MouseEvent as RMouseEvent, useRef, useCallback, useEffect, 
 import { cn } from "@ui-builder/ui";
 import type { CanvasConfig } from "@ui-builder/builder-core";
 import type { Point } from "@ui-builder/shared";
+import { CANVAS_MIN_ZOOM, CANVAS_MAX_ZOOM, CANVAS_ZOOM_SENSITIVITY } from "../constants";
 
 export interface CanvasRootProps {
   canvasConfig: CanvasConfig;
@@ -40,9 +41,8 @@ export function CanvasRoot({
   const [isPanning, setIsPanning] = useState(false);
   const panStart = useRef<{ pointer: Point; offset: Point } | null>(null);
 
-  const MIN_ZOOM = 0.1;
-  const MAX_ZOOM = 4;
-  const ZOOM_SENSITIVITY = 0.001;
+  // Zoom constraints extracted to constants
+  // MIN_ZOOM: CANVAS_MIN_ZOOM, MAX_ZOOM: CANVAS_MAX_ZOOM, SENSITIVITY: CANVAS_ZOOM_SENSITIVITY
 
   // ── Apply CSS transform — useLayoutEffect so screen-space overlays (e.g.
   // SectionToolbar) can read correct getBoundingClientRect in their own
@@ -85,8 +85,8 @@ export function CanvasRoot({
         const canvasY = (mouseY - panOffset.y) / zoom;
 
         // Calculate next zoom level
-        const delta = -e.deltaY * ZOOM_SENSITIVITY;
-        const nextZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom * (1 + delta * 0.5)));
+        const delta = -e.deltaY * CANVAS_ZOOM_SENSITIVITY;
+        const nextZoom = Math.min(CANVAS_MAX_ZOOM, Math.max(CANVAS_MIN_ZOOM, zoom * (1 + delta * 0.5)));
 
         // Adjust pan so the canvas point stays under the cursor
         const newPanX = mouseX - canvasX * nextZoom;

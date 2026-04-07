@@ -261,3 +261,108 @@ export const DEFAULT_LAYERS_PANEL_POS = { x: 80, y: 120 } as const;
  * Design: right:16, y:64 = top-right corner with comfortable margin.
  */
 export const DEFAULT_PROPERTIES_PANEL_POS = { right: 16, y: 64 } as const;
+
+// ── Section Toolbar Behavior ───────────────────────────────────────────
+
+/**
+ * Section toolbar sticky margin (16px).
+ * Gap between toolbar and container top/bottom edges when section scrolls out of view.
+ * Used in: SectionToolbar.tsx sticky positioning logic.
+ * Design: 16px = comfortable margin from container edge.
+ */
+export const SECTION_TOOLBAR_STICKY_MARGIN = 16 as const;
+
+/**
+ * Section toolbar fade start threshold (100px).
+ * When section has only ~100px visible in viewport, toolbar begins fading out.
+ * Used in: SectionToolbar.tsx opacity calculation.
+ * Design: 100px = fade starts before section is mostly scrolled out, providing smooth UX.
+ */
+export const SECTION_TOOLBAR_FADE_START_THRESHOLD = 100 as const;
+
+/**
+ * Section toolbar fade duration (100px).
+ * Distance (px) over which toolbar opacity transitions from full to transparent.
+ * Complete fade happens from 100px → 0px visible (next 100px threshold decrease).
+ * Used in: SectionToolbar.tsx opacity calculation.
+ * Design: 100px = smooth gradual fade, not too fast.
+ */
+export const SECTION_TOOLBAR_FADE_DURATION = 100 as const;
+
+/**
+ * Section toolbar opacity transition timing (150ms ease-out).
+ * CSS transition for opacity fading on SectionToolbar.
+ * Used in: SectionToolbar.tsx `div.style.transition`.
+ * Design: 150ms = responsive fade that feels smooth but not sluggish.
+ */
+export const SECTION_TOOLBAR_OPACITY_TRANSITION = "opacity 150ms ease-out" as const;
+
+/**
+ * Section toolbar off-screen positioning (9999px).
+ * Extreme coordinate value used to place toolbar off-screen until position is calculated.
+ * Used in: SectionToolbar.tsx initial positioning when frame not yet available.
+ * Design: 9999px = far enough to be invisible without affecting layout flow.
+ */
+export const SECTION_TOOLBAR_OFFSCREEN_POS = -9999 as const;
+
+/**
+ * Section default minimum height fallback (400px).
+ * Default height for section when props.minHeight is not defined.
+ * Used in: SectionToolbar.tsx when calculating fallback section height.
+ * Design: 400px = reasonable default section height for most layouts.
+ */
+export const SECTION_DEFAULT_MIN_HEIGHT = 400 as const;
+
+// ── Canvas Zoom & Controls ────────────────────────────────────────────
+
+/**
+ * Canvas minimum zoom level (0.1 = 10%).
+ * Prevent users from zooming out too far (layout becomes incomprehensible).
+ * Used in: CanvasRoot.tsx zoom constraint.
+ * Design: 0.1x = 90% zoom-out limit (still readable canvas).
+ */
+export const CANVAS_MIN_ZOOM = 0.1 as const;
+
+/**
+ * Canvas maximum zoom level (4.0 = 400%).
+ * Prevent users from zooming in too much (canvas interactions become difficult).
+ * Used in: CanvasRoot.tsx zoom constraint.
+ * Design: 4.0x = 300% zoom-in limit (detailed pixel work possible).
+ */
+export const CANVAS_MAX_ZOOM = 4 as const;
+
+/**
+ * Canvas zoom sensitivity (0.001).
+ * Multiplier for mouse wheel scroll delta → zoom change ratio.
+ * Used in: CanvasRoot.tsx wheel event handler.
+ * Design: 0.001 = moderate sensitivity (comfortable scroll-to-zoom speed).
+ */
+export const CANVAS_ZOOM_SENSITIVITY = 0.001 as const;
+
+// ── Minimap Constants ──────────────────────────────────────────────────
+
+/**
+ * Minimap inner width (144px).
+ * Fixed width of the minimap's visible canvas area (excluding padding).
+ * Used in: CanvasMinimap.tsx scale calculation and layout.
+ * Design: 144px = readable miniature representation, not too large.
+ */
+export const MINIMAP_INNER_WIDTH = 144 as const;
+
+/**
+ * Minimap padding (8px).
+ * Padding around the minimap inner area (all sides).
+ * Used in: CanvasMinimap.tsx total dimension calculation.
+ * Design: 8px = standard guttering around minimap content.
+ */
+export const MINIMAP_PADDING = 8 as const;
+
+// ── Overlay Transitions ────────────────────────────────────────────────
+
+/**
+ * Section overlay fast transition timing (0.15s ease).
+ * CSS transition for overlay styling changes (border-color, opacity, etc).
+ * Used in: SectionOverlay.tsx quick visual state updates.
+ * Design: 150ms = perceptible transition without feeling sluggish.
+ */
+export const SECTION_OVERLAY_TRANSITION_FAST = "0.15s ease" as const;

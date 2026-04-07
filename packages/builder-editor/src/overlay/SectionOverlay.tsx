@@ -2,7 +2,7 @@ import React, { useState, useEffect, useLayoutEffect, useRef, memo, useCallback,
 import { Plus, UnfoldVertical } from "lucide-react";
 import type { BuilderNode } from "@ui-builder/builder-core";
 import type { Point } from "@ui-builder/shared";
-import { SECTION_HOVER_ZONE } from "../constants";
+import { SECTION_HOVER_ZONE, SECTION_OVERLAY_TRANSITION_FAST } from "../constants";
 
 interface SectionBoundary {
   nodeId: string;
@@ -135,7 +135,7 @@ export const SectionOverlay = memo(function SectionOverlay({
                   width: "100%",
                   height: 0,
                   borderTop: `${1 / zoom}px dashed ${isHov ? "#6366f1" : "#c4c4c4"}`,
-                  transition: "border-color 0.15s ease",
+                  transition: `border-color ${SECTION_OVERLAY_TRANSITION_FAST}`,
                   pointerEvents: "none",
                 }}
               />
@@ -151,7 +151,7 @@ export const SectionOverlay = memo(function SectionOverlay({
                   alignItems: "center",
                   gap: 4 / zoom,
                   opacity: isHov || isResizing ? 1 : 0,
-                  transition: "opacity 0.15s ease",
+                  transition: `opacity ${SECTION_OVERLAY_TRANSITION_FAST}`,
                   pointerEvents: isHov || isResizing ? "auto" : "none",
                 }}
               >

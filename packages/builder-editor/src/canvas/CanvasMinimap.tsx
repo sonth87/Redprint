@@ -1,6 +1,7 @@
 import React from "react";
 import { cn } from "@ui-builder/ui";
 import type { Point } from "@ui-builder/shared";
+import { MINIMAP_INNER_WIDTH, MINIMAP_PADDING } from "../constants";
 
 export interface CanvasMinimapProps {
   canvasWidth: number;
@@ -12,9 +13,8 @@ export interface CanvasMinimapProps {
   visible: boolean;
 }
 
-/** Fixed inner width of the minimap canvas area (px). */
-const MINIMAP_INNER_W = 144;
-const MINIMAP_PAD = 8;
+/** Fixed inner width of the minimap canvas area (px) — extracted to constants.
+ * See MINIMAP_INNER_WIDTH and MINIMAP_PADDING for sizing details. */
 
 /**
  * CanvasMinimap — a small fixed overlay (bottom-right) that shows:
@@ -35,10 +35,10 @@ export function CanvasMinimap({
   visible,
 }: CanvasMinimapProps) {
   // Scale: canvas world coords → minimap px
-  const scale = MINIMAP_INNER_W / canvasWidth;
+  const scale = MINIMAP_INNER_WIDTH / canvasWidth;
   const innerH = Math.max(4, Math.round(canvasHeight * scale));
-  const totalW = MINIMAP_INNER_W + MINIMAP_PAD * 2;
-  const totalH = innerH + MINIMAP_PAD * 2;
+  const totalW = MINIMAP_INNER_WIDTH + MINIMAP_PADDING * 2;
+  const totalH = innerH + MINIMAP_PADDING * 2;
 
   // Viewport rect in canvas-space coords
   const vpX = -panOffset.x / zoom;
@@ -47,9 +47,9 @@ export function CanvasMinimap({
   const vpH = containerHeight / zoom;
 
   // Clamp viewport indicator within inner minimap area
-  const indLeft   = Math.max(0, Math.min(vpX * scale, MINIMAP_INNER_W));
+  const indLeft   = Math.max(0, Math.min(vpX * scale, MINIMAP_INNER_WIDTH));
   const indTop    = Math.max(0, Math.min(vpY * scale, innerH));
-  const indRight  = Math.max(0, Math.min((vpX + vpW) * scale, MINIMAP_INNER_W));
+  const indRight  = Math.max(0, Math.min((vpX + vpW) * scale, MINIMAP_INNER_WIDTH));
   const indBottom = Math.max(0, Math.min((vpY + vpH) * scale, innerH));
   const indW = Math.max(0, indRight - indLeft);
   const indH = Math.max(0, indBottom - indTop);
@@ -72,9 +72,9 @@ export function CanvasMinimap({
       <div
         className="absolute rounded-sm bg-white border border-border/50"
         style={{
-          left: MINIMAP_PAD,
-          top: MINIMAP_PAD,
-          width: MINIMAP_INNER_W,
+          left: MINIMAP_PADDING,
+          top: MINIMAP_PADDING,
+          width: MINIMAP_INNER_WIDTH,
           height: innerH,
         }}
       />
@@ -84,8 +84,8 @@ export function CanvasMinimap({
         <div
           className="absolute border-2 border-primary bg-primary/15 rounded-sm"
           style={{
-            left: MINIMAP_PAD + indLeft,
-            top: MINIMAP_PAD + indTop,
+            left: MINIMAP_PADDING + indLeft,
+            top: MINIMAP_PADDING + indTop,
             width: indW,
             height: indH,
           }}

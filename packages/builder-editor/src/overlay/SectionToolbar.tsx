@@ -27,6 +27,12 @@ import {
   TOOLBAR_PADDING,
   DUAL_GAP_PX,
   TOOLBAR_LEFT_OFFSET,
+  SECTION_TOOLBAR_STICKY_MARGIN,
+  SECTION_TOOLBAR_FADE_START_THRESHOLD,
+  SECTION_TOOLBAR_FADE_DURATION,
+  SECTION_TOOLBAR_OPACITY_TRANSITION,
+  SECTION_TOOLBAR_OFFSCREEN_POS,
+  SECTION_DEFAULT_MIN_HEIGHT,
 } from "../constants";
 import { AISectionPopover } from "../ai/ai-section";
 import type { AIConfig } from "../ai/types";
@@ -152,7 +158,7 @@ export const SectionToolbar = memo(function SectionToolbar({
   const effectiveButtonCount = showAIButton ? NUM_TOOLBAR_BUTTONS : NUM_TOOLBAR_BUTTONS - 1;
   const toolbarHeight = effectiveButtonCount * BTN_SIZE + (effectiveButtonCount - 1) * TOOLBAR_BTN_GAP + TOOLBAR_PADDING * 2;
 
-  const STICKY_MARGIN = 16; // px gap from the canvas area top/bottom edges
+  // STICKY_MARGIN extracted to constants — see SECTION_TOOLBAR_STICKY_MARGIN
 
   const divRef = useRef<HTMLDivElement>(null);
 
@@ -191,12 +197,12 @@ export const SectionToolbar = memo(function SectionToolbar({
           .slice(0, currentIdx)
           .reduce((sum, s) => sum + ((s.props?.minHeight as number) ?? 0), 0);
         sectionViewportTop = frameRect.top + fallbackTop * zoom;
-        sectionViewportHeight = ((node.props?.minHeight as number) ?? 400) * zoom;
+        sectionViewportHeight = ((node.props?.minHeight as number) ?? SECTION_DEFAULT_MIN_HEIGHT) * zoom;
       }
     } else {
       // No frame yet — place off-screen until next update
-      div.style.top = "-9999px";
-      div.style.left = "-9999px";
+      div.style.top = `${SECTION_TOOLBAR_OFFSCREEN_POS}px`;
+      div.style.left = `${SECTION_TOOLBAR_OFFSCREEN_POS}px`;
       div.style.opacity = "0";
       return;
     }
@@ -211,8 +217,6 @@ export const SectionToolbar = memo(function SectionToolbar({
     //    Toolbar fades out when section has only ~50px visible in viewport
     //    Completely transparent when fully scrolled out
     const sectionBottom = sectionViewportTop + sectionViewportHeight;
-    const FADE_START_THRESHOLD = 100;   // Fade starts when only 100px visible
-    const FADE_DURATION = 100;          // Complete fade over next 50px (0-50px visible)
 
     let opacityAlpha = 1;
 
@@ -222,8 +226,8 @@ export const SectionToolbar = memo(function SectionToolbar({
     const visibleHeight = Math.max(0, visibleBottom - visibleTop);
 
     // If visible height is less than threshold, start fading
-    if (visibleHeight < FADE_START_THRESHOLD) {
-      const fadeProgress = (FADE_START_THRESHOLD - visibleHeight) / FADE_DURATION;
+    if (visibleHeight < SECTION_TOOLBAR_FADE_START_THRESHOLD) {
+      const fadeProgress = (SECTION_TOOLBAR_FADE_START_THRESHOLD - visibleHeight) / SECTION_TOOLBAR_FADE_DURATION;
       opacityAlpha = Math.max(0, Math.min(1, 1 - fadeProgress));
     }
 
@@ -233,19 +237,19 @@ export const SectionToolbar = memo(function SectionToolbar({
     let toolbarCenterViewport = idealCenterTop;
 
     // If section top is above container → stick to container top + margin
-    if (sectionViewportTop < containerOriginTop + STICKY_MARGIN) {
-      toolbarCenterViewport = containerOriginTop + STICKY_MARGIN + toolbarHeight / 2;
+    if (sectionViewportTop < containerOriginTop + SECTION_TOOLBAR_STICKY_MARGIN) {
+      toolbarCenterViewport = containerOriginTop + SECTION_TOOLBAR_STICKY_MARGIN + toolbarHeight / 2;
     }
     // If section bottom is below container → stick to container bottom - margin
-    else if (sectionBottom > containerBottom - STICKY_MARGIN) {
-      toolbarCenterViewport = containerBottom - STICKY_MARGIN - toolbarHeight / 2;
+    else if (sectionBottom > containerBottom - SECTION_TOOLBAR_STICKY_MARGIN) {
+      toolbarCenterViewport = containerBottom - SECTION_TOOLBAR_STICKY_MARGIN - toolbarHeight / 2;
     }
 
     const top = toolbarCenterViewport - toolbarHeight / 2 - containerOriginTop;
 
     // ── 5. Clamp position to container bounds ──────────────────────────────
-    const minTop = STICKY_MARGIN;
-    const maxTop = containerHeight - toolbarHeight - STICKY_MARGIN;
+    const minTop = SECTION_TOOLBAR_STICKY_MARGIN;
+    const maxTop = containerHeight - toolbarHeight - SECTION_TOOLBAR_STICKY_MARGIN;
     const clampedTop = Math.max(minTop, Math.min(maxTop, top));
 
     // ── 6. Horizontal: left of the canvas frame (dual-mode aware) ────────
@@ -259,7 +263,7 @@ export const SectionToolbar = memo(function SectionToolbar({
     div.style.top = `${clampedTop}px`;
     div.style.left = `${left}px`;
     div.style.opacity = String(opacityAlpha);
-    div.style.transition = "opacity 150ms ease-out";
+    div.style.transition = SECTION_TOOLBAR_OPACITY_TRANSITION;
   }, [
     zoom, panOffset, node.id, node.props, sectionNodes, currentIdx, canvasFrameRef,
     canvasContainerRef, canvasMode, activeBreakpoint, desktopFrameWidth, mobileFramePos,
@@ -274,7 +278,7 @@ export const SectionToolbar = memo(function SectionToolbar({
   const fallbackCanvasTop = sectionNodes
     .slice(0, currentIdx)
     .reduce((sum, s) => sum + ((s.props?.minHeight as number) ?? 0), 0);
-  const fallbackCanvasHeight = (node.props?.minHeight as number) ?? 400;
+  const fallbackCanvasHeight = (node.props?.minHeight as number) ?? SECTION_DEFAULT_MIN_HEIGHT;
   const mobileYOffset = isOnMobile ? (mobileFramePos?.y ?? 0) * zoom : 0;
 
   const toolbarTop =
