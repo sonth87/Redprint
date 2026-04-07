@@ -15,7 +15,7 @@
 
 ## Project Context
 
-This is a **UI Builder Library** — a modular, extensible platform for drag-and-drop web interface building (similar to LadiPage, Webflow).
+This is a **UI Builder Library** — a modular, extensible platform for drag-and-drop web interface building.
 
 ### Monorepo Structure
 

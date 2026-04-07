@@ -12,7 +12,7 @@
 
 **Project Name:** `UI Builder Library`
 **App Type:** `Monorepo (Turborepo + pnpm workspaces)`
-**Description:** A modular, extensible UI Builder Library that allows users to drag-and-drop to create web interfaces — similar to LadiPage, Webflow. The library is designed as a **platform**, not just a component set. This spec covers the **library layer only** — backend services (manifest API, CDN, auth, persistence) are out of scope but integration contracts are defined.
+**Description:** A modular, extensible UI Builder Library that allows users to drag-and-drop to create web interfaces. The library is designed as a **platform**, not just a component set. This spec covers the **library layer only** — backend services (manifest API, CDN, auth, persistence) are out of scope but integration contracts are defined.
 
 ### Target Users
 

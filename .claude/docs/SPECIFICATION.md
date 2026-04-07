@@ -10,7 +10,7 @@
 
 ### Objective
 
-Build a **UI Builder Library** — a modular, extensible platform enabling drag-and-drop web interface creation, similar to LadiPage and Webflow. Designed as a **platform**, not merely a component library.
+Build a **UI Builder Library** — a modular, extensible platform enabling drag-and-drop web interface creation. Designed as a **platform**, not merely a component library.
 
 ### Core User Capabilities
 

@@ -1,6 +1,6 @@
 # UI Builder — Copilot Instructions
 
-Monorepo library (Turborepo + pnpm). Drag-and-drop web interface builder (LadiPage/Webflow-style).
+Monorepo library (Turborepo + pnpm). Drag-and-drop web interface builder.
 Full spec: `.claude/ARCHITECTURE.md` (overrides) + `.claude/RULES.md` (baseline).
 
 ---

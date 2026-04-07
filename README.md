@@ -1,6 +1,6 @@
 # UI Builder Library
 
-**A modular, extensible drag-and-drop interface builder platform — similar to LadiPage & Webflow.**
+**A modular, extensible drag-and-drop interface builder platform.**
 
 > 🔗 **Full Technical Specification:** See `.claude/docs/SPECIFICATION.md`
 
