@@ -49,7 +49,7 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
       "id": "66d8727b-4951-4087-af2b-4f868606d1a8",
       "type": "Section",
       "parentId": "root",
-      "order": 0,
+      "order": 1,
       "props": {
         "minHeight": 700
       },
@@ -233,7 +233,7 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
       "id": "d7d6da9a-066f-489a-a915-35cb31357640",
       "type": "Section",
       "parentId": "root",
-      "order": 2,
+      "order": 4,
       "props": {
         "minHeight": 516
       },
@@ -325,7 +325,7 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
       "id": "94364802-4f4d-4f88-9ef8-ce49a897b4b6",
       "type": "Section",
       "parentId": "root",
-      "order": 4,
+      "order": 6,
       "props": {
         "minHeight": 400
       },
@@ -488,7 +488,7 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
       "id": "608d3d8a-b8f2-4015-b913-40507904455c",
       "type": "Section",
       "parentId": "root",
-      "order": 1,
+      "order": 0,
       "props": {
         "minHeight": 100
       },
@@ -761,7 +761,7 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
       "id": "c87d9ea8-d214-4bb8-a0d9-325df53e5ba9",
       "type": "Section",
       "parentId": "root",
-      "order": 3,
+      "order": 5,
       "props": {
         "minHeight": 112
       },
@@ -1272,7 +1272,7 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
       "id": "bba59e98-744e-442e-86ed-0b216e0feca0",
       "type": "Section",
       "parentId": "root",
-      "order": 5,
+      "order": 7,
       "props": {
         "minHeight": 400
       },
@@ -2098,6 +2098,945 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
       "metadata": {
         "createdAt": "2026-04-07T10:15:48.841Z",
         "updatedAt": "2026-04-07T10:15:48.841Z"
+      }
+    },
+    "e72e4aca-6759-450d-968b-e88ab9dbf056": {
+      "id": "e72e4aca-6759-450d-968b-e88ab9dbf056",
+      "type": "Section",
+      "parentId": "root",
+      "order": 2,
+      "props": {
+        "minHeight": 400
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "width": "100%",
+        "minHeight": "400px",
+        "position": "relative",
+        "backgroundColor": "#ffffff"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Section",
+      "metadata": {
+        "createdAt": "2026-04-07T11:02:16.237Z",
+        "updatedAt": "2026-04-07T11:02:16.237Z"
+      }
+    },
+    "a5645b35-0c4a-40df-ad22-6077fe96b087": {
+      "id": "a5645b35-0c4a-40df-ad22-6077fe96b087",
+      "type": "Container",
+      "parentId": "e72e4aca-6759-450d-968b-e88ab9dbf056",
+      "order": 0,
+      "props": {
+        "display": "flex",
+        "direction": "column",
+        "gap": "48px",
+        "padding": "80px 24px",
+        "showPlaceholder": true
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "8px",
+        "padding": "16px",
+        "width": "100%",
+        "position": "relative",
+        "alignItems": "center",
+        "backgroundColor": "#fbfbfb"
+      },
+      "responsiveStyle": {
+        "mobile": {
+          "padding": "40px 16px",
+          "gap": "32px"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Container",
+      "metadata": {
+        "createdAt": "2026-04-07T11:02:28.398Z",
+        "updatedAt": "2026-04-07T11:02:28.398Z"
+      }
+    },
+    "d1836a66-98ac-428a-adfa-79e3e8caa495": {
+      "id": "d1836a66-98ac-428a-adfa-79e3e8caa495",
+      "type": "Text",
+      "parentId": "a5645b35-0c4a-40df-ad22-6077fe96b087",
+      "order": 0,
+      "props": {
+        "text": "What Our Clients Say",
+        "tag": "h2"
+      },
+      "style": {
+        "fontSize": "42px",
+        "color": "#1a1a1a",
+        "lineHeight": "1.6",
+        "fontWeight": "800",
+        "textAlign": "center",
+        "marginBottom": "8px"
+      },
+      "responsiveStyle": {
+        "mobile": {
+          "fontSize": "32px"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T11:02:28.399Z",
+        "updatedAt": "2026-04-07T11:02:28.399Z"
+      }
+    },
+    "b66e04e9-7501-44a3-bc67-cce5a898a551": {
+      "id": "b66e04e9-7501-44a3-bc67-cce5a898a551",
+      "type": "Text",
+      "parentId": "a5645b35-0c4a-40df-ad22-6077fe96b087",
+      "order": 1,
+      "props": {
+        "text": "Trusted by pet owners and enthusiasts worldwide.",
+        "tag": "p"
+      },
+      "style": {
+        "fontSize": "18px",
+        "color": "#666666",
+        "lineHeight": "1.6",
+        "textAlign": "center",
+        "maxWidth": "600px"
+      },
+      "responsiveStyle": {
+        "mobile": {
+          "fontSize": "16px"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T11:02:28.399Z",
+        "updatedAt": "2026-04-07T11:02:28.399Z"
+      }
+    },
+    "94e37cdf-465e-48f6-b66e-87895ba506c9": {
+      "id": "94e37cdf-465e-48f6-b66e-87895ba506c9",
+      "type": "Grid",
+      "parentId": "a5645b35-0c4a-40df-ad22-6077fe96b087",
+      "order": 2,
+      "props": {
+        "columns": 3,
+        "rows": 1,
+        "columnGap": 30,
+        "rowGap": 30,
+        "padding": 16
+      },
+      "style": {
+        "display": "grid",
+        "columnGap": "16px",
+        "rowGap": "16px",
+        "padding": "16px",
+        "width": "100%",
+        "minHeight": "80px",
+        "gridTemplateColumns": "repeat(3, 1fr)",
+        "maxWidth": "1200px"
+      },
+      "responsiveStyle": {
+        "tablet": {
+          "gridTemplateColumns": "repeat(2, 1fr)"
+        },
+        "mobile": {
+          "gridTemplateColumns": "1fr"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Grid",
+      "metadata": {
+        "createdAt": "2026-04-07T11:02:28.399Z",
+        "updatedAt": "2026-04-07T11:02:28.399Z"
+      }
+    },
+    "31dcf382-1335-4f52-aef0-b20cc0c63b38": {
+      "id": "31dcf382-1335-4f52-aef0-b20cc0c63b38",
+      "type": "TestimonialCard",
+      "parentId": "94e37cdf-465e-48f6-b66e-87895ba506c9",
+      "order": 0,
+      "props": {
+        "quote": "The grooming service here is exceptional. My cat has never looked better or felt more relaxed after a visit!",
+        "author": "Sarah Jenkins",
+        "role": "Cat Owner",
+        "accentColor": "#ff8c94",
+        "bgColor": "#ffffff",
+        "starCount": 5
+      },
+      "style": {
+        "width": "320px",
+        "padding": "24px",
+        "borderRadius": "16px",
+        "boxShadow": "0 10px 30px rgba(0,0,0,0.05)"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Testimonial Card",
+      "metadata": {
+        "createdAt": "2026-04-07T11:02:28.399Z",
+        "updatedAt": "2026-04-07T11:02:28.399Z"
+      }
+    },
+    "400c630c-9b27-40f8-9e3f-ced27e5ac1b5": {
+      "id": "400c630c-9b27-40f8-9e3f-ced27e5ac1b5",
+      "type": "TestimonialCard",
+      "parentId": "94e37cdf-465e-48f6-b66e-87895ba506c9",
+      "order": 1,
+      "props": {
+        "quote": "Finding a place that truly understands high-energy dogs was a lifesaver. Their training programs are top-notch.",
+        "author": "Mark Thompson",
+        "role": "Husky Parent",
+        "accentColor": "#ff8c94",
+        "bgColor": "#ffffff",
+        "starCount": 5
+      },
+      "style": {
+        "width": "320px",
+        "padding": "24px",
+        "borderRadius": "16px",
+        "boxShadow": "0 10px 30px rgba(0,0,0,0.05)"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Testimonial Card",
+      "metadata": {
+        "createdAt": "2026-04-07T11:02:28.399Z",
+        "updatedAt": "2026-04-07T11:02:28.399Z"
+      }
+    },
+    "b4bcd4f5-6174-4877-a1f2-4f4d770ecbca": {
+      "id": "b4bcd4f5-6174-4877-a1f2-4f4d770ecbca",
+      "type": "TestimonialCard",
+      "parentId": "94e37cdf-465e-48f6-b66e-87895ba506c9",
+      "order": 2,
+      "props": {
+        "quote": "A wonderful community of pet lovers. The products are high quality and the staff is incredibly knowledgeable.",
+        "author": "Emily Chen",
+        "role": "Pet Blogger",
+        "accentColor": "#ff8c94",
+        "bgColor": "#ffffff",
+        "starCount": 5
+      },
+      "style": {
+        "width": "320px",
+        "padding": "24px",
+        "borderRadius": "16px",
+        "boxShadow": "0 10px 30px rgba(0,0,0,0.05)"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Testimonial Card",
+      "metadata": {
+        "createdAt": "2026-04-07T11:02:28.399Z",
+        "updatedAt": "2026-04-07T11:02:28.399Z"
+      }
+    },
+    "f90b4e67-7365-4389-8b8b-d9ed95d81379": {
+      "id": "f90b4e67-7365-4389-8b8b-d9ed95d81379",
+      "type": "Section",
+      "parentId": "root",
+      "order": 3,
+      "props": {
+        "minHeight": 400
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "width": "100%",
+        "minHeight": "400px",
+        "position": "relative",
+        "backgroundColor": "#ffffff"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Section",
+      "metadata": {
+        "createdAt": "2026-04-07T11:02:32.478Z",
+        "updatedAt": "2026-04-07T11:02:32.478Z"
+      }
+    },
+    "1e24994d-9ae8-4bd9-b0c4-761fd3799baa": {
+      "id": "1e24994d-9ae8-4bd9-b0c4-761fd3799baa",
+      "type": "Container",
+      "parentId": "f90b4e67-7365-4389-8b8b-d9ed95d81379",
+      "order": 0,
+      "props": {
+        "display": "flex",
+        "direction": "column",
+        "gap": "8px",
+        "padding": "80px 0",
+        "showPlaceholder": false
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "8px",
+        "padding": "80px 24px",
+        "width": "100%",
+        "position": "relative",
+        "alignItems": "center",
+        "backgroundColor": "#ffffff"
+      },
+      "responsiveStyle": {
+        "mobile": {
+          "padding": "40px 16px"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Container",
+      "metadata": {
+        "createdAt": "2026-04-07T11:03:10.116Z",
+        "updatedAt": "2026-04-07T11:03:10.116Z"
+      }
+    },
+    "091cebc9-dd16-4f4f-9c7e-899addb0299b": {
+      "id": "091cebc9-dd16-4f4f-9c7e-899addb0299b",
+      "type": "Text",
+      "parentId": "1e24994d-9ae8-4bd9-b0c4-761fd3799baa",
+      "order": 0,
+      "props": {
+        "text": "Khám Phá Các Loài Cún Phổ Biến",
+        "tag": "h2"
+      },
+      "style": {
+        "fontSize": "42px",
+        "color": "#1a1a1a",
+        "lineHeight": "1.6",
+        "fontWeight": "800",
+        "marginBottom": "16px",
+        "textAlign": "center"
+      },
+      "responsiveStyle": {
+        "mobile": {
+          "fontSize": "28px"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T11:03:10.117Z",
+        "updatedAt": "2026-04-07T11:03:10.117Z"
+      }
+    },
+    "19e370cc-ab0f-4ab4-84bb-aa473140ccb6": {
+      "id": "19e370cc-ab0f-4ab4-84bb-aa473140ccb6",
+      "type": "Text",
+      "parentId": "1e24994d-9ae8-4bd9-b0c4-761fd3799baa",
+      "order": 1,
+      "props": {
+        "text": "Tìm hiểu về tính cách và đặc điểm của những người bạn bốn chân đáng yêu nhất hiện nay.",
+        "tag": "p"
+      },
+      "style": {
+        "fontSize": "18px",
+        "color": "#666666",
+        "lineHeight": "1.6",
+        "textAlign": "center",
+        "maxWidth": "700px",
+        "marginBottom": "60px"
+      },
+      "responsiveStyle": {
+        "mobile": {
+          "fontSize": "16px",
+          "marginBottom": "32px"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T11:03:10.117Z",
+        "updatedAt": "2026-04-07T11:03:10.117Z"
+      }
+    },
+    "e8c3ec41-48fb-4da9-a369-a906df0424b5": {
+      "id": "e8c3ec41-48fb-4da9-a369-a906df0424b5",
+      "type": "Grid",
+      "parentId": "1e24994d-9ae8-4bd9-b0c4-761fd3799baa",
+      "order": 2,
+      "props": {
+        "columns": 3,
+        "rows": 1,
+        "columnGap": 30,
+        "rowGap": 40,
+        "padding": 16
+      },
+      "style": {
+        "display": "grid",
+        "columnGap": "16px",
+        "rowGap": "16px",
+        "padding": "16px",
+        "width": "100%",
+        "minHeight": "80px",
+        "gridTemplateColumns": "repeat(3, 1fr)",
+        "maxWidth": "1200px",
+        "gap": "30px"
+      },
+      "responsiveStyle": {
+        "tablet": {
+          "gridTemplateColumns": "repeat(2, 1fr)"
+        },
+        "mobile": {
+          "gridTemplateColumns": "1fr",
+          "gap": "24px"
+        }
+      },
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Grid",
+      "metadata": {
+        "createdAt": "2026-04-07T11:03:10.117Z",
+        "updatedAt": "2026-04-07T11:03:10.117Z"
+      }
+    },
+    "0b17008e-9742-4413-a6b3-e80ec31b5917": {
+      "id": "0b17008e-9742-4413-a6b3-e80ec31b5917",
+      "type": "Container",
+      "parentId": "e8c3ec41-48fb-4da9-a369-a906df0424b5",
+      "order": 0,
+      "props": {
+        "display": "flex",
+        "direction": "column",
+        "gap": "8px",
+        "padding": "16px",
+        "showPlaceholder": true
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "8px",
+        "padding": "16px",
+        "width": "100%",
+        "position": "relative",
+        "backgroundColor": "#fff9f0",
+        "borderRadius": "24px",
+        "overflow": "hidden",
+        "boxShadow": "0 10px 25px rgba(0,0,0,0.05)",
+        "transition": "transform 0.3s ease"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Container",
+      "metadata": {
+        "createdAt": "2026-04-07T11:03:10.117Z",
+        "updatedAt": "2026-04-07T11:03:10.117Z"
+      }
+    },
+    "11e9d8a7-27d1-4e7b-a0d7-7bd123e3bed3": {
+      "id": "11e9d8a7-27d1-4e7b-a0d7-7bd123e3bed3",
+      "type": "Image",
+      "parentId": "0b17008e-9742-4413-a6b3-e80ec31b5917",
+      "order": 0,
+      "props": {
+        "src": "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=800&q=80",
+        "alt": "Poodle",
+        "objectFit": "cover"
+      },
+      "style": {
+        "width": "100%",
+        "height": "240px",
+        "borderRadius": "8px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Image",
+      "metadata": {
+        "createdAt": "2026-04-07T11:03:10.117Z",
+        "updatedAt": "2026-04-07T11:03:10.117Z"
+      }
+    },
+    "4c1fe6fe-0f75-43c9-a774-2500d54afe48": {
+      "id": "4c1fe6fe-0f75-43c9-a774-2500d54afe48",
+      "type": "Container",
+      "parentId": "0b17008e-9742-4413-a6b3-e80ec31b5917",
+      "order": 1,
+      "props": {
+        "display": "flex",
+        "direction": "column",
+        "gap": "8px",
+        "padding": "24px",
+        "showPlaceholder": true
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "8px",
+        "padding": "24px",
+        "width": "100%",
+        "position": "relative"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Container",
+      "metadata": {
+        "createdAt": "2026-04-07T11:03:10.117Z",
+        "updatedAt": "2026-04-07T11:03:10.117Z"
+      }
+    },
+    "2e721b67-12f2-4c69-96da-d03856a05410": {
+      "id": "2e721b67-12f2-4c69-96da-d03856a05410",
+      "type": "Text",
+      "parentId": "4c1fe6fe-0f75-43c9-a774-2500d54afe48",
+      "order": 0,
+      "props": {
+        "text": "Poodle Thông Thái",
+        "tag": "h3"
+      },
+      "style": {
+        "fontSize": "22px",
+        "color": "#4a4a4a",
+        "lineHeight": "1.6",
+        "fontWeight": "700",
+        "marginBottom": "8px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T11:03:10.117Z",
+        "updatedAt": "2026-04-07T11:03:10.117Z"
+      }
+    },
+    "eecaab41-7733-4b16-8cea-34e9c20d9b71": {
+      "id": "eecaab41-7733-4b16-8cea-34e9c20d9b71",
+      "type": "Text",
+      "parentId": "4c1fe6fe-0f75-43c9-a774-2500d54afe48",
+      "order": 1,
+      "props": {
+        "text": "Nổi tiếng với trí thông minh tuyệt vời và bộ lông xoăn không rụng, Poodle là lựa chọn hoàn hảo cho gia đình.",
+        "tag": "p"
+      },
+      "style": {
+        "fontSize": "15px",
+        "color": "#7a7a7a",
+        "lineHeight": "1.6",
+        "marginBottom": "16px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T11:03:10.117Z",
+        "updatedAt": "2026-04-07T11:03:10.117Z"
+      }
+    },
+    "4d3ea4dc-fbc1-49b3-92f2-99aca431d42a": {
+      "id": "4d3ea4dc-fbc1-49b3-92f2-99aca431d42a",
+      "type": "Button",
+      "parentId": "4c1fe6fe-0f75-43c9-a774-2500d54afe48",
+      "order": 2,
+      "props": {
+        "label": "Tìm hiểu thêm",
+        "variant": "ghost",
+        "size": "md",
+        "disabled": false
+      },
+      "style": {
+        "display": "inline-flex",
+        "alignItems": "center",
+        "justifyContent": "center",
+        "borderRadius": "6px",
+        "cursor": "pointer",
+        "fontWeight": "600",
+        "fontSize": "14px",
+        "border": "none",
+        "backgroundColor": "#111827",
+        "color": "#ff8c94",
+        "padding": "0"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Button",
+      "metadata": {
+        "createdAt": "2026-04-07T11:03:10.118Z",
+        "updatedAt": "2026-04-07T11:03:10.118Z"
+      }
+    },
+    "6252e9d3-1f9d-4bb9-8078-40c0d8c0283d": {
+      "id": "6252e9d3-1f9d-4bb9-8078-40c0d8c0283d",
+      "type": "Container",
+      "parentId": "e8c3ec41-48fb-4da9-a369-a906df0424b5",
+      "order": 1,
+      "props": {
+        "display": "flex",
+        "direction": "column",
+        "gap": "8px",
+        "padding": "16px",
+        "showPlaceholder": true
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "8px",
+        "padding": "16px",
+        "width": "100%",
+        "position": "relative",
+        "backgroundColor": "#f0f7ff",
+        "borderRadius": "24px",
+        "overflow": "hidden",
+        "boxShadow": "0 10px 25px rgba(0,0,0,0.05)"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Container",
+      "metadata": {
+        "createdAt": "2026-04-07T11:03:10.118Z",
+        "updatedAt": "2026-04-07T11:03:10.118Z"
+      }
+    },
+    "76bcc5b0-0d9c-4f62-925a-e2a8cb7f8e44": {
+      "id": "76bcc5b0-0d9c-4f62-925a-e2a8cb7f8e44",
+      "type": "Image",
+      "parentId": "6252e9d3-1f9d-4bb9-8078-40c0d8c0283d",
+      "order": 0,
+      "props": {
+        "src": "https://images.unsplash.com/photo-1552053831-71594a27632d?w=800&q=80",
+        "alt": "Golden Retriever",
+        "objectFit": "cover"
+      },
+      "style": {
+        "width": "100%",
+        "height": "240px",
+        "borderRadius": "8px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Image",
+      "metadata": {
+        "createdAt": "2026-04-07T11:03:10.118Z",
+        "updatedAt": "2026-04-07T11:03:10.118Z"
+      }
+    },
+    "68d3c40b-ea63-492d-a02d-d0e59a737217": {
+      "id": "68d3c40b-ea63-492d-a02d-d0e59a737217",
+      "type": "Container",
+      "parentId": "6252e9d3-1f9d-4bb9-8078-40c0d8c0283d",
+      "order": 1,
+      "props": {
+        "display": "flex",
+        "direction": "column",
+        "gap": "8px",
+        "padding": "24px",
+        "showPlaceholder": true
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "8px",
+        "padding": "24px",
+        "width": "100%",
+        "position": "relative"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Container",
+      "metadata": {
+        "createdAt": "2026-04-07T11:03:10.118Z",
+        "updatedAt": "2026-04-07T11:03:10.118Z"
+      }
+    },
+    "1f7fa340-4b98-422c-aba0-726dd99554d5": {
+      "id": "1f7fa340-4b98-422c-aba0-726dd99554d5",
+      "type": "Text",
+      "parentId": "68d3c40b-ea63-492d-a02d-d0e59a737217",
+      "order": 0,
+      "props": {
+        "text": "Golden Thân Thiện",
+        "tag": "h3"
+      },
+      "style": {
+        "fontSize": "22px",
+        "color": "#4a4a4a",
+        "lineHeight": "1.6",
+        "fontWeight": "700",
+        "marginBottom": "8px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T11:03:10.118Z",
+        "updatedAt": "2026-04-07T11:03:10.118Z"
+      }
+    },
+    "3819ad51-ae56-4fcb-b99a-9b1f46d16d29": {
+      "id": "3819ad51-ae56-4fcb-b99a-9b1f46d16d29",
+      "type": "Text",
+      "parentId": "68d3c40b-ea63-492d-a02d-d0e59a737217",
+      "order": 1,
+      "props": {
+        "text": "Loài chó 'quốc dân' với tính cách hiền lành, kiên nhẫn và cực kỳ yêu quý trẻ nhỏ trong gia đình.",
+        "tag": "p"
+      },
+      "style": {
+        "fontSize": "15px",
+        "color": "#7a7a7a",
+        "lineHeight": "1.6",
+        "marginBottom": "16px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T11:03:10.118Z",
+        "updatedAt": "2026-04-07T11:03:10.118Z"
+      }
+    },
+    "fbd846b6-2680-4c6a-b155-6b5d4fd067d5": {
+      "id": "fbd846b6-2680-4c6a-b155-6b5d4fd067d5",
+      "type": "Button",
+      "parentId": "68d3c40b-ea63-492d-a02d-d0e59a737217",
+      "order": 2,
+      "props": {
+        "label": "Tìm hiểu thêm",
+        "variant": "ghost",
+        "size": "md",
+        "disabled": false
+      },
+      "style": {
+        "display": "inline-flex",
+        "alignItems": "center",
+        "justifyContent": "center",
+        "borderRadius": "6px",
+        "cursor": "pointer",
+        "fontWeight": "600",
+        "fontSize": "14px",
+        "border": "none",
+        "backgroundColor": "#111827",
+        "color": "#ff8c94",
+        "padding": "0"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Button",
+      "metadata": {
+        "createdAt": "2026-04-07T11:03:10.118Z",
+        "updatedAt": "2026-04-07T11:03:10.118Z"
+      }
+    },
+    "2cfd1891-9dac-4b62-9acb-f42a5091c725": {
+      "id": "2cfd1891-9dac-4b62-9acb-f42a5091c725",
+      "type": "Container",
+      "parentId": "e8c3ec41-48fb-4da9-a369-a906df0424b5",
+      "order": 2,
+      "props": {
+        "display": "flex",
+        "direction": "column",
+        "gap": "8px",
+        "padding": "16px",
+        "showPlaceholder": true
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "8px",
+        "padding": "16px",
+        "width": "100%",
+        "position": "relative",
+        "backgroundColor": "#fff0f3",
+        "borderRadius": "24px",
+        "overflow": "hidden",
+        "boxShadow": "0 10px 25px rgba(0,0,0,0.05)"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Container",
+      "metadata": {
+        "createdAt": "2026-04-07T11:03:10.118Z",
+        "updatedAt": "2026-04-07T11:03:10.118Z"
+      }
+    },
+    "44d91b77-0c9b-4ae7-a34b-1c7c50fb0cbe": {
+      "id": "44d91b77-0c9b-4ae7-a34b-1c7c50fb0cbe",
+      "type": "Image",
+      "parentId": "2cfd1891-9dac-4b62-9acb-f42a5091c725",
+      "order": 0,
+      "props": {
+        "src": "https://images.unsplash.com/photo-1517423440428-a5a00ad493e8?w=800&q=80",
+        "alt": "Corgi",
+        "objectFit": "cover"
+      },
+      "style": {
+        "width": "100%",
+        "height": "240px",
+        "borderRadius": "8px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Image",
+      "metadata": {
+        "createdAt": "2026-04-07T11:03:10.118Z",
+        "updatedAt": "2026-04-07T11:03:10.118Z"
+      }
+    },
+    "2e3d4705-48f9-4e10-981d-86d9592bcaf4": {
+      "id": "2e3d4705-48f9-4e10-981d-86d9592bcaf4",
+      "type": "Container",
+      "parentId": "2cfd1891-9dac-4b62-9acb-f42a5091c725",
+      "order": 1,
+      "props": {
+        "display": "flex",
+        "direction": "column",
+        "gap": "8px",
+        "padding": "24px",
+        "showPlaceholder": true
+      },
+      "style": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "8px",
+        "padding": "24px",
+        "width": "100%",
+        "position": "relative"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Container",
+      "metadata": {
+        "createdAt": "2026-04-07T11:03:10.118Z",
+        "updatedAt": "2026-04-07T11:03:10.118Z"
+      }
+    },
+    "da6bc239-2be3-4419-ac5e-59f2d8d6232a": {
+      "id": "da6bc239-2be3-4419-ac5e-59f2d8d6232a",
+      "type": "Text",
+      "parentId": "2e3d4705-48f9-4e10-981d-86d9592bcaf4",
+      "order": 0,
+      "props": {
+        "text": "Corgi Chân Ngắn",
+        "tag": "h3"
+      },
+      "style": {
+        "fontSize": "22px",
+        "color": "#4a4a4a",
+        "lineHeight": "1.6",
+        "fontWeight": "700",
+        "marginBottom": "8px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T11:03:10.118Z",
+        "updatedAt": "2026-04-07T11:03:10.118Z"
+      }
+    },
+    "e0dcfa92-0e10-41ec-8ff6-6e97bb35c503": {
+      "id": "e0dcfa92-0e10-41ec-8ff6-6e97bb35c503",
+      "type": "Text",
+      "parentId": "2e3d4705-48f9-4e10-981d-86d9592bcaf4",
+      "order": 1,
+      "props": {
+        "text": "Sở hữu ngoại hình đáng yêu với đôi chân ngắn và vòng ba 'quyến rũ', Corgi luôn là tâm điểm của mọi ánh nhìn.",
+        "tag": "p"
+      },
+      "style": {
+        "fontSize": "15px",
+        "color": "#7a7a7a",
+        "lineHeight": "1.6",
+        "marginBottom": "16px"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Text",
+      "metadata": {
+        "createdAt": "2026-04-07T11:03:10.118Z",
+        "updatedAt": "2026-04-07T11:03:10.118Z"
+      }
+    },
+    "8b55cfcc-6a20-4456-8ff9-8f79619091df": {
+      "id": "8b55cfcc-6a20-4456-8ff9-8f79619091df",
+      "type": "Button",
+      "parentId": "2e3d4705-48f9-4e10-981d-86d9592bcaf4",
+      "order": 2,
+      "props": {
+        "label": "Tìm hiểu thêm",
+        "variant": "ghost",
+        "size": "md",
+        "disabled": false
+      },
+      "style": {
+        "display": "inline-flex",
+        "alignItems": "center",
+        "justifyContent": "center",
+        "borderRadius": "6px",
+        "cursor": "pointer",
+        "fontWeight": "600",
+        "fontSize": "14px",
+        "border": "none",
+        "backgroundColor": "#111827",
+        "color": "#ff8c94",
+        "padding": "0"
+      },
+      "responsiveStyle": {},
+      "interactions": [],
+      "hidden": false,
+      "locked": false,
+      "name": "Button",
+      "metadata": {
+        "createdAt": "2026-04-07T11:03:10.118Z",
+        "updatedAt": "2026-04-07T11:03:10.118Z"
       }
     }
   },
