@@ -155,14 +155,24 @@ export const SectionOverlay = memo(function SectionOverlay({
                 pointerEvents: "auto",
                 cursor: "pointer",
                 zIndex: 49,
+                userSelect: "none",
               }}
               onMouseEnter={() => setHovered(b.nodeId)}
               onMouseLeave={() => setHovered(null)}
+              onPointerDown={(e) => {
+                e.stopPropagation();
+              }}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                // Prevent selection/focus
+                e.preventDefault();
+              }}
               onClick={(e) => {
                 if (e.metaKey || e.ctrlKey) return;
                 e.stopPropagation();
                 onSelect?.(b.nodeId);
               }}
+              data-section-handle="left"
             />
 
             {/* Right Gutter Handle */}
@@ -176,14 +186,23 @@ export const SectionOverlay = memo(function SectionOverlay({
                 pointerEvents: "auto",
                 cursor: "pointer",
                 zIndex: 49,
+                userSelect: "none",
               }}
               onMouseEnter={() => setHovered(b.nodeId)}
               onMouseLeave={() => setHovered(null)}
+              onPointerDown={(e) => {
+                e.stopPropagation();
+              }}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+              }}
               onClick={(e) => {
                 if (e.metaKey || e.ctrlKey) return;
                 e.stopPropagation();
                 onSelect?.(b.nodeId);
               }}
+              data-section-handle="right"
             />
 
             {/* Hover detection zone at bottom of section */}
@@ -247,8 +266,16 @@ export const SectionOverlay = memo(function SectionOverlay({
                     whiteSpace: "nowrap",
                     boxShadow: `0 ${1 / zoom}px ${4 / zoom}px rgba(0,0,0,0.08)`,
                     lineHeight: 1,
+                    userSelect: "none",
                   }}
-                  onMouseDown={(e) => e.stopPropagation()}
+                  data-section-action="add"
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                  }}
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  }}
                   onClick={(e) => {
                     e.stopPropagation();
                     onAddSection(b.order);
@@ -274,6 +301,11 @@ export const SectionOverlay = memo(function SectionOverlay({
                     boxShadow: `0 ${1 / zoom}px ${4 / zoom}px rgba(0,0,0,0.08)`,
                     padding: 0,
                     flexShrink: 0,
+                    userSelect: "none",
+                  }}
+                  data-resize-handle="section"
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
                   }}
                   onMouseDown={(e) => {
                     e.stopPropagation();

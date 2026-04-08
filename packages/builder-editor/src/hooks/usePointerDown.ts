@@ -40,36 +40,6 @@ export interface UsePointerDownReturn {
   handlePointerDown: (e: React.PointerEvent) => void;
 }
 
-/**
- * Finds the nearest ancestor (or itself) that has a data-node-id present in selectedNodeIds.
- */
-function findSelectedAncestor(el: HTMLElement | null, selectedNodeIds: string[]): string | null {
-  let curr = el;
-  while (curr) {
-    const id = curr.getAttribute("data-node-id");
-    if (id && selectedNodeIds.includes(id)) return id;
-    if (curr.tagName === "BODY") break;
-    curr = curr.parentElement;
-  }
-  return null;
-}
-
-/**
- * Given a clicked element, checks if any of the selected nodes contain it as a descendant.
- */
-function findContainingSelectedNode(
-  el: HTMLElement | null,
-  selectedNodeIds: string[],
-  frameEl: HTMLElement,
-): string | null {
-  for (const id of selectedNodeIds) {
-    const selectedEl = frameEl.querySelector(`[data-node-id="${id}"]`);
-    if (selectedEl && selectedEl.contains(el)) {
-      return id;
-    }
-  }
-  return null;
-}
 
 /**
  * Computes the union bounding rect (in screen space) of all selected nodes.
@@ -267,10 +237,8 @@ export function usePointerDown({
           const node    = nodes[id];
           const frameEl = activeFrameRef?.current ?? canvasFrameRef.current;
 
-          // For single-selection: check if clicked element is inside the
-          // already-selected node (ancestor walk).
-          const isAlreadySelected = findSelectedAncestor(nodeEl, selectedNodeIds) !== null ||
-            (frameEl ? findContainingSelectedNode(target, selectedNodeIds, frameEl) !== null : false);
+          // For single-selection: check if clicked node itself is already selected.
+          const isAlreadySelected = selectedNodeIds.includes(id);
 
           if (!isAlreadySelected) {
             if (node?.locked) return;
