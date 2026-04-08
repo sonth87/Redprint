@@ -145,22 +145,45 @@ export function CanvasRoot({
     panStart.current = null;
   }, []);
 
-  // Background grid pattern
+  // Calculate dynamic grid opacity to prevent moire patterns when zoomed out
+  const apparentGridSize = canvasConfig.gridSize * zoom;
+  // Fade out small grid when apparent size drops below 15px, completely hide below 4px
+  const smallGridAlpha = Math.max(0, Math.min(0.4, (apparentGridSize - 4) / 10 * 0.4));
+  // Large grid is 10x larger and fades out if it gets too small
+  const largeGridVisualSize = apparentGridSize * 10;
+  const largeGridAlpha = Math.max(0, Math.min(0.4, (largeGridVisualSize - 4) / 10 * 0.4));
+
   const gridPattern = canvasConfig.showGrid ? (
     <defs>
       <pattern
-        id="canvas-grid"
-        width={canvasConfig.gridSize * zoom}
-        height={canvasConfig.gridSize * zoom}
+        id="canvas-grid-small"
+        width={apparentGridSize}
+        height={apparentGridSize}
         patternUnits="userSpaceOnUse"
-        x={panOffset.x % (canvasConfig.gridSize * zoom)}
-        y={panOffset.y % (canvasConfig.gridSize * zoom)}
+        x={panOffset.x % apparentGridSize}
+        y={panOffset.y % apparentGridSize}
       >
         <path
-          d={`M ${canvasConfig.gridSize * zoom} 0 L 0 0 0 ${canvasConfig.gridSize * zoom}`}
+          d={`M ${apparentGridSize} 0 L 0 0 0 ${apparentGridSize}`}
           fill="none"
-          stroke="hsl(var(--muted-foreground) / 0.4)"
+          stroke={`hsl(var(--muted-foreground) / ${smallGridAlpha})`}
           strokeWidth="0.5"
+        />
+      </pattern>
+      <pattern
+        id="canvas-grid-large"
+        width={apparentGridSize * 10}
+        height={apparentGridSize * 10}
+        patternUnits="userSpaceOnUse"
+        x={panOffset.x % (apparentGridSize * 10)}
+        y={panOffset.y % (apparentGridSize * 10)}
+      >
+        <rect width="100%" height="100%" fill="url(#canvas-grid-small)" />
+        <path
+          d={`M ${apparentGridSize * 10} 0 L 0 0 0 ${apparentGridSize * 10}`}
+          fill="none"
+          stroke={`hsl(var(--muted-foreground) / ${largeGridAlpha})`}
+          strokeWidth="1"
         />
       </pattern>
     </defs>
@@ -185,7 +208,7 @@ export function CanvasRoot({
       {canvasConfig.showGrid && (
         <svg className="absolute inset-0 w-full h-full pointer-events-none">
           {gridPattern}
-          <rect width="100%" height="100%" fill="url(#canvas-grid)" />
+          <rect width="100%" height="100%" fill="url(#canvas-grid-large)" />
         </svg>
       )}
 
