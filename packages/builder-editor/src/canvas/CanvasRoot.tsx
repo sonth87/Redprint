@@ -13,6 +13,7 @@ export interface CanvasRootProps {
   children: React.ReactNode;
   className?: string;
   activeTool?: string;
+  onPointerDown?: (e: React.PointerEvent) => void;
 }
 
 /**
@@ -36,6 +37,7 @@ export function CanvasRoot({
   children,
   className,
   activeTool = "select",
+  onPointerDown,
 }: CanvasRootProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPanning, setIsPanning] = useState(false);
@@ -199,6 +201,7 @@ export function CanvasRoot({
         className,
       )}
       style={{ userSelect: "none" }}
+      onPointerDown={onPointerDown}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}

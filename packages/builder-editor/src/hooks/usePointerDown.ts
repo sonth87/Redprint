@@ -62,6 +62,11 @@ export function usePointerDown({
 
       let nodeEl = target.closest("[data-node-id]");
 
+      const isForcingSelection = e.metaKey || e.ctrlKey;
+      if (isForcingSelection) {
+        nodeEl = null;
+      }
+
       // Cycle Selection (Alt+Click or DoubleClick)
       if (e.altKey && nodeEl && canvasFrameRef.current) {
         const elements = document.elementsFromPoint(e.clientX, e.clientY);
@@ -95,7 +100,18 @@ export function usePointerDown({
           });
 
           // Sections stack vertically — select only, no free drag
-          if (node?.type === "Section") return;
+          if (node?.type === "Section") {
+            // Start rubber banding instead of moving
+            if (canvasFrameRef.current) {
+              const rect = canvasFrameRef.current.getBoundingClientRect();
+              const pt = {
+                x: (e.clientX - rect.left) / zoom,
+                y: (e.clientY - rect.top) / zoom,
+              };
+              setRubberBanding({ startPoint: pt, currentPoint: pt });
+            }
+            return;
+          }
 
           const style = nodes[id]?.style || {};
           const el = target.closest("[data-node-id]") as HTMLElement;
@@ -134,12 +150,16 @@ export function usePointerDown({
         }
       }
 
-      clearSelection();
-      if (canvasFrameRef.current) {
-        const rect = canvasFrameRef.current.getBoundingClientRect();
+      if (!e.shiftKey) {
+        clearSelection();
+      }
+
+      const frame = canvasFrameRef.current || activeFrameRef?.current;
+      if (frame) {
+        const rect = frame.getBoundingClientRect();
         const pt = {
-          x: (e.clientX - rect.left) / zoom,
-          y: (e.clientY - rect.top) / zoom,
+          x: Math.round((e.clientX - rect.left) / zoom),
+          y: Math.round((e.clientY - rect.top) / zoom),
         };
         setRubberBanding({ startPoint: pt, currentPoint: pt });
       }

@@ -66,6 +66,7 @@ import {
 // ── Editor-only command types (no undo/redo) ─────────────────────────────
 
 export const CMD_SELECT_NODE = "SELECT_NODE" as const;
+export const CMD_SELECT_NODES = "SELECT_NODES" as const;
 export const CMD_DESELECT_NODE = "DESELECT_NODE" as const;
 export const CMD_CLEAR_SELECTION = "CLEAR_SELECTION" as const;
 export const CMD_SET_BREAKPOINT = "SET_BREAKPOINT" as const;
@@ -75,6 +76,10 @@ export const CMD_COMPONENT_RENDER_ERROR = "COMPONENT_RENDER_ERROR" as const;
 export interface SelectNodePayload {
   nodeId: string;
   addToSelection?: boolean;
+}
+
+export interface SelectNodesPayload {
+  nodeIds: string[];
 }
 
 export interface DeselectNodePayload {
@@ -904,6 +909,21 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
       return {
         ...state,
         editor: { ...state.editor, selectedNodeIds: newSelectedIds },
+      };
+    },
+  );
+
+  engine.registerHandler<SelectNodesPayload>(
+    CMD_SELECT_NODES,
+    (state, payload) => {
+      const { nodeIds } = payload;
+      const validIds = nodeIds.filter((id) => {
+        const node = state.document.nodes[id];
+        return node && !node.locked;
+      });
+      return {
+        ...state,
+        editor: { ...state.editor, selectedNodeIds: validIds },
       };
     },
   );

@@ -113,7 +113,7 @@ export const SectionOverlay = memo(function SectionOverlay({
         const isHov = hovered === b.nodeId;
 
         return (
-          <div key={b.nodeId}>
+          <div key={b.nodeId} style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
             {/* ── Section Gutter Handles ── */}
             {isHov && (
               <>
@@ -144,7 +144,7 @@ export const SectionOverlay = memo(function SectionOverlay({
               </>
             )}
 
-            {/* Left Gutter Handle */}
+             {/* Left Gutter Handle */}
             <div
               style={{
                 position: "absolute",
@@ -159,6 +159,7 @@ export const SectionOverlay = memo(function SectionOverlay({
               onMouseEnter={() => setHovered(b.nodeId)}
               onMouseLeave={() => setHovered(null)}
               onClick={(e) => {
+                if (e.metaKey || e.ctrlKey) return;
                 e.stopPropagation();
                 onSelect?.(b.nodeId);
               }}
@@ -179,6 +180,7 @@ export const SectionOverlay = memo(function SectionOverlay({
               onMouseEnter={() => setHovered(b.nodeId)}
               onMouseLeave={() => setHovered(null)}
               onClick={(e) => {
+                if (e.metaKey || e.ctrlKey) return;
                 e.stopPropagation();
                 onSelect?.(b.nodeId);
               }}

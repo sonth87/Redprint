@@ -17,14 +17,20 @@ export function useSelection() {
     .filter((n): n is BuilderNode => n !== undefined);
 
   const select = useCallback(
-    (nodeId: string, addToSelection = false) => {
-      // We emit directly as selection changes are not document mutations
-      // (no undo/redo needed for selection)
-      dispatch({
-        type: "SELECT_NODE",
-        payload: { nodeId, addToSelection },
-        description: "Select node",
-      });
+    (nodeId: string | string[], addToSelection = false) => {
+      if (Array.isArray(nodeId)) {
+        dispatch({
+          type: "SELECT_NODES",
+          payload: { nodeIds: nodeId },
+          description: "Select nodes",
+        });
+      } else {
+        dispatch({
+          type: "SELECT_NODE",
+          payload: { nodeId, addToSelection },
+          description: "Select node",
+        });
+      }
     },
     [dispatch],
   );

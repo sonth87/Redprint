@@ -71,72 +71,72 @@ export const SelectionOverlay = memo(function SelectionOverlay({
   onResizeStart,
   onRotateStart,
 }: SelectionOverlayProps) {
-  if (!selection.boundingBox || selection.selectedIds.length === 0) return null;
+  if (!selection.isRubberBanding && (!selection.boundingBox || selection.selectedIds.length === 0)) return null;
 
-  const { x, y, width, height } = selection.boundingBox;
+  const boundingBox = selection.boundingBox;
+  const showBoundingBox = boundingBox && selection.selectedIds.length > 0;
   const borderWidth = Math.max(1, 2 / zoom);
 
   return (
     <>
       {/* Bounding box */}
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          left: x,
-          top: y,
-          width,
-          height,
-          outline: `${borderWidth}px dashed hsl(var(--selection-color, 221.2 83.2% 53.3%))`,
-          // uncomment dòng dưới đây nếu muốn rotate cả bounding box (hiện tại chỉ rotate node, không rotate bounding box)
-          // transform: rotation ? `rotate(${rotation}deg)` : undefined,
-          // transformOrigin: "center",
-          zIndex: 40,
-        }}
-      >
-        {/* Resize handles — only show when single selection and not a section */}
-        {selection.selectedIds.length === 1 && !isSection && (
-          (["n", "s", "e", "w", "ne", "nw", "se", "sw"] as ResizeHandleType[]).map((h) => (
-            <ResizeHandle
-              key={h}
-              handle={h}
-              bounds={selection.boundingBox!}
-              zoom={zoom}
-              onMouseDown={onResizeStart}
-            />
-          ))
-        )}
+      {showBoundingBox && (
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            left: boundingBox.x,
+            top: boundingBox.y,
+            width: boundingBox.width,
+            height: boundingBox.height,
+            outline: `${borderWidth}px dashed hsl(var(--selection-color, 221.2 83.2% 53.3%))`,
+            zIndex: 40,
+          }}
+        >
+          {/* Resize handles — only show when single selection and not a section */}
+          {selection.selectedIds.length === 1 && !isSection && (
+            (["n", "s", "e", "w", "ne", "nw", "se", "sw"] as ResizeHandleType[]).map((h) => (
+              <ResizeHandle
+                key={h}
+                handle={h}
+                bounds={boundingBox}
+                zoom={zoom}
+                onMouseDown={onResizeStart}
+              />
+            ))
+          )}
 
-        {/* Rotation handle */}
-        {selection.selectedIds.length === 1 && !isSection && (
-          <div
-            data-rotation-handle
-            className="absolute pointer-events-auto cursor-crosshair"
-            style={{
-              left: "50%",
-              top: "100%",
-              transform: "translate(-50%, 10px)",
-              width: 12,
-              height: 12,
-              borderRadius: "50%",
-              backgroundColor: "white",
-              border: "2px solid hsl(221.2 83.2% 53.3%)",
-              zIndex: 50,
-            }}
-            onMouseDown={(e) => { e.stopPropagation(); onRotateStart(e); }}
-          />
-        )}
-      </div>
+          {/* Rotation handle */}
+          {selection.selectedIds.length === 1 && !isSection && (
+            <div
+              data-rotation-handle
+              className="absolute pointer-events-auto cursor-crosshair"
+              style={{
+                left: "50%",
+                top: "100%",
+                transform: "translate(-50%, 10px)",
+                width: 12,
+                height: 12,
+                borderRadius: "50%",
+                backgroundColor: "white",
+                border: "2px solid hsl(221.2 83.2% 53.3%)",
+                zIndex: 50,
+              }}
+              onMouseDown={(e) => { e.stopPropagation(); onRotateStart(e); }}
+            />
+          )}
+        </div>
+      )}
 
       {/* Rubber-band selection rect */}
       {selection.isRubberBanding && selection.rubberBandRect && (
         <div
-          className="absolute pointer-events-none border border-blue-500 bg-blue-500/10"
+          className="absolute pointer-events-none border-2 border-blue-500 bg-blue-500/20"
           style={{
             left: selection.rubberBandRect.x,
             top: selection.rubberBandRect.y,
             width: selection.rubberBandRect.width,
             height: selection.rubberBandRect.height,
-            zIndex: 45,
+            zIndex: 100,
           }}
         />
       )}

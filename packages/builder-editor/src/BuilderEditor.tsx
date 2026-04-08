@@ -213,11 +213,56 @@ function EditorInner({
     [document.canvasConfig, showGrid, canvasWidth, canvasMinHeight],
   );
 
+  const handleRubberBandSelect = useCallback(
+    (rbRect: { x: number; y: number; width: number; height: number }) => {
+      if (!canvasFrameRef.current) return;
+      const frameEl = canvasFrameRef.current; // Always use desktop frame as origin for canvas coordinates
+      const frameRect = frameEl.getBoundingClientRect();
+
+      const hitIds: string[] = [];
+      // Search in both frames if in dual mode
+      const nodeElements = window.document.querySelectorAll("[data-node-id]");
+
+      nodeElements.forEach((el: Element) => {
+        const id = el.getAttribute("data-node-id");
+        if (!id || id === document.rootNodeId) return;
+
+        const node = document.nodes[id];
+        if (node?.type === "Section" || node?.locked) return;
+
+        const rect = el.getBoundingClientRect();
+        const nodeCanvasRect = {
+          x: (rect.left - frameRect.left) / zoom,
+          y: (rect.top - frameRect.top) / zoom,
+          width: rect.width / zoom,
+          height: rect.height / zoom,
+        };
+
+        const intersects =
+          nodeCanvasRect.x < rbRect.x + rbRect.width &&
+          nodeCanvasRect.x + nodeCanvasRect.width > rbRect.x &&
+          nodeCanvasRect.y < rbRect.y + rbRect.height &&
+          nodeCanvasRect.y + nodeCanvasRect.height > rbRect.y;
+
+        if (intersects) {
+          hitIds.push(id);
+        }
+      });
+
+      if (hitIds.length > 0) {
+        select(hitIds);
+      } else {
+        clearSelection();
+      }
+    },
+    [document.nodes, document.rootNodeId, zoom, select, clearSelection]
+  );
+
   // ── Gesture hooks ────────────────────────────────────────────────────────
   const { setResizing, snapGuides: resizeSnapGuides, distanceGuides: resizeDistanceGuides, liveDimensions: resizeLiveDimensions } =
     useResizeGesture({ zoom, breakpoint, showGrid, gridSize: document.canvasConfig.gridSize, snapEngine, nodes: document.nodes, canvasFrameRef, activeFrameRef, dispatch });
 
-  const { rubberBanding, setRubberBanding, rubberBandRect } = useRubberBand({ zoom, canvasFrameRef });
+  const { rubberBanding, setRubberBanding, rubberBandRect } = useRubberBand({ zoom, canvasFrameRef, onSelectionEnd: handleRubberBandSelect });
 
   const { moving, setMoving, dragStartedRef, snapGuides: moveSnapGuides, distanceGuides: moveDistanceGuides, liveDimensions: moveLiveDimensions, flowDragOffset, flowDropTarget } =
     useMoveGesture({ zoom, breakpoint, snapEnabled: showGrid, snapEngine, nodes: document.nodes, canvasFrameRef, activeFrameRef, dispatch, rootNodeId: document.rootNodeId, getContainerConfig });
@@ -410,21 +455,21 @@ function EditorInner({
         <FigmaImportDialog open={figmaOpen} onOpenChange={setFigmaOpen} />
 
         {/* Canvas area */}
-        <div
-          className="bg-muted/20 absolute inset-0 z-0 overflow-hidden"
-          onPointerDown={(e) => {
-            const target = e.target as HTMLElement;
-            if (
-              canvasFrameRef.current?.contains(target) ||
-              mobileFrameRef.current?.contains(target) ||
-              target.closest("[data-resize-handle]") ||
-              target.closest("[data-rotation-handle]")
-            ) return;
-            clearSelection();
-          }}
-        >
+        <div className="bg-muted/20 absolute inset-0 z-0 overflow-hidden">
           <CanvasRoot canvasConfig={canvasConfigParams} zoom={zoom} panOffset={panOffset}
-            onZoomChange={setZoom} onPanOffsetChange={setPanOffset} activeTool={activeTool} className="h-full w-full">
+            onZoomChange={setZoom} onPanOffsetChange={setPanOffset} activeTool={activeTool} className="h-full w-full"
+            onPointerDown={(e) => {
+              const target = e.target as HTMLElement;
+              // Ignore clicks on floating panels, resize handles, or other interactive overlays
+              if (
+                target.closest("[data-floating-panel]") ||
+                target.closest("[data-resize-handle]") ||
+                target.closest("[data-rotation-handle]")
+              ) return;
+              
+              handlePointerDown(e);
+            }}
+          >
 
             <div style={{ display: "flex", alignItems: "flex-start", gap: canvasMode === "dual" ? DUAL_GAP_PX : 0 }}>
 

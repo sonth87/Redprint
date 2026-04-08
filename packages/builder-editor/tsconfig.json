@@ -6,10 +6,10 @@
     "verbatimModuleSyntax": false,
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "paths": {
-      "@ui-builder/builder-core": ["../builder-core/dist/index.d.ts"],
-      "@ui-builder/builder-react": ["../builder-react/dist/index.d.ts"],
-      "@ui-builder/shared": ["../shared/dist/index.d.ts"],
-      "@ui-builder/ui": ["../ui/dist/index.d.ts"]
+      "@ui-builder/builder-core": ["../builder-core/src/index"],
+      "@ui-builder/builder-react": ["../builder-react/src/index"],
+      "@ui-builder/shared": ["../shared/src/index"],
+      "@ui-builder/ui": ["../ui/src/index"]
     }
   },
   "include": ["src"],
