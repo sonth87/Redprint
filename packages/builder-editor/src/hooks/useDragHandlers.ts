@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import type { Point } from "@ui-builder/shared";
-import type { BuilderNode, PaletteDragData, Breakpoint } from "@ui-builder/builder-core";
+import type { BuilderNode, PaletteDragData, Breakpoint, PaletteItem } from "@ui-builder/builder-core";
 import { v4 as uuidv4 } from "uuid";
 import { resolveContainerDropPosition } from "./useDropSlotResolver";
 
@@ -19,11 +19,12 @@ interface UseDragHandlersOptions {
   getContainerConfig?: (
     componentType: string,
   ) => { layoutType?: string; disallowedChildTypes?: string[] } | undefined;
+  onAfterDrop?: () => void;
 }
 
 export interface UseDragHandlersReturn {
   handleDragStart: (componentType: string, e: React.DragEvent) => void;
-  handlePaletteDragStart: (item: import("@ui-builder/builder-core").PaletteItem, e: React.DragEvent) => void;
+  handlePaletteDragStart: (item: PaletteItem, e: React.DragEvent) => void;
   handleDrop: (e: React.DragEvent) => void;
   handleDragOver: (e: React.DragEvent) => void;
   handleDragEnter: (e: React.DragEvent) => void;
@@ -36,6 +37,7 @@ export function useDragHandlers({
   dispatch,
   nodes,
   getContainerConfig,
+  onAfterDrop,
 }: UseDragHandlersOptions): UseDragHandlersReturn {
   const handleDragStart = useCallback(
     (componentType: string, e: React.DragEvent) => {
@@ -45,7 +47,7 @@ export function useDragHandlers({
   );
 
   const handlePaletteDragStart = useCallback(
-    (item: import("@ui-builder/builder-core").PaletteItem, e: React.DragEvent) => {
+    (item: PaletteItem, e: React.DragEvent) => {
       const dragData: PaletteDragData = {
         source: "palette-item",
         componentType: item.componentType,
@@ -209,8 +211,12 @@ export function useDragHandlers({
           });
         }
       }
+
+      if (onAfterDrop) {
+        onAfterDrop();
+      }
     },
-    [rootNodeId, dispatch, zoom, canvasFrameRef, nodes, getContainerConfig],
+    [rootNodeId, dispatch, zoom, canvasFrameRef, nodes, getContainerConfig, onAfterDrop],
   );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -226,4 +232,3 @@ export function useDragHandlers({
 
   return { handleDragStart, handlePaletteDragStart, handleDrop, handleDragOver, handleDragEnter };
 }
-

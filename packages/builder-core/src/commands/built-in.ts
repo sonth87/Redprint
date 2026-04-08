@@ -6,9 +6,11 @@
 // Node lifecycle
 export const CMD_ADD_NODE = "ADD_NODE" as const;
 export const CMD_REMOVE_NODE = "REMOVE_NODE" as const;
+export const CMD_REMOVE_NODES = "REMOVE_NODES" as const;
 export const CMD_MOVE_NODE = "MOVE_NODE" as const;
 export const CMD_REORDER_NODE = "REORDER_NODE" as const;
 export const CMD_DUPLICATE_NODE = "DUPLICATE_NODE" as const;
+export const CMD_DUPLICATE_NODES = "DUPLICATE_NODES" as const;
 
 // Node state
 export const CMD_UPDATE_PROPS = "UPDATE_PROPS" as const;
@@ -69,6 +71,10 @@ export interface RemoveNodePayload {
   nodeId: string;
 }
 
+export interface RemoveNodesPayload {
+  nodeIds: string[];
+}
+
 export interface MoveNodePayload {
   nodeId: string;
   targetParentId: string;
@@ -87,6 +93,13 @@ export interface DuplicateNodePayload {
   offset?: Point;
   /** Pre-generated ID for the duplicate root — enables undo */
   newNodeId?: string;
+}
+
+export interface DuplicateNodesPayload {
+  nodeIds: string[];
+  offset?: Point;
+  /** Pre-generated IDs for the duplicate roots — enables undo */
+  newNodeIds?: string[];
 }
 
 export interface UpdatePropsPayload {

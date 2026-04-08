@@ -9,7 +9,7 @@ interface RubberBandingState {
 interface UseRubberBandOptions {
   zoom: number;
   canvasFrameRef: React.RefObject<HTMLDivElement | null>;
-  onSelectionEnd?: (rect: Rect) => void;
+  onSelectionEnd?: (rect: Rect, e: MouseEvent) => void;
 }
 
 export interface UseRubberBandReturn {
@@ -62,7 +62,7 @@ export function useRubberBand({ zoom, canvasFrameRef, onSelectionEnd }: UseRubbe
         };
 
         if (finalRect.width > 2 || finalRect.height > 2) {
-          onSelectionEnd(finalRect);
+          onSelectionEnd(finalRect, e);
         }
       }
       setRubberBanding(null);

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef } from "react";
+import React, { useMemo, useRef } from "react";
 import {
   BuilderProvider,
   useBuilder,
@@ -20,11 +20,10 @@ import {
   type PaletteCatalog,
 } from "@ui-builder/builder-core";
 import {
-  DEFAULT_SECTION_HEIGHT_PX,
   TRANSITION_FAST_CSS,
   TRANSITION_MID_CSS,
 } from "@ui-builder/shared";
-import { Monitor, Smartphone, GripVertical, LocateFixed } from "lucide-react";
+import { Monitor, Smartphone, LocateFixed } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { cn } from "@ui-builder/ui";
 
@@ -35,7 +34,6 @@ import {
   HoverOutline,
   DistanceGuides,
   LiveDimensionsDisplay,
-  FlowDropPlaceholder,
 } from "./overlay/EditorOverlay";
 import { SectionOverlay } from "./overlay/SectionOverlay";
 import { SectionToolbar } from "./overlay/SectionToolbar";
@@ -50,13 +48,15 @@ import { PropertyPanel } from "./panels/right/PropertyPanel";
 import { PageSettings } from "./panels/right/PageSettings";
 import { FloatingPanel } from "./panels/FloatingPanel";
 import { ContextualToolbar } from "./toolbar/ContextualToolbar";
+import { MultiSelectToolbar } from "./toolbar/MultiSelectToolbar";
 import { DeleteConfirmDialog } from "./panels/DeleteConfirmDialog";
-import { SnapEngine } from "./snap/SnapEngine";
 import { AIAssistant } from "./ai/AIAssistant";
 import { AIConfigPanel } from "./ai/AIConfig";
 import { buildAIContext } from "./ai/buildAIContext";
 import { AIConfigProvider } from "./ai/AIConfigContext";
 import { FigmaImportDialog } from "./figma/FigmaImportDialog";
+import { ArtboardLabel } from "./canvas/ArtboardLabel";
+import { FlowDropPlaceholderLayer } from "./canvas/FlowDropPlaceholderLayer";
 import { initI18n, type SupportedLocale } from "./i18n";
 import { useTranslation } from "react-i18next";
 
@@ -65,7 +65,6 @@ import { useResizeGesture } from "./hooks/useResizeGesture";
 import { useRubberBand } from "./hooks/useRubberBand";
 import { useMoveGesture } from "./hooks/useMoveGesture";
 import { useRotateGesture } from "./hooks/useRotateGesture";
-import { getGridCellClientRect } from "./hooks/useDropSlotResolver";
 import { useSelectionRect } from "./hooks/useSelectionRect";
 import { useHoverRect } from "./hooks/useHoverRect";
 import { useDimensionCapture } from "./hooks/useDimensionCapture";
@@ -88,6 +87,8 @@ import { useDeleteConfirm } from "./hooks/useDeleteConfirm";
 import { useMobileFrame } from "./hooks/useMobileFrame";
 import { useNodeHandlers } from "./hooks/useNodeHandlers";
 import { useDragHandleGesture } from "./hooks/useDragHandleGesture";
+import { useRubberBandSelect } from "./hooks/useRubberBandSelect";
+import { useCanvasActions } from "./hooks/useCanvasActions";
 
 import {
   DEFAULT_COMPONENTS_PANEL_POS,
@@ -95,7 +96,7 @@ import {
   DUAL_GAP_PX,
 } from "./constants";
 
-import type { BuilderNode } from "@ui-builder/builder-core";
+
 
 // ── Inner editor (must be inside BuilderProvider) ─────────────────────────
 
@@ -174,7 +175,21 @@ function EditorInner({
   const selectedNode       = selectedNodeId ? (document.nodes[selectedNodeId] ?? null) : null;
   const registry           = builder?.registry;
   const selectedDefinition = selectedNode && registry ? (registry.getComponent(selectedNode.type) ?? null) : null;
-  const allComponents: ComponentDefinition[] = registry ? registry.listComponents() : [];
+  const allComponents: ComponentDefinition[] = useMemo(() => registry ? registry.listComponents() : [], [registry]);
+
+  const {
+    snapEngine,
+    getContainerConfig,
+    handleAddSection,
+    toggleCanvasMode,
+  } = useCanvasActions({
+    document, allComponents, registry, canvasMode, canvasWidth, canvasMinHeight, showGrid, dispatch,
+  });
+
+  const { handleRubberBandSelect } = useRubberBandSelect({
+    document, zoom, selectedNodeIds, select, clearSelection, canvasFrameRef,
+  });
+
   const selectedSectionNode =
     selectedNodeId && document.nodes[selectedNodeId]?.type === "Section"
       ? document.nodes[selectedNodeId]
@@ -193,70 +208,8 @@ function EditorInner({
     [state, allComponents, aiConfig.includePageContext, paletteCatalog],
   );
 
-  // ── Snap engine ──────────────────────────────────────────────────────────
-  const getContainerConfig = useCallback(
-    (componentType: string) => {
-      const def = registry?.getComponent(componentType);
-      return def?.containerConfig
-        ? { layoutType: def.containerConfig.layoutType, disallowedChildTypes: def.containerConfig.disallowedChildTypes }
-        : undefined;
-    },
-    [registry],
-  );
+  // ── Snap engine (now handled by hook) ────────────────────────────────────
 
-  const snapEngine = useMemo(
-    () => new SnapEngine({
-      gridSize: document.canvasConfig.gridSize, snapEnabled: showGrid, snapToGrid: showGrid,
-      snapToComponents: document.canvasConfig.snapToComponents, threshold: document.canvasConfig.snapThreshold,
-      canvasWidth, canvasHeight: canvasMinHeight,
-    }),
-    [document.canvasConfig, showGrid, canvasWidth, canvasMinHeight],
-  );
-
-  const handleRubberBandSelect = useCallback(
-    (rbRect: { x: number; y: number; width: number; height: number }) => {
-      if (!canvasFrameRef.current) return;
-      const frameEl = canvasFrameRef.current; // Always use desktop frame as origin for canvas coordinates
-      const frameRect = frameEl.getBoundingClientRect();
-
-      const hitIds: string[] = [];
-      // Search in both frames if in dual mode
-      const nodeElements = window.document.querySelectorAll("[data-node-id]");
-
-      nodeElements.forEach((el: Element) => {
-        const id = el.getAttribute("data-node-id");
-        if (!id || id === document.rootNodeId) return;
-
-        const node = document.nodes[id];
-        if (node?.type === "Section" || node?.locked) return;
-
-        const rect = el.getBoundingClientRect();
-        const nodeCanvasRect = {
-          x: (rect.left - frameRect.left) / zoom,
-          y: (rect.top - frameRect.top) / zoom,
-          width: rect.width / zoom,
-          height: rect.height / zoom,
-        };
-
-        const intersects =
-          nodeCanvasRect.x < rbRect.x + rbRect.width &&
-          nodeCanvasRect.x + nodeCanvasRect.width > rbRect.x &&
-          nodeCanvasRect.y < rbRect.y + rbRect.height &&
-          nodeCanvasRect.y + nodeCanvasRect.height > rbRect.y;
-
-        if (intersects) {
-          hitIds.push(id);
-        }
-      });
-
-      if (hitIds.length > 0) {
-        select(hitIds);
-      } else {
-        clearSelection();
-      }
-    },
-    [document.nodes, document.rootNodeId, zoom, select, clearSelection]
-  );
 
   // ── Gesture hooks ────────────────────────────────────────────────────────
   const { setResizing, snapGuides: resizeSnapGuides, distanceGuides: resizeDistanceGuides, liveDimensions: resizeLiveDimensions } =
@@ -287,9 +240,9 @@ function EditorInner({
 
   // ── Interaction hooks ────────────────────────────────────────────────────
   const { handleDragStart, handlePaletteDragStart, handleDrop, handleDragOver, handleDragEnter } =
-    useDragHandlers({ rootNodeId: document.rootNodeId, zoom, canvasFrameRef, dispatch, nodes: document.nodes, getContainerConfig });
+    useDragHandlers({ rootNodeId: document.rootNodeId, zoom, canvasFrameRef, dispatch, nodes: document.nodes, getContainerConfig, onAfterDrop: handlePaletteClose });
 
-  const { addItem: handlePaletteItemClick } = useClickToAdd({ rootNodeId: document.rootNodeId, zoom, panOffset, canvasContainerRef, dispatch });
+  const { addItem: handlePaletteItemClick } = useClickToAdd({ rootNodeId: document.rootNodeId, zoom, panOffset, canvasContainerRef, dispatch, onAfterAdd: handlePaletteClose });
 
   const { handlePointerDown } = usePointerDown({
     activeTool, zoom, rootNodeId: document.rootNodeId, nodes: document.nodes, canvasFrameRef, activeFrameRef,
@@ -312,49 +265,24 @@ function EditorInner({
     : selectionRectBase;
 
   // ── Delete with confirmation ──────────────────────────────────────────────
-  const { deleteConfirmNodeId, setDeleteConfirmNodeId, deleteConfirmChildCount, handleDeleteNode, executeConfirmedDelete } =
+  const { deleteConfirmNodeId, setDeleteConfirmNodeId, deleteConfirmChildCount, handleDeleteNode, handleDeleteNodes, executeConfirmedDelete } =
     useDeleteConfirm({ nodes: document.nodes, rootNodeId: document.rootNodeId, sectionNodes, registry, dispatch });
 
   // ── Drag handle gesture ───────────────────────────────────────────────────
   const { handleDragHandlePointerDown } = useDragHandleGesture({
-    selectedNodeId, nodes: document.nodes, zoom, activeFrameRef, canvasFrameRef, dragStartedRef, setMoving,
+    selectedNodeId, selectedNodeIds, nodes: document.nodes, zoom, activeFrameRef, canvasFrameRef, dragStartedRef, setMoving,
   });
 
   // ── Keyboard shortcuts ────────────────────────────────────────────────────
   useKeyboardShortcuts({
-    selectedNodeId, rootNodeId: document.rootNodeId, nodes: document.nodes, clipboard: state.editor.clipboard,
-    breakpoint, editingNodeId, canvasContainerRef, dispatch, clearSelection, undo, redo, setBreakpoint, onDeleteNode: handleDeleteNode,
+    selectedNodeIds, rootNodeId: document.rootNodeId, nodes: document.nodes, clipboard: state.editor.clipboard,
+    breakpoint, editingNodeId, canvasContainerRef, dispatch, clearSelection, undo, redo, setBreakpoint, 
+    onDeleteNode: handleDeleteNode, onDeleteNodes: handleDeleteNodes,
   });
-
-  // ── Canvas mode helpers ──────────────────────────────────────────────────
-  const setCanvasMode = useCallback(
-    (mode: CanvasMode) => dispatch({ type: "SET_CANVAS_MODE", payload: { canvasMode: mode }, description: "Toggle canvas mode" }),
-    [dispatch],
-  );
-  const toggleCanvasMode = useCallback(
-    () => setCanvasMode(canvasMode === "dual" ? "single" : "dual"),
-    [canvasMode, setCanvasMode],
-  );
 
   const canvasConfigParams = useMemo(
     () => ({ ...document.canvasConfig, showGrid, snapEnabled: showGrid }),
     [document.canvasConfig, showGrid],
-  );
-
-  const handleAddSection = useCallback(
-    (afterOrder: number) => {
-      dispatch({
-        type: "ADD_NODE",
-        payload: {
-          nodeId: uuidv4(), parentId: document.rootNodeId, componentType: "Section",
-          props: { minHeight: DEFAULT_SECTION_HEIGHT_PX },
-          style: { display: "flex", flexDirection: "column", width: "100%", minHeight: "400px", position: "relative", backgroundColor: "#ffffff" },
-          insertIndex: afterOrder + 1,
-        },
-        description: "Add section",
-      });
-    },
-    [dispatch, document.rootNodeId],
   );
 
   const frameEventHandlers = {
@@ -619,16 +547,35 @@ function EditorInner({
             />
           )}
 
-          {selectedNodeId && selectionRect && !selectedSectionNode && !editingNodeId && (
+          {selectedNodeIds.length === 1 && selectionRect && !selectedSectionNode && !editingNodeId && (
             <ContextualToolbar
-              nodeId={selectedNodeId} rect={selectionRect} zoom={zoom} panOffset={panOffset}
-              onDelete={() => handleDeleteNode(selectedNodeId)}
+              nodeId={selectedNodeIds[0]!} rect={selectionRect} zoom={zoom} panOffset={panOffset}
+              onDelete={() => handleDeleteNode(selectedNodeIds[0]!)}
               onDuplicate={() => dispatch({
                 type: "DUPLICATE_NODE",
-                payload: { nodeId: selectedNodeId, offset: { x: 20, y: 20 }, newNodeId: uuidv4() },
+                payload: { nodeId: selectedNodeIds[0]!, offset: { x: 20, y: 20 }, newNodeId: uuidv4() },
                 description: "Duplicate",
               })}
               onMoveUp={onMoveUp} onMoveDown={onMoveDown}
+              onDragHandlePointerDown={handleDragHandlePointerDown}
+            />
+          )}
+
+          {selectedNodeIds.length > 1 && selectionRect && !editingNodeId && (
+            <MultiSelectToolbar
+              count={selectedNodeIds.length}
+              rect={selectionRect}
+              zoom={zoom}
+              panOffset={panOffset}
+              onDelete={() => handleDeleteNodes(selectedNodeIds)}
+              onDuplicate={() => {
+                const newNodeIds = selectedNodeIds.map(() => uuidv4());
+                dispatch({
+                  type: "DUPLICATE_NODES",
+                  payload: { nodeIds: selectedNodeIds, offset: { x: 20, y: 20 }, newNodeIds },
+                  description: `Duplicate ${selectedNodeIds.length} nodes`,
+                });
+              }}
               onDragHandlePointerDown={handleDragHandlePointerDown}
             />
           )}
@@ -695,108 +642,6 @@ function EditorInner({
         onCancel={() => setDeleteConfirmNodeId(null)}
       />
     </AIConfigProvider>
-  );
-}
-
-// ── ArtboardLabel ──────────────────────────────────────────────────────────
-
-interface ArtboardLabelProps {
-  icon: React.ReactNode;
-  label: string;
-  width: number;
-  isActive: boolean;
-  onClick: () => void;
-  gripProps?: React.HTMLAttributes<HTMLDivElement>;
-}
-
-function ArtboardLabel({ icon, label, width, isActive, onClick, gripProps }: ArtboardLabelProps) {
-  return (
-    <div
-      style={{
-        position: "absolute", bottom: "100%", marginBottom: 8,
-        fontSize: 11, color: "hsl(var(--muted-foreground))",
-        display: "flex", alignItems: "center", gap: 5,
-        userSelect: "none", cursor: "pointer", whiteSpace: "nowrap",
-      }}
-      onClick={onClick}
-    >
-      {gripProps && (
-        <div
-          style={{ cursor: "grab", display: "flex", alignItems: "center", padding: "0 2px", marginRight: 2, opacity: 0.5 }}
-          onClick={(e) => e.stopPropagation()}
-          title="Drag to reposition"
-          className="duration-200 hover:scale-150"
-          {...gripProps}
-        >
-          <GripVertical size={11} />
-        </div>
-      )}
-      {icon}
-      <span>{label}</span>
-      <span style={{ opacity: 0.5 }}>&#183; {width}px</span>
-      {isActive && (
-        <span style={{ fontSize: 9, background: "hsl(221.2 83.2% 53.3% / 0.12)", color: "hsl(221.2 83.2% 53.3%)", padding: "1px 5px", borderRadius: 3 }}>
-          Active
-        </span>
-      )}
-    </div>
-  );
-}
-
-// ── FlowDropPlaceholderLayer ───────────────────────────────────────────────
-
-interface FlowDropPlaceholderLayerProps {
-  flowDropTarget: { containerId: string; insertIndex: number; gridCell?: { col: number; row: number } } | null;
-  moving: { nodeId: string } | null;
-  activeFrameRef: React.RefObject<HTMLDivElement | null>;
-  canvasFrameRef: React.RefObject<HTMLDivElement | null>;
-  nodes: Record<string, BuilderNode>;
-  zoom: number;
-  panOffset: { x: number; y: number };
-}
-
-function FlowDropPlaceholderLayer({ flowDropTarget, moving, activeFrameRef, canvasFrameRef, nodes, zoom, panOffset }: FlowDropPlaceholderLayerProps) {
-  if (!flowDropTarget || !moving) return null;
-  const frameEl = activeFrameRef.current ?? canvasFrameRef.current;
-  if (!frameEl) return null;
-
-  const containerEl = frameEl.querySelector(`[data-node-id="${flowDropTarget.containerId}"]`) as HTMLElement | null;
-  if (!containerEl) return null;
-
-  const fr    = frameEl.getBoundingClientRect();
-  const cRect = containerEl.getBoundingClientRect();
-  const toRect = (r: DOMRect): { x: number; y: number; width: number; height: number } => ({
-    x: (r.left - fr.left) / zoom + panOffset.x / zoom,
-    y: (r.top  - fr.top)  / zoom + panOffset.y / zoom,
-    width:  r.width  / zoom,
-    height: r.height / zoom,
-  });
-
-  const containerRect = toRect(cRect);
-  const siblings = Object.values(nodes)
-    .filter((n) => n.parentId === flowDropTarget.containerId && n.id !== moving.nodeId)
-    .sort((a, b) => a.order - b.order);
-
-  const getSibRect = (sibId: string) => {
-    const el = frameEl.querySelector(`[data-node-id="${sibId}"]`) as HTMLElement | null;
-    return el ? toRect(el.getBoundingClientRect()) : null;
-  };
-
-  const idx             = flowDropTarget.insertIndex;
-  const prevSiblingRect = idx > 0 ? getSibRect(siblings[idx - 1]?.id ?? "") : null;
-  const nextSiblingRect = getSibRect(siblings[idx]?.id ?? "");
-
-  let gridCellRect: { x: number; y: number; width: number; height: number } | undefined;
-  if (flowDropTarget.gridCell) {
-    const cellClient = getGridCellClientRect(containerEl, flowDropTarget.gridCell.col, flowDropTarget.gridCell.row);
-    if (cellClient) gridCellRect = toRect(cellClient as unknown as DOMRect);
-  }
-
-  return (
-    <FlowDropPlaceholder
-      containerRect={containerRect} prevSiblingRect={prevSiblingRect}
-      nextSiblingRect={nextSiblingRect} gridCellRect={gridCellRect} zoom={zoom}
-    />
   );
 }
 

@@ -1,22 +1,27 @@
-import { useCallback } from "react";
-import type React from "react";
+import React, { useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import type { BuilderNode } from "@ui-builder/builder-core";
 import type { Point } from "@ui-builder/shared";
 
-interface MovingState {
+interface NodeMovingSnapshot {
   nodeId: string;
-  startPoint: Point;
   startLeft: number;
   startTop: number;
   startWidth?: number;
   startHeight?: number;
   wasAbsolute: boolean;
+}
+
+interface MovingState {
+  nodeId: string; // Primary anchor node
+  nodes: NodeMovingSnapshot[];
+  startPoint: Point;
   gestureGroupId: string;
 }
 
 interface UseDragHandleGestureOptions {
   selectedNodeId: string | null;
+  selectedNodeIds: string[];
   nodes: Record<string, BuilderNode>;
   zoom: number;
   activeFrameRef: React.RefObject<HTMLDivElement | null>;
@@ -39,6 +44,7 @@ export interface UseDragHandleGestureReturn {
  */
 export function useDragHandleGesture({
   selectedNodeId,
+  selectedNodeIds,
   nodes,
   zoom,
   activeFrameRef,
@@ -55,46 +61,49 @@ export function useDragHandleGesture({
       // Sections stack vertically — not freely draggable
       if (n.type === "Section") return;
 
-      const style = n.style || {};
-      let startLeft: number;
-      let startTop: number;
+      const frameEl = activeFrameRef?.current ?? canvasFrameRef.current;
+      const frameRect = frameEl?.getBoundingClientRect();
 
-      if (style.position === "absolute") {
-        startLeft = parseFloat(String(style.left ?? "0")) || 0;
-        startTop  = parseFloat(String(style.top  ?? "0")) || 0;
-      } else if (activeFrameRef.current) {
-        const frameEl = activeFrameRef.current;
-        const el = frameEl.querySelector(`[data-node-id="${selectedNodeId}"]`) as HTMLElement | null;
-        if (el) {
-          const frameRect = frameEl.getBoundingClientRect();
-          const elRect    = el.getBoundingClientRect();
+      const movingNodeIds = selectedNodeIds.includes(selectedNodeId) ? selectedNodeIds : [selectedNodeId];
+
+      const movingNodes: NodeMovingSnapshot[] = movingNodeIds.map(mId => {
+        const mNode = nodes[mId];
+        const mStyle = mNode?.style || {};
+        const mEl = frameEl?.querySelector(`[data-node-id="${mId}"]`) as HTMLElement | null;
+        
+        let startLeft: number;
+        let startTop: number;
+        if (mStyle.position === "absolute") {
+          startLeft = parseFloat(String(mStyle.left ?? "0")) || 0;
+          startTop = parseFloat(String(mStyle.top ?? "0")) || 0;
+        } else if (mEl && frameRect) {
+          const elRect = mEl.getBoundingClientRect();
           startLeft = (elRect.left - frameRect.left) / zoom;
-          startTop  = (elRect.top  - frameRect.top)  / zoom;
+          startTop = (elRect.top - frameRect.top) / zoom;
         } else {
           startLeft = 0;
-          startTop  = 0;
+          startTop = 0;
         }
-      } else {
-        startLeft = 0;
-        startTop  = 0;
-      }
 
-      const frameEl = activeFrameRef.current ?? canvasFrameRef.current;
-      const el = frameEl?.querySelector(`[data-node-id="${selectedNodeId}"]`) as HTMLElement | null;
+        return {
+          nodeId: mId,
+          startLeft,
+          startTop,
+          startWidth: mEl?.offsetWidth,
+          startHeight: mEl?.offsetHeight,
+          wasAbsolute: mStyle.position === "absolute",
+        };
+      });
 
       dragStartedRef.current = false;
       setMoving({
         nodeId: selectedNodeId,
+        nodes: movingNodes,
         startPoint: { x: e.clientX, y: e.clientY },
-        startLeft,
-        startTop,
-        startWidth:  el?.offsetWidth,
-        startHeight: el?.offsetHeight,
-        wasAbsolute: style.position === "absolute",
         gestureGroupId: uuidv4(),
       });
     },
-    [selectedNodeId, nodes, zoom, activeFrameRef, canvasFrameRef, dragStartedRef, setMoving],
+    [selectedNodeId, selectedNodeIds, nodes, zoom, activeFrameRef, canvasFrameRef, dragStartedRef, setMoving],
   );
 
   return { handleDragHandlePointerDown };

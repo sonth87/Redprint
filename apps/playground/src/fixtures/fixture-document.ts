@@ -94,8 +94,8 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
         "position": "absolute",
         "top": "10%",
         "left": "5%",
-        "opacity": "0.5",
-        "zIndex": "0"
+        "opacity": 0.5,
+        "zIndex": 0
       },
       "responsiveStyle": {},
       "interactions": [],
@@ -123,7 +123,7 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
         "fontWeight": "900",
         "textAlign": "center",
         "marginBottom": "24px",
-        "zIndex": "1"
+        "zIndex": 1
       },
       "responsiveStyle": {},
       "interactions": [],
@@ -151,7 +151,7 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
         "textAlign": "center",
         "maxWidth": "600px",
         "marginBottom": "40px",
-        "zIndex": "1"
+        "zIndex": 1
       },
       "responsiveStyle": {},
       "interactions": [],
@@ -182,7 +182,7 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
         "padding": "16px",
         "width": "100%",
         "position": "relative",
-        "zIndex": "1"
+        "zIndex": 1
       },
       "responsiveStyle": {},
       "interactions": [],
@@ -534,7 +534,7 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
         "backgroundColor": "#ffffff",
         "borderBottom": "1px solid #eeeeee",
         "top": "0",
-        "zIndex": "1000"
+        "zIndex": 1000
       },
       "responsiveStyle": {
         "mobile": {

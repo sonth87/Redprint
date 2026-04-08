@@ -41,29 +41,43 @@ export function useSelectionRect({
       setSelectionRect(null);
       return;
     }
-    const id = selectedNodeIds[0]!;
+
     const queryRoot = nodeQueryRef?.current ?? canvasFrameRef.current;
-    const el = queryRoot.querySelector(
-      `[data-node-id="${id}"]`
-    ) as HTMLElement;
-    if (!el) {
+    const frameRect = canvasFrameRef.current.getBoundingClientRect();
+
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    let found = false;
+
+    selectedNodeIds.forEach((id) => {
+      const el = queryRoot.querySelector(`[data-node-id="${id}"]`) as HTMLElement;
+      if (!el) return;
+
+      const elRect = el.getBoundingClientRect();
+      const left = (elRect.left - frameRect.left) / zoom;
+      const top = (elRect.top - frameRect.top) / zoom;
+      const right = left + el.offsetWidth;
+      const bottom = top + el.offsetHeight;
+
+      minX = Math.min(minX, left);
+      minY = Math.min(minY, top);
+      maxX = Math.max(maxX, right);
+      maxY = Math.max(maxY, bottom);
+      found = true;
+    });
+
+    if (!found) {
       setSelectionRect(null);
       return;
     }
 
-    const frameRect = canvasFrameRef.current.getBoundingClientRect();
-    const elRect = el.getBoundingClientRect();
-
-    const cxViewport = (elRect.left + elRect.right) / 2;
-    const cyViewport = (elRect.top + elRect.bottom) / 2;
-    const cxCanvas = (cxViewport - frameRect.left) / zoom;
-    const cyCanvas = (cyViewport - frameRect.top) / zoom;
-
     setSelectionRect({
-      x: cxCanvas - el.offsetWidth / 2,
-      y: cyCanvas - el.offsetHeight / 2,
-      width: el.offsetWidth,
-      height: el.offsetHeight,
+      x: minX,
+      y: minY,
+      width: maxX - minX,
+      height: maxY - minY,
     });
   }, [selectedNodeIds, zoom, panOffset, nodes, canvasFrameRef, nodeQueryRef]);
 

@@ -10,7 +10,7 @@ interface ClipboardData {
 }
 
 interface UseKeyboardShortcutsOptions {
-  selectedNodeId: string | null;
+  selectedNodeIds: string[];
   rootNodeId: string;
   nodes: Record<string, BuilderNode>;
   clipboard: ClipboardData | null;
@@ -23,12 +23,8 @@ interface UseKeyboardShortcutsOptions {
   undo: () => void;
   redo: () => void;
   setBreakpoint?: (bp: "desktop" | "mobile") => void;
-  /**
-   * Optional override for delete action.
-   * When provided, called instead of dispatching REMOVE_NODE directly.
-   * Allows BuilderEditor to inject a confirmation dialog.
-   */
   onDeleteNode?: (nodeId: string) => void;
+  onDeleteNodes?: (nodeIds: string[]) => void;
 }
 
 function collectSubtree(
@@ -51,7 +47,7 @@ function collectSubtree(
 }
 
 export function useKeyboardShortcuts({
-  selectedNodeId,
+  selectedNodeIds,
   rootNodeId,
   nodes,
   clipboard,
@@ -64,74 +60,59 @@ export function useKeyboardShortcuts({
   redo,
   setBreakpoint,
   onDeleteNode,
+  onDeleteNodes,
 }: UseKeyboardShortcutsOptions): void {
   const manager = useMemo(() => new ShortcutManager(), []);
+  const selectedNodeId = selectedNodeIds[0] ?? null;
 
-  // Refs for arrow nudge coalescing — group rapid nudge keystrokes into one
-  // history entry so Ctrl+Z undoes the entire nudge burst, not each pixel.
+  // Refs for arrow nudge coalescing
   const nudgeGroupIdRef = useRef<string | null>(null);
   const nudgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // ── Undo / Redo — registered on window so they work regardless of focus ──
-  // (User may click into the Properties or Layers panel, losing canvas focus)
   useEffect(() => {
     const handleUndoRedo = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
-      // Skip if typing in a text input
-      if (
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.isContentEditable
-      )
-        return;
-
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) return;
       const ctrl = e.ctrlKey || e.metaKey;
-      if (ctrl && e.key === "z" && !e.shiftKey) {
-        e.preventDefault();
-        undo();
-        return;
-      }
-      if (ctrl && (e.key === "y" || (e.key === "z" && e.shiftKey))) {
-        e.preventDefault();
-        redo();
-        return;
-      }
+      if (ctrl && e.key === "z" && !e.shiftKey) { e.preventDefault(); undo(); return; }
+      if (ctrl && (e.key === "y" || (e.key === "z" && e.shiftKey))) { e.preventDefault(); redo(); return; }
     };
-
     window.addEventListener("keydown", handleUndoRedo);
     return () => window.removeEventListener("keydown", handleUndoRedo);
   }, [undo, redo]);
 
-  // ── All other shortcuts — scoped to canvas container ─────────────────────
   useEffect(() => {
     const container = canvasContainerRef.current;
     if (!container) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       const ctrl = e.ctrlKey || e.metaKey;
-
-      // Undo/Redo handled by window listener above — skip here
       if (ctrl && (e.key === "z" || e.key === "y")) return;
 
+      const hasMultiSelect = selectedNodeIds.length > 1;
+
+      // Copy
       if (ctrl && e.key === "c" && selectedNodeId) {
         e.preventDefault();
-        const snapshot = collectSubtree(selectedNodeId, nodes);
+        const snapshot: Record<string, BuilderNode> = {};
+        selectedNodeIds.forEach(id => {
+          Object.assign(snapshot, collectSubtree(id, nodes));
+        });
         dispatch({
           type: "SET_CLIPBOARD",
-          payload: {
-            data: { nodeIds: [selectedNodeId], operation: "copy", snapshot },
-          },
+          payload: { data: { nodeIds: selectedNodeIds, operation: "copy", snapshot } },
           description: "Copy",
         });
         return;
       }
 
+      // Paste
       if (ctrl && e.key === "v") {
         e.preventDefault();
         if (!clipboard) return;
-        for (const nodeId of clipboard.nodeIds) {
+        clipboard.nodeIds.forEach(nodeId => {
           const src = clipboard.snapshot[nodeId];
-          if (!src) continue;
+          if (!src) return;
           dispatch({
             type: "ADD_NODE",
             payload: {
@@ -143,117 +124,98 @@ export function useKeyboardShortcuts({
             },
             description: "Paste",
           });
-        }
-        return;
-      }
-
-      if (ctrl && e.key === "d" && selectedNodeId) {
-        e.preventDefault();
-        dispatch({
-          type: "DUPLICATE_NODE",
-          payload: {
-            nodeId: selectedNodeId,
-            offset: { x: 20, y: 20 },
-            newNodeId: uuidv4(),
-          },
-          description: "Duplicate",
         });
         return;
       }
 
-      if (
-        (e.key === "Delete" || e.key === "Backspace") &&
-        selectedNodeId &&
-        selectedNodeId !== rootNodeId
-      ) {
-        const active = globalThis.document?.activeElement;
-        if (
-          active?.tagName === "INPUT" ||
-          active?.tagName === "TEXTAREA" ||
-          (active as HTMLElement)?.contentEditable === "true"
-        )
-          return;
+      // Duplicate
+      if (ctrl && e.key === "d" && selectedNodeId) {
         e.preventDefault();
-        if (onDeleteNode) {
-          onDeleteNode(selectedNodeId);
+        if (hasMultiSelect) {
+          const newNodeIds = selectedNodeIds.map(() => uuidv4());
+          dispatch({
+            type: "DUPLICATE_NODES",
+            payload: { nodeIds: selectedNodeIds, offset: { x: 20, y: 20 }, newNodeIds },
+            description: "Duplicate multiple",
+          });
         } else {
           dispatch({
-            type: "REMOVE_NODE",
-            payload: { nodeId: selectedNodeId },
-            description: "Delete",
+            type: "DUPLICATE_NODE",
+            payload: { nodeId: selectedNodeId, offset: { x: 20, y: 20 }, newNodeId: uuidv4() },
+            description: "Duplicate",
           });
         }
         return;
       }
 
-      if (e.key === "Escape") {
-        clearSelection();
+      // Delete
+      if ((e.key === "Delete" || e.key === "Backspace") && selectedNodeId) {
+        if (selectedNodeIds.includes(rootNodeId)) return;
+        const active = globalThis.document?.activeElement;
+        if (active?.tagName === "INPUT" || active?.tagName === "TEXTAREA" || (active as HTMLElement)?.contentEditable === "true") return;
+        e.preventDefault();
+
+        if (hasMultiSelect) {
+          if (onDeleteNodes) {
+            onDeleteNodes(selectedNodeIds);
+          } else {
+            dispatch({ type: "REMOVE_NODES", payload: { nodeIds: selectedNodeIds }, description: "Delete multiple" });
+          }
+        } else {
+          if (onDeleteNode) {
+            onDeleteNode(selectedNodeId);
+          } else {
+            dispatch({ type: "REMOVE_NODE", payload: { nodeId: selectedNodeId }, description: "Delete" });
+          }
+        }
         return;
       }
 
-      // Device breakpoint shortcuts (D = desktop, M = mobile)
+      if (e.key === "Escape") { clearSelection(); return; }
+
+      // Device Breakpoint Shortcuts
       if (!ctrl && !e.shiftKey && !e.altKey && setBreakpoint) {
         const active = globalThis.document?.activeElement;
-        const isTyping =
-          active?.tagName === "INPUT" ||
-          active?.tagName === "TEXTAREA" ||
-          (active as HTMLElement)?.contentEditable === "true";
+        const isTyping = active?.tagName === "INPUT" || active?.tagName === "TEXTAREA" || (active as HTMLElement)?.contentEditable === "true";
         if (!isTyping) {
-          if (e.key === "d" || e.key === "D") {
-            e.preventDefault();
-            setBreakpoint("desktop");
-            return;
-          }
-          if (e.key === "m" || e.key === "M") {
-            e.preventDefault();
-            setBreakpoint("mobile");
-            return;
-          }
+          if (e.key === "d" || e.key === "D") { e.preventDefault(); setBreakpoint("desktop"); return; }
+          if (e.key === "m" || e.key === "M") { e.preventDefault(); setBreakpoint("mobile"); return; }
         }
       }
 
+      // Nudge
       if (selectedNodeId && !ctrl && !editingNodeId) {
         const activeEl = globalThis.document?.activeElement;
-        const isTypingInInput =
-          activeEl?.tagName === "INPUT" ||
-          activeEl?.tagName === "TEXTAREA" ||
-          (activeEl as HTMLElement)?.contentEditable === "true";
-        if (isTypingInInput) return;
+        if (activeEl?.tagName === "INPUT" || activeEl?.tagName === "TEXTAREA" || (activeEl as HTMLElement)?.contentEditable === "true") return;
+        
         const step = e.shiftKey ? 10 : 1;
-        let dx = 0;
-        let dy = 0;
+        let dx = 0, dy = 0;
         if (e.key === "ArrowLeft") dx = -step;
         if (e.key === "ArrowRight") dx = step;
         if (e.key === "ArrowUp") dy = -step;
         if (e.key === "ArrowDown") dy = step;
+
         if (dx !== 0 || dy !== 0) {
           e.preventDefault();
-          const node = nodes[selectedNodeId];
-          if (!node) return;
-          const left = parseFloat(String(node.style.left ?? "0")) || 0;
-          const top = parseFloat(String(node.style.top ?? "0")) || 0;
-
-          // Coalesce rapid nudge keystrokes: reuse the same groupId for 500 ms
-          // so that pressing ↑↑↑ 10 times only creates one undo step.
           if (nudgeTimerRef.current) clearTimeout(nudgeTimerRef.current);
           if (!nudgeGroupIdRef.current) nudgeGroupIdRef.current = uuidv4();
-          nudgeTimerRef.current = setTimeout(() => {
-            nudgeGroupIdRef.current = null;
-          }, 500);
+          nudgeTimerRef.current = setTimeout(() => { nudgeGroupIdRef.current = null; }, 500);
 
-          dispatch({
-            type: "UPDATE_STYLE",
-            payload: {
-              nodeId: selectedNodeId,
-              style: {
-                position: "absolute",
-                left: `${left + dx}px`,
-                top: `${top + dy}px`,
+          selectedNodeIds.forEach(id => {
+            const node = nodes[id];
+            if (!node) return;
+            const left = parseFloat(String(node.style.left ?? "0")) || 0;
+            const top = parseFloat(String(node.style.top ?? "0")) || 0;
+            dispatch({
+              type: "UPDATE_STYLE",
+              payload: {
+                nodeId: id,
+                style: { position: "absolute", left: `${left + dx}px`, top: `${top + dy}px` },
+                breakpoint,
               },
-              breakpoint,
-            },
-            groupId: nudgeGroupIdRef.current,
-            description: "Nudge",
+              groupId: nudgeGroupIdRef.current ?? undefined,
+              description: "Nudge",
+            });
           });
         }
       }
@@ -262,6 +224,7 @@ export function useKeyboardShortcuts({
     container.addEventListener("keydown", handleKeyDown);
     return () => container.removeEventListener("keydown", handleKeyDown);
   }, [
+    selectedNodeIds,
     selectedNodeId,
     nodes,
     rootNodeId,
@@ -273,6 +236,7 @@ export function useKeyboardShortcuts({
     canvasContainerRef,
     setBreakpoint,
     onDeleteNode,
+    onDeleteNodes,
   ]);
 
   // Suppress unused variable warning for manager — available for future extension

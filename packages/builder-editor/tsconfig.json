@@ -4,13 +4,7 @@
     "rootDir": "./src",
     "outDir": "./dist",
     "verbatimModuleSyntax": false,
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "paths": {
-      "@ui-builder/builder-core": ["../builder-core/src/index"],
-      "@ui-builder/builder-react": ["../builder-react/src/index"],
-      "@ui-builder/shared": ["../shared/src/index"],
-      "@ui-builder/ui": ["../ui/src/index"]
-    }
+    "lib": ["DOM", "DOM.Iterable", "ESNext"]
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist", "tests"]

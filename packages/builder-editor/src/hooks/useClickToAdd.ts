@@ -1,7 +1,6 @@
 import { useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
-import type { PaletteItem } from "@ui-builder/builder-core";
-import type { Breakpoint } from "@ui-builder/builder-core";
+import type { PaletteItem, Breakpoint } from "@ui-builder/builder-core";
 
 interface UseClickToAddOptions {
   rootNodeId: string;
@@ -9,6 +8,7 @@ interface UseClickToAddOptions {
   panOffset: { x: number; y: number };
   canvasContainerRef: React.RefObject<HTMLDivElement | null>;
   dispatch: (action: { type: string; payload: unknown; description?: string; groupId?: string }) => void;
+  onAfterAdd?: () => void;
 }
 
 /**
@@ -21,6 +21,7 @@ export function useClickToAdd({
   panOffset,
   canvasContainerRef,
   dispatch,
+  onAfterAdd,
 }: UseClickToAddOptions) {
   const addItem = useCallback(
     (item: PaletteItem) => {
@@ -81,8 +82,12 @@ export function useClickToAdd({
           });
         }
       }
+
+      if (onAfterAdd) {
+        onAfterAdd();
+      }
     },
-    [rootNodeId, zoom, panOffset, canvasContainerRef, dispatch],
+    [rootNodeId, zoom, panOffset, canvasContainerRef, dispatch, onAfterAdd],
   );
 
   return { addItem };

@@ -18,6 +18,7 @@ export interface UseDeleteConfirmReturn {
   setDeleteConfirmNodeId: (id: string | null) => void;
   deleteConfirmChildCount: number;
   handleDeleteNode: (nodeId: string) => void;
+  handleDeleteNodes: (nodeIds: string[]) => void;
   executeConfirmedDelete: () => void;
 }
 
@@ -99,11 +100,27 @@ export function useDeleteConfirm({
     setDeleteConfirmNodeId(null);
   }, [deleteConfirmNodeId, nodes, rootNodeId, sectionNodes, dispatch]);
 
+  const handleDeleteNodes = useCallback(
+    (nodeIds: string[]) => {
+      const isDeletingLastSection = nodes[nodeIds[0]!]?.type === "Section" && sectionNodes.length === 1 && nodeIds.length === 1;
+      
+      dispatch({ 
+        type: "REMOVE_NODES", 
+        payload: { nodeIds }, 
+        description: `Delete ${nodeIds.length} nodes` 
+      });
+
+      if (isDeletingLastSection) addReplacementSection(dispatch, rootNodeId);
+    },
+    [nodes, sectionNodes.length, rootNodeId, dispatch]
+  );
+
   return {
     deleteConfirmNodeId,
     setDeleteConfirmNodeId,
     deleteConfirmChildCount,
     handleDeleteNode,
+    handleDeleteNodes,
     executeConfirmedDelete,
   };
 }

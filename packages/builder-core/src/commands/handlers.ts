@@ -18,7 +18,9 @@ import { DUPLICATE_OFFSET } from "../constants";
 import {
   CMD_ADD_NODE,
   CMD_REMOVE_NODE,
+  CMD_REMOVE_NODES,
   CMD_DUPLICATE_NODE,
+  CMD_DUPLICATE_NODES,
   CMD_UPDATE_PROPS,
   CMD_UPDATE_STYLE,
   CMD_UPDATE_RESPONSIVE_STYLE,
@@ -296,13 +298,55 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
       }
       return {
         type: "RESTORE_NODES",
-        payload: { snapshot, selectNodeId: nodeId },
+        payload: { snapshot, selectNodeIds: [nodeId] },
       };
     },
   );
 
+  // ── REMOVE_NODES (Batch) ────────────────────────────────────────────────
+  engine.registerHandler<{ nodeIds: string[] }>(
+    CMD_REMOVE_NODES,
+    (state, payload) => {
+      const { nodeIds } = payload;
+      const allToRemove = new Set<string>();
+      nodeIds.forEach((id) => {
+        if (state.document.nodes[id]) {
+          allToRemove.add(id);
+          collectDescendants(id, state.document.nodes).forEach((dId) => allToRemove.add(dId));
+        }
+      });
+
+      const newNodes = { ...state.document.nodes };
+      allToRemove.forEach((id) => delete newNodes[id]);
+
+      const newSelectedIds = state.editor.selectedNodeIds.filter((id) => !allToRemove.has(id));
+
+      return {
+        ...state,
+        document: { ...state.document, updatedAt: now(), nodes: newNodes },
+        editor: { ...state.editor, selectedNodeIds: newSelectedIds },
+      };
+    },
+    (state, payload) => {
+      const { nodeIds } = payload;
+      const snapshot: Record<string, BuilderNode> = {};
+      nodeIds.forEach((id) => {
+        const node = state.document.nodes[id];
+        if (node) {
+          snapshot[id] = node;
+          collectDescendants(id, state.document.nodes).forEach((dId) => {
+            snapshot[dId] = state.document.nodes[dId]!;
+          });
+        }
+      });
+      if (Object.keys(snapshot).length === 0) return undefined;
+
+      return { type: "RESTORE_NODES", payload: { snapshot, selectNodeIds: nodeIds } };
+    },
+  );
+
   // ── RESTORE_NODES (internal inverse of REMOVE_NODE) ───────────────────
-  engine.registerHandler<{ snapshot: Record<string, BuilderNode>; selectNodeId: string }>(
+  engine.registerHandler<{ snapshot: Record<string, BuilderNode>; selectNodeIds: string[] }>(
     "RESTORE_NODES",
     (state, payload) => ({
       ...state,
@@ -311,7 +355,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
         updatedAt: now(),
         nodes: { ...state.document.nodes, ...payload.snapshot },
       },
-      editor: { ...state.editor, selectedNodeIds: [payload.selectNodeId] },
+      editor: { ...state.editor, selectedNodeIds: payload.selectNodeIds },
     }),
   );
 
@@ -338,6 +382,47 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
     (_state, payload) => {
       if (!payload.newNodeId) return undefined;
       return { type: CMD_REMOVE_NODE, payload: { nodeId: payload.newNodeId } };
+    },
+  );
+
+  // ── DUPLICATE_NODES (Batch) ─────────────────────────────────────────────
+  engine.registerHandler<{ nodeIds: string[]; offset?: { x: number; y: number }; newNodeIds?: string[] }>(
+    CMD_DUPLICATE_NODES,
+    (state, payload) => {
+      const { nodeIds, offset = DUPLICATE_OFFSET, newNodeIds = [] } = payload;
+      const combinedNewNodes: Record<string, BuilderNode> = {};
+      const newRootIds: string[] = [];
+
+      nodeIds.forEach((nodeId, i) => {
+        if (state.document.nodes[nodeId]) {
+          const { newNodes, newRootId } = cloneSubtree(
+            nodeId,
+            state.document.nodes,
+            offset,
+            newNodeIds[i],
+          );
+          Object.assign(combinedNewNodes, newNodes);
+          newRootIds.push(newRootId);
+        }
+      });
+
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: now(),
+          nodes: { ...state.document.nodes, ...combinedNewNodes },
+        },
+        editor: { ...state.editor, selectedNodeIds: newRootIds },
+      };
+    },
+    (_state, payload) => {
+      // Logic for inverse: we need the IDs of the new roots to remove them.
+      // Since they are generated or passed in payload, we can use them.
+      // We'll need a way to ensure we have them. If not passed, we can't undo reliably.
+      // But in our system, we should pre-generate them.
+      if (!payload.newNodeIds || payload.newNodeIds.length === 0) return undefined;
+      return { type: CMD_REMOVE_NODES, payload: { nodeIds: payload.newNodeIds } };
     },
   );
 

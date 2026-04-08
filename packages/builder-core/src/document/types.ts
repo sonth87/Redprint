@@ -13,7 +13,15 @@ import type { Asset, AssetManifest } from "./assets";
 export interface StyleConfig {
   // Box model
   margin?: string | BoxValue;
+  marginTop?: string;
+  marginRight?: string;
+  marginBottom?: string;
+  marginLeft?: string;
   padding?: string | BoxValue;
+  paddingTop?: string;
+  paddingRight?: string;
+  paddingBottom?: string;
+  paddingLeft?: string;
   width?: string;
   height?: string;
   minWidth?: string;
