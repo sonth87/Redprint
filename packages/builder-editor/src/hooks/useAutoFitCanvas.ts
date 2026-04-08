@@ -1,7 +1,5 @@
-import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
-import type React from "react";
-import { MIN_ZOOM, FIT_TO_SCREEN_PADDING, CANVAS_CENTER_OFFSET, VERTICAL_CENTER_DIVISOR } from "@ui-builder/shared";
-import type { Point } from "@ui-builder/shared";
+import React, { useCallback, useEffect, useLayoutEffect, useRef } from "react";
+import { MIN_ZOOM, FIT_TO_SCREEN_PADDING, CANVAS_CENTER_OFFSET, VERTICAL_CENTER_DIVISOR, type Point } from "@ui-builder/shared";
 
 interface UseAutoFitCanvasOptions {
   breakpoint: string;
@@ -14,6 +12,8 @@ interface UseAutoFitCanvasOptions {
   setPanOffset: (offset: Point) => void;
   zoom: number;
   panOffset: Point;
+  boundingWidth?: number;
+  boundingHeight?: number;
 }
 
 export interface UseAutoFitCanvasReturn {
@@ -39,6 +39,8 @@ export function useAutoFitCanvas({
   setPanOffset,
   zoom,
   panOffset,
+  boundingWidth,
+  boundingHeight,
 }: UseAutoFitCanvasOptions): UseAutoFitCanvasReturn {
   const prevBreakpointRef = useRef<string>(breakpoint);
 
@@ -57,7 +59,7 @@ export function useAutoFitCanvas({
     const centeredX = Math.max(CANVAS_CENTER_OFFSET, (containerWidth - canvasWidth * actualZoom) / 2);
     const centeredY = Math.max(CANVAS_CENTER_OFFSET, (containerHeight - canvasMinHeight * actualZoom) / VERTICAL_CENTER_DIVISOR);
     setPanOffset({ x: centeredX, y: centeredY });
-  }, [breakpoint, canvasWidth, canvasMinHeight, canvasMode, clearSelection, setZoom, setPanOffset]);
+  }, [breakpoint, canvasWidth, canvasMinHeight, canvasMode, clearSelection, setZoom, setPanOffset, canvasContainerRef]);
 
   const handleFitToScreen = useCallback(() => {
     if (!canvasContainerRef.current) return;
@@ -87,10 +89,14 @@ export function useAutoFitCanvas({
 
   const containerW = canvasContainerRef.current?.offsetWidth  ?? 1000;
   const containerH = canvasContainerRef.current?.offsetHeight ?? 1000;
+
+  const actualContentW = boundingWidth ?? canvasWidth;
+  const actualContentH = boundingHeight ?? canvasMinHeight;
+
   const isCanvasInViewport =
-    panOffset.x + canvasWidth    * zoom > 0 &&
+    panOffset.x + actualContentW * zoom > 0 &&
     panOffset.x                          < containerW &&
-    panOffset.y + canvasMinHeight * zoom > 0 &&
+    panOffset.y + actualContentH * zoom > 0 &&
     panOffset.y                          < containerH;
 
   return { handleFitToScreen, isCanvasInViewport };

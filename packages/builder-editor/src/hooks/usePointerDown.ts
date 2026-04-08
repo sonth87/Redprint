@@ -28,6 +28,7 @@ interface UsePointerDownOptions {
   clearSelection: () => void;
   setMoving: (state: MovingState | null) => void;
   setRubberBanding: (state: { startPoint: Point; currentPoint: Point } | null) => void;
+  selectedNodeIds: string[];
 }
 
 export interface UsePointerDownReturn {
@@ -46,6 +47,7 @@ export function usePointerDown({
   clearSelection,
   setMoving,
   setRubberBanding,
+  selectedNodeIds,
 }: UsePointerDownOptions): UsePointerDownReturn {
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
@@ -58,7 +60,28 @@ export function usePointerDown({
       )
         return;
 
-      const nodeEl = target.closest("[data-node-id]");
+      let nodeEl = target.closest("[data-node-id]");
+
+      // Cycle Selection (Alt+Click or DoubleClick)
+      if (e.altKey && nodeEl && canvasFrameRef.current) {
+        const elements = document.elementsFromPoint(e.clientX, e.clientY);
+        const hitNodeIds = elements
+          .map((el) => el.getAttribute("data-node-id"))
+          .filter((id): id is string => id !== null && id !== rootNodeId);
+
+        if (hitNodeIds.length > 0) {
+          const currentSelectedIndex = hitNodeIds.findIndex((id) => selectedNodeIds.includes(id));
+          if (currentSelectedIndex !== -1) {
+            const nextIndex = (currentSelectedIndex + 1) % hitNodeIds.length;
+            const nextId = hitNodeIds[nextIndex];
+            const nextEl = canvasFrameRef.current.querySelector(`[data-node-id="${nextId}"]`);
+            if (nextEl) {
+              nodeEl = nextEl;
+            }
+          }
+        }
+      }
+
       if (nodeEl) {
         const id = nodeEl.getAttribute("data-node-id");
         if (id && id !== rootNodeId) {
@@ -133,6 +156,7 @@ export function usePointerDown({
       dragStartedRef,
       setMoving,
       setRubberBanding,
+      selectedNodeIds,
     ]
   );
 

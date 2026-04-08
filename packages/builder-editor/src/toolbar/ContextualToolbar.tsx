@@ -85,12 +85,13 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
 
   // Breadcrumbs string
   let breadcrumb = node.name || node.type;
-  if (node.parentId && node.parentId !== "root") {
-    const pNode = document.nodes[node.parentId];
-    if (pNode) {
-      breadcrumb = `${pNode.name || pNode.type} > ${breadcrumb}`;
-    }
-  }
+  // Tạm bỏ tính năng này.
+  // if (node.parentId && node.parentId !== "root") {
+  //   const pNode = document.nodes[node.parentId];
+  //   if (pNode) {
+  //     breadcrumb = `${pNode.name || pNode.type} > ${breadcrumb}`;
+  //   }
+  // }
 
   return (
     <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>

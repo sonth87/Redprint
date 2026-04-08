@@ -140,8 +140,26 @@ function EditorInner({
       ? mobileFrameRef.current
       : canvasFrameRef.current;
 
+  const desktopWidth = document.canvasConfig.width ?? DEVICE_VIEWPORT_PRESETS.desktop.width;
+  const mobileWidth = DEVICE_VIEWPORT_PRESETS.mobile.width;
+  const mobileHeight = DEVICE_VIEWPORT_PRESETS.mobile.height;
+  
+  const { mobileFramePos, handleMobileFrameGripDown } = useMobileFrame({ zoom });
+
+  const boundingWidth = canvasMode === "dual" 
+    ? desktopWidth + 240 + mobileWidth + Math.max(0, mobileFramePos.x)
+    : canvasWidth;
+
+  const actualDesktopHeight = canvasFrameRef.current?.offsetHeight ?? canvasMinHeight;
+  const actualMobileHeight = mobileFrameRef.current?.offsetHeight ?? mobileHeight;
+
+  const boundingHeight = canvasMode === "dual"
+    ? Math.max(actualDesktopHeight, actualMobileHeight + Math.max(0, mobileFramePos.y))
+    : actualDesktopHeight;
+
   const { handleFitToScreen, isCanvasInViewport } = useAutoFitCanvas({
     breakpoint, canvasMode, canvasWidth, canvasMinHeight,
+    boundingWidth, boundingHeight,
     canvasContainerRef, clearSelection, setZoom, setPanOffset, zoom, panOffset,
   });
 
@@ -149,8 +167,6 @@ function EditorInner({
   const { handleZoomInFromCenter, handleZoomOutFromCenter } = useZoomFromCenter({
     canvasContainerRef, zoom, panOffset, setZoom, setPanOffset,
   });
-
-  const { mobileFramePos, handleMobileFrameGripDown } = useMobileFrame({ zoom });
 
   // ── Derived selection ────────────────────────────────────────────────────
   const selectedNodeId     = selectedNodeIds[0] ?? null;
@@ -231,7 +247,7 @@ function EditorInner({
 
   const { handlePointerDown } = usePointerDown({
     activeTool, zoom, rootNodeId: document.rootNodeId, nodes: document.nodes, canvasFrameRef, activeFrameRef,
-    dragStartedRef, dispatch, clearSelection, setMoving, setRubberBanding,
+    dragStartedRef, dispatch, clearSelection, setMoving, setRubberBanding, selectedNodeIds,
   });
 
   const { onMoveUp, onMoveDown } = useZIndexHandlers({ selectedNodeId, nodes: document.nodes, dispatch });
