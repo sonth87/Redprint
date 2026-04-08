@@ -223,13 +223,13 @@ export const RESIZE_HANDLE_BASE = 8 as const;
 // ── Canvas Layout Constants ────────────────────────────────────────────
 
 /**
- * Dual-mode frame gap in canvas-space (240px).
+ * Dual-mode frame gap in canvas-space (480px).
  * Horizontal spacing (px) between desktop and mobile frame in dual-view mode.
  * Canvas-space pixels (not screen-space; scaled by zoom later).
- * Design: 240px = visible gap that accommodates viewport guides.
+ * Design: 480px = generous visible gap that accommodates viewport guides.
  * Note: Crucial for responsive editing in dual-mode canvas.
  */
-export const DUAL_GAP_PX = 240 as const;
+export const DUAL_GAP_PX = 480 as const;
 
 /**
  * Toolbar left offset from frame edge (8px).

@@ -28,6 +28,8 @@ export interface SectionOverlayProps {
   onAddSection: (afterOrder: number) => void;
   /** Called when user starts resizing a section */
   onResizeStart: (nodeId: string, clientY: number, currentHeight: number, gestureGroupId: string) => void;
+  /** Called to select a section */
+  onSelect?: (nodeId: string) => void;
   /** Whether a section resize is in progress (suppresses UI jitter) */
   isResizing: boolean;
 }
@@ -45,6 +47,7 @@ export const SectionOverlay = memo(function SectionOverlay({
   canvasFrameRef,
   onAddSection,
   onResizeStart,
+  onSelect,
   isResizing,
 }: SectionOverlayProps) {
   const [boundaries, setBoundaries] = useState<SectionBoundary[]>([]);
@@ -111,6 +114,76 @@ export const SectionOverlay = memo(function SectionOverlay({
 
         return (
           <div key={b.nodeId}>
+            {/* ── Section Gutter Handles ── */}
+            {isHov && (
+              <>
+                <div
+                  style={{
+                    position: "absolute",
+                    left: -60 / zoom,
+                    width: `calc(100% + ${120 / zoom}px)`,
+                    top: b.top,
+                    borderTop: `${1.5 / zoom}px dashed hsl(221.2 83.2% 53.3%)`,
+                    opacity: 0.7,
+                    pointerEvents: "none",
+                    zIndex: 55,
+                  }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    left: -60 / zoom,
+                    width: `calc(100% + ${120 / zoom}px)`,
+                    top: b.bottom,
+                    borderTop: `${1.5 / zoom}px dashed hsl(221.2 83.2% 53.3%)`,
+                    opacity: 0.7,
+                    pointerEvents: "none",
+                    zIndex: 55,
+                  }}
+                />
+              </>
+            )}
+
+            {/* Left Gutter Handle */}
+            <div
+              style={{
+                position: "absolute",
+                left: -60 / zoom,
+                width: 60 / zoom,
+                top: b.top,
+                height: b.height,
+                pointerEvents: "auto",
+                cursor: "pointer",
+                zIndex: 49,
+              }}
+              onMouseEnter={() => setHovered(b.nodeId)}
+              onMouseLeave={() => setHovered(null)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect?.(b.nodeId);
+              }}
+            />
+
+            {/* Right Gutter Handle */}
+            <div
+              style={{
+                position: "absolute",
+                right: -60 / zoom,
+                width: 60 / zoom,
+                top: b.top,
+                height: b.height,
+                pointerEvents: "auto",
+                cursor: "pointer",
+                zIndex: 49,
+              }}
+              onMouseEnter={() => setHovered(b.nodeId)}
+              onMouseLeave={() => setHovered(null)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect?.(b.nodeId);
+              }}
+            />
+
             {/* Hover detection zone at bottom of section */}
             <div
               style={{

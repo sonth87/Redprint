@@ -92,6 +92,7 @@ import { useDragHandleGesture } from "./hooks/useDragHandleGesture";
 import {
   DEFAULT_COMPONENTS_PANEL_POS,
   DEFAULT_PROPERTIES_PANEL_POS,
+  DUAL_GAP_PX,
 } from "./constants";
 
 import type { BuilderNode } from "@ui-builder/builder-core";
@@ -147,7 +148,7 @@ function EditorInner({
   const { mobileFramePos, handleMobileFrameGripDown } = useMobileFrame({ zoom });
 
   const boundingWidth = canvasMode === "dual" 
-    ? desktopWidth + 240 + mobileWidth + Math.max(0, mobileFramePos.x)
+    ? desktopWidth + DUAL_GAP_PX + mobileWidth + Math.max(0, mobileFramePos.x)
     : canvasWidth;
 
   const actualDesktopHeight = canvasFrameRef.current?.offsetHeight ?? canvasMinHeight;
@@ -329,6 +330,7 @@ function EditorInner({
     onResizeStart: (nodeId: string, clientY: number, currentHeightPx: number, gid: string) =>
       startSectionResize(nodeId, clientY, currentHeightPx, gid),
     isResizing: sectionResizing !== null,
+    onSelect: (nodeId: string) => select([nodeId]),
   } as const;
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -424,7 +426,7 @@ function EditorInner({
           <CanvasRoot canvasConfig={canvasConfigParams} zoom={zoom} panOffset={panOffset}
             onZoomChange={setZoom} onPanOffsetChange={setPanOffset} activeTool={activeTool} className="h-full w-full">
 
-            <div style={{ display: "flex", alignItems: "flex-start", gap: canvasMode === "dual" ? 240 : 0 }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: canvasMode === "dual" ? DUAL_GAP_PX : 0 }}>
 
               {/* Desktop frame */}
               <div style={{ display: "flex", flexDirection: "column", flexShrink: 0 }}>
