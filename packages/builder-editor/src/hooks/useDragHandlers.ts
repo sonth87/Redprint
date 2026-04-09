@@ -3,6 +3,7 @@ import type { Point } from "@ui-builder/shared";
 import type { BuilderNode, PaletteDragData, Breakpoint, PaletteItem } from "@ui-builder/builder-core";
 import { v4 as uuidv4 } from "uuid";
 import { resolveContainerDropPosition } from "./useDropSlotResolver";
+import { resolveContainerLayoutType, type ContainerConfigResolver } from "./dragUtils";
 
 interface UseDragHandlersOptions {
   rootNodeId: string;
@@ -17,7 +18,7 @@ interface UseDragHandlersOptions {
    * and (b) redirect the drop when the target forbids the dragged type.
    */
   getContainerConfig?: (
-    componentType: string,
+    nodeOrType: BuilderNode | string,
   ) => { layoutType?: string; disallowedChildTypes?: string[] } | undefined;
   onAfterDrop?: () => void;
 }
@@ -99,7 +100,7 @@ export function useDragHandlers({
           const candidateId = candidateEl.getAttribute("data-node-id") ?? rootNodeId;
           const candidateNode = nodes[candidateId];
           if (candidateNode) {
-            const cfg = getContainerConfig(candidateNode.type);
+            const cfg = getContainerConfig(candidateNode);
             if (!cfg?.disallowedChildTypes?.includes(componentType)) {
               parentId = candidateId;
               break;
@@ -111,7 +112,7 @@ export function useDragHandlers({
         // If we walked all the way up without a valid parent, fall back to root
         const finalNode = nodes[parentId];
         if (finalNode) {
-          const cfg = getContainerConfig(finalNode.type);
+          const cfg = getContainerConfig(finalNode);
           if (cfg?.disallowedChildTypes?.includes(componentType)) {
             parentId = rootNodeId;
           }
@@ -132,8 +133,7 @@ export function useDragHandlers({
       if (nodes && getContainerConfig) {
         const parentNode = nodes[parentId];
         if (parentNode) {
-          const cfg = getContainerConfig(parentNode.type);
-          const layoutType = cfg?.layoutType ?? "absolute";
+          const layoutType = resolveContainerLayoutType(parentNode, getContainerConfig as ContainerConfigResolver | undefined);
           if (layoutType !== "absolute") {
             position = undefined; // Children flow naturally — no position:absolute
           }
@@ -145,8 +145,7 @@ export function useDragHandlers({
       if (nodes && getContainerConfig && canvasFrameRef.current) {
         const parentNode = nodes[parentId];
         if (parentNode) {
-          const cfg = getContainerConfig(parentNode.type);
-          const layoutType = cfg?.layoutType ?? "absolute";
+          const layoutType = resolveContainerLayoutType(parentNode, getContainerConfig as ContainerConfigResolver | undefined);
           if (layoutType !== "absolute") {
             const frameEl = canvasFrameRef.current;
             const containerEl = frameEl.querySelector(

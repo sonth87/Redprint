@@ -1,19 +1,15 @@
 import { useState, useEffect, useRef } from "react";
-import { v4 as uuidv4 } from "uuid";
 import type { SnapGuide, DistanceGuide, LiveDimensions } from "../types";
 import type { Point, Rect } from "@ui-builder/shared";
 import type { BuilderNode } from "@ui-builder/builder-core";
 import type { SnapEngine } from "../snap/SnapEngine";
 import { resolveContainerDropPosition } from "./useDropSlotResolver";
-
-interface NodeMovingSnapshot {
-  nodeId: string;
-  startLeft: number;
-  startTop: number;
-  startWidth?: number;
-  startHeight?: number;
-  wasAbsolute: boolean;
-}
+import {
+  resolveContainerLayoutType,
+  shouldUseFlowDrag,
+  type ContainerConfigResolver,
+  type NodeMovingSnapshot,
+} from "./dragUtils";
 
 interface MovingState {
   nodeId: string; // Primary anchor node
@@ -39,7 +35,7 @@ interface UseMoveGestureOptions {
    * Drives the flow-mode vs absolute-mode branching during drag.
    */
   getContainerConfig?: (
-    componentType: string,
+    nodeOrType: BuilderNode | string,
   ) => { layoutType?: string; disallowedChildTypes?: string[] } | undefined;
 }
 
@@ -115,8 +111,19 @@ function findHoveredFlowContainer(
   draggingNodeType: string,
   currentParentId: string | null | undefined,
   nodes: Record<string, BuilderNode>,
-  getContainerConfig: ((type: string) => { layoutType?: string; disallowedChildTypes?: string[] } | undefined) | undefined,
+  getContainerConfig: ContainerConfigResolver | undefined,
 ): string | null {
+  const currentParentEl = currentParentId
+    ? (globalThis.document.querySelector(`[data-node-id="${currentParentId}"]`) as HTMLElement | null)
+    : null;
+  const currentParentRect = currentParentEl?.getBoundingClientRect();
+  const isWithinCurrentParent =
+    !!currentParentRect &&
+    clientX >= currentParentRect.left &&
+    clientX <= currentParentRect.right &&
+    clientY >= currentParentRect.top &&
+    clientY <= currentParentRect.bottom;
+
   const elements = globalThis.document.elementsFromPoint(clientX, clientY);
   for (const el of elements) {
     const id = (el as HTMLElement).getAttribute?.("data-node-id");
@@ -127,7 +134,7 @@ function findHoveredFlowContainer(
     const targetNode = nodes[id];
     if (!targetNode) continue;
 
-    const cfg = getContainerConfig?.(targetNode.type);
+    const cfg = getContainerConfig?.(targetNode);
     const layoutType = cfg?.layoutType ?? "absolute";
     if (layoutType === "absolute") continue; // not a flow/grid container
 
@@ -142,6 +149,23 @@ function findHoveredFlowContainer(
       ancestorId = nodes[ancestorId]?.parentId;
     }
     if (isDescendant) continue;
+
+    // When dragging inside a nested flow container, keep the current parent as
+    // the target until the pointer actually leaves its bounds. Otherwise a
+    // grid/flex ancestor (for example a Repeater/Grid item wrapper) hijacks
+    // the drop and the node jumps out of its local stack.
+    if (isWithinCurrentParent && currentParentId) {
+      let parentCursor: string | null | undefined = currentParentId;
+      let isAncestorOfCurrentParent = false;
+      while (parentCursor) {
+        if (parentCursor === id) {
+          isAncestorOfCurrentParent = true;
+          break;
+        }
+        parentCursor = nodes[parentCursor]?.parentId;
+      }
+      if (isAncestorOfCurrentParent) continue;
+    }
 
     return id;
   }
@@ -209,10 +233,7 @@ export function useMoveGesture({
       
       // ── Determine if node lives in a flow/grid parent ──────────────────
       // Multi-select dragging currently bypasses flow-mode logic (complexity)
-      const parentNode = node?.parentId ? nodes[node.parentId] : null;
-      const parentCfg = parentNode ? getContainerConfig?.(parentNode.type) : undefined;
-      const parentLayoutType = parentCfg?.layoutType ?? "absolute";
-      const isFlowParent = !isMultiSelect && parentLayoutType !== "absolute";
+      const isFlowParent = !isMultiSelect && shouldUseFlowDrag(node, nodes, getContainerConfig);
 
       // ══════════════════════════════════════════════════════════════════
       // FLOW MODE — node lives inside a Grid, Column, or other flow container
@@ -220,9 +241,6 @@ export function useMoveGesture({
       // ══════════════════════════════════════════════════════════════════
       if (isFlowParent && node?.parentId) {
         const fr = frameEl.getBoundingClientRect();
-        const parentEl = frameEl.querySelector(
-          `[data-node-id="${node.parentId}"]`,
-        ) as HTMLElement | null;
         const tx = (e.clientX - moving.startPoint.x) / zoom;
         const ty = (e.clientY - moving.startPoint.y) / zoom;
         const flowNodeEl = frameEl.querySelector(`[data-node-id="${moving.nodeId}"]`) as HTMLElement | null;
@@ -440,32 +458,24 @@ export function useMoveGesture({
       if (dragStartedRef.current && flowDropTarget !== null && !isMultiSelect) {
         const { containerId, insertIndex } = flowDropTarget;
         const dropNode = nodes[moving.nodeId];
-        const dropParentCfg = dropNode?.parentId ? getContainerConfig?.(nodes[dropNode.parentId]?.type ?? "") : undefined;
-        if ((dropParentCfg?.layoutType ?? "absolute") !== "absolute") {
-          dispatch({
-            type: "UPDATE_STYLE",
-            payload: {
-              nodeId: moving.nodeId,
-              style: { position: undefined, left: undefined, top: undefined } as Record<string, unknown>,
-              breakpoint,
-            },
-            description: "Clear position on flow drop",
-          });
-          if (dropNode?.parentId !== containerId) {
-            dispatch({ type: "MOVE_NODE", payload: { nodeId: moving.nodeId, targetParentId: containerId, position: "inside" }, description: "Drop into flow container" });
-          }
-          dispatch({ type: "REORDER_NODE", payload: { nodeId: moving.nodeId, insertIndex }, description: "Reorder in flow container" });
-        } else if ((dropParentCfg?.layoutType ?? "absolute") === "absolute") {
-          dispatch({ type: "UPDATE_STYLE", payload: { nodeId: moving.nodeId, style: { position: undefined, left: undefined, top: undefined } as Record<string, unknown>, breakpoint }, description: "Clear position on flow drop" });
+        dispatch({
+          type: "UPDATE_STYLE",
+          payload: {
+            nodeId: moving.nodeId,
+            style: { position: undefined, left: undefined, top: undefined } as Record<string, unknown>,
+            breakpoint,
+          },
+          description: "Clear position on flow drop",
+        });
+        if (dropNode?.parentId !== containerId) {
           dispatch({ type: "MOVE_NODE", payload: { nodeId: moving.nodeId, targetParentId: containerId, position: "inside" }, description: "Drop into flow container" });
-          dispatch({ type: "REORDER_NODE", payload: { nodeId: moving.nodeId, insertIndex }, description: "Reorder in flow container" });
         }
+        dispatch({ type: "REORDER_NODE", payload: { nodeId: moving.nodeId, insertIndex }, description: "Reorder in flow container" });
       }
       else if (dragStartedRef.current && lastReorderIndexRef.current !== null && !isMultiSelect) {
         const n = nodes[moving.nodeId];
         const p = n?.parentId ? nodes[n.parentId] : null;
-        const cfg = p ? getContainerConfig?.(p.type) : undefined;
-        if ((cfg?.layoutType ?? "absolute") !== "absolute") {
+        if (resolveContainerLayoutType(p, getContainerConfig) !== "absolute") {
           dispatch({ type: "REORDER_NODE", payload: { nodeId: moving.nodeId, insertIndex: lastReorderIndexRef.current }, description: "Reorder" });
         }
       }

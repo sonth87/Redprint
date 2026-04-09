@@ -3,6 +3,7 @@ import { DEFAULT_SECTION_HEIGHT_PX } from "@ui-builder/shared";
 import { v4 as uuidv4 } from "uuid";
 import { SnapEngine } from "../snap/SnapEngine";
 import type {
+  BuilderNode,
   BuilderDocument,
   ComponentDefinition,
   ComponentRegistry,
@@ -55,7 +56,8 @@ export function useCanvasActions({
   );
 
   const getContainerConfig = useCallback(
-    (componentType: string) => {
+    (nodeOrType: BuilderNode | string) => {
+      const componentType = typeof nodeOrType === "string" ? nodeOrType : nodeOrType.type;
       const def = registry?.getComponent(componentType);
       return def?.containerConfig
         ? {
