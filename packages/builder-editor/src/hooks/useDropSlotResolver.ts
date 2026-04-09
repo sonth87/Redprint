@@ -12,6 +12,16 @@
 
 import type { BuilderNode } from "@ui-builder/builder-core";
 
+function getElementScale(containerEl: HTMLElement): { scaleX: number; scaleY: number } {
+  const rect = containerEl.getBoundingClientRect();
+  const scaleX = containerEl.offsetWidth > 0 ? rect.width / containerEl.offsetWidth : 1;
+  const scaleY = containerEl.offsetHeight > 0 ? rect.height / containerEl.offsetHeight : 1;
+  return {
+    scaleX: Number.isFinite(scaleX) && scaleX > 0 ? scaleX : 1,
+    scaleY: Number.isFinite(scaleY) && scaleY > 0 ? scaleY : 1,
+  };
+}
+
 // ── Grid track parser ─────────────────────────────────────────────────────
 
 /**
@@ -82,16 +92,17 @@ export function getGridCellClientRect(
   row: number,
 ): { left: number; top: number; width: number; height: number } | null {
   const computed = getComputedStyle(containerEl);
-  const colTracks = parseGridTracks(computed.gridTemplateColumns);
+  const { scaleX, scaleY } = getElementScale(containerEl);
+  const colTracks = parseGridTracks(computed.gridTemplateColumns).map((track) => track * scaleX);
   if (colTracks.length === 0) return null;
 
-  const rowTracksRaw = parseGridTracks(computed.gridTemplateRows);
+  const rowTracksRaw = parseGridTracks(computed.gridTemplateRows).map((track) => track * scaleY);
   const containerRect = containerEl.getBoundingClientRect();
-  const paddingLeft  = parseFloat(computed.paddingLeft)  || 0;
-  const paddingTop   = parseFloat(computed.paddingTop)   || 0;
-  const paddingBot   = parseFloat(computed.paddingBottom)|| 0;
-  const colGap = parseFloat(computed.columnGap) || 0;
-  const rowGap = parseFloat(computed.rowGap)    || 0;
+  const paddingLeft  = (parseFloat(computed.paddingLeft)  || 0) * scaleX;
+  const paddingTop   = (parseFloat(computed.paddingTop)   || 0) * scaleY;
+  const paddingBot   = (parseFloat(computed.paddingBottom)|| 0) * scaleY;
+  const colGap = (parseFloat(computed.columnGap) || 0) * scaleX;
+  const rowGap = (parseFloat(computed.rowGap)    || 0) * scaleY;
 
   const colEdges = buildTrackEdges(colTracks, colGap, paddingLeft);
 
@@ -133,17 +144,18 @@ function resolveGridDrop(
   containerEl: HTMLElement,
 ): ContainerDropResult {
   const computed = getComputedStyle(containerEl);
-  const colTracks = parseGridTracks(computed.gridTemplateColumns);
+  const { scaleX, scaleY } = getElementScale(containerEl);
+  const colTracks = parseGridTracks(computed.gridTemplateColumns).map((track) => track * scaleX);
   if (colTracks.length === 0) return { insertIndex: 0 };
 
   const numCols = colTracks.length;
-  const rowTracksRaw = parseGridTracks(computed.gridTemplateRows);
+  const rowTracksRaw = parseGridTracks(computed.gridTemplateRows).map((track) => track * scaleY);
   const containerRect = containerEl.getBoundingClientRect();
-  const paddingLeft  = parseFloat(computed.paddingLeft)  || 0;
-  const paddingTop   = parseFloat(computed.paddingTop)   || 0;
-  const paddingBot   = parseFloat(computed.paddingBottom)|| 0;
-  const colGap = parseFloat(computed.columnGap) || 0;
-  const rowGap = parseFloat(computed.rowGap)    || 0;
+  const paddingLeft  = (parseFloat(computed.paddingLeft)  || 0) * scaleX;
+  const paddingTop   = (parseFloat(computed.paddingTop)   || 0) * scaleY;
+  const paddingBot   = (parseFloat(computed.paddingBottom)|| 0) * scaleY;
+  const colGap = (parseFloat(computed.columnGap) || 0) * scaleX;
+  const rowGap = (parseFloat(computed.rowGap)    || 0) * scaleY;
 
   const colEdges = buildTrackEdges(colTracks, colGap, paddingLeft);
   const innerH = containerRect.height - paddingTop - paddingBot;

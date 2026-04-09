@@ -172,6 +172,7 @@ export function useMoveGesture({
   const canvasOffsetRef = useRef({ x: 0, y: 0 });
   /** Last dispatched reorder index — avoids flooding REORDER_NODE on every pixel */
   const lastReorderIndexRef = useRef<number | null>(null);
+  const flowDragPreviewRef = useRef<HTMLElement | null>(null);
   /**
    * Tracks the last flow-container we transitioned into during an absolute-mode drag.
    * Prevents re-dispatching MOVE_NODE + UPDATE_STYLE on every mousemove pixel while
@@ -219,129 +220,84 @@ export function useMoveGesture({
       // ══════════════════════════════════════════════════════════════════
       if (isFlowParent && node?.parentId) {
         const fr = frameEl.getBoundingClientRect();
-        const cursorCanvasY = (e.clientY - fr.top) / zoom;
-
-        // ── Check if cursor has left the parent element ──────────────────
         const parentEl = frameEl.querySelector(
           `[data-node-id="${node.parentId}"]`,
         ) as HTMLElement | null;
-
-        const outsideParent =
-          !parentEl ||
-          e.clientX < parentEl.getBoundingClientRect().left ||
-          e.clientX > parentEl.getBoundingClientRect().right ||
-          e.clientY < parentEl.getBoundingClientRect().top ||
-          e.clientY > parentEl.getBoundingClientRect().bottom;
-
-        if (outsideParent) {
-          const detachNodeEl = frameEl.querySelector(
-            `[data-node-id="${moving.nodeId}"]`,
-          ) as HTMLElement | null;
-          let nodeCanvasX = Math.round((e.clientX - fr.left) / zoom);
-          let nodeCanvasY = Math.round((e.clientY - fr.top) / zoom);
-          if (detachNodeEl) {
-            const er = detachNodeEl.getBoundingClientRect();
-            nodeCanvasX = Math.round((er.left - fr.left) / zoom);
-            nodeCanvasY = Math.round((er.top - fr.top) / zoom);
-          }
-
-          const hoveredEls = globalThis.document.elementsFromPoint(e.clientX, e.clientY);
-          const newParentEl = hoveredEls.find((el) => {
-            const id = (el as HTMLElement).getAttribute?.("data-node-id");
-            return id && id !== moving.nodeId && id !== node.parentId;
-          }) as HTMLElement | undefined;
-
-          const newParentId =
-            newParentEl?.getAttribute("data-node-id") ?? rootNodeId ?? "";
-          const newParentNode = newParentId ? nodes[newParentId] : null;
-          const newParentCfg = newParentNode
-            ? getContainerConfig?.(newParentNode.type)
-            : undefined;
-          const newParentLayoutType = newParentCfg?.layoutType ?? "absolute";
-
-          dispatch({
-            type: "MOVE_NODE",
-            payload: { nodeId: moving.nodeId, targetParentId: newParentId, position: "inside" },
-            description: "Move out of layout",
-          });
-
-          if (newParentLayoutType === "absolute") {
-            const snapshot = moving.nodes.find(n => n.nodeId === moving.nodeId);
-            dispatch({
-              type: "UPDATE_STYLE",
-              payload: {
-                nodeId: moving.nodeId,
-                style: {
-                  position: "absolute",
-                  left: `${nodeCanvasX}px`,
-                  top: `${nodeCanvasY}px`,
-                  ...(snapshot?.startWidth != null && { width: `${snapshot.startWidth}px` }),
-                  ...(snapshot?.startHeight != null && { height: `${snapshot.startHeight}px` }),
-                },
-                breakpoint,
-              },
-              description: "Position after detach",
-            });
-          }
-
-          if (detachNodeEl) {
-            const origTransform = detachNodeEl.dataset.dragOriginalTransform ?? "";
-            detachNodeEl.style.transform = origTransform;
-            detachNodeEl.style.removeProperty("opacity");
-            detachNodeEl.style.removeProperty("z-index");
-            detachNodeEl.style.removeProperty("pointer-events");
-            delete detachNodeEl.dataset.dragOriginalTransform;
-          }
-
-          canvasOffsetRef.current = { x: 0, y: 0 };
-          lastReorderIndexRef.current = null;
-          setFlowDragOffset(null);
-          
-          setMoving({
-            ...moving,
-            nodes: moving.nodes.map(n => n.nodeId === moving.nodeId ? { ...n, startLeft: nodeCanvasX, startTop: nodeCanvasY, wasAbsolute: false } : n),
-            startPoint: { x: e.clientX, y: e.clientY },
-            gestureGroupId: uuidv4(),
-          });
-          return;
-        }
-
         const tx = (e.clientX - moving.startPoint.x) / zoom;
         const ty = (e.clientY - moving.startPoint.y) / zoom;
-
         const flowNodeEl = frameEl.querySelector(`[data-node-id="${moving.nodeId}"]`) as HTMLElement | null;
-        if (flowNodeEl) {
-          if (isFirstMove) {
-            flowNodeEl.dataset.dragOriginalTransform = flowNodeEl.style.transform ?? "";
-            flowNodeEl.style.setProperty("opacity", "0.75");
-            flowNodeEl.style.setProperty("z-index", "9999");
-            flowNodeEl.style.setProperty("pointer-events", "none");
-          }
-          const base = flowNodeEl.dataset.dragOriginalTransform ?? "";
-          flowNodeEl.style.transform = base ? `translate(${tx}px, ${ty}px) ${base}` : `translate(${tx}px, ${ty}px)`;
+        if (flowNodeEl && isFirstMove) {
+          const dragPreview = flowNodeEl.cloneNode(true) as HTMLElement;
+          dragPreview.removeAttribute("data-node-id");
+          dragPreview.querySelectorAll("[data-node-id]").forEach((el) => el.removeAttribute("data-node-id"));
+          const er = flowNodeEl.getBoundingClientRect();
+          const initialLeft = (er.left - fr.left) / zoom;
+          const initialTop = (er.top - fr.top) / zoom;
+
+          dragPreview.dataset.flowDragPreview = "true";
+          dragPreview.style.position = "absolute";
+          dragPreview.style.left = `${initialLeft}px`;
+          dragPreview.style.top = `${initialTop}px`;
+          dragPreview.style.width = `${er.width / zoom}px`;
+          dragPreview.style.height = `${er.height / zoom}px`;
+          dragPreview.style.margin = "0";
+          dragPreview.style.pointerEvents = "none";
+          dragPreview.style.zIndex = "9999";
+          dragPreview.style.opacity = "0.9";
+          dragPreview.style.visibility = "visible";
+          dragPreview.style.transform = "translate(0px, 0px)";
+          dragPreview.style.transition = "none";
+          frameEl.appendChild(dragPreview);
+          flowDragPreviewRef.current = dragPreview;
+
+          flowNodeEl.style.setProperty("visibility", "hidden");
+          flowNodeEl.style.setProperty("pointer-events", "none");
+        }
+        if (flowDragPreviewRef.current) {
+          flowDragPreviewRef.current.style.transform = `translate(${tx}px, ${ty}px)`;
         }
 
         setFlowDragOffset({ x: tx, y: ty });
 
-        const siblings = Object.values(nodes).filter((n) => n.parentId === node.parentId && n.id !== moving.nodeId);
-        let insertIndex: number;
-        const parentContainerEl = parentEl as HTMLElement | null;
-        if (parentContainerEl && parentNode && getContainerConfig) {
-          const result = resolveContainerDropPosition(e.clientX, e.clientY, parentContainerEl, parentNode, siblings, getContainerConfig);
-          insertIndex = result.insertIndex;
+        const hoveredFlowId = findHoveredFlowContainer(
+          e.clientX,
+          e.clientY,
+          moving.nodeId,
+          node.type,
+          node.parentId,
+          nodes,
+          getContainerConfig,
+        );
+        const targetContainerId = hoveredFlowId ?? node.parentId;
+        const targetContainerNode = nodes[targetContainerId];
+        const targetContainerEl = frameEl.querySelector(
+          `[data-node-id="${targetContainerId}"]`,
+        ) as HTMLElement | null;
+
+        const siblings = Object.values(nodes).filter(
+          (n) => n.parentId === targetContainerId && n.id !== moving.nodeId,
+        );
+
+        if (targetContainerEl && targetContainerNode && getContainerConfig) {
+          const result = resolveContainerDropPosition(
+            e.clientX,
+            e.clientY,
+            targetContainerEl,
+            targetContainerNode,
+            siblings,
+            getContainerConfig,
+          );
+          lastReorderIndexRef.current = result.insertIndex;
+          setFlowDropTarget({
+            containerId: targetContainerId,
+            insertIndex: result.insertIndex,
+            gridCell: result.gridCell,
+          });
         } else {
-          const sorted = [...siblings].sort((a, b) => a.order - b.order);
-          insertIndex = sorted.length;
-          for (let i = 0; i < sorted.length; i++) {
-            const sib = sorted[i]!;
-            const sibEl = frameEl.querySelector(`[data-node-id="${sib.id}"]`) as HTMLElement | null;
-            if (!sibEl) continue;
-            const sibRect = sibEl.getBoundingClientRect();
-            const sibMidY = (sibRect.top - fr.top) / zoom + sibRect.height / (2 * zoom);
-            if (cursorCanvasY < sibMidY) { insertIndex = i; break; }
-          }
+          setFlowDropTarget(null);
+          lastReorderIndexRef.current = null;
         }
-        lastReorderIndexRef.current = insertIndex;
+
         setSnapGuides([]);
         setDistanceGuides([]);
         setLiveDimensions(null);
@@ -464,6 +420,10 @@ export function useMoveGesture({
 
     const handleGlobalMouseUp = () => {
       const upFrameEl = activeFrameRef?.current ?? canvasFrameRef.current;
+      if (flowDragPreviewRef.current) {
+        flowDragPreviewRef.current.remove();
+        flowDragPreviewRef.current = null;
+      }
       moving.nodes.forEach(mNode => {
         const upNodeEl = upFrameEl?.querySelector(`[data-node-id="${mNode.nodeId}"]`) as HTMLElement | null;
         if (upNodeEl) {
@@ -472,6 +432,7 @@ export function useMoveGesture({
           upNodeEl.style.removeProperty("opacity");
           upNodeEl.style.removeProperty("z-index");
           upNodeEl.style.removeProperty("pointer-events");
+          upNodeEl.style.removeProperty("visibility");
           delete upNodeEl.dataset.dragOriginalTransform;
         }
       });
@@ -480,7 +441,21 @@ export function useMoveGesture({
         const { containerId, insertIndex } = flowDropTarget;
         const dropNode = nodes[moving.nodeId];
         const dropParentCfg = dropNode?.parentId ? getContainerConfig?.(nodes[dropNode.parentId]?.type ?? "") : undefined;
-        if ((dropParentCfg?.layoutType ?? "absolute") === "absolute") {
+        if ((dropParentCfg?.layoutType ?? "absolute") !== "absolute") {
+          dispatch({
+            type: "UPDATE_STYLE",
+            payload: {
+              nodeId: moving.nodeId,
+              style: { position: undefined, left: undefined, top: undefined } as Record<string, unknown>,
+              breakpoint,
+            },
+            description: "Clear position on flow drop",
+          });
+          if (dropNode?.parentId !== containerId) {
+            dispatch({ type: "MOVE_NODE", payload: { nodeId: moving.nodeId, targetParentId: containerId, position: "inside" }, description: "Drop into flow container" });
+          }
+          dispatch({ type: "REORDER_NODE", payload: { nodeId: moving.nodeId, insertIndex }, description: "Reorder in flow container" });
+        } else if ((dropParentCfg?.layoutType ?? "absolute") === "absolute") {
           dispatch({ type: "UPDATE_STYLE", payload: { nodeId: moving.nodeId, style: { position: undefined, left: undefined, top: undefined } as Record<string, unknown>, breakpoint }, description: "Clear position on flow drop" });
           dispatch({ type: "MOVE_NODE", payload: { nodeId: moving.nodeId, targetParentId: containerId, position: "inside" }, description: "Drop into flow container" });
           dispatch({ type: "REORDER_NODE", payload: { nodeId: moving.nodeId, insertIndex }, description: "Reorder in flow container" });

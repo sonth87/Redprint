@@ -529,7 +529,7 @@ function EditorInner({
             <FlowDropPlaceholderLayer
               flowDropTarget={flowDropTarget} moving={moving}
               activeFrameRef={activeFrameRef} canvasFrameRef={canvasFrameRef}
-              nodes={document.nodes} zoom={zoom} panOffset={panOffset}
+              nodes={document.nodes} zoom={zoom}
             />
           </CanvasRoot>
 
