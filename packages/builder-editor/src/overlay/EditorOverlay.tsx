@@ -1,6 +1,7 @@
 import React, { memo } from "react";
 import type { Rect } from "@ui-builder/shared";
 import type { SelectionState, SnapGuide, ResizeHandleType, DistanceGuide, LiveDimensions } from "../types";
+import { ROTATABLE_SELECTION_FRAME } from "../constants";
 
 // ── Selection bounding box ─────────────────────────────────────────────────
 
@@ -66,7 +67,7 @@ export interface SelectionOverlayProps {
 export const SelectionOverlay = memo(function SelectionOverlay({
   selection,
   zoom,
-  rotation: _rotation = 0,
+  rotation = 0,
   isSection = false,
   onResizeStart,
   onRotateStart,
@@ -76,6 +77,9 @@ export const SelectionOverlay = memo(function SelectionOverlay({
   const boundingBox = selection.boundingBox;
   const showBoundingBox = boundingBox && selection.selectedIds.length > 0;
   const borderWidth = Math.max(1, 2 / zoom);
+
+  // Only apply rotation if enabled and it's a single selection
+  const applyRotation = ROTATABLE_SELECTION_FRAME && selection.selectedIds.length === 1;
 
   return (
     <>
@@ -89,6 +93,7 @@ export const SelectionOverlay = memo(function SelectionOverlay({
             width: boundingBox.width,
             height: boundingBox.height,
             outline: `${borderWidth}px dashed hsl(var(--selection-color, 221.2 83.2% 53.3%))`,
+            transform: applyRotation ? `rotate(${rotation}deg)` : undefined,
             zIndex: 40,
           }}
         >
@@ -113,7 +118,9 @@ export const SelectionOverlay = memo(function SelectionOverlay({
               style={{
                 left: "50%",
                 top: "100%",
-                transform: "translate(-50%, 10px)",
+                transform: applyRotation 
+                  ? "translate(-50%, 15px)" // More spacing if frame is rotated
+                  : "translate(-50%, 10px)",
                 width: 12,
                 height: 12,
                 borderRadius: "50%",
@@ -122,7 +129,12 @@ export const SelectionOverlay = memo(function SelectionOverlay({
                 zIndex: 50,
               }}
               onMouseDown={(e) => { e.stopPropagation(); onRotateStart(e); }}
-            />
+            >
+              {/* Rotation connector line */}
+              {applyRotation && (
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full w-[2px] h-[15px] bg-blue-500/50" />
+              )}
+            </div>
           )}
         </div>
       )}
@@ -621,4 +633,3 @@ export const FlowDropPlaceholder = memo(function FlowDropPlaceholder({
     </>
   );
 });
-

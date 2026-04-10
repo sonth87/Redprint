@@ -366,3 +366,12 @@ export const MINIMAP_PADDING = 8 as const;
  * Design: 150ms = perceptible transition without feeling sluggish.
  */
 export const SECTION_OVERLAY_TRANSITION_FAST = "0.15s ease" as const;
+
+/**
+ * Rotatable selection frame (true/false).
+ * When true, the selection frame rotates with the component.
+ * When false, the selection frame remains an axis-aligned bounding box (AABB).
+ * Design: true = more precise for single elements; false = standard for multiple select.
+ */
+export const ROTATABLE_SELECTION_FRAME = true as const;
+

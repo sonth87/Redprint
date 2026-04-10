@@ -229,8 +229,9 @@ function EditorInner({
 
   // ── Overlay hooks ────────────────────────────────────────────────────────
   const { selectionRect: selectionRectRaw, currentRotation } = useSelectionRect({
-    selectedNodeIds, zoom, panOffset, nodes: document.nodes, canvasFrameRef, nodeQueryRef: activeFrameRef,
+    selectedNodeIds, zoom, panOffset, nodes: document.nodes, canvasFrameRef, breakpoint, nodeQueryRef: activeFrameRef,
   });
+
 
   const { hoverRect, handleMouseOver, handleMouseOut } = useHoverRect({
     selectedNodeIds, rootNodeId: document.rootNodeId, zoom, panOffset, nodes: document.nodes, canvasFrameRef, nodeQueryRef: activeFrameRef,

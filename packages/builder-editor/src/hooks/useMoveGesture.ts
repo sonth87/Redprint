@@ -358,6 +358,9 @@ export function useMoveGesture({
           const trueCanvasX = (er.left - fr.left) / zoom;
           const trueCanvasY = (er.top - fr.top) / zoom;
           canvasOffsetRef.current = { x: trueCanvasX - primarySnapshot.startLeft, y: trueCanvasY - primarySnapshot.startTop };
+          
+          // Capture original styles for restoration
+          nodeEl.dataset.dragOriginalTransform = nodeEl.style.transform || "";
         } else {
           canvasOffsetRef.current = { x: 0, y: 0 };
         }
@@ -444,8 +447,8 @@ export function useMoveGesture({
       }
       moving.nodes.forEach(mNode => {
         const upNodeEl = upFrameEl?.querySelector(`[data-node-id="${mNode.nodeId}"]`) as HTMLElement | null;
-        if (upNodeEl) {
-          const origTransform = upNodeEl.dataset.dragOriginalTransform ?? "";
+        if (upNodeEl && upNodeEl.dataset.dragOriginalTransform !== undefined) {
+          const origTransform = upNodeEl.dataset.dragOriginalTransform;
           upNodeEl.style.transform = origTransform;
           upNodeEl.style.removeProperty("opacity");
           upNodeEl.style.removeProperty("z-index");
