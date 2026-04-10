@@ -75,8 +75,8 @@ export const ContainerComponent: ComponentDefinition = {
         ...(style as React.CSSProperties),
         display: (node.props.display as string) ?? "flex",
         flexDirection: (node.props.direction as "row" | "column") ?? "column",
-        gap: node.props.gap ? String(node.props.gap) : "8px",
-        padding: node.props.padding ? String(node.props.padding) : "16px",
+        gap: node.props.gap !== undefined ? String(node.props.gap) : "8px",
+        padding: node.props.padding !== undefined ? String(node.props.padding) : "16px",
       }}
     >
       {(children as React.ReactNode) ?? 
@@ -93,8 +93,8 @@ export const ContainerComponent: ComponentDefinition = {
         ...(style as React.CSSProperties),
         display: (node.props.display as string) ?? "flex",
         flexDirection: (node.props.direction as "row" | "column") ?? "column",
-        gap: node.props.gap ? String(node.props.gap) : "8px",
-        padding: node.props.padding ? String(node.props.padding) : "16px",
+        gap: node.props.gap !== undefined ? String(node.props.gap) : "8px",
+        padding: node.props.padding !== undefined ? String(node.props.padding) : "16px",
       }}
     >
       {children as React.ReactNode}

@@ -29,7 +29,6 @@ import {
   TOOLBAR_LEFT_OFFSET,
   SECTION_TOOLBAR_STICKY_MARGIN,
   SECTION_TOOLBAR_FADE_START_THRESHOLD,
-  SECTION_TOOLBAR_FADE_DURATION,
   SECTION_TOOLBAR_OPACITY_TRANSITION,
   SECTION_TOOLBAR_OFFSCREEN_POS,
   SECTION_DEFAULT_MIN_HEIGHT,
@@ -213,9 +212,12 @@ export const SectionToolbar = memo(function SectionToolbar({
     const containerHeight = containerEl ? containerEl.clientHeight : window.innerHeight;
     const containerBottom = containerOriginTop + containerHeight;
 
-    // ── 3. Compute fade opacity based on visibility ────────────────────────
-    //    Toolbar fades out when section has only ~50px visible in viewport
-    //    Completely transparent when fully scrolled out
+    // ── 3. Compute fade opacity based on clipping ─────────────────────────
+    // Keep full opacity while the entire section is still within the viewport.
+    // Only fade once the section is actually being clipped by the container's
+    // top or bottom edge. This avoids tiny sections fading out prematurely at
+    // low zoom levels, where their rendered height can be smaller than the
+    // generic fade threshold even though they are fully visible.
     const sectionBottom = sectionViewportTop + sectionViewportHeight;
 
     let opacityAlpha = 1;
@@ -225,10 +227,12 @@ export const SectionToolbar = memo(function SectionToolbar({
     const visibleBottom = Math.min(sectionBottom, containerBottom);
     const visibleHeight = Math.max(0, visibleBottom - visibleTop);
 
-    // If visible height is less than threshold, start fading
-    if (visibleHeight < SECTION_TOOLBAR_FADE_START_THRESHOLD) {
-      const fadeProgress = (SECTION_TOOLBAR_FADE_START_THRESHOLD - visibleHeight) / SECTION_TOOLBAR_FADE_DURATION;
-      opacityAlpha = Math.max(0, Math.min(1, 1 - fadeProgress));
+    const isFullyVisible = sectionViewportTop >= containerOriginTop && sectionBottom <= containerBottom;
+
+    if (!isFullyVisible) {
+      const effectiveFadeRange = Math.min(SECTION_TOOLBAR_FADE_START_THRESHOLD, sectionViewportHeight);
+      const safeFadeRange = Math.max(1, effectiveFadeRange);
+      opacityAlpha = Math.max(0, Math.min(1, visibleHeight / safeFadeRange));
     }
 
     // ── 4. Position: try to center on visible part; if section scrolled,
