@@ -86,13 +86,19 @@ export function useKeyboardShortcuts({
     if (!container) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = globalThis.document?.activeElement;
+      const isTyping =
+        activeEl?.tagName === "INPUT" ||
+        activeEl?.tagName === "TEXTAREA" ||
+        (activeEl as HTMLElement)?.contentEditable === "true";
+
       const ctrl = e.ctrlKey || e.metaKey;
       if (ctrl && (e.key === "z" || e.key === "y")) return;
 
       const hasMultiSelect = selectedNodeIds.length > 1;
 
       // Copy
-      if (ctrl && e.key === "c" && selectedNodeId) {
+      if (ctrl && e.key === "c" && selectedNodeId && !isTyping) {
         e.preventDefault();
         const snapshot: Record<string, BuilderNode> = {};
         selectedNodeIds.forEach(id => {
@@ -107,7 +113,7 @@ export function useKeyboardShortcuts({
       }
 
       // Paste
-      if (ctrl && e.key === "v") {
+      if (ctrl && e.key === "v" && !isTyping) {
         e.preventDefault();
         if (!clipboard) return;
         clipboard.nodeIds.forEach(nodeId => {
@@ -129,7 +135,7 @@ export function useKeyboardShortcuts({
       }
 
       // Duplicate
-      if (ctrl && e.key === "d" && selectedNodeId) {
+      if (ctrl && e.key === "d" && selectedNodeId && !isTyping) {
         e.preventDefault();
         if (hasMultiSelect) {
           const newNodeIds = selectedNodeIds.map(() => uuidv4());
@@ -149,10 +155,8 @@ export function useKeyboardShortcuts({
       }
 
       // Delete
-      if ((e.key === "Delete" || e.key === "Backspace") && selectedNodeId) {
+      if ((e.key === "Delete" || e.key === "Backspace") && selectedNodeId && !isTyping) {
         if (selectedNodeIds.includes(rootNodeId)) return;
-        const active = globalThis.document?.activeElement;
-        if (active?.tagName === "INPUT" || active?.tagName === "TEXTAREA" || (active as HTMLElement)?.contentEditable === "true") return;
         e.preventDefault();
 
         if (hasMultiSelect) {
@@ -174,19 +178,13 @@ export function useKeyboardShortcuts({
       if (e.key === "Escape") { clearSelection(); return; }
 
       // Device Breakpoint Shortcuts
-      if (!ctrl && !e.shiftKey && !e.altKey && setBreakpoint) {
-        const active = globalThis.document?.activeElement;
-        const isTyping = active?.tagName === "INPUT" || active?.tagName === "TEXTAREA" || (active as HTMLElement)?.contentEditable === "true";
-        if (!isTyping) {
-          if (e.key === "d" || e.key === "D") { e.preventDefault(); setBreakpoint("desktop"); return; }
-          if (e.key === "m" || e.key === "M") { e.preventDefault(); setBreakpoint("mobile"); return; }
-        }
+      if (!ctrl && !e.shiftKey && !e.altKey && setBreakpoint && !isTyping) {
+        if (e.key === "d" || e.key === "D") { e.preventDefault(); setBreakpoint("desktop"); return; }
+        if (e.key === "m" || e.key === "M") { e.preventDefault(); setBreakpoint("mobile"); return; }
       }
 
       // Nudge
-      if (selectedNodeId && !ctrl && !editingNodeId) {
-        const activeEl = globalThis.document?.activeElement;
-        if (activeEl?.tagName === "INPUT" || activeEl?.tagName === "TEXTAREA" || (activeEl as HTMLElement)?.contentEditable === "true") return;
+      if (selectedNodeId && !ctrl && !editingNodeId && !isTyping) {
         
         const step = e.shiftKey ? 10 : 1;
         let dx = 0, dy = 0;

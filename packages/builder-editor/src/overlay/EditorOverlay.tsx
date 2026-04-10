@@ -58,6 +58,7 @@ export interface SelectionOverlayProps {
   isSection?: boolean;
   onResizeStart: (handle: ResizeHandleType, e: React.MouseEvent) => void;
   onRotateStart: (e: React.MouseEvent) => void;
+  onDoubleClick?: (e: React.MouseEvent) => void;
 }
 
 /**
@@ -71,6 +72,7 @@ export const SelectionOverlay = memo(function SelectionOverlay({
   isSection = false,
   onResizeStart,
   onRotateStart,
+  onDoubleClick,
 }: SelectionOverlayProps) {
   if (!selection.isRubberBanding && (!selection.boundingBox || selection.selectedIds.length === 0)) return null;
 
@@ -86,7 +88,9 @@ export const SelectionOverlay = memo(function SelectionOverlay({
       {/* Bounding box */}
       {showBoundingBox && (
         <div
-          className="absolute pointer-events-none"
+          data-selection-frame={!isSection ? "true" : undefined}
+          data-node-id={(!isSection && selection.selectedIds.length === 1) ? selection.selectedIds[0] : undefined}
+          className={`absolute ${isSection ? "pointer-events-none" : "pointer-events-auto"}`}
           style={{
             left: boundingBox.x,
             top: boundingBox.y,
@@ -94,8 +98,10 @@ export const SelectionOverlay = memo(function SelectionOverlay({
             height: boundingBox.height,
             outline: `${borderWidth}px dashed hsl(var(--selection-color, 221.2 83.2% 53.3%))`,
             transform: applyRotation ? `rotate(${rotation}deg)` : undefined,
-            zIndex: 40,
+            zIndex: isSection ? 40 : 51,
+            backgroundColor: "transparent",
           }}
+          onDoubleClick={!isSection ? onDoubleClick : undefined}
         >
           {/* Resize handles — only show when single selection and not a section */}
           {selection.selectedIds.length === 1 && !isSection && (

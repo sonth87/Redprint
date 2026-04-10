@@ -493,6 +493,7 @@ function EditorInner({
             <SelectionOverlay
               selection={{ selectedIds: selectedNodeIds, boundingBox: selectionRect, isRubberBanding: !!rubberBanding, rubberBandRect }}
               zoom={zoom} rotation={currentRotation} isSection={!!selectedSectionNode}
+              onDoubleClick={handleCanvasDoubleClick}
               onResizeStart={(handle, e) => {
                 if (!selectionRect || !selectedNodeId) return;
                 setResizing({
