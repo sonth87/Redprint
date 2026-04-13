@@ -40,7 +40,8 @@
     "preview": "Preview",
     "export": "Export",
     "import": "Import",
-    "aiAssistant": "AI Assistant"
+    "aiAssistant": "AI Assistant",
+    "mobileSyncNotice": "Desktop elements remain the same on Mobile by default. You can customize Mobile design (colors, sizes, fonts, backgrounds, content) without affecting Desktop. Hiding elements is also independent. Note: Adding/Deleting elements will sync on both."
   },
   "contextToolbar": {
     "dragToMove": "Drag to move",

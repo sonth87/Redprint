@@ -4,10 +4,12 @@ import { RuntimeRenderer } from "@ui-builder/builder-renderer";
 import { ComponentRegistry } from "@ui-builder/builder-core";
 import { BASE_COMPONENTS } from "@ui-builder/builder-components";
 import { FIXTURE_DOCUMENT } from "../../playground/src/fixtures/fixture-document";
+import { CUSTOM_COMPONENTS } from "../../playground/src/components/sample-components";
 
 // Create a registry with built-in components
 const registry = new ComponentRegistry();
 BASE_COMPONENTS.forEach((def) => registry.registerComponent(def));
+CUSTOM_COMPONENTS.forEach((def) => registry.registerComponent(def));
 
 export default function Home() {
   return (

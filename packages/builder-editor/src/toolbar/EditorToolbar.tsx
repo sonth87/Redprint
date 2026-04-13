@@ -19,7 +19,10 @@ import {
   Columns2,
   Sparkles,
   Maximize2,
+  Info,
+  X,
 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 
 // Figma logo as a small inline SVG button icon
 const FigmaIcon = ({ size = 14 }: { size?: number }) => (
@@ -155,17 +158,35 @@ export const EditorToolbar = memo(function EditorToolbar({
         {canvasMode !== "dual" && (
           <>
             <div className="flex items-center gap-0.5">
-              {breakpointOptions.map(({ bp, label, icon: Icon, shortcut }) => (
-                <ToolbarButton
-                  key={bp}
-                  icon={Icon}
-                  tooltip={`${label} ${DEVICE_VIEWPORT_PRESETS[bp].width}px (${shortcut})`}
-                  isActive={breakpoint === bp}
-                  onClick={() => onBreakpointChange(bp)}
-                  aria-label={`${label} breakpoint`}
-                  compact
-                />
-              ))}
+              {breakpointOptions.map(({ bp, label, icon: Icon, shortcut }) => {
+                const isMobile = bp === "mobile";
+                return (
+                  <div key={bp} className="relative">
+                    <ToolbarButton
+                      icon={Icon}
+                      tooltip={`${label} ${DEVICE_VIEWPORT_PRESETS[bp].width}px (${shortcut})`}
+                      isActive={breakpoint === bp}
+                      onClick={() => onBreakpointChange(bp)}
+                      aria-label={`${label} breakpoint`}
+                      compact
+                    />
+                    {isMobile && (
+                      <TooltipProvider>
+                        <ToolbarButton
+                          icon={Info}
+                          className="absolute -right-1 -top-1 h-3.5 w-3.5 rounded-full bg-indigo-600 p-0 text-[8px] text-white hover:bg-indigo-700 border border-background shadow-sm"
+                          tooltip={
+                            <div className="w-[280px] p-1 text-[11px] leading-relaxed">
+                              {t("toolbar.mobileSyncNotice")}
+                            </div>
+                          }
+                          compact
+                        />
+                      </TooltipProvider>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             {/* Current device width indicator */}

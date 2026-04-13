@@ -40,7 +40,8 @@
     "preview": "Xem trước",
     "export": "Xuất",
     "import": "Nhập",
-    "aiAssistant": "Trợ lý AI"
+    "aiAssistant": "Trợ lý AI",
+    "mobileSyncNotice": "Phần tử trên Desktop mặc định giữ nguyên trên Mobile. Bạn có thể tùy chỉnh thiết kế riêng cho Mobile (màu sắc, kích thước, kiểu chữ, hình nền, nội dung) mà không ảnh hưởng Desktop. Ẩn phần tử cũng độc lập giữa 2 phiên bản. Lưu ý: Thêm/Xóa phần tử vẫn đồng bộ cả hai."
   },
   "contextToolbar": {
     "dragToMove": "Kéo để di chuyển",

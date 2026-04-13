@@ -5,7 +5,7 @@ import type { LucideIcon } from "lucide-react";
 
 export interface ToolbarButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon: LucideIcon;
-  tooltip: string;
+  tooltip: React.ReactNode;
   tooltipSide?: "top" | "bottom" | "left" | "right";
   isActive?: boolean;
   activeClassName?: string;
