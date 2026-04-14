@@ -26,4 +26,4 @@ router.get("/items/:id", async (req, res) => {
   }
 });
 
-export const paletteRouter = router;
+export const paletteRouter: Router = router;

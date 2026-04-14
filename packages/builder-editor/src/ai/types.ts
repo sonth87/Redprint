@@ -97,7 +97,7 @@ export interface AIPresetItem {
   id: string;
   name: string;
   componentType: string;
-  props: Record<string, unknown>;
+  props?: Record<string, unknown>;
   style?: Record<string, unknown>;
   tags?: string[];
 }
