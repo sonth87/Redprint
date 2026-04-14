@@ -7,6 +7,7 @@ import { Pen, Eye, Code, Github, Languages } from "lucide-react";
 import { useBuilderSetup } from "./hooks/useBuilderSetup";
 import { BASE_COMPONENTS } from "@ui-builder/builder-components";
 import { CUSTOM_COMPONENTS } from "./components/sample-components";
+import { remotePaletteProvider } from "./lib/remote-palette";
 import koTranslations from "./i18n/ko.json";
 import koFlatTranslations from "./i18n/ko-flat.json";
 
@@ -21,7 +22,7 @@ type Locale = "en" | "vi" | "ko" | "ko-flat";
  * Tab "JSON" → raw document JSON inspector
  */
 export function App() {
-  const { builder, groupRegistry, paletteCatalog } = useBuilderSetup();
+  const { builder, groupRegistry, useRemotePalette } = useBuilderSetup();
   const [activeTab, setActiveTab] = useState<Tab>("editor");
   const [locale, setLocale] = useState<Locale>("en");
 
@@ -35,8 +36,6 @@ export function App() {
     setLocale(next);
   };
 
-  // Demo: Support both nested (ko.json) and flat (ko-flat.json) formats
-  // The flat format uses keys like "toolbar.undo" instead of { toolbar: { undo: "..." } }
   const i18nResources = React.useMemo(
     () => ({
       ko: { translation: locale === "ko-flat" ? koFlatTranslations : koTranslations },
@@ -44,7 +43,6 @@ export function App() {
     [locale]
   );
 
-  // Build a registry for the runtime renderer (same components)
   const runtimeRegistry = React.useMemo(() => {
     const reg = new ComponentRegistry();
     for (const comp of BASE_COMPONENTS) {
@@ -61,8 +59,6 @@ export function App() {
 
   return (
     <div className="flex flex-col h-full w-full overflow-hidden bg-background">
-
-      {/* ── App Header ── */}
       <header className="flex items-center justify-between h-11 px-4 border-b bg-background shrink-0">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded bg-foreground flex items-center justify-center text-background text-xs font-black">
@@ -74,7 +70,6 @@ export function App() {
           </span>
         </div>
 
-        {/* Mode tabs */}
         <div className="flex items-center gap-0.5 bg-muted rounded-md p-0.5">
           {(
             [
@@ -127,7 +122,7 @@ export function App() {
           </a>
         </div>
       </header>
-
+      
       {/* ── Content area ── */}
       <div className="flex-1 overflow-hidden">
 
@@ -136,7 +131,7 @@ export function App() {
           <BuilderEditor
             builder={builder}
             groupRegistry={groupRegistry}
-            paletteCatalog={paletteCatalog}
+            remotePaletteProvider={useRemotePalette ? remotePaletteProvider : undefined}
             locale={locale}
             i18nResources={i18nResources}
             className="h-full"

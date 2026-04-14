@@ -19,7 +19,7 @@ function getLucideIcon(name: string): React.ElementType {
 // ── Props ─────────────────────────────────────────────────────────────────
 
 export interface AddElementsPanelProps {
-  catalog: PaletteCatalog;
+  catalog?: PaletteCatalog;
   activeGroupId: string | null;
   onGroupChange: (groupId: string) => void;
   onClose: () => void;
@@ -113,8 +113,8 @@ export const AddElementsPanel: React.FC<AddElementsPanelProps> = ({
   const lang = locale ?? i18n.language ?? "en";
 
   const groups: PaletteGroup[] = useMemo(
-    () => [...catalog.groups].sort((a, b) => a.order - b.order),
-    [catalog.groups],
+    () => (catalog?.groups ? [...catalog.groups].sort((a, b) => a.order - b.order) : []),
+    [catalog?.groups],
   );
 
   const activeGroup = useMemo(

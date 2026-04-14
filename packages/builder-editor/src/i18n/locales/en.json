@@ -23,6 +23,11 @@
     "undo": "Undo",
     "redo": "Redo"
   },
+  "canvas": {
+    "empty": "Empty Canvas",
+    "emptyHint": "Drag & drop components from the left panel, or use AI to generate a full page instantly.",
+    "generateWithAI": "Generate Page with AI"
+  },
   "toolbar": {
     "undo": "Undo",
     "redo": "Redo",
@@ -41,6 +46,7 @@
     "export": "Export",
     "import": "Import",
     "aiAssistant": "AI Assistant",
+    "aiGeneratePage": "Generate Page with AI",
     "mobileSyncNotice": "Desktop elements remain the same on Mobile by default. You can customize Mobile design (colors, sizes, fonts, backgrounds, content) without affecting Desktop. Hiding elements is also independent. Note: Adding/Deleting elements will sync on both."
   },
   "contextToolbar": {
@@ -257,18 +263,26 @@
     "generateDescription": "Describe the page or component you want to create (e.g., \"A contact form with email and message fields\").",
     "thinking": "AI is thinking…",
     "configTitle": "AI Configuration",
-    "provider": "Provider",
-    "apiKey": "API Key",
+    "backendUrl": "Backend URL",
+    "backendUrlHint": "URL of the AI backend server. API keys are configured on the server.",
     "model": "Model",
     "temperature": "Temperature",
     "maxTokens": "Max Tokens",
     "systemPrompt": "System Prompt",
     "defaultSystemPrompt": "You are an AI assistant for a visual UI builder. Help users build, modify, and improve their web page designs.",
-    "apiKeyNotConfigured": "API key is not configured. Please open AI settings.",
-    "providers": {
-      "openai": "OpenAI (ChatGPT)",
-      "gemini": "Google Gemini",
-      "claude": "Anthropic Claude"
+    "backendNotConfigured": "Backend URL is not configured. Please set it in AI settings.",
+    "backendUnavailable": "Cannot reach AI backend. Please check the server is running.",
+    "pageGenerator": {
+      "title": "Generate Full Page with AI",
+      "description": "Describe the page you want to build. AI will analyse your request, create a section outline, then generate each section — appearing live on the canvas as it goes.",
+      "placeholder": "e.g. \"A landing page for a SaaS project management app with pricing and testimonials\"",
+      "analysing": "Analysing your request and creating a page outline…",
+      "generatingSections": "Generating sections",
+      "building": "Building…",
+      "done": "Done",
+      "success": "Page generated successfully! Closing…",
+      "cancel": "Cancel",
+      "tryAgain": "Try Again"
     }
   },
   "layers": {
@@ -329,7 +343,7 @@
     "transformTitle": "Transform content",
     "previewTitle": "AI Preview",
     "buttonTooltip": "AI Tools",
-    "noApiKey": "AI API key not configured. Open AI settings to get started.",
+    "noApiKey": "AI backend is not configured. Open AI settings to set the backend URL.",
     "tonesLabel": "Tone",
     "tones": {
       "friendly": "Friendly",
@@ -373,7 +387,7 @@
     "customTitle": "Custom Prompt",
     "previewTitle": "AI Preview",
     "buttonTooltip": "Generate section with AI",
-    "noApiKey": "AI API key not configured. Open AI settings to get started.",
+    "noApiKey": "AI backend is not configured. Open AI settings to set the backend URL.",
     "customPlaceholder": "Describe the section you want to generate…",
     "generate": "Generate",
     "generating": "Generating section…",

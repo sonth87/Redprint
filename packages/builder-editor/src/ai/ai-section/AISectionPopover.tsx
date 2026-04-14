@@ -146,7 +146,7 @@ export function AISectionPopover({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, state.view, state.isLoading, cancel, goToMain, handleClose]);
 
-  const isConfigured = !!aiConfig.apiKey;
+  const isConfigured = !!aiConfig.backendUrl;
 
   const headerTitle = (() => {
     if (state.view === "custom") return t("aiSection.customTitle");

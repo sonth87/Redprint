@@ -5,8 +5,15 @@
 export type AIProvider = "openai" | "gemini" | "claude";
 
 export interface AIConfig {
-  provider: AIProvider;
-  apiKey: string;
+  /**
+   * URL of the AI backend server (apps/api).
+   * Defaults to http://localhost:3002 in development.
+   */
+  backendUrl: string;
+  /** @deprecated — kept for migration period, ignored by the backend adapter */
+  provider?: AIProvider;
+  /** @deprecated — kept for migration period, ignored. Keys are set on the backend. */
+  apiKey?: string;
   model?: string;
   temperature?: number;
   maxTokens?: number;

@@ -115,8 +115,8 @@ export function AIAssistant({ open, onOpenChange, config, onConfigChange, contex
   const handleGenerate = useCallback(async () => {
     const text = prompt.trim();
     if (!text || isLoading) return;
-    if (!config.apiKey) {
-      setError(t("ai.apiKeyNotConfigured"));
+    if (!config.backendUrl) {
+      setError("Backend URL not configured. Set backendUrl in AI settings.");
       return;
     }
 
@@ -203,7 +203,7 @@ export function AIAssistant({ open, onOpenChange, config, onConfigChange, contex
                 </Badge>
               )}
               <Badge variant="outline" className="text-[10px]">
-                {config.provider}
+                backend
               </Badge>
               {!isLoading && (
                 <Button

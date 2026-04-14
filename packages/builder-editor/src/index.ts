@@ -2,15 +2,12 @@
  * @ui-builder/builder-editor — public API
  *
  * Visual editor for the UI Builder Library.
- *
- * @example
- * import { BuilderEditor } from '@ui-builder/builder-editor';
- * <BuilderEditor config={{ document: { name: 'My Page' } }} />
  */
 
 // Main editor component
-export { BuilderEditor } from "./BuilderEditor";
+export { BuilderEditor, useRemotePaletteProvider } from "./BuilderEditor";
 export type { BuilderEditorProps } from "./BuilderEditor";
+export type { RemotePaletteProvider } from "./types/remote-palette";
 
 // Canvas
 export { CanvasRoot } from "./canvas/CanvasRoot";
