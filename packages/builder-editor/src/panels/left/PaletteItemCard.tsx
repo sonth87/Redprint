@@ -311,8 +311,8 @@ export const PaletteItemCard: React.FC<PaletteItemCardProps> = ({
   };
 
   const sharedClasses = cn(
-    "border border-border/50 rounded-lg overflow-hidden cursor-grab active:cursor-grabbing",
-    "bg-muted/20 hover:bg-accent/50 hover:border-border transition-all",
+    "border border-border/0 rounded-lg overflow-hidden cursor-grab active:cursor-grabbing",
+    "bg-muted/20 hover:bg-accent/50 transition-all",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
     "group select-none",
   );

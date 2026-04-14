@@ -1,4 +1,4 @@
-import React, { memo, useState, useCallback } from "react";
+import React, { memo, useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { ScrollArea, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@ui-builder/ui";
 import { ChevronRight, Eye, EyeOff, Lock, Unlock, Layers } from "lucide-react";
 import type { BuilderDocument, BuilderNode } from "@ui-builder/builder-core";
@@ -32,21 +32,53 @@ const LayerItem = memo(function LayerItem({
   onToggleLocked,
 }: LayerItemProps) {
   const [expanded, setExpanded] = useState(true);
+  const itemRef = useRef<HTMLDivElement>(null);
   const isSelected = selectedIds.includes(node.id);
 
-  const children = Object.values(document.nodes)
-    .filter((n) => n.parentId === node.id)
-    .sort((a, b) => a.order - b.order);
+  const children = useMemo(() => 
+    Object.values(document.nodes)
+      .filter((n) => n.parentId === node.id)
+      .sort((a, b) => a.order - b.order)
+  , [document.nodes, node.id]);
 
   const hasChildren = children.length > 0;
+
+  // Auto-expand if a descendant is selected
+  const hasSelectedDescendant = useMemo(() => {
+    return selectedIds.some(id => {
+      let current = document.nodes[id];
+      while (current && current.parentId) {
+        if (current.parentId === node.id) return true;
+        current = document.nodes[current.parentId];
+      }
+      return false;
+    });
+  }, [selectedIds, node.id, document.nodes]);
+
+  useEffect(() => {
+    if (hasSelectedDescendant) {
+      setExpanded(true);
+    }
+  }, [hasSelectedDescendant]);
+
+  // Scroll into view when selected
+  useEffect(() => {
+    if (isSelected && itemRef.current) {
+      itemRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }
+  }, [isSelected]);
 
   return (
     <div>
       <div
+        ref={itemRef}
         className={cn(
           "group flex items-center h-7 pr-1 rounded-sm cursor-pointer select-none",
           "hover:bg-muted/60 transition-colors",
-          isSelected && "bg-blue-500/10 text-blue-600",
+          isSelected && "bg-blue-500/10 text-blue-600 font-medium",
         )}
         style={{ paddingLeft: depth * 12 + 4 }}
         onClick={(e) => onSelect(node.id, e.shiftKey || e.metaKey)}

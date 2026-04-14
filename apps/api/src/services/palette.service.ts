@@ -12,35 +12,55 @@ export class PaletteService {
   }
 
   /**
-   * Returns the tree structure for the side panel (Metadata only).
+   * Returns the tree structure for the side panel (Metadata only - NO ITEMS).
    */
-  static async getCatalog() {
+  static async getMetadata() {
     const data = await this.getRawData();
-    // In a real system, we might want to strip 'content' here to save bandwidth
-    const catalog = {
+    return {
       version: data.version,
       groups: data.groups.map((group: any) => ({
-        ...group,
+        id: group.id,
+        label: group.label,
+        icon: group.icon,
+        order: group.order,
+        i18n: group.i18n,
         types: group.types.map((type: any) => ({
-          ...type,
-          items: type.items.map((item: any) => ({
-            id: item.id,
-            type: item.type,
-            name: item.name,
-            description: item.description,
-            thumbnail: item.thumbnail,
-            componentType: item.componentType,
-            tags: item.tags || [],
-            style: item.style,
-            props: item.props,
-            i18n: item.i18n,
-            responsiveStyle: item.responsiveStyle,
-            responsiveProps: item.responsiveProps
-          }))
+          id: type.id,
+          label: type.label,
+          order: type.order,
+          layout: type.layout,
+          i18n: type.i18n,
+          // Items are NOT included here
+          items: []
         }))
       }))
     };
-    return catalog;
+  }
+
+  /**
+   * Returns items for a specific group.
+   */
+  static async getGroupItems(groupId: string) {
+    const data = await this.getRawData();
+    const group = data.groups.find((g: any) => g.id === groupId);
+    if (!group) return null;
+
+    return {
+      groupId: group.id,
+      types: group.types.map((type: any) => ({
+        id: type.id,
+        items: type.items
+      }))
+    };
+  }
+
+  /**
+   * Returns the tree structure for the side panel (Metadata with ALL items).
+   * @deprecated Use getMetadata and getGroupItems instead for better performance.
+   */
+  static async getCatalog() {
+    const data = await this.getRawData();
+    return data;
   }
 
   /**

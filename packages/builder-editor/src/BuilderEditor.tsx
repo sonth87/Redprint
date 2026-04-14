@@ -138,13 +138,54 @@ function EditorInner({
   const [figmaOpen, setFigmaOpen] = React.useState(false);
 
   const [remoteCatalog, setRemoteCatalog] = React.useState<PaletteCatalog | undefined>();
+  const [loadedGroups, setLoadedGroups] = React.useState<Set<string>>(new Set());
+  const [isCatalogLoading, setIsCatalogLoading] = React.useState(false);
+  const [isGroupLoading, setIsGroupLoading] = React.useState(false);
   const effectiveCatalog = paletteCatalog || remoteCatalog;
 
+  // Initial metadata fetch
   React.useEffect(() => {
-    if (remotePaletteProvider && !paletteCatalog) {
-      remotePaletteProvider.fetchCatalog().then(setRemoteCatalog).catch(console.error);
+    if (remotePaletteProvider && !paletteCatalog && !remoteCatalog) {
+      setIsCatalogLoading(true);
+      remotePaletteProvider.fetchMetadata()
+        .then(setRemoteCatalog)
+        .catch(console.error)
+        .finally(() => setIsCatalogLoading(false));
     }
-  }, [remotePaletteProvider, paletteCatalog]);
+  }, [remotePaletteProvider, paletteCatalog, remoteCatalog]);
+
+  // On-demand group items fetch
+  React.useEffect(() => {
+    if (!remotePaletteProvider || !activePaletteGroupId || !remoteCatalog || loadedGroups.has(activePaletteGroupId)) {
+      setIsGroupLoading(false);
+      return;
+    }
+
+    setIsGroupLoading(true);
+    remotePaletteProvider.fetchGroupItems(activePaletteGroupId).then((groupData) => {
+      setRemoteCatalog((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          groups: prev.groups.map((g) => {
+            if (g.id !== activePaletteGroupId) return g;
+            return {
+              ...g,
+              types: g.types.map((t) => {
+                const updatedType = groupData.types.find((ut) => ut.id === t.id);
+                return updatedType ? { ...t, items: updatedType.items } : t;
+              })
+            };
+          })
+        };
+      });
+      setLoadedGroups((prev) => new Set(prev).add(activePaletteGroupId));
+      setIsGroupLoading(false);
+    }).catch((err) => {
+      console.error(err);
+      setIsGroupLoading(false);
+    });
+  }, [remotePaletteProvider, activePaletteGroupId, remoteCatalog, loadedGroups]);
 
   // ── Canvas geometry ──────────────────────────────────────────────────────
   const { canvasWidth, canvasMinHeight, sectionNodes } = useCanvasDimensions({ document, breakpoint });
@@ -363,6 +404,7 @@ function EditorInner({
             catalog={effectiveCatalog} activeGroupId={activePaletteGroupId}
             onGroupChange={setActivePaletteGroupId} onClose={handlePaletteClose}
             onItemDragStart={handlePaletteDragStart} onItemClick={handlePaletteItemClick} locale={locale}
+            isLoading={isCatalogLoading || isGroupLoading}
           />
         )}
         {!(effectiveCatalog || remotePaletteProvider) && (
