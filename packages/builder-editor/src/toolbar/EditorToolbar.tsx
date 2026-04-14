@@ -18,6 +18,7 @@ import {
   Hand,
   Columns2,
   Sparkles,
+  LayoutTemplate,
   Maximize2,
   Info,
   X,
@@ -57,6 +58,8 @@ export interface EditorToolbarProps {
   onCanvasModeToggle: () => void;
   onFitToScreen?: () => void;
   onAIOpen?: () => void;
+  /** Open the full-page AI generator dialog */
+  onPageGeneratorOpen?: () => void;
   /** Open the Figma import dialog */
   onFigmaOpen?: () => void;
 }
@@ -83,6 +86,7 @@ export const EditorToolbar = memo(function EditorToolbar({
   onCanvasModeToggle,
   onFitToScreen,
   onAIOpen,
+  onPageGeneratorOpen,
   onFigmaOpen,
 }: EditorToolbarProps) {
   const zoomPct = Math.round(zoom * 100);
@@ -256,7 +260,7 @@ export const EditorToolbar = memo(function EditorToolbar({
           compact
         />
 
-        {(onAIOpen || onFigmaOpen) && (
+        {(onAIOpen || onFigmaOpen || onPageGeneratorOpen) && (
           <>
             {/* Separator */}
             <div className="bg-border mx-1 h-6 w-px" />
@@ -270,6 +274,16 @@ export const EditorToolbar = memo(function EditorToolbar({
               >
                 <FigmaIcon size={14} />
               </button>
+            )}
+
+            {onPageGeneratorOpen && (
+              <ToolbarButton
+                icon={LayoutTemplate}
+                tooltip={t("toolbar.aiGeneratePage")}
+                onClick={onPageGeneratorOpen}
+                aria-label={t("toolbar.aiGeneratePage")}
+                compact
+              />
             )}
 
             {onAIOpen && (

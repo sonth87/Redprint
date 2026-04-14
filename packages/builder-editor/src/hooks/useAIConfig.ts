@@ -2,9 +2,7 @@ import { useState, useCallback } from "react";
 import type { AIConfig } from "../ai/types";
 
 const DEFAULT_AI_CONFIG: AIConfig = {
-  provider: "openai",
-  apiKey: "",
-  model: "gpt-4o-mini",
+  backendUrl: "http://localhost:3002",
   temperature: 0.7,
   maxTokens: 8192,
   streamingEnabled: false,
@@ -16,17 +14,25 @@ const STORAGE_KEY = "ui-builder:ai-config";
 export interface UseAIConfigReturn {
   aiOpen: boolean;
   setAiOpen: (open: boolean) => void;
+  pageGeneratorOpen: boolean;
+  setPageGeneratorOpen: (open: boolean) => void;
   aiConfig: AIConfig;
   handleAIConfigChange: (config: AIConfig) => void;
 }
 
-/** Manages AI assistant open state and config (with localStorage persistence). */
+/** Manages AI assistant + page generator open state and config (with localStorage persistence). */
 export function useAIConfig(): UseAIConfigReturn {
   const [aiOpen, setAiOpen] = useState(false);
+  const [pageGeneratorOpen, setPageGeneratorOpen] = useState(false);
   const [aiConfig, setAiConfig] = useState<AIConfig>(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) return { ...DEFAULT_AI_CONFIG, ...(JSON.parse(stored) as AIConfig) };
+      if (stored) {
+        const parsed = JSON.parse(stored) as AIConfig;
+        // Migration: if stored config has no backendUrl, add default
+        if (!parsed.backendUrl) parsed.backendUrl = DEFAULT_AI_CONFIG.backendUrl;
+        return { ...DEFAULT_AI_CONFIG, ...parsed };
+      }
     } catch {
       // ignore parse errors
     }
@@ -42,5 +48,5 @@ export function useAIConfig(): UseAIConfigReturn {
     }
   }, []);
 
-  return { aiOpen, setAiOpen, aiConfig, handleAIConfigChange };
+  return { aiOpen, setAiOpen, pageGeneratorOpen, setPageGeneratorOpen, aiConfig, handleAIConfigChange };
 }

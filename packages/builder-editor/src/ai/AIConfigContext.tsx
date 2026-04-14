@@ -10,9 +10,7 @@ import React, { createContext, useContext } from "react";
 import type { AIConfig } from "./types";
 
 const DEFAULT_CONFIG: AIConfig = {
-  provider: "openai",
-  apiKey: "",
-  model: "gpt-4o-mini",
+  backendUrl: "http://localhost:3002",
   temperature: 0.7,
   maxTokens: 8192,
   streamingEnabled: false,

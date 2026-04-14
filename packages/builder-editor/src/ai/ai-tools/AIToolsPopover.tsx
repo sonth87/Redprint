@@ -144,7 +144,7 @@ export function AIToolsPopover({
   }, [open, state.view, cancel, goToMain, handleClose]);
 
   const actions = mode === "image" ? AI_IMAGE_ACTIONS : AI_TEXT_ACTIONS;
-  const isConfigured = !!aiConfig.apiKey;
+  const isConfigured = !!aiConfig.backendUrl;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

@@ -23,7 +23,7 @@ import {
   TRANSITION_FAST_CSS,
   TRANSITION_MID_CSS,
 } from "@ui-builder/shared";
-import { Monitor, Smartphone, LocateFixed } from "lucide-react";
+import { Monitor, Smartphone, LocateFixed, LayoutTemplate, Sparkles } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { cn } from "@ui-builder/ui";
 
@@ -54,6 +54,7 @@ import { AIAssistant } from "./ai/AIAssistant";
 import { AIConfigPanel } from "./ai/AIConfig";
 import { buildAIContext } from "./ai/buildAIContext";
 import { AIConfigProvider } from "./ai/AIConfigContext";
+import { PageGeneratorModal } from "./ai/page-generator";
 import { FigmaImportDialog } from "./figma/FigmaImportDialog";
 import { ArtboardLabel } from "./canvas/ArtboardLabel";
 import { FlowDropPlaceholderLayer } from "./canvas/FlowDropPlaceholderLayer";
@@ -124,7 +125,7 @@ function EditorInner({
   const { paletteMode, activePaletteGroupId, setActivePaletteGroupId, handleGroupSelect, handlePaletteClose } =
     usePaletteState();
   const { layersOpen, layersPanelPos, handleLayersToggle } = useLayersPanel();
-  const { aiOpen, setAiOpen, aiConfig, handleAIConfigChange } = useAIConfig();
+  const { aiOpen, setAiOpen, pageGeneratorOpen, setPageGeneratorOpen, aiConfig, handleAIConfigChange } = useAIConfig();
   const [figmaOpen, setFigmaOpen] = React.useState(false);
 
   // ── Canvas geometry ──────────────────────────────────────────────────────
@@ -327,6 +328,7 @@ function EditorInner({
           onToolChange={(tool) => { setActiveTool(tool); if (tool === "pan") clearSelection(); }}
           onCanvasModeToggle={toggleCanvasMode} onFitToScreen={handleFitToScreen}
           onAIOpen={() => setAiOpen(true)}
+          onPageGeneratorOpen={() => setPageGeneratorOpen(true)}
           onFigmaOpen={() => setFigmaOpen(true)}
         />
 
@@ -381,6 +383,7 @@ function EditorInner({
         </FloatingPanel>
 
         <AIAssistant open={aiOpen} onOpenChange={setAiOpen} config={aiConfig} onConfigChange={handleAIConfigChange} context={aiContext} />
+        <PageGeneratorModal open={pageGeneratorOpen} onOpenChange={setPageGeneratorOpen} config={aiConfig} context={aiContext} />
         <FigmaImportDialog open={figmaOpen} onOpenChange={setFigmaOpen} />
 
         {/* Canvas area */}
@@ -449,6 +452,29 @@ function EditorInner({
                     <div className="pointer-events-none absolute inset-y-0 left-1/2 z-0 w-[1200px] -translate-x-1/2 border-x border-dashed border-blue-400/20" />
                     <NodeRenderer nodeId={document.rootNodeId} />
                     <SectionOverlay {...sharedSectionOverlayProps} canvasFrameRef={canvasFrameRef} />
+                    {/* Empty canvas prompt */}
+                    {sectionNodes.length === 0 && (
+                      <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
+                        <div className="pointer-events-auto flex flex-col items-center gap-4 rounded-2xl border border-dashed border-border/60 bg-background/70 px-10 py-8 text-center backdrop-blur-sm shadow-sm">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                            <LayoutTemplate className="h-6 w-6 text-primary" />
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium">{t("canvas.empty")}</p>
+                            <p className="text-xs text-muted-foreground max-w-[220px] leading-relaxed">
+                              {t("canvas.emptyHint")}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => setPageGeneratorOpen(true)}
+                            className="flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 active:scale-95 transition-all"
+                          >
+                            <Sparkles className="h-3 w-3" />
+                            {t("canvas.generateWithAI")}
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

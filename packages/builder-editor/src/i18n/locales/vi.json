@@ -23,6 +23,11 @@
     "undo": "Hoàn tác",
     "redo": "Làm lại"
   },
+  "canvas": {
+    "empty": "Canvas Trống",
+    "emptyHint": "Kéo thả thành phần từ bảng bên trái, hoặc sử dụng AI để tạo toàn bộ trang ngay lập tức.",
+    "generateWithAI": "Tạo trang bằng AI"
+  },
   "toolbar": {
     "undo": "Hoàn tác",
     "redo": "Làm lại",
@@ -41,6 +46,7 @@
     "export": "Xuất",
     "import": "Nhập",
     "aiAssistant": "Trợ lý AI",
+    "aiGeneratePage": "Tạo trang bằng AI",
     "mobileSyncNotice": "Phần tử trên Desktop mặc định giữ nguyên trên Mobile. Bạn có thể tùy chỉnh thiết kế riêng cho Mobile (màu sắc, kích thước, kiểu chữ, hình nền, nội dung) mà không ảnh hưởng Desktop. Ẩn phần tử cũng độc lập giữa 2 phiên bản. Lưu ý: Thêm/Xóa phần tử vẫn đồng bộ cả hai."
   },
   "contextToolbar": {
@@ -257,18 +263,26 @@
     "generateDescription": "Mô tả trang hoặc thành phần bạn muốn tạo (ví dụ: \"Một form liên hệ với trường email và tin nhắn\").",
     "thinking": "AI đang suy nghĩ…",
     "configTitle": "Cấu hình AI",
-    "provider": "Nhà cung cấp",
-    "apiKey": "Khóa API",
+    "backendUrl": "Backend URL",
+    "backendUrlHint": "URL của server AI backend. API key được cấu hình trên server.",
     "model": "Mô hình",
     "temperature": "Nhiệt độ",
     "maxTokens": "Token tối đa",
     "systemPrompt": "Prompt hệ thống",
     "defaultSystemPrompt": "Bạn là trợ lý AI cho trình xây dựng giao diện trực quan. Hãy giúp người dùng xây dựng, chỉnh sửa và cải thiện thiết kế trang web.",
-    "apiKeyNotConfigured": "Chưa cấu hình API key. Vui lòng mở cài đặt AI.",
-    "providers": {
-      "openai": "OpenAI (ChatGPT)",
-      "gemini": "Google Gemini",
-      "claude": "Anthropic Claude"
+    "backendNotConfigured": "Chưa cấu hình Backend URL. Vui lòng đặt URL trong cài đặt AI.",
+    "backendUnavailable": "Không thể kết nối AI backend. Vui lòng kiểm tra server đang chạy.",
+    "pageGenerator": {
+      "title": "Tạo Trang Bằng AI",
+      "description": "Mô tả trang bạn muốn xây dựng. AI sẽ phân tích yêu cầu của bạn, tạo dàn ý, sau đó tạo từng section và hiển thị trực tiếp lên canvas.",
+      "placeholder": "VD: \"Một trang giới thiệu ứng dụng SaaS quản lý dự án với bảng giá và ý kiến khách hàng\"",
+      "analysing": "Đang phân tích yêu cầu và tạo dàn ý trang…",
+      "generatingSections": "Đang tạo các section",
+      "building": "Đang xây dựng…",
+      "done": "Xong",
+      "success": "Đã tạo trang thành công! Đang đóng…",
+      "cancel": "Hủy",
+      "tryAgain": "Thử lại"
     }
   },
   "layers": {
@@ -329,7 +343,7 @@
     "transformTitle": "Biến hoá nội dung",
     "previewTitle": "Xem trước AI",
     "buttonTooltip": "AI Tools",
-    "noApiKey": "Chưa cấu hình API key AI. Vui lòng mở cài đặt AI để bắt đầu.",
+    "noApiKey": "Chưa cấu hình AI backend. Mở cài đặt AI để đặt Backend URL.",
     "tonesLabel": "Giọng điệu",
     "tones": {
       "friendly": "Thân thiện",
@@ -373,7 +387,7 @@
     "customTitle": "Tuỳ chỉnh",
     "previewTitle": "Xem trước AI",
     "buttonTooltip": "Tạo section bằng AI",
-    "noApiKey": "Chưa cấu hình API key AI. Mở cài đặt AI để bắt đầu.",
+    "noApiKey": "Chưa cấu hình AI backend. Mở cài đặt AI để đặt Backend URL.",
     "customPlaceholder": "Mô tả section bạn muốn tạo…",
     "generate": "Tạo",
     "generating": "Đang tạo section…",
