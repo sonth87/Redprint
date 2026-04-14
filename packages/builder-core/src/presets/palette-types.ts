@@ -82,12 +82,20 @@ export interface PaletteType {
 
 // ── Item (variant / preset) ───────────────────────────────────────────────
 
+export type PaletteItemType = "variant" | "group";
+
 export interface PaletteItem {
   /** Unique within the parent type. Used as React key and for dedup. */
   id: string;
   /**
+   * The type of item:
+   * - "variant": A single component with pre-defined props/style.
+   * - "group": A composite component or snippet (e.g. Price Card).
+   */
+  type: PaletteItemType;
+  /**
    * The ComponentDefinition.type key this item instantiates.
-   * Must match a registered component. If unregistered, the item is hidden.
+   * For "group", this is usually the root component (e.g. "Container" or "Section").
    */
   componentType: string;
   /** Fallback display name */
@@ -96,38 +104,38 @@ export interface PaletteItem {
   description?: string;
   /**
    * Preview thumbnail URL or data-URI.
-   * When provided, shown as an <img> in the item card.
-   * When absent, falls back to a live mini-render for simple component types,
-   * or to a generic icon placeholder.
    */
   thumbnail?: string | null;
   /**
    * Per-locale name/description overrides.
-   * Keyed by locale code, e.g. { "en": { "name": "...", "description": "..." }, "vi": { "name": "..." } }
    */
   i18n?: Record<string, { name?: string; description?: string }>;
-  /** Props applied when the item is added to the canvas (merged onto component defaultProps) */
-  props: Record<string, unknown>;
-  /** Style overrides applied to node.style (merged onto component defaultStyle) */
+  /**
+   * The following fields are optional because they might be fetched on-demand (Lazy-load).
+   */
+  /** Props applied when the item is added to the canvas */
+  props?: Record<string, unknown>;
+  /** Style overrides applied to node.style */
   style?: Partial<StyleConfig>;
-  /**
-   * Per-breakpoint style overrides applied immediately after ADD_NODE.
-   * Applied via UPDATE_RESPONSIVE_STYLE commands grouped with the same groupId.
-   */
+  /** Per-breakpoint style overrides */
   responsiveStyle?: Partial<Record<Breakpoint, Partial<StyleConfig>>>;
-  /**
-   * Per-breakpoint prop overrides applied immediately after ADD_NODE.
-   * Applied via UPDATE_RESPONSIVE_PROPS commands grouped with the same groupId.
-   */
+  /** Per-breakpoint prop overrides */
   responsiveProps?: Partial<Record<Breakpoint, Record<string, unknown>>>;
   /**
    * For container-type items: child nodes to create recursively.
-   * Matches the existing PresetChildNode contract.
    */
   children?: PresetChildNode[];
-  /** Tags used for cross-group search, e.g. ["heading", "typography", "h1"] */
+  /** Tags used for cross-group search */
   tags?: string[];
 }
+
+/**
+ * Minimal metadata for a palette item, used for the initial catalog load.
+ */
+export type PaletteItemMetadata = Pick<
+  PaletteItem,
+  "id" | "type" | "componentType" | "name" | "thumbnail" | "i18n" | "tags"
+>;
 
 // ── Palette drag data ─────────────────────────────────────────────────────
 
@@ -140,10 +148,12 @@ export interface PaletteItem {
 export interface PaletteDragData {
   /** "palette-item" discriminant — distinguishes from old `{ type }` format */
   source: "palette-item";
+  /** Item ID for remote fetching */
+  itemId?: string;
   /** Component type to instantiate */
   componentType: string;
-  /** Full preset configuration to apply after ADD_NODE */
-  presetData: {
+  /** Full preset configuration to apply after ADD_NODE (optional if itemId is present) */
+  presetData?: {
     props: Record<string, unknown>;
     style?: Partial<StyleConfig>;
     responsiveStyle?: Partial<Record<Breakpoint, Partial<StyleConfig>>>;

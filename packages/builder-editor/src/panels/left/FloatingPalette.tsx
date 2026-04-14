@@ -57,7 +57,9 @@ export const FloatingPalette: React.FC<FloatingPaletteProps> = ({
   const panelRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  const groups: PaletteGroup[] = [...catalog.groups].sort((a, b) => a.order - b.order);
+  const groups: PaletteGroup[] = catalog?.groups 
+    ? [...catalog.groups].sort((a, b) => a.order - b.order)
+    : [];
 
   const getGroupLabel = useCallback(
     (group: PaletteGroup): string => {

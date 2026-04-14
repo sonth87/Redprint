@@ -6,7 +6,18 @@ import { useTranslation } from "react-i18next";
 
 // ── Simple-type live preview ───────────────────────────────────────────────
 
-const SIMPLE_PREVIEW_TYPES = new Set(["Text", "Button", "Divider", "Shape", "Anchor"]);
+const SIMPLE_PREVIEW_TYPES = new Set([
+  "Text",
+  "TextMarquee",
+  "TextMask",
+  "CollapsibleText",
+  "Button",
+  "Divider",
+  "Shape",
+  "Anchor",
+  "Image",
+  "Container",
+]);
 
 interface MiniPreviewProps {
   item: PaletteItem;
@@ -14,87 +25,171 @@ interface MiniPreviewProps {
 
 const MiniPreview: React.FC<MiniPreviewProps> = ({ item }) => {
   const type = item.componentType;
+  const s = item.style ?? {};
+  const p = item.props ?? {};
 
-  if (type === "Text") {
-    const text = String(item.props?.text ?? item.name).replace(/<[^>]+>/g, "");
-    const fontSize = item.style?.fontSize as string | undefined;
-    const fw = item.style?.fontWeight as string | number | undefined;
+  // Text-based components
+  if (type === "Text" || type === "TextMarquee" || type === "TextMask" || type === "CollapsibleText") {
+    const rawText = String(p.text ?? item.name).replace(/<[^>]+>/g, "");
+    const text = rawText.length > 25 ? rawText.slice(0, 25) + "…" : rawText;
+    const fontSize = s.fontSize as string | undefined;
+    const fw = s.fontWeight as string | number | undefined;
+    const color = s.color as string | undefined;
+    const ff = s.fontFamily as string | undefined;
+
     return (
       <div
-        className="flex items-center justify-center w-full h-full p-1 overflow-hidden"
-        style={{ transform: "scale(0.55)", transformOrigin: "center center" }}
+        className={cn(
+          "flex items-center justify-center w-full h-full p-2 overflow-hidden",
+          type === "TextMarquee" && "relative after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-transparent after:to-background/20",
+        )}
       >
         <span
-          style={{ fontSize: fontSize ?? "18px", fontWeight: fw ?? 400, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}
-          className="text-foreground"
+          style={{
+            fontSize: fontSize ?? "18px",
+            fontWeight: fw ?? (type === "CollapsibleText" ? 500 : 400),
+            fontFamily: ff,
+            color: color ?? "inherit",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            maxWidth: "100%",
+            transform: "scale(0.7)",
+            transformOrigin: "center center",
+            textDecoration: type === "CollapsibleText" ? "underline" : undefined,
+            textDecorationColor: type === "CollapsibleText" ? "rgba(0,0,0,0.2)" : undefined,
+            ...(type === "TextMask" ? {
+              backgroundImage: (p.gradient as string) ?? "linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            } : {}),
+          }}
         >
-          {text.length > 20 ? text.slice(0, 20) + "…" : text}
+          {text}
         </span>
       </div>
     );
   }
 
   if (type === "Button") {
-    const label = String(item.props?.label ?? item.name).replace(/<[^>]+>/g, "");
-    const bg = item.style?.backgroundColor as string | undefined;
-    const color = item.style?.color as string | undefined;
-    const radius = item.style?.borderRadius as string | undefined;
+    const label = String(p.label ?? item.name).replace(/<[^>]+>/g, "");
+    const bg = s.backgroundColor as string | undefined;
+    const color = s.color as string | undefined;
+    const radius = s.borderRadius as string | undefined;
+    const border = s.border as string | undefined;
+    const fs = (s as Record<string, unknown>).fontStyle as string | undefined;
+    const tt = s.textTransform as React.CSSProperties["textTransform"];
+
     return (
-      <div className="flex items-center justify-center w-full h-full">
+      <div className="flex items-center justify-center w-full h-full p-1.5">
         <div
           style={{
             background: bg ?? "#111827",
             color: color ?? "#fff",
             borderRadius: radius ?? "4px",
+            border: border ?? undefined,
             padding: "4px 10px",
-            fontSize: "11px",
-            fontWeight: 500,
+            fontSize: "10px",
+            fontWeight: 600,
+            fontStyle: fs,
+            textTransform: tt,
             whiteSpace: "nowrap",
+            transform: "scale(0.85)",
+            transformOrigin: "center center",
+            boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
           }}
         >
-          {label.length > 14 ? label.slice(0, 14) + "…" : label}
+          {label.length > 16 ? label.slice(0, 16) + "…" : label}
+        </div>
+      </div>
+    );
+  }
+
+  if (type === "Image") {
+    const src = (p.src as string) || (item.thumbnail as string);
+    if (src) {
+      return (
+        <div className="w-full h-full flex items-center justify-center bg-muted/30">
+          <img src={src} alt="" className="max-w-full max-h-full object-cover" draggable={false} />
+        </div>
+      );
+    }
+  }
+
+  if (type === "Container") {
+    const bg = (s.background as string) || (s.backgroundColor as string);
+    const border = s.border || (s.borderWidth ? `${s.borderWidth} ${s.borderStyle || "solid"} ${s.borderColor || "transparent"}` : undefined);
+    return (
+      <div className="flex items-center justify-center w-full h-full p-2">
+        <div
+          className="w-full h-full flex flex-col items-center justify-center gap-1 border border-dashed border-muted-foreground/20 rounded"
+          style={{
+            background: bg ?? "transparent",
+            border: (border as string) ?? undefined,
+            borderRadius: s.borderRadius as string ?? "4px",
+            backdropFilter: (s.backdropFilter as string) ?? undefined,
+          }}
+        >
+          <div className="w-4 h-0.5 bg-muted-foreground/20 rounded-full" />
+          <div className="w-6 h-0.5 bg-muted-foreground/10 rounded-full" />
         </div>
       </div>
     );
   }
 
   if (type === "Divider") {
-    const color = item.props?.color as string | undefined;
-    const thickness = Number(item.props?.thickness ?? 1);
-    const orientation = item.props?.orientation as string | undefined;
+    const color = p.color as string | undefined;
+    const thickness = Math.min(Number(p.thickness ?? 1), 4);
+    const orientation = p.orientation as string | undefined;
     return (
       <div className="flex items-center justify-center w-full h-full">
         {orientation === "vertical" ? (
-          <div style={{ width: thickness, height: 40, backgroundColor: color ?? "#e5e7eb" }} />
+          <div style={{ width: thickness, height: 40, backgroundColor: color ?? "#e5e7eb", borderRadius: "full" }} />
         ) : (
-          <div style={{ width: "70%", height: thickness, backgroundColor: color ?? "#e5e7eb" }} />
+          <div style={{ width: "70%", height: thickness, backgroundColor: color ?? "#e5e7eb", borderRadius: "full" }} />
         )}
       </div>
     );
   }
 
   if (type === "Shape") {
-    const fill = item.props?.fill as string | undefined;
-    const shape = item.props?.shape as string | undefined;
+    const fill = p.fill as string | undefined;
+    const shape = p.shape as string | undefined;
     return (
-      <div className="flex items-center justify-center w-full h-full">
-        <svg viewBox="0 0 40 40" width="40" height="40">
+      <div className="flex items-center justify-center w-full h-full p-2">
+        <svg viewBox="0 0 40 40" width="32" height="32" style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.1))" }}>
           {shape === "circle" ? (
             <circle cx="20" cy="20" r="16" fill={fill ?? "#111827"} />
           ) : shape === "triangle" ? (
-            <polygon points="20,5 38,36 2,36" fill={fill ?? "#f59e0b"} />
+            <polygon points="20,5 36,34 4,34" fill={fill ?? "#f59e0b"} />
+          ) : shape === "star" ? (
+            <path d="M20,2 25,14 38,14 28,22 32,35 20,28 8,35 12,22 2,14 15,14 Z" fill={fill ?? "#f59e0b"} />
+          ) : shape === "heart" ? (
+            <path d="M20,36 C20,36 4,24 4,14 C4,8 9,4 14,4 C17,4 19,6 20,8 C21,6 23,4 26,4 C31,4 36,8 36,14 C36,24 20,36 20,36 Z" fill={fill ?? "#ef4444"} />
+          ) : shape === "hexagon" ? (
+            <polygon points="20,2 38,11 38,29 20,38 2,29 2,11" fill={fill ?? "#10b981"} />
+          ) : shape === "diamond" ? (
+            <polygon points="20,4 36,20 20,36 4,20" fill={fill ?? "#3b82f6"} />
+          ) : shape === "arrow-right" ? (
+            <path d="M4,20 L36,20 M24,8 L36,20 L24,32" fill="none" stroke={fill ?? "#111827"} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+          ) : shape === "arrow-left" ? (
+            <path d="M36,20 L4,20 M16,8 L4,20 L16,32" fill="none" stroke={fill ?? "#111827"} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+          ) : shape === "arrow-up" ? (
+            <path d="M20,36 L20,4 M8,16 L20,4 L32,16" fill="none" stroke={fill ?? "#111827"} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+          ) : shape === "arrow-down" ? (
+            <path d="M20,4 L20,36 M8,24 L20,36 L32,24" fill="none" stroke={fill ?? "#111827"} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
           ) : (
-            <rect x="4" y="10" width="32" height="20" rx="2" fill={fill ?? "#111827"} />
+            <rect x="4" y="8" width="32" height="24" rx="3" fill={fill ?? "#111827"} />
           )}
         </svg>
       </div>
     );
   }
 
-  // Anchor or fallback
+  // Fallback icon
   return (
-    <div className="flex items-center justify-center w-full h-full text-muted-foreground/40">
-      <GripHorizontal className="w-6 h-6" />
+    <div className="flex items-center justify-center w-full h-full text-muted-foreground/30">
+      <GripHorizontal className="w-5 h-5" />
     </div>
   );
 };
@@ -130,19 +225,21 @@ export const PaletteItemCard: React.FC<PaletteItemCardProps> = ({
     return item.name;
   }, [item, lang]);
 
-  const showThumbnail = Boolean(item.thumbnail);
+  const effectiveThumbnail = item.thumbnail || (item.componentType === "Image" ? item.props?.src as string : undefined);
+  const showThumbnail = Boolean(effectiveThumbnail);
   const showLivePreview = !showThumbnail && SIMPLE_PREVIEW_TYPES.has(item.componentType);
 
   // ── Preview layout — visual-only, no label ───────────────────────────────
   if (layout === "preview") {
     const s = item.style ?? {};
     const rawLabel = String(item.props?.label ?? displayName).replace(/<[^>]+>/g, "");
-    const label = rawLabel.length > 20 ? rawLabel.slice(0, 20) + "…" : rawLabel;
+    const label = rawLabel.length > 40 ? rawLabel.slice(0, 40) + "…" : rawLabel;
     const border =
       (s.border as string | undefined) ??
       ((s.borderColor as string | undefined)
         ? `${(s.borderWidth as string | undefined) ?? "1px"} ${(s.borderStyle as string | undefined) ?? "solid"} ${s.borderColor as string}`
         : undefined);
+
     return (
       <div
         draggable
@@ -156,35 +253,42 @@ export const PaletteItemCard: React.FC<PaletteItemCardProps> = ({
         }}
         className={cn(
           "min-h-12 flex items-center justify-center rounded-lg overflow-hidden cursor-grab active:cursor-grabbing",
-          "hover:scale-105 transition-all",
+          "hover:scale-[1.02] transition-all",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring select-none group",
+          !showThumbnail && "border border-border/40 bg-muted/10"
         )}
         title={displayName}
       >
         {showThumbnail ? (
-          <img src={item.thumbnail!} alt={displayName} className="max-h-full max-w-full object-contain" draggable={false} />
-        ) : (
+          <img src={effectiveThumbnail!} alt={displayName} className="max-h-full max-w-full object-contain" draggable={false} />
+        ) : SIMPLE_PREVIEW_TYPES.has(item.componentType) ? (
           <div
-            style={{
-              background: (s.backgroundColor as string | undefined) ?? "transparent",
+            className="w-full flex items-center justify-center"
+            style={item.componentType === "Button" || item.componentType === "Text" ? {
+              background: (s.backgroundColor as string | undefined) ?? (s.background as string | undefined) ?? "transparent",
               color: (s.color as string | undefined) ?? "#111827",
               borderRadius: (s.borderRadius as string | undefined) ?? "4px",
               border,
-              padding: "5px 12px",
-              fontSize: "12px",
+              padding: "8px 16px",
+              fontSize: "14px",
               fontWeight: (s.fontWeight as string | number | undefined) ?? 500,
-              letterSpacing: (s.letterSpacing as string | undefined),
-              fontFamily: (s.fontFamily as string | undefined) ?? "inherit",
+              fontFamily: (s.fontFamily as string | undefined),
+              fontStyle: ((s as Record<string, unknown>).fontStyle as string | undefined),
               textTransform: (s.textTransform as React.CSSProperties["textTransform"]),
-              whiteSpace: "nowrap" as const,
+              letterSpacing: (s.letterSpacing as string | undefined),
+              textAlign: "center",
               width: "100%",
-              textAlign: "center" as const,
-              boxSizing: "border-box" as const,
+              boxShadow: s.boxShadow as string,
+              whiteSpace: "nowrap",
               overflow: "hidden",
               textOverflow: "ellipsis",
-            }}
+            } : { width: "100%", height: 60 }}
           >
-            {label}
+            {item.componentType === "Button" || item.componentType === "Text" ? label : <MiniPreview item={item} />}
+          </div>
+        ) : (
+          <div className="flex items-center justify-center w-full h-12 text-muted-foreground/30">
+            <GripHorizontal className="w-5 h-5" />
           </div>
         )}
       </div>
@@ -214,15 +318,17 @@ export const PaletteItemCard: React.FC<PaletteItemCardProps> = ({
   );
 
   // ── List layout — Text variant: full-row styled text preview ─────────
-  // For Text items the styled text IS the preview — no separate thumbnail box.
-  if (layout === "list" && item.componentType === "Text") {
+  // For Text-like items the styled text IS the preview — no separate thumbnail box.
+  const isTextType = ["Text", "TextMarquee", "TextMask", "CollapsibleText"].includes(item.componentType);
+  if (layout === "list" && isTextType) {
     const rawText = String(item.props?.text ?? displayName).replace(/<[^>]+>/g, "");
     const parsedPx = parseFloat((item.style?.fontSize as string | undefined) ?? "18");
-    // Scale proportionally so large headings (48px+) still fit in the row
-    const previewPx = Math.min(parsedPx * 0.55, 22);
+    // Better scale: keep hierarchy but cap at 28px for headings, 14px min
+    const previewPx = Math.max(14, Math.min(parsedPx * 0.65, 28));
     const fw = item.style?.fontWeight as string | number | undefined;
     const ff = item.style?.fontFamily as string | undefined;
     const color = item.style?.color as string | undefined;
+    const fs = (item.style as Record<string, unknown> | undefined)?.fontStyle as string | undefined;
 
     return (
       <div
@@ -235,14 +341,23 @@ export const PaletteItemCard: React.FC<PaletteItemCardProps> = ({
             fontSize: `${previewPx}px`,
             fontWeight: fw ?? 400,
             fontFamily: ff,
+            fontStyle: fs,
             color: color ?? undefined,
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
-            lineHeight: 1.3,
+            lineHeight: 1.2,
+            ...(item.componentType === "TextMask" ? {
+              backgroundImage: (item.props?.gradient as string) ?? "linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              width: "fit-content"
+            } : {}),
+            ...(item.componentType === "CollapsibleText" ? { textDecoration: "underline", textDecorationColor: "rgba(0,0,0,0.2)" } : {})
           }}
         >
-          {rawText.length > 40 ? rawText.slice(0, 40) + "…" : rawText}
+          {rawText.length > 50 ? rawText.slice(0, 50) + "…" : rawText}
+          {item.componentType === "TextMarquee" && " ↔"}
         </span>
       </div>
     );
@@ -259,7 +374,7 @@ export const PaletteItemCard: React.FC<PaletteItemCardProps> = ({
         <div className="w-14 h-9 flex-shrink-0 rounded-md overflow-hidden bg-background/60 border border-border/30">
           {showThumbnail ? (
             <img
-              src={item.thumbnail!}
+              src={effectiveThumbnail!}
               alt={displayName}
               className="w-full h-full object-cover"
               draggable={false}
@@ -298,7 +413,7 @@ export const PaletteItemCard: React.FC<PaletteItemCardProps> = ({
       <div className="relative h-16 w-full overflow-hidden bg-background/60 border-b border-border/30">
         {showThumbnail ? (
           <img
-            src={item.thumbnail!}
+            src={effectiveThumbnail!}
             alt={displayName}
             className="w-full h-full object-cover"
             draggable={false}

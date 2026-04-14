@@ -60,6 +60,7 @@ import { ArtboardLabel } from "./canvas/ArtboardLabel";
 import { FlowDropPlaceholderLayer } from "./canvas/FlowDropPlaceholderLayer";
 import { initI18n, type SupportedLocale } from "./i18n";
 import { useTranslation } from "react-i18next";
+import { type RemotePaletteProvider } from "./types/remote-palette";
 
 import { useViewport } from "./hooks/useViewport";
 import { useResizeGesture } from "./hooks/useResizeGesture";
@@ -99,15 +100,23 @@ import {
 
 
 
+// ── Context for Remote Palette Provider ─────────────────────────────────────
+
+const RemotePaletteContext = React.createContext<RemotePaletteProvider | null>(null);
+
+export const useRemotePaletteProvider = () => React.useContext(RemotePaletteContext);
+
 // ── Inner editor (must be inside BuilderProvider) ─────────────────────────
 
 function EditorInner({
   groupRegistry,
   paletteCatalog,
+  remotePaletteProvider,
   locale,
 }: {
   groupRegistry?: GroupRegistry;
   paletteCatalog?: PaletteCatalog;
+  remotePaletteProvider?: RemotePaletteProvider;
   locale?: string;
 }) {
   const { t } = useTranslation();
@@ -127,6 +136,15 @@ function EditorInner({
   const { layersOpen, layersPanelPos, handleLayersToggle } = useLayersPanel();
   const { aiOpen, setAiOpen, pageGeneratorOpen, setPageGeneratorOpen, aiConfig, handleAIConfigChange } = useAIConfig();
   const [figmaOpen, setFigmaOpen] = React.useState(false);
+
+  const [remoteCatalog, setRemoteCatalog] = React.useState<PaletteCatalog | undefined>();
+  const effectiveCatalog = paletteCatalog || remoteCatalog;
+
+  React.useEffect(() => {
+    if (remotePaletteProvider && !paletteCatalog) {
+      remotePaletteProvider.fetchCatalog().then(setRemoteCatalog).catch(console.error);
+    }
+  }, [remotePaletteProvider, paletteCatalog]);
 
   // ── Canvas geometry ──────────────────────────────────────────────────────
   const { canvasWidth, canvasMinHeight, sectionNodes } = useCanvasDimensions({ document, breakpoint });
@@ -333,21 +351,21 @@ function EditorInner({
         />
 
         {/* Palette */}
-        {paletteCatalog && paletteMode === "floating" && (
+        {paletteMode === "floating" && (effectiveCatalog || remotePaletteProvider) && (
           <FloatingPalette
-            catalog={paletteCatalog} activeGroupId={activePaletteGroupId}
+            catalog={effectiveCatalog!} activeGroupId={activePaletteGroupId}
             onGroupSelect={handleGroupSelect} locale={locale}
             layersOpen={layersOpen} onLayersToggle={handleLayersToggle}
           />
         )}
-        {paletteCatalog && paletteMode === "docked" && (
+        {paletteMode === "docked" && (effectiveCatalog || remotePaletteProvider) && (
           <AddElementsPanel
-            catalog={paletteCatalog} activeGroupId={activePaletteGroupId}
+            catalog={effectiveCatalog} activeGroupId={activePaletteGroupId}
             onGroupChange={setActivePaletteGroupId} onClose={handlePaletteClose}
             onItemDragStart={handlePaletteDragStart} onItemClick={handlePaletteItemClick} locale={locale}
           />
         )}
-        {!paletteCatalog && (
+        {!(effectiveCatalog || remotePaletteProvider) && (
           <FloatingPanel id="components" title="Components" defaultPosition={DEFAULT_COMPONENTS_PANEL_POS}>
             <div className="h-[40vh] min-h-[300px] overflow-hidden">
               <ComponentPalette components={allComponents} onDragStart={handleDragStart} groupRegistry={groupRegistry} />
@@ -686,6 +704,10 @@ export interface BuilderEditorProps {
    * When provided, replaces the legacy ComponentPalette with the new Wix-style palette.
    */
   paletteCatalog?: PaletteCatalog;
+  /** Whether to fetch the palette catalog from a remote API if paletteCatalog is not provided */
+  useRemotePalette?: boolean;
+  /** Custom provider for fetching remote palette data. If provided, overrides internal defaults. */
+  remotePaletteProvider?: RemotePaletteProvider;
   /** Locale for i18n (e.g., "en", "vi") */
   locale?: SupportedLocale | string;
   /** Additional i18n resources to merge with built-in translations */
@@ -695,7 +717,16 @@ export interface BuilderEditorProps {
 }
 
 export function BuilderEditor({
-  builder, config, className, groupRegistry, paletteCatalog, locale, i18nResources, i18nKeySeparator,
+  builder,
+  config,
+  className,
+  groupRegistry,
+  paletteCatalog,
+  useRemotePalette,
+  remotePaletteProvider,
+  locale,
+  i18nResources,
+  i18nKeySeparator,
 }: BuilderEditorProps) {
   React.useEffect(() => {
     if (locale || i18nResources || i18nKeySeparator !== undefined) {
@@ -705,9 +736,16 @@ export function BuilderEditor({
 
   return (
     <BuilderProvider builder={builder} config={config}>
-      <div className={cn("h-full w-full", className)}>
-        <EditorInner groupRegistry={groupRegistry} paletteCatalog={paletteCatalog} locale={locale} />
-      </div>
+      <RemotePaletteContext.Provider value={remotePaletteProvider ?? null}>
+        <div className={cn("h-full w-full", className)}>
+          <EditorInner 
+            groupRegistry={groupRegistry} 
+            paletteCatalog={paletteCatalog} 
+            remotePaletteProvider={remotePaletteProvider} 
+            locale={locale} 
+          />
+        </div>
+      </RemotePaletteContext.Provider>
     </BuilderProvider>
   );
 }
