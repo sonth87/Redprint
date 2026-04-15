@@ -229,7 +229,7 @@ export const RESIZE_HANDLE_BASE = 8 as const;
  * Design: 480px = generous visible gap that accommodates viewport guides.
  * Note: Crucial for responsive editing in dual-mode canvas.
  */
-export const DUAL_GAP_PX = 480 as const;
+export const DUAL_GAP_PX = 1500 as const;
 
 /**
  * Toolbar left offset from frame edge (8px).
