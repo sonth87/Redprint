@@ -1,0 +1,34 @@
+Chào bạn, dựa trên việc phân tích mã nguồn trong thư mục `packages/builder-editor/src/ai/` và `apps/api/src/routes/ai.routes.ts`, tôi xin gửi một vài **đánh giá chi tiết về AI Assistant** của project này.
+
+### 🌟 1. Ưu điểm & Điểm mạnh (The Good)
+
+*   **Kiến trúc Client - Backend rõ ràng & An toàn:**
+    *   Trước đây có thể cấu hình API Key ở Client, nhưng hiện tại đã chuyển sang mô hình gọi API qua `backendUrl` (`apps/api/`). Điều này rất quan trọng vì nó ẩn đi các API Key (OpenAI, Gemini, Claude) khỏi frontend, đảm bảo tính bảo mật.
+*   **Context Building cực kì tối ưu (`buildAIContext.ts`):**
+    *   Không gửi "mù mờ" toàn bộ cây DOM. Việc gửi AI Context được kiểm soát rất tốt. Gồm các thông tin trọng yếu: Node đang chọn (`selectedNode`), cây cấu trúc trang (nếu bật `includePageContext`), và **đặc biệt là `availablePresets`**.
+    *   Việc cho AI biết về các `availablePresets` (danh mục component có sẵn) giúp AI sinh ra lệnh `ADD_NODE` dùng component chính xác thay vì sinh ra mã chung chung bị lỗi.
+*   **Hệ thống Command (Command-driven architecture):**
+    *   **Crucial Design Choice!** AI KHÔNG trực tiếp mutate state (thay đổi trạng thái DOM). Thay vào đó, AI trả về JSON chứa mảng các "Commands" (như `ADD_NODE`, `UPDATE_PROPS`, `UPDATE_STYLE`).
+    *   Việc áp dụng qua một Command Engine giúp mọi thay đổi do AI tạo ra đều **hoàn toàn có thể Undo/Redo (Ctrl+Z)**. Đây là một điểm cộng tuyệt đối cho trải nghiệm người dùng trên các công cụ Builder.
+    *   Có **Whitelist Commands an toàn**: AI không thể tự động xóa (`REMOVE_NODE`) nếu không được phép, tránh phá hoại layout của người dùng.
+*   **Parsing Response Robust (`AIService.ts`):**
+    *   Hàm `parseAIResponse` xử lý rất tốt các tình huống AI trả về định dạng "lệch chuẩn" (ví dụ: trả về Markdown block chứa JSON ` ```json ... ``` ` thay vì raw JSON). Nó bóc tách cấu trúc khá thông minh, làm giảm thiểu các lỗi liên quan đến format.
+*   **Hỗ trợ Streaming UI (`AIAssistant.tsx`):**
+    *   Có UI cho trạng thái Streaming (`streamingEnabled`) với hiệu ứng Typing. Dù hiện tại phần Chat đang simulate stream (chờ full response rồi trả ra), nhưng cơ sở hạ tầng đã được thiết lập tốt cho SSE (Server-Sent Events).
+    *   Hệ thống `/api/ai/generate-page` ở backend thực sự dùng Server-Sent Events để báo tiến độ sinh theo từng Section, rất phù hợp với UX cho các tác vụ tốn thời gian.
+*   **Parallel/Batched Generation (`ai.routes.ts`):**
+    *   Ở backend, `generate-page` hỗ trợ mode `parallel` và có khả năng batched, phân chia layout thành các "sections" nhỏ để xử lý song song, tối ưu hóa thời gian chờ đáng kể thay vì làm Sequential toàn bộ trang.
+
+### ⚠️ 2. Một số hạn chế & Điểm cần cải thiện (The Bad / To Improve)
+
+*   **Chat Streaming là giả lập (Simulated Streaming):**
+    *   Trong `AIService.ts`, hàm `streamAIMessage` thực tế đang gọi backend (`sendAIMessage`), chờ kết quả trả về **đầy đủ (JSON)** rồi mới emit token một lần duy nhất qua callbacks.
+    *   *Đề xuất cải thiện:* Backend route `/api/ai/chat` nên được nâng cấp để thực sự stream token-by-token xuống Client qua SSE, rồi phía Client parse JSON theo từng chunk (thông qua các thư viện như `partial-json-parser`). Nó sẽ giúp UX của Chat nhanh hơn rõ rệt.
+*   **Token Limit Issue với `includePageContext`:**
+    *   Nếu trang quá lớn, việc bật cờ `includePageContext: true` (Serialize toàn bộ nodes trong trang) sẽ tốn cực kỳ nhiều token (chi phí tốn kém) và thậm chí vượt ngưỡng Context Window của một số model thấp.
+    *   *Đề xuất cải thiện:* Nên có một cơ chế "Prune/Slim" sâu hơn cho `AIPageNode`, hoặc có logic RAG (retrieval-augmented generation) để chỉ lấy các nodes gần với vùng được chọn.
+*   **Thiếu cơ chế Self-Correction (Auto-Retry) trên Frontend:**
+    *   Khi `parseAIResponse` thất bại hoàn toàn (không tìm ra JSON hợp lệ), nó trả về dạng raw text message. Nó không tự động đính kèm thông báo lỗi đó để feedback lại cho AI tự sửa chữa. (Dù vậy, AI models hiện nay khá ngoan nên tỉ lệ này thấp).
+
+### 💡 Tổng kết
+Tính năng AI Assistant của UI Builder được xây dựng cực kỳ **bài bản, có hệ thống và modular**. Ý tưởng biến AI từ một "code generator" thuần túy thành một "Command emitter" (Phát sinh các action dispatchable vào Redux/Zustand) là thiết kế đúng đắn và chuẩn mực cho các công cụ editor hiện đại. Chỉ cần tối ưu thêm luồng True-Streaming Token-by-Token thì sẽ đạt đến mức rất hoàn hảo!
