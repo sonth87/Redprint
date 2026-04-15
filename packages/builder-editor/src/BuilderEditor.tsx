@@ -36,6 +36,7 @@ import {
   LiveDimensionsDisplay,
 } from "./overlay/EditorOverlay";
 import { SectionOverlay } from "./overlay/SectionOverlay";
+import { SpacingHighlightOverlay } from "./overlay/SpacingHighlightOverlay";
 import { SectionToolbar } from "./overlay/SectionToolbar";
 import { EditorToolbar } from "./toolbar/EditorToolbar";
 import { ComponentPalette } from "./panels/left/ComponentPalette";
@@ -136,6 +137,7 @@ function EditorInner({
   const { layersOpen, layersPanelPos, handleLayersToggle } = useLayersPanel();
   const { aiOpen, setAiOpen, pageGeneratorOpen, setPageGeneratorOpen, aiConfig, handleAIConfigChange } = useAIConfig();
   const [figmaOpen, setFigmaOpen] = React.useState(false);
+  const [spacingHover, setSpacingHover] = React.useState<"padding" | "margin" | null>(null);
 
   const [remoteCatalog, setRemoteCatalog] = React.useState<PaletteCatalog | undefined>();
   const [loadedGroups, setLoadedGroups] = React.useState<Set<string>>(new Set());
@@ -429,8 +431,14 @@ function EditorInner({
         <FloatingPanel id="properties" title={selectedNode ? "Properties" : "Page Settings"} defaultPosition={DEFAULT_PROPERTIES_PANEL_POS}>
           <div className="flex h-[75vh] max-h-[800px] min-h-[500px] flex-col overflow-hidden">
             {selectedNode ? (
-              <PropertyPanel selectedNode={selectedNode} definition={selectedDefinition} breakpoint={breakpoint}
-                onPropChange={handlePropChange} onStyleChange={handleStyleChange} />
+              <PropertyPanel
+                selectedNode={selectedNode}
+                definition={selectedDefinition}
+                breakpoint={breakpoint}
+                onPropChange={handlePropChange}
+                onStyleChange={handleStyleChange}
+                onSpacingHover={setSpacingHover}
+              />
             ) : (
               <div className="flex flex-col h-full">
                 <PageSettings document={document} onCanvasConfigChange={handleCanvasConfigChange} />
@@ -600,6 +608,14 @@ function EditorInner({
                   elementRect: el.getBoundingClientRect(), currentRotation, gestureGroupId: uuidv4(),
                 });
               }}
+            />
+
+            <SpacingHighlightOverlay
+              type={spacingHover}
+              node={selectedNode}
+              breakpoint={breakpoint}
+              selectionRect={selectionRect}
+              zoom={zoom}
             />
 
             {hoverRect && <HoverOutline rect={hoverRect} zoom={zoom} />}

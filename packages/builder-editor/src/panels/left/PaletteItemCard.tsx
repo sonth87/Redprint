@@ -357,7 +357,7 @@ export const PaletteItemCard: React.FC<PaletteItemCardProps> = ({
           }}
         >
           {rawText.length > 50 ? rawText.slice(0, 50) + "…" : rawText}
-          {item.componentType === "TextMarquee" && " ↔"}
+          {item.componentType === "TextMarquee"}
         </span>
       </div>
     );
