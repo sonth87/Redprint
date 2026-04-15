@@ -122,29 +122,40 @@ export const InlineTextEditor: React.FC<InlineTextEditorProps> = ({
     const containerRect = canvasContainerRef.current.getBoundingClientRect();
     const elRect = el.getBoundingClientRect();
 
-    // Position the overlay at the element's screen-space origin, then set its
-    // natural (canvas-space) dimensions and apply `transform: scale(zoom)`.
-    // This makes the browser lay out text in exactly the same CSS box as the
-    // original element — same width, same font-size, same padding — then zoom
-    // the rendered result identically to the canvas frame. Manually scaling
-    // individual CSS properties by zoom causes sub-pixel text-reflow differences
-    // that produce inconsistent line-wrapping at fractional zoom levels.
-    const viewportX = elRect.left - containerRect.left;
-    const viewportY = elRect.top  - containerRect.top;
-    const canvasW   = elRect.width  / zoom;
-    const canvasH   = elRect.height / zoom;
+    // Get the element's unrotated dimensions and transform
+    const computed = window.getComputedStyle(el);
+    const originalTransform = computed.transform !== "none" ? computed.transform : "";
+
+    // Calculate the center of the element in the container's coordinate space
+    const centerX = elRect.left + elRect.width / 2 - containerRect.left;
+    const centerY = elRect.top + elRect.height / 2 - containerRect.top;
+
+    // Use offsetWidth/offsetHeight instead of bounding rect dimensions because
+    // bounding rect is larger than the actual element when rotated.
+    const canvasW = el.offsetWidth;
+    const canvasH = el.offsetHeight;
+
+    // Calculate the unrotated top-left layout position.
+    // We don't multiply by zoom here because the CSS scale() transform
+    // visually scales the element from its center without affecting its layout box.
+    const viewportX = centerX - canvasW / 2;
+    const viewportY = centerY - canvasH / 2;
 
     const s = containerRef.current.style;
     s.left            = `${viewportX}px`;
     s.top             = `${viewportY}px`;
     s.width           = `${canvasW}px`;
     s.minHeight       = `${canvasH}px`;
-    s.transform       = `scale(${zoom})`;
-    s.transformOrigin = "0 0";
+
+    // Set transform origin to center for proper rotation/scaling
+    s.transformOrigin = "50% 50%";
+
+    // Apply scale first (from center), then original transform (which includes rotation)
+    // CSS transforms are applied from right to left: scale(zoom) then originalTransform
+    s.transform       = `${originalTransform} scale(${zoom})`;
 
     // Copy computed styles as-is — no zoom scaling needed because the
     // container itself is scaled by the transform above.
-    const computed = window.getComputedStyle(el);
     s.fontFamily      = computed.fontFamily;
     s.fontSize        = computed.fontSize;
     s.fontWeight      = computed.fontWeight;
@@ -175,10 +186,13 @@ export const InlineTextEditor: React.FC<InlineTextEditorProps> = ({
       const cRect = container.getBoundingClientRect();
       // Convert overlay pixels → canvas-space coordinates (absolute from origin).
       // Subtract panOffset so the result is independent of scroll/pan position.
-      const x = (cRect.left - containerRect.left - panOffset.x) / zoom;
-      const y = (cRect.top  - containerRect.top  - panOffset.y) / zoom;
-      const width  = cRect.width  / zoom;
-      const height = cRect.height / zoom;
+      // Use offsetWidth/offsetHeight instead of cRect.width/height to get the unrotated size.
+      const centerX = (cRect.left + cRect.width / 2 - containerRect.left - panOffset.x) / zoom;
+      const centerY = (cRect.top + cRect.height / 2 - containerRect.top - panOffset.y) / zoom;
+      const width  = container.offsetWidth;
+      const height = container.offsetHeight;
+      const x = centerX - width / 2;
+      const y = centerY - height / 2;
       onBoundsChange({ x, y, width, height });
     };
 
