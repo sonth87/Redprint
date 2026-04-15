@@ -135,9 +135,11 @@ export const InlineTextEditor: React.FC<InlineTextEditorProps> = ({
     const canvasW = el.offsetWidth;
     const canvasH = el.offsetHeight;
 
-    // Calculate the unrotated top-left position, scaled by zoom
-    const viewportX = centerX - (canvasW * zoom) / 2;
-    const viewportY = centerY - (canvasH * zoom) / 2;
+    // Calculate the unrotated top-left layout position.
+    // We don't multiply by zoom here because the CSS scale() transform
+    // visually scales the element from its center without affecting its layout box.
+    const viewportX = centerX - canvasW / 2;
+    const viewportY = centerY - canvasH / 2;
 
     const s = containerRef.current.style;
     s.left            = `${viewportX}px`;
