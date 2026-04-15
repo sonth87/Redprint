@@ -1,5 +1,6 @@
 import React from "react";
 import type { ComponentDefinition } from "@ui-builder/builder-core";
+import { sanitizeHtml } from "../utils/sanitize";
 
 export const ButtonComponent: ComponentDefinition = {
   type: "Button",
@@ -72,7 +73,7 @@ export const ButtonComponent: ComponentDefinition = {
       disabled={Boolean(node.props.disabled)}
       className="select-none"
       // eslint-disable-next-line react/no-danger
-      dangerouslySetInnerHTML={{ __html: String(node.props.label ?? "<p>Button</p>") }}
+      dangerouslySetInnerHTML={{ __html: sanitizeHtml(String(node.props.label ?? "<p>Button</p>")) }}
     />
   ),
   runtimeRenderer: ({ node, style }) => (
@@ -80,7 +81,7 @@ export const ButtonComponent: ComponentDefinition = {
       style={style as React.CSSProperties}
       disabled={Boolean(node.props.disabled)}
       // eslint-disable-next-line react/no-danger
-      dangerouslySetInnerHTML={{ __html: String(node.props.label ?? "<p>Button</p>") }}
+      dangerouslySetInnerHTML={{ __html: sanitizeHtml(String(node.props.label ?? "<p>Button</p>")) }}
     />
   ),
 };

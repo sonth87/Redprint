@@ -22,7 +22,8 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@ui-builder/builder-core": "workspace:*"
+    "@ui-builder/builder-core": "workspace:*",
+    "dompurify": "^3.2.4"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
@@ -30,6 +31,7 @@
   },
   "devDependencies": {
     "@ui-builder/config": "workspace:*",
+    "@types/dompurify": "^3.2.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "tsup": "^8.3.0",
