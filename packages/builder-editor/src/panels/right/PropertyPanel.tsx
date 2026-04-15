@@ -29,6 +29,133 @@ export interface PropertyPanelProps {
 }
 
 /**
+ * A specialized input for numeric values with a fixed or selectable CSS unit.
+ * Features:
+ * - Click unit label to cycle units (with safe value capping for %).
+ * - Click and drag horizontally to scrub (increment/decrement) the value.
+ */
+function NumericPropertyInput({
+  value,
+  onChange,
+  placeholder = "0",
+  units = ["px"],
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  units?: string[];
+}) {
+  const [isScrubbing, setIsScrubbing] = React.useState(false);
+  
+  // Parsing: detect current unit and numeric value
+  const isAuto = value === "auto";
+  const currentUnit = units.find(u => String(value).endsWith(u)) || units[0];
+  const numPart = isAuto ? "" : String(value || "").replace(new RegExp(`${currentUnit}$`), "");
+
+  const handleNumChange = (newVal: string) => {
+    if (newVal === "" || newVal === "auto") {
+      onChange(newVal);
+      return;
+    }
+    if (!/^[-+]?[0-9]*\.?[0-9]*$/.test(newVal)) return;
+    onChange(newVal + currentUnit);
+  };
+
+  const toggleUnit = () => {
+    if (units.length <= 1 || isAuto) return;
+    const currentIndex = units.indexOf(currentUnit);
+    const nextUnit = units[(currentIndex + 1) % units.length];
+    
+    let nextNum = parseFloat(numPart) || 0;
+    
+    // Method 1: Safe Defaults
+    // If switching to %, ensure the value isn't absurdly large (max 100%)
+    if (nextUnit === "%" && nextNum > 100) {
+      nextNum = 100;
+    } else if (nextUnit === "px" && currentUnit === "%" && nextNum === 100) {
+      // If switching from 100% to px, maybe default to a common size or let it be
+      // For now, just keep the number as per user's "Method 1" request
+    }
+
+    onChange(nextNum + nextUnit);
+  };
+
+  // Scrubbing Logic
+  const onMouseDown = React.useCallback((e: React.MouseEvent) => {
+    if (isAuto || e.button !== 0) return; // Only left click
+    
+    const startX = e.clientX;
+    const startVal = parseFloat(numPart) || 0;
+    let hasMoved = false;
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      const deltaX = moveEvent.clientX - startX;
+      if (Math.abs(deltaX) > 3) {
+        hasMoved = true;
+        setIsScrubbing(true);
+        
+        // Adjust step based on modifiers
+        let step = 1;
+        if (moveEvent.shiftKey) step = 10;
+        if (moveEvent.altKey) step = 0.1;
+        
+        const newVal = startVal + (deltaX * step);
+        // Round to 1 decimal place if using alt, else integer
+        const formattedVal = step < 1 ? Math.round(newVal * 10) / 10 : Math.round(newVal);
+        
+        onChange(formattedVal + currentUnit);
+      }
+    };
+
+    const onMouseUp = () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+      setTimeout(() => setIsScrubbing(false), 0);
+      
+      if (hasMoved) {
+        // Prevent click events if we actually dragged
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+  }, [numPart, currentUnit, isAuto, onChange]);
+
+  return (
+    <div className="relative flex items-center group">
+      <Input
+        className={cn(
+          "h-7 text-xs pr-8 focus-visible:ring-1",
+          !isAuto && "cursor-ew-resize select-none focus:cursor-text",
+          isScrubbing && "cursor-ew-resize pointer-events-none"
+        )}
+        value={numPart}
+        placeholder={isAuto ? "auto" : placeholder}
+        onMouseDown={onMouseDown}
+        onChange={(e) => handleNumChange(e.target.value)}
+      />
+      {!isAuto && (
+        <span 
+          className={cn(
+            "absolute right-2.5 text-[10px] font-medium text-muted-foreground/60 select-none cursor-default",
+            units.length > 1 && "cursor-pointer hover:text-primary hover:bg-muted px-1 rounded transition-colors"
+          )}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleUnit();
+          }}
+          title={units.length > 1 ? `Click to switch unit (${units.join('/')})` : undefined}
+        >
+          {currentUnit}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/**
  * Renders a single prop control based on its PropSchema.
  */
 function PropControl({
@@ -545,11 +672,11 @@ export const PropertyPanel = memo(function PropertyPanel({
                 {["width", "height", "minWidth", "maxWidth", "minHeight", "maxHeight"].map((key) => (
                   <div key={key} className="grid gap-1">
                     <Label className="text-[10px] text-muted-foreground capitalize">{key}</Label>
-                    <Input
-                      className="h-7 text-xs"
+                    <NumericPropertyInput
                       value={String(style[key] ?? "")}
                       placeholder="auto"
-                      onChange={(e) => onStyleChange(key, e.target.value || undefined)}
+                      units={["width", "maxWidth", "height", "maxHeight"].includes(key) ? ["px", "%"] : ["px"]}
+                      onChange={(val) => onStyleChange(key, val || undefined)}
                     />
                   </div>
                 ))}
@@ -564,11 +691,10 @@ export const PropertyPanel = memo(function PropertyPanel({
                     <Label className="text-[10px] text-muted-foreground capitalize">
                       {key === "padding" ? "All" : key.replace("padding", "").toLowerCase()}
                     </Label>
-                    <Input
-                      className="h-7 text-xs"
+                    <NumericPropertyInput
                       value={String(style[key] ?? "")}
                       placeholder="0"
-                      onChange={(e) => onStyleChange(key, e.target.value || undefined)}
+                      onChange={(val) => onStyleChange(key, val || undefined)}
                     />
                   </div>
                 ))}
@@ -580,11 +706,10 @@ export const PropertyPanel = memo(function PropertyPanel({
                     <Label className="text-[10px] text-muted-foreground capitalize">
                       {key === "margin" ? "All" : key.replace("margin", "").toLowerCase()}
                     </Label>
-                    <Input
-                      className="h-7 text-xs"
+                    <NumericPropertyInput
                       value={String(style[key] ?? "")}
                       placeholder="0"
-                      onChange={(e) => onStyleChange(key, e.target.value || undefined)}
+                      onChange={(val) => onStyleChange(key, val || undefined)}
                     />
                   </div>
                 ))}
@@ -605,11 +730,10 @@ export const PropertyPanel = memo(function PropertyPanel({
                 </div>
                 <div className="grid gap-1">
                   <Label className="text-[10px] text-muted-foreground">Font Size</Label>
-                  <Input
-                    className="h-7 text-xs"
+                  <NumericPropertyInput
                     value={String(style.fontSize ?? "")}
                     placeholder="16px"
-                    onChange={(e) => onStyleChange("fontSize", e.target.value || undefined)}
+                    onChange={(val) => onStyleChange("fontSize", val || undefined)}
                   />
                 </div>
                 <div className="grid gap-1">
@@ -639,11 +763,10 @@ export const PropertyPanel = memo(function PropertyPanel({
                 </div>
                 <div className="grid gap-1">
                   <Label className="text-[10px] text-muted-foreground">Letter Spacing</Label>
-                  <Input
-                    className="h-7 text-xs"
+                  <NumericPropertyInput
                     value={String(style.letterSpacing ?? "")}
                     placeholder="0"
-                    onChange={(e) => onStyleChange("letterSpacing", e.target.value || undefined)}
+                    onChange={(val) => onStyleChange("letterSpacing", val || undefined)}
                   />
                 </div>
                 <div className="grid gap-1">
@@ -715,11 +838,10 @@ export const PropertyPanel = memo(function PropertyPanel({
               <div className="grid grid-cols-2 gap-2">
                 <div className="grid gap-1">
                   <Label className="text-[10px] text-muted-foreground">Width</Label>
-                  <Input
-                    className="h-7 text-xs"
+                  <NumericPropertyInput
                     value={String(style.borderWidth ?? "")}
                     placeholder="0"
-                    onChange={(e) => onStyleChange("borderWidth", e.target.value || undefined)}
+                    onChange={(val) => onStyleChange("borderWidth", val || undefined)}
                   />
                 </div>
                 <div className="grid gap-1">
@@ -740,11 +862,10 @@ export const PropertyPanel = memo(function PropertyPanel({
                 </div>
                 <div className="grid gap-1">
                   <Label className="text-[10px] text-muted-foreground">Radius</Label>
-                  <Input
-                    className="h-7 text-xs"
+                  <NumericPropertyInput
                     value={String(style.borderRadius ?? "")}
                     placeholder="0"
-                    onChange={(e) => onStyleChange("borderRadius", e.target.value || undefined)}
+                    onChange={(val) => onStyleChange("borderRadius", val || undefined)}
                   />
                 </div>
                 <div className="grid gap-1.5">
@@ -832,11 +953,11 @@ export const PropertyPanel = memo(function PropertyPanel({
                 </div>
                 <div className="grid gap-1">
                   <Label className="text-[10px] text-muted-foreground">Z-Index</Label>
-                  <Input
-                    className="h-7 text-xs"
+                  <NumericPropertyInput
                     value={String(style.zIndex ?? "")}
                     placeholder="auto"
-                    onChange={(e) => onStyleChange("zIndex", e.target.value || undefined)}
+                    units={[""]}
+                    onChange={(val) => onStyleChange("zIndex", val || undefined)}
                   />
                 </div>
               </div>
