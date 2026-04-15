@@ -17,6 +17,29 @@ import type {
 
 export const aiRouter: IRouter = Router();
 
+// ── Helper: Summarize Node Tree ───────────────────────────────────────────
+function summarizeNodeTree(pageNodes: Record<string, any>, rootId: string, depth = 0, maxDepth = 4): string {
+  const node = pageNodes[rootId];
+  if (!node) return "";
+
+  const indent = "  ".repeat(depth);
+  let summary = `${indent}- ${node.type} (id: "${node.id}")`;
+  if (node.name) summary += ` [name: ${node.name}]`;
+
+  if (depth >= maxDepth) return summary + " (truncated...)";
+
+  const children = Object.values(pageNodes)
+    .filter(n => n.parentId === rootId)
+    .sort((a, b) => a.order - b.order);
+
+  if (children.length > 0) {
+    summary += "\n" + children.map(c => summarizeNodeTree(pageNodes, c.id, depth + 1, maxDepth)).join("\n");
+  }
+
+  return summary;
+}
+
+
 // ── Utility: write SSE event ─────────────────────────────────────────────
 
 function sendSSE(res: Response, event: string, data: unknown) {
@@ -171,7 +194,7 @@ aiRouter.post("/chat", async (req: Request, res: Response) => {
     const ctx = body.builderContext;
     const componentList = ctx.availableComponents.map((c) => `${c.type}`).join(", ");
     const pageContextBlock = ctx.pageNodes
-      ? `\n## Full Page Node Tree\n${JSON.stringify(ctx.pageNodes, null, 2)}\n`
+      ? `\n## Page Node Tree Summary\n${summarizeNodeTree(ctx.pageNodes, ctx.document.rootNodeId)}\n`
       : "";
 
     const presetsBlock = ctx.availablePresets

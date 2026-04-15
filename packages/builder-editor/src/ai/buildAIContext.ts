@@ -104,12 +104,12 @@ export function buildAIContext(
       type: c.type,
       name: c.name,
       category: c.category,
+      // Only include minimal schema for network optimization
       capabilities: Object.entries(c.capabilities)
         .filter(([, v]) => Boolean(v))
         .map(([k]) => k),
-      propSchema: c.propSchema
-        .filter((s) => s.type !== "group")
-        .map((s) => ({ key: s.key, label: s.label, type: s.type })),
+      // Prop schema is heavy and usually omitted unless we really need it for all components
+      // propSchema: c.propSchema.map(s => ({ key: s.key, label: s.label, type: s.type }))
     })),
     activeBreakpoint: state.editor.activeBreakpoint,
     pageNodes,
