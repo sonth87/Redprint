@@ -54,7 +54,6 @@ import { AIAssistant } from "./ai/AIAssistant";
 import { AIConfigPanel } from "./ai/AIConfig";
 import { buildAIContext } from "./ai/buildAIContext";
 import { AIConfigProvider } from "./ai/AIConfigContext";
-import { PageGeneratorModal } from "./ai/page-generator";
 import { FigmaImportDialog } from "./figma/FigmaImportDialog";
 import { ArtboardLabel } from "./canvas/ArtboardLabel";
 import { FlowDropPlaceholderLayer } from "./canvas/FlowDropPlaceholderLayer";
@@ -134,7 +133,7 @@ function EditorInner({
   const { paletteMode, activePaletteGroupId, setActivePaletteGroupId, handleGroupSelect, handlePaletteClose } =
     usePaletteState();
   const { layersOpen, layersPanelPos, handleLayersToggle } = useLayersPanel();
-  const { aiOpen, setAiOpen, pageGeneratorOpen, setPageGeneratorOpen, aiConfig, handleAIConfigChange } = useAIConfig();
+  const { aiOpen, setAiOpen, aiConfig, handleAIConfigChange } = useAIConfig();
   const [figmaOpen, setFigmaOpen] = React.useState(false);
 
   const [remoteCatalog, setRemoteCatalog] = React.useState<PaletteCatalog | undefined>();
@@ -387,7 +386,6 @@ function EditorInner({
           onToolChange={(tool) => { setActiveTool(tool); if (tool === "pan") clearSelection(); }}
           onCanvasModeToggle={toggleCanvasMode} onFitToScreen={handleFitToScreen}
           onAIOpen={() => setAiOpen(true)}
-          onPageGeneratorOpen={() => setPageGeneratorOpen(true)}
           onFigmaOpen={() => setFigmaOpen(true)}
         />
 
@@ -443,7 +441,6 @@ function EditorInner({
         </FloatingPanel>
 
         <AIAssistant open={aiOpen} onOpenChange={setAiOpen} config={aiConfig} onConfigChange={handleAIConfigChange} context={aiContext} />
-        <PageGeneratorModal open={pageGeneratorOpen} onOpenChange={setPageGeneratorOpen} config={aiConfig} context={aiContext} />
         <FigmaImportDialog open={figmaOpen} onOpenChange={setFigmaOpen} />
 
         {/* Canvas area */}
@@ -526,7 +523,7 @@ function EditorInner({
                             </p>
                           </div>
                           <button
-                            onClick={() => setPageGeneratorOpen(true)}
+                            onClick={() => setAiOpen(true)}
                             className="flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 active:scale-95 transition-all"
                           >
                             <Sparkles className="h-3 w-3" />

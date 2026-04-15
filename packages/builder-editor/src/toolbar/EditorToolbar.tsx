@@ -18,12 +18,12 @@ import {
   Hand,
   Columns2,
   Sparkles,
-  LayoutTemplate,
   Maximize2,
   Info,
-  X,
 } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { ZOOM_LEVELS, TOOLTIP_DELAY_EXTENDED_MS } from "@ui-builder/shared";
+import type { EditorTool } from "../types";
+import { ToolbarButton } from "./ToolbarButton";
 
 // Figma logo as a small inline SVG button icon
 const FigmaIcon = ({ size = 14 }: { size?: number }) => (
@@ -35,9 +35,6 @@ const FigmaIcon = ({ size = 14 }: { size?: number }) => (
     <path d="M2 28.5C2 33.1944 5.80558 37 10.5 37H19V20H10.5C5.80558 20 2 23.8056 2 28.5Z" fill="#A259FF"/>
   </svg>
 );
-import { ZOOM_LEVELS, TOOLTIP_DELAY_EXTENDED_MS } from "@ui-builder/shared";
-import type { EditorTool } from "../types";
-import { ToolbarButton } from "./ToolbarButton";
 
 export interface EditorToolbarProps {
   breakpoint: Breakpoint;
@@ -58,8 +55,6 @@ export interface EditorToolbarProps {
   onCanvasModeToggle: () => void;
   onFitToScreen?: () => void;
   onAIOpen?: () => void;
-  /** Open the full-page AI generator dialog */
-  onPageGeneratorOpen?: () => void;
   /** Open the Figma import dialog */
   onFigmaOpen?: () => void;
 }
@@ -86,7 +81,6 @@ export const EditorToolbar = memo(function EditorToolbar({
   onCanvasModeToggle,
   onFitToScreen,
   onAIOpen,
-  onPageGeneratorOpen,
   onFigmaOpen,
 }: EditorToolbarProps) {
   const zoomPct = Math.round(zoom * 100);
@@ -260,7 +254,7 @@ export const EditorToolbar = memo(function EditorToolbar({
           compact
         />
 
-        {(onAIOpen || onFigmaOpen || onPageGeneratorOpen) && (
+        {(onAIOpen || onFigmaOpen) && (
           <>
             {/* Separator */}
             <div className="bg-border mx-1 h-6 w-px" />
@@ -274,16 +268,6 @@ export const EditorToolbar = memo(function EditorToolbar({
               >
                 <FigmaIcon size={14} />
               </button>
-            )}
-
-            {onPageGeneratorOpen && (
-              <ToolbarButton
-                icon={LayoutTemplate}
-                tooltip={t("toolbar.aiGeneratePage")}
-                onClick={onPageGeneratorOpen}
-                aria-label={t("toolbar.aiGeneratePage")}
-                compact
-              />
             )}
 
             {onAIOpen && (

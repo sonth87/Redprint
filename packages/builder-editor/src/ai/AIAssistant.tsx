@@ -3,6 +3,8 @@
  *
  * Flow: user types prompt → Generate → loading/streaming indicator
  * → commands parsed → applied to canvas → dialog closes automatically.
+ *
+ * With fullPageMode checkbox, user can generate a complete page (replacing all existing content).
  */
 import React, { useCallback, useRef, useState, useEffect } from "react";
 import {
@@ -13,10 +15,12 @@ import {
   Button,
   ScrollArea,
   Badge,
+  Label,
+  Checkbox,
 } from "@ui-builder/ui";
 import { Settings, Sparkles, Zap, Loader2 } from "lucide-react";
 import { useBuilder } from "@ui-builder/builder-react";
-import type { AIConfig, AIMessage, AIBuilderContext, AIResponse, AICommandSuggestion } from "./types";
+import type { AIConfig, AIMessage, AIBuilderContext, AIResponse } from "./types";
 import { sendAIMessage, streamAIMessage, parseAIResponse } from "./AIService";
 import { AIConfigPanel } from "./AIConfig";
 import { normalizeAICommands } from "./normalizeAICommands";
@@ -59,6 +63,7 @@ export function AIAssistant({ open, onOpenChange, config, onConfigChange, contex
   const [isLoading, setIsLoading] = useState(false);
   const [streamingText, setStreamingText] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [fullPageMode, setFullPageMode] = useState(false);
 
   // Reset all state when dialog closes
   useEffect(() => {
@@ -89,6 +94,33 @@ export function AIAssistant({ open, onOpenChange, config, onConfigChange, contex
   const applyAndClose = useCallback(
     (response: AIResponse) => {
       if (abortRef.current) return;
+      
+      // If fullPageMode is enabled, clear all existing nodes first (except root)
+      if (fullPageMode) {
+        // Get current state to find children of root
+        const state = (dispatch as unknown as { getState?: () => { document?: { rootNodeId: string; nodes?: Record<string, unknown> } } }).getState?.() || { document: { rootNodeId: context.document.rootNodeId, nodes: {} } };
+        const rootNodeId = context.document.rootNodeId;
+        const nodes = state.document?.nodes || {};
+        
+        // Find and remove all children of root node
+        const childrenToRemove = Object.values(nodes).filter(
+          (n: unknown) => {
+            const node = n as { parentId?: string; id?: string };
+            return node.parentId === rootNodeId && node.id !== rootNodeId;
+          }
+        );
+        
+        for (const child of childrenToRemove) {
+          try {
+            const childNode = child as { id: string };
+            dispatch({ type: "REMOVE_NODE", payload: { nodeId: childNode.id } } as never);
+          } catch (err) {
+            const nodeId = (child as { id?: string }).id || 'unknown';
+            console.warn(`[AI] Failed to remove node ${nodeId}:`, err);
+          }
+        }
+      }
+      
       if (response.suggestions && response.suggestions.length > 0) {
         const commands = normalizeAICommands(response.suggestions, context.document.rootNodeId);
         const errors: string[] = [];
@@ -109,7 +141,7 @@ export function AIAssistant({ open, onOpenChange, config, onConfigChange, contex
       }
       onOpenChange(false);
     },
-    [dispatch, onOpenChange, context.document.rootNodeId],
+    [dispatch, onOpenChange, context.document.rootNodeId, fullPageMode],
   );
 
   const handleGenerate = useCallback(async () => {
@@ -167,7 +199,7 @@ export function AIAssistant({ open, onOpenChange, config, onConfigChange, contex
         setError(err instanceof Error ? err.message : "Unknown error");
       }
     }
-  }, [prompt, isLoading, config, context, t, applyAndClose]);
+  }, [prompt, isLoading, config, context, applyAndClose]);
 
   const handleCancel = useCallback(() => {
     abortRef.current = true;
@@ -240,6 +272,23 @@ export function AIAssistant({ open, onOpenChange, config, onConfigChange, contex
                   rows={5}
                   className="w-full rounded-md border bg-transparent px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
                 />
+
+                {/* Full Page Mode Checkbox */}
+                <div className="flex items-center gap-2.5">
+                  <Checkbox
+                    id="fullPageMode"
+                    checked={fullPageMode}
+                    onCheckedChange={(checked: boolean | "indeterminate") => {
+                      if (typeof checked === "boolean") {
+                        setFullPageMode(checked);
+                      }
+                    }}
+                    disabled={isLoading}
+                  />
+                  <Label htmlFor="fullPageMode" className="text-sm cursor-pointer select-none">
+                    {t("toolbar.fullPageMode")}
+                  </Label>
+                </div>
 
                 {/* Error */}
                 {error && <p className="text-xs text-destructive">{error}</p>}

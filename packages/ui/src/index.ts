@@ -27,6 +27,8 @@ export { Slider } from "./components/slider";
 
 export { Switch } from "./components/switch";
 
+export { Checkbox } from "./components/checkbox";
+
 export { Toggle, toggleVariants } from "./components/toggle";
 export type { ToggleProps } from "./components/toggle";
 
