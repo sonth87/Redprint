@@ -47,9 +47,12 @@ function NumericPropertyInput({
 }) {
   const [isScrubbing, setIsScrubbing] = React.useState(false);
   
+  // Ensure units is non-empty with fallback
+  const safeUnits = (units && units.length > 0) ? units : ["px"];
+  
   // Parsing: detect current unit and numeric value
   const isAuto = value === "auto";
-  const currentUnit = units.find(u => String(value).endsWith(u)) || units[0];
+  const currentUnit = safeUnits.find(u => String(value).endsWith(u)) || safeUnits[0]!;
   const numPart = isAuto ? "" : String(value || "").replace(new RegExp(`${currentUnit}$`), "");
 
   const handleNumChange = (newVal: string) => {
@@ -62,9 +65,9 @@ function NumericPropertyInput({
   };
 
   const toggleUnit = () => {
-    if (units.length <= 1 || isAuto) return;
-    const currentIndex = units.indexOf(currentUnit);
-    const nextUnit = units[(currentIndex + 1) % units.length];
+    if (safeUnits.length <= 1 || isAuto) return;
+    const currentIndex = safeUnits.indexOf(currentUnit);
+    const nextUnit = safeUnits[(currentIndex + 1) % safeUnits.length]!;
     
     let nextNum = parseFloat(numPart) || 0;
     
@@ -140,13 +143,13 @@ function NumericPropertyInput({
         <span 
           className={cn(
             "absolute right-2.5 text-[10px] font-medium text-muted-foreground/60 select-none cursor-default",
-            units.length > 1 && "cursor-pointer hover:text-primary hover:bg-muted px-1 rounded transition-colors"
+            safeUnits.length > 1 && "cursor-pointer hover:text-primary hover:bg-muted px-1 rounded transition-colors"
           )}
           onClick={(e) => {
             e.stopPropagation();
             toggleUnit();
           }}
-          title={units.length > 1 ? `Click to switch unit (${units.join('/')})` : undefined}
+          title={safeUnits.length > 1 ? `Click to switch unit (${safeUnits.join('/')})` : undefined}
         >
           {currentUnit}
         </span>
