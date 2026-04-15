@@ -1,5 +1,6 @@
 import React from "react";
 import type { ComponentDefinition } from "@ui-builder/builder-core";
+import { sanitizeHtml } from "../utils/sanitize";
 
 export const CollapsibleTextComponent: ComponentDefinition = {
   type: "CollapsibleText",
@@ -45,7 +46,7 @@ export const CollapsibleTextComponent: ComponentDefinition = {
         <div
           style={{ overflow: "hidden", display: "-webkit-box", WebkitLineClamp: Number(node.props.previewLines ?? 3), WebkitBoxOrient: "vertical" }}
           // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{ __html: html }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(html) }}
         />
         <span
           style={{
@@ -79,7 +80,7 @@ export const CollapsibleTextComponent: ComponentDefinition = {
               : { overflow: "hidden", display: "-webkit-box", WebkitLineClamp: Number(node.props.previewLines ?? 3), WebkitBoxOrient: "vertical" }
           }
           // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{ __html: html }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(html) }}
         />
         <button
           style={{ display: "inline-block", marginTop: 8, fontSize: "14px", fontWeight: "600", cursor: "pointer", background: "none", border: "none", padding: 0, textDecoration: "underline" }}

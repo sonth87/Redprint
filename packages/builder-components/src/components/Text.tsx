@@ -1,5 +1,6 @@
 import React from "react";
 import type { ComponentDefinition } from "@ui-builder/builder-core";
+import { sanitizeHtml } from "../utils/sanitize";
 
 export const TextComponent: ComponentDefinition = {
   type: "Text",
@@ -60,7 +61,7 @@ export const TextComponent: ComponentDefinition = {
         style={style as React.CSSProperties}
         className="outline-none"
         // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{ __html: html }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(html) }}
       />
     );
   },
@@ -70,7 +71,7 @@ export const TextComponent: ComponentDefinition = {
       <Tag
         style={style as React.CSSProperties}
         // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{ __html: String(node.props.text ?? "") }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(String(node.props.text ?? "")) }}
       />
     );
   },

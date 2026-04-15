@@ -47,6 +47,7 @@ import {
 } from "lucide-react";
 import { useAIToolsState } from "./useAIToolsState";
 import { AI_TONES, AI_TEXT_ACTIONS, AI_IMAGE_ACTIONS, AI_CUSTOM_SUGGESTIONS } from "./ai-tools-config";
+import { sanitizeHtml } from "../../utils/sanitize";
 import type { AIToolsMode } from "./types";
 import type { AIConfig } from "../types";
 
@@ -510,8 +511,7 @@ function PreviewView({
         ) : (
           <div
             className="text-[12px] leading-relaxed text-foreground prose-sm max-w-none"
-            /* Safe — content comes from the AI, same origin as user-authored content */
-            dangerouslySetInnerHTML={{ __html: previewContent ?? "" }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(previewContent ?? "") }}
           />
         )}
 

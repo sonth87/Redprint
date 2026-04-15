@@ -37,6 +37,7 @@
     "@ui-builder/builder-react": "workspace:*",
     "@ui-builder/shared": "workspace:*",
     "@ui-builder/ui": "workspace:*",
+    "dompurify": "^3.2.4",
     "i18next": "^26.0.3",
     "lucide-react": "^1.7.0",
     "react-i18next": "^17.0.2",
@@ -48,6 +49,7 @@
   },
   "devDependencies": {
     "@testing-library/react": "^16.0.0",
+    "@types/dompurify": "^3.2.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@types/uuid": "^10.0.0",
