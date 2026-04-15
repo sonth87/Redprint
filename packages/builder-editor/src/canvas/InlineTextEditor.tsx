@@ -186,10 +186,13 @@ export const InlineTextEditor: React.FC<InlineTextEditorProps> = ({
       const cRect = container.getBoundingClientRect();
       // Convert overlay pixels → canvas-space coordinates (absolute from origin).
       // Subtract panOffset so the result is independent of scroll/pan position.
-      const x = (cRect.left - containerRect.left - panOffset.x) / zoom;
-      const y = (cRect.top  - containerRect.top  - panOffset.y) / zoom;
-      const width  = cRect.width  / zoom;
-      const height = cRect.height / zoom;
+      // Use offsetWidth/offsetHeight instead of cRect.width/height to get the unrotated size.
+      const centerX = (cRect.left + cRect.width / 2 - containerRect.left - panOffset.x) / zoom;
+      const centerY = (cRect.top + cRect.height / 2 - containerRect.top - panOffset.y) / zoom;
+      const width  = container.offsetWidth;
+      const height = container.offsetHeight;
+      const x = centerX - width / 2;
+      const y = centerY - height / 2;
       onBoundsChange({ x, y, width, height });
     };
 
