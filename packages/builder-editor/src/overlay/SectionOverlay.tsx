@@ -148,8 +148,8 @@ export const SectionOverlay = memo(function SectionOverlay({
             <div
               style={{
                 position: "absolute",
-                left: -150 / zoom,
-                width: 150 / zoom,
+                left: -250,
+                width: 250,
                 top: b.top,
                 height: b.height,
                 pointerEvents: "auto",
@@ -179,8 +179,8 @@ export const SectionOverlay = memo(function SectionOverlay({
             <div
               style={{
                 position: "absolute",
-                right: -150 / zoom,
-                width: 150 / zoom,
+                right: -250,
+                width: 250,
                 top: b.top,
                 height: b.height,
                 pointerEvents: "auto",
