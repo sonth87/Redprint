@@ -84,7 +84,11 @@ export function usePointerDown({
       const target = e.target as HTMLElement;
       if (
         target.closest("[data-resize-handle]") ||
-        target.closest("[data-rotation-handle]")
+        target.closest("[data-rotation-handle]") ||
+        target.closest("[data-section-handle]") ||
+        target.closest("[data-section-action]") ||
+        target.closest("[data-section-handle]") ||
+        target.closest("[data-section-action]")
       ) return;
 
       // ── PRIORITY 1: Multi-select group drag ───────────────────────────────

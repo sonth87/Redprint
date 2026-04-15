@@ -622,7 +622,7 @@ function EditorInner({
           {selectedSectionNode && (
             <SectionToolbar
               node={selectedSectionNode} sectionNodes={sectionNodes} zoom={zoom} panOffset={panOffset}
-              canvasFrameRef={canvasFrameRef} canvasContainerRef={canvasContainerRef} dispatch={dispatch} newNodeId={uuidv4}
+              canvasFrameRef={activeFrameRef} canvasContainerRef={canvasContainerRef} dispatch={dispatch} newNodeId={uuidv4}
               canvasMode={canvasMode} activeBreakpoint={breakpoint}
               desktopFrameWidth={document.canvasConfig.width ?? DEVICE_VIEWPORT_PRESETS.desktop.width}
               mobileFramePos={mobileFramePos} onDelete={handleDeleteNode}

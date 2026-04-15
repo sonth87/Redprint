@@ -161,18 +161,15 @@ export const SectionOverlay = memo(function SectionOverlay({
               onMouseLeave={() => setHovered(null)}
               onPointerDown={(e) => {
                 if (e.button !== 0) return;
-                e.stopPropagation();
               }}
               onMouseDown={(e) => {
                 if (e.button !== 0) return;
-                e.stopPropagation();
                 // Prevent selection/focus
                 e.preventDefault();
               }}
               onClick={(e) => {
                 if (e.button !== 0) return;
                 if (e.metaKey || e.ctrlKey) return;
-                e.stopPropagation();
                 onSelect?.(b.nodeId);
               }}
               data-section-handle="left"
@@ -195,17 +192,14 @@ export const SectionOverlay = memo(function SectionOverlay({
               onMouseLeave={() => setHovered(null)}
               onPointerDown={(e) => {
                 if (e.button !== 0) return;
-                e.stopPropagation();
               }}
               onMouseDown={(e) => {
                 if (e.button !== 0) return;
-                e.stopPropagation();
                 e.preventDefault();
               }}
               onClick={(e) => {
                 if (e.button !== 0) return;
                 if (e.metaKey || e.ctrlKey) return;
-                e.stopPropagation();
                 onSelect?.(b.nodeId);
               }}
               data-section-handle="right"
@@ -276,18 +270,15 @@ export const SectionOverlay = memo(function SectionOverlay({
                   }}
                   data-section-action="add"
                   onPointerDown={(e) => {
-                    if (e.button !== 0) return;
-                    e.stopPropagation();
-                  }}
+                if (e.button !== 0) return;
+              }}
                   onMouseDown={(e) => {
-                    if (e.button !== 0) return;
-                    e.stopPropagation();
-                    e.preventDefault();
+                if (e.button !== 0) return;
+                e.preventDefault();
                   }}
                   onClick={(e) => {
-                    if (e.button !== 0) return;
-                    e.stopPropagation();
-                    onAddSection(b.order);
+                if (e.button !== 0) return;
+                onAddSection(b.order);
                   }}
                 >
                   Thêm mới Section
@@ -314,13 +305,11 @@ export const SectionOverlay = memo(function SectionOverlay({
                   }}
                   data-resize-handle="section"
                   onPointerDown={(e) => {
-                    if (e.button !== 0) return;
-                    e.stopPropagation();
-                  }}
+                if (e.button !== 0) return;
+              }}
                   onMouseDown={(e) => {
-                    if (e.button !== 0) return;
-                    e.stopPropagation();
-                    e.preventDefault();
+                if (e.button !== 0) return;
+                e.preventDefault();
                     const id = b.nodeId + "-resize-" + Date.now();
                     // Pass canvas-space height (NOT multiplied by zoom)
                     onResizeStart(b.nodeId, e.clientY, b.height, id);
