@@ -122,29 +122,38 @@ export const InlineTextEditor: React.FC<InlineTextEditorProps> = ({
     const containerRect = canvasContainerRef.current.getBoundingClientRect();
     const elRect = el.getBoundingClientRect();
 
-    // Position the overlay at the element's screen-space origin, then set its
-    // natural (canvas-space) dimensions and apply `transform: scale(zoom)`.
-    // This makes the browser lay out text in exactly the same CSS box as the
-    // original element — same width, same font-size, same padding — then zoom
-    // the rendered result identically to the canvas frame. Manually scaling
-    // individual CSS properties by zoom causes sub-pixel text-reflow differences
-    // that produce inconsistent line-wrapping at fractional zoom levels.
-    const viewportX = elRect.left - containerRect.left;
-    const viewportY = elRect.top  - containerRect.top;
-    const canvasW   = elRect.width  / zoom;
-    const canvasH   = elRect.height / zoom;
+    // Get the element's unrotated dimensions and transform
+    const computed = window.getComputedStyle(el);
+    const originalTransform = computed.transform !== "none" ? computed.transform : "";
+
+    // Calculate the center of the element in the container's coordinate space
+    const centerX = elRect.left + elRect.width / 2 - containerRect.left;
+    const centerY = elRect.top + elRect.height / 2 - containerRect.top;
+
+    // Use offsetWidth/offsetHeight instead of bounding rect dimensions because
+    // bounding rect is larger than the actual element when rotated.
+    const canvasW = el.offsetWidth;
+    const canvasH = el.offsetHeight;
+
+    // Calculate the unrotated top-left position, scaled by zoom
+    const viewportX = centerX - (canvasW * zoom) / 2;
+    const viewportY = centerY - (canvasH * zoom) / 2;
 
     const s = containerRef.current.style;
     s.left            = `${viewportX}px`;
     s.top             = `${viewportY}px`;
     s.width           = `${canvasW}px`;
     s.minHeight       = `${canvasH}px`;
-    s.transform       = `scale(${zoom})`;
-    s.transformOrigin = "0 0";
+
+    // Set transform origin to center for proper rotation/scaling
+    s.transformOrigin = "50% 50%";
+
+    // Apply scale first (from center), then original transform (which includes rotation)
+    // CSS transforms are applied from right to left: scale(zoom) then originalTransform
+    s.transform       = `${originalTransform} scale(${zoom})`;
 
     // Copy computed styles as-is — no zoom scaling needed because the
     // container itself is scaled by the transform above.
-    const computed = window.getComputedStyle(el);
     s.fontFamily      = computed.fontFamily;
     s.fontSize        = computed.fontSize;
     s.fontWeight      = computed.fontWeight;
