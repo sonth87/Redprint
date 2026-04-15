@@ -265,19 +265,33 @@ export async function sendAIMessage(
   const systemContent = buildSystemMessage(config, context);
   const backendUrl = getBackendUrl(config);
 
+  // Slim down context before sending to save bandwidth and tokens
+  const slimContext = {
+    document: context.document,
+    selectedNode: context.selectedNode,
+    // Only send the types to save tokens, backend/AI doesn't need full capabilities for simple chat unless generating a page
+    availableComponents: context.availableComponents.map(c => ({ type: c.type, name: c.name, category: c.category })),
+    activeBreakpoint: context.activeBreakpoint,
+    // pageNodes are optionally sent, but slim them down if present
+    pageNodes: context.pageNodes ? Object.fromEntries(
+      Object.entries(context.pageNodes).map(([id, node]) => [id, {
+        id: node.id,
+        type: node.type,
+        name: node.name,
+        parentId: node.parentId,
+        order: node.order
+        // Omit props/style to save huge amount of tokens
+      }])
+    ) : undefined,
+    availablePresets: context.availablePresets,
+  };
+
   const payload = {
     messages: [
       { role: "system", content: systemContent },
       ...messages.map((m) => ({ role: m.role, content: m.content })),
     ],
-    builderContext: {
-      document: context.document,
-      selectedNode: context.selectedNode,
-      availableComponents: context.availableComponents,
-      activeBreakpoint: context.activeBreakpoint,
-      pageNodes: context.pageNodes,
-      availablePresets: context.availablePresets,
-    },
+    builderContext: slimContext,
   };
 
   const res = await fetch(`${backendUrl}/api/ai/chat`, {
