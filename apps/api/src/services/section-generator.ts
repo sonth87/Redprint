@@ -41,6 +41,43 @@ function extractJSON(text: string): unknown {
   }
 }
 
+// ── Design tokens instruction builder ────────────────────────────────────
+
+function buildDesignTokensInstruction(tokens: Record<string, unknown>): string {
+  const { primaryColor, secondaryColor, accentColor, fontFamily, headingFontFamily, borderRadius, backgroundColor, textColor } = tokens as any;
+
+  let instruction = `\n## Design Tokens — MANDATORY\nYou MUST use ONLY these values. Do NOT invent or approximate colors. Apply them specifically:\n`;
+
+  if (primaryColor) {
+    instruction += `- PRIMARY COLOR "${primaryColor}": Use for hero backgrounds, main buttons (backgroundColor), accent elements\n`;
+  }
+  if (secondaryColor) {
+    instruction += `- SECONDARY COLOR "${secondaryColor}": Use for section backgrounds, secondary buttons, text areas\n`;
+  }
+  if (accentColor) {
+    instruction += `- ACCENT COLOR "${accentColor}": Use for highlights, icons, borders, hover states\n`;
+  }
+  if (backgroundColor) {
+    instruction += `- BACKGROUND COLOR "${backgroundColor}": Use for main page/section background\n`;
+  }
+  if (textColor) {
+    instruction += `- TEXT COLOR "${textColor}": Use for body text and paragraph color\n`;
+  }
+  if (fontFamily) {
+    instruction += `- FONT FAMILY "${fontFamily}": Use for body text in "fontFamily" style property\n`;
+  }
+  if (headingFontFamily) {
+    instruction += `- HEADING FONT "${headingFontFamily}": Use for h1, h2, h3 in "fontFamily" style property\n`;
+  }
+  if (borderRadius) {
+    instruction += `- BORDER RADIUS "${borderRadius}": Use for rounded corners in "borderRadius" style property\n`;
+  }
+
+  instruction += `\nComplete token reference:\n${JSON.stringify(tokens, null, 2)}\n\nREPEAT: Use ONLY these colors. Do NOT use random colors like #FF7F50, #4A90E2, etc.`;
+
+  return instruction;
+}
+
 // ── Prompt builders ───────────────────────────────────────────────────────
 
 function buildSystemPrompt(
@@ -77,7 +114,7 @@ DO NOT generate a new "Section" component — the section already exists`;
       : "";
 
   const designTokensHint = Object.keys(designContext.designTokens).length > 0
-    ? `\n## Design Tokens — MANDATORY\nUse ONLY these values for colors and typography. Do NOT invent arbitrary CSS values.\n${JSON.stringify(designContext.designTokens, null, 2)}`
+    ? buildDesignTokensInstruction(designContext.designTokens as Record<string, unknown>)
     : "";
 
   return `You are a professional web page builder AI. Generate ADD_NODE commands to build a single page section.

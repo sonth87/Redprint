@@ -144,9 +144,12 @@ export interface ChatResponse {
 export interface DesignTokens {
   primaryColor?: string;
   secondaryColor?: string;
+  accentColor?: string;
   fontFamily?: string;
+  headingFontFamily?: string;
   borderRadius?: string;
   backgroundColor?: string;
+  textColor?: string;
 }
 
 // ── SSE Event payloads ──────────────────────────────────────────────────
