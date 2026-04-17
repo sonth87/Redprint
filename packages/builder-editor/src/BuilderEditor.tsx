@@ -263,8 +263,9 @@ function EditorInner({
     () => buildAIContext(state, allComponents, {
       includePageContext: aiConfig.includePageContext,
       paletteCatalog: paletteCatalog ?? undefined,
+      designTokens: aiConfig.designTokens,
     }),
-    [state, allComponents, aiConfig.includePageContext, paletteCatalog],
+    [state, allComponents, aiConfig.includePageContext, paletteCatalog, aiConfig.designTokens],
   );
 
   // ── Snap engine (now handled by hook) ────────────────────────────────────
@@ -440,7 +441,7 @@ function EditorInner({
           </div>
         </FloatingPanel>
 
-        <AIAssistant open={aiOpen} onOpenChange={setAiOpen} config={aiConfig} onConfigChange={handleAIConfigChange} context={aiContext} />
+        <AIAssistant open={aiOpen} onOpenChange={setAiOpen} config={aiConfig} context={aiContext} />
         <FigmaImportDialog open={figmaOpen} onOpenChange={setFigmaOpen} />
 
         {/* Canvas area */}

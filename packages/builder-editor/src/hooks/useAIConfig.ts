@@ -7,6 +7,7 @@ const DEFAULT_AI_CONFIG: AIConfig = {
   maxTokens: 8192,
   streamingEnabled: false,
   includePageContext: false,
+  designTokens: {},
 };
 
 const STORAGE_KEY = "ui-builder:ai-config";

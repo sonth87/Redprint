@@ -3,7 +3,9 @@
  * for the AI assistant to reason about.
  */
 import type { BuilderState, ComponentDefinition, PaletteCatalog } from "@ui-builder/builder-core";
-import type { AIBuilderContext, AIPageNode, AIPresetGroup } from "./types";
+import type { AIBuilderContext, AIPageNode, AIPageNodeSlim, AIPageNodeSummary, AIPresetGroup } from "./types";
+import { serializeComponentsCompact, deriveNestingRules } from "./serializeComponents";
+import { serializePresetsCompact } from "./serializePresets";
 
 export interface BuildAIContextOptions {
   /**
@@ -21,6 +23,8 @@ export interface BuildAIContextOptions {
    * generate precise ADD_NODE payloads using real presets.
    */
   paletteCatalog?: PaletteCatalog;
+  /** Design tokens for consistent styling across AI-generated sections. Phase 2A. */
+  designTokens?: AIBuilderContext["designTokens"];
 }
 
 export function buildAIContext(
@@ -35,11 +39,22 @@ export function buildAIContext(
     ? components.find((c) => c.type === selectedNode.type) ?? null
     : null;
 
+  // Phase 3A: Hierarchical page context (slim tree + focused nodes)
   let pageNodes: Record<string, AIPageNode> | undefined;
+  let pageNodesSummary: AIPageNodeSummary | undefined;
   if (options.includePageContext) {
-    pageNodes = {};
+    // Build slim tree for ALL nodes (structure only)
+    const tree: Record<string, AIPageNodeSlim> = {};
+    const fullNodes: Record<string, AIPageNode> = {};
     for (const node of Object.values(doc.nodes)) {
-      pageNodes[node.id] = {
+      tree[node.id] = {
+        id: node.id,
+        type: node.type,
+        name: node.name,
+        parentId: node.parentId,
+        order: node.order,
+      };
+      fullNodes[node.id] = {
         id: node.id,
         type: node.type,
         name: node.name,
@@ -49,6 +64,36 @@ export function buildAIContext(
         style: node.style as Record<string, unknown>,
       };
     }
+
+    // Identify focused set: selected node + parent + all siblings
+    const focusedIds = new Set<string>();
+    if (selectedId) {
+      focusedIds.add(selectedId);
+      const selectedNode = doc.nodes[selectedId];
+      if (selectedNode?.parentId && doc.nodes[selectedNode.parentId]) {
+        focusedIds.add(selectedNode.parentId);
+        // Add all siblings (same parent)
+        for (const sibling of Object.values(doc.nodes)) {
+          if (sibling.parentId === selectedNode.parentId) {
+            focusedIds.add(sibling.id);
+          }
+        }
+      }
+    }
+
+    // Build focused nodes map with full detail
+    const focusedNodes: Record<string, AIPageNode> = {};
+    for (const nodeId of focusedIds) {
+      if (fullNodes[nodeId]) {
+        focusedNodes[nodeId] = fullNodes[nodeId];
+      }
+    }
+
+    pageNodes = fullNodes; // Keep for backward compat
+    pageNodesSummary = {
+      tree,
+      focusedNodes,
+    };
   }
 
   // Build a slim preset reference from the palette catalog so the AI knows
@@ -76,6 +121,13 @@ export function buildAIContext(
           })),
       }));
   }
+
+  // Phase 1B: compact component manifest + nesting rules
+  const componentsManifest = serializeComponentsCompact(components);
+  const nestingRules = deriveNestingRules(components);
+
+  // Phase 1C: compact preset summary
+  const availablePresetsCompact = options.paletteCatalog ? serializePresetsCompact(options.paletteCatalog) : undefined;
 
   return {
     document: {
@@ -113,6 +165,12 @@ export function buildAIContext(
     })),
     activeBreakpoint: state.editor.activeBreakpoint,
     pageNodes,
+    pageNodesSummary,
     availablePresets,
+    componentsManifest,
+    nestingRules,
+    availablePresetsCompact,
+    // Phase 2A: design tokens from config
+    designTokens: options.designTokens,
   };
 }

@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -1 /Users/skyline/PROJECTS/my-builder/packages/builder-components/src/components/*.tsx)",
+      "Bash(xargs cat *)",
+      "Bash(python3)",
+      "Bash(python3 -c ' *)",
+      "WebSearch",
+      "WebFetch(domain:support.wix.com)",
+      "WebFetch(domain:help.ladipage.vn)",
+      "Bash(pnpm --filter api tsc --noEmit)",
+      "Bash(pnpm typecheck *)",
+      "Bash(pnpm lint:fix)",
+      "Bash(pnpm lint *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
+    ]
+  }
+}

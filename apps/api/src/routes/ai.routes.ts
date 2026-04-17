@@ -8,6 +8,7 @@ import { Router, type IRouter, type Request, type Response } from "express";
 import { generatePageOutline } from "../services/outline-generator.js";
 import { generateSectionCommands, extractStyleSummary } from "../services/section-generator.js";
 import { callLLM } from "../services/llm-client.js";
+import { COMMAND_REFERENCE } from "../services/command-reference.js";
 import type {
   ChatRequest,
   GeneratePageRequest,
@@ -156,6 +157,78 @@ aiRouter.post("/generate-page", async (req: Request, res: Response) => {
   }
 });
 
+// ── Chat system prompt builder ───────────────────────────────────────────
+
+function buildChatSystemPrompt(ctx: ChatRequest["builderContext"]): string {
+  // Components: use pre-serialized compact manifest when available (Phase 1B),
+  // otherwise fall back to a simple type list.
+  const componentList =
+    ctx.componentsManifest ??
+    ctx.availableComponents.map((c) => `${c.type} (${c.category})`).join(", ");
+
+  // Nesting rules: use derived rules when available (Phase 1B), else static fallback.
+  const nestingRules =
+    ctx.nestingRules ??
+    `Container components (can have children): Section, Container, Grid, Column
+Leaf components (no children): Text, Button, Image, Divider
+Always build pages with proper nesting: Section → Column/Grid → leaf nodes.
+Never place leaf nodes directly into root — wrap them in a Section or Container first.`;
+
+  const selectedNodeBlock = ctx.selectedNode
+    ? `- Selected node: ${ctx.selectedNode.type} (id: "${ctx.selectedNode.id}", name: "${ctx.selectedNode.name ?? "unnamed"}")
+  Props: ${JSON.stringify(ctx.selectedNode.props)}
+  Style: ${JSON.stringify(ctx.selectedNode.style)}`
+    : "- No node selected";
+
+  // Phase 3A: prefer hierarchical summary (slim tree + focused nodes) over full tree
+  let pageContextBlock = "";
+  if (ctx.pageNodesSummary) {
+    const { tree, focusedNodes } = ctx.pageNodesSummary;
+    pageContextBlock = `\n## Page Structure (Slim Tree)
+All existing nodes structure:\n${JSON.stringify(tree, null, 2)}\n
+## Focused Nodes (with full details)
+Selected node + parent + siblings:\n${JSON.stringify(focusedNodes, null, 2)}\n`;
+  } else if (ctx.pageNodes) {
+    pageContextBlock = `\n## Full Page Node Tree\nAll existing nodes with their real UUIDs — use these IDs in UPDATE_* commands:\n${JSON.stringify(ctx.pageNodes, null, 2)}\n`;
+  }
+
+  // Presets: use compact one-line string (Phase 1C) or full list.
+  const presetsBlock = ctx.availablePresetsCompact
+    ? `\n## Available Presets\n${ctx.availablePresetsCompact}\n`
+    : ctx.availablePresets
+    ? `\n## Available Presets\n${ctx.availablePresets
+        .flatMap((g) =>
+          g.types.flatMap((t) =>
+            t.items.map(
+              (item) =>
+                `  - id: "${item.id}", name: "${item.name}", componentType: "${item.componentType}"`
+            )
+          )
+        )
+        .join("\n")}\n`
+    : "";
+
+  // Design tokens (Phase 2A).
+  const designTokensBlock =
+    ctx.designTokens && Object.keys(ctx.designTokens).length > 0
+      ? `\n## Design Tokens — MANDATORY\nUse ONLY these values for colors and typography. Do NOT invent arbitrary CSS values.\n${JSON.stringify(ctx.designTokens, null, 2)}\n`
+      : "";
+
+  return `You are an AI assistant for a visual web page builder called Redprint. Help users build, modify, and improve their web page designs by generating precise builder commands.
+
+## Current Builder State
+- Document: "${ctx.document.name}" (${ctx.document.nodeCount} nodes, rootId: "${ctx.document.rootNodeId}")
+- Active breakpoint: ${ctx.activeBreakpoint}
+${selectedNodeBlock}
+
+## Available Components
+${componentList}
+
+## Component Hierarchy
+${nestingRules}${pageContextBlock}${presetsBlock}${designTokensBlock}
+${COMMAND_REFERENCE}`;
+}
+
 // ── POST /api/ai/chat ────────────────────────────────────────────────────
 
 aiRouter.post("/chat", async (req: Request, res: Response) => {
@@ -167,56 +240,13 @@ aiRouter.post("/chat", async (req: Request, res: Response) => {
   }
 
   try {
-    // Build system prompt from builder context
-    const ctx = body.builderContext;
-    const componentList = ctx.availableComponents.map((c) => `${c.type}`).join(", ");
-    const pageContextBlock = ctx.pageNodes
-      ? `\n## Full Page Node Tree\n${JSON.stringify(ctx.pageNodes, null, 2)}\n`
-      : "";
+    const systemContent = buildChatSystemPrompt(body.builderContext);
 
-    const presetsBlock = ctx.availablePresets
-      ? `\n## Available Presets\n${ctx.availablePresets
-          .flatMap((g) =>
-            g.types.flatMap((t) =>
-              t.items.map(
-                (item) =>
-                  `  - id: "${item.id}", name: "${item.name}", componentType: "${item.componentType}"`
-              )
-            )
-          )
-          .join("\n")}\n`
-      : "";
-
-    const selectedNodeBlock = ctx.selectedNode
-      ? `- Selected node: ${ctx.selectedNode.type} (id: "${ctx.selectedNode.id}")\n  Style: ${JSON.stringify(ctx.selectedNode.style)}`
-      : "- No node selected";
-
-    const systemContent = `You are an AI assistant for a visual web page builder called Redprint. Help users build, modify, and improve their web page designs by generating precise builder commands.
-
-## Current Builder State
-- Document: "${ctx.document.name}" (${ctx.document.nodeCount} nodes, rootId: "${ctx.document.rootNodeId}")
-- Active breakpoint: ${ctx.activeBreakpoint}
-${selectedNodeBlock}
-
-## Available Components
-${componentList}
-${pageContextBlock}${presetsBlock}
-## Command Reference
-ADD_NODE: { "type": "ADD_NODE", "payload": { "componentType": "...", "parentId": "...", "nodeId": "temp-x", "props": {}, "style": {} } }
-UPDATE_STYLE: { "type": "UPDATE_STYLE", "payload": { "nodeId": "uuid", "style": {} } }
-UPDATE_PROPS: { "type": "UPDATE_PROPS", "payload": { "nodeId": "uuid", "props": {} } }
-UPDATE_RESPONSIVE_STYLE: { "type": "UPDATE_RESPONSIVE_STYLE", "payload": { "nodeId": "uuid", "breakpoint": "mobile|tablet|desktop", "style": {} } }
-UPDATE_RESPONSIVE_PROPS: { "type": "UPDATE_RESPONSIVE_PROPS", "payload": { "nodeId": "uuid", "breakpoint": "mobile|tablet|desktop", "props": {} } }
-RENAME_NODE: { "type": "RENAME_NODE", "payload": { "nodeId": "uuid", "name": "..." } }
-DUPLICATE_NODE: { "type": "DUPLICATE_NODE", "payload": { "nodeId": "uuid" } }
-
-## Output Format — CRITICAL
-Respond with EXACTLY ONE JSON object:
-{ "message": "Brief explanation", "commands": [ ... ] }`;
-
+    // body.messages contains only user/assistant messages (no system role).
+    // The client no longer sends a system message — the backend owns that.
     const messages = [
       { role: "system" as const, content: systemContent },
-      ...body.messages,
+      ...body.messages.filter((m) => m.role !== "system"),
     ];
 
     const rawText = await callLLM(messages, true);

@@ -127,6 +127,12 @@ export interface PaletteItem {
   children?: PresetChildNode[];
   /** Tags used for cross-group search */
   tags?: string[];
+  /** Semantic purpose for AI context — e.g. "hero", "features", "pricing", "testimonials", "cta". Phase 4A. */
+  purpose?: string;
+  /** Industry hints for AI pattern matching — e.g. ["saas", "ecommerce", "portfolio"]. Phase 4A. */
+  industryHints?: string[];
+  /** Layout variant — e.g. "center", "split-left", "3col-grid", "slider", "accordion". Phase 4A. */
+  layoutVariant?: string;
 }
 
 /**

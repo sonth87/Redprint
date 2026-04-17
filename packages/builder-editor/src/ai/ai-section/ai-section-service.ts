@@ -61,14 +61,6 @@ function buildSectionPrompt(request: GenerateSectionRequest): string {
     `- Build rich, complete layouts: multiple rows, proper typography, spacing, and colours.`,
     `- MAKE IT RESPONSIVE: Provide "responsiveStyle", "responsiveProps", or "responsiveHidden" alongside standard "style"/"props" to adapt the layout for mobile and tablet limits. Example: stack columns into a list on mobile by setting flex-direction to column, or use shorter text on mobile via responsiveProps.`,
     `- Respond in English regardless of the user's language.`,
-    ``,
-    `COMMAND FORMAT (each line is one ADD_NODE):`,
-    `{"type":"ADD_NODE","payload":{"componentType":"Container","parentId":"root","nodeId":"temp-main","props":{},"style":{},"responsiveStyle":{"mobile":{"padding":"20px"}}}}`,
-    `{"type":"ADD_NODE","payload":{"componentType":"Text","parentId":"temp-main","props":{"text":"Long Title on Desktop","tag":"h1"},"style":{"fontSize":"32px"},"responsiveProps":{"mobile":{"text":"Short Title"}}}}`,
-    ``,
-    `EXAMPLE - Full response with 3 levels and responsive behavior:`,
-    `{"message":"Responsive feature section","commands":[{"type":"ADD_NODE","payload":{"componentType":"Grid","parentId":"root","nodeId":"temp-grid","props":{},"style":{"display":"grid","gridTemplateColumns":"1fr 1fr","gap":"40px"},"responsiveStyle":{"mobile":{"gridTemplateColumns":"1fr","gap":"20px"}}}},{"type":"ADD_NODE","payload":{"componentType":"Column","parentId":"temp-grid","nodeId":"temp-col","props":{},"style":{"display":"flex"}}},{"type":"ADD_NODE","payload":{"componentType":"Button","parentId":"temp-col","props":{"label":"Learn more about this product"},"style":{"padding":"16px"},"responsiveProps":{"mobile":{"label":"Learn More"}}}]}`,
-    ``,
   ].join("\n");
 }
 

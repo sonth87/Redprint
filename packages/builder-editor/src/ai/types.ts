@@ -22,6 +22,8 @@ export interface AIConfig {
   streamingEnabled?: boolean;
   /** Include full page node tree in AI context for more accurate edits. Default: false */
   includePageContext?: boolean;
+  /** Design tokens for consistent styling across AI-generated sections. Phase 2A. */
+  designTokens?: DesignTokens;
 }
 
 export interface AIMessage {
@@ -46,6 +48,35 @@ export interface AIPageNode {
   order: number;
   props: Record<string, unknown>;
   style: Record<string, unknown>;
+}
+
+/** Ultra-slim node for hierarchical tree — structure only (Phase 3A) */
+export interface AIPageNodeSlim {
+  id: string;
+  type: string;
+  name?: string;
+  parentId: string | null;
+  order: number;
+}
+
+/** Hierarchical page context: slim tree for structure + focused nodes for details */
+export interface AIPageNodeSummary {
+  /** All nodes with structure only (id, type, name, parentId, order) */
+  tree: Record<string, AIPageNodeSlim>;
+  /** Selected node + parent + siblings with full props/style detail */
+  focusedNodes: Record<string, AIPageNode>;
+}
+
+/** Design tokens for AI-consistent styling across sections */
+export interface DesignTokens {
+  primaryColor?: string;
+  secondaryColor?: string;
+  accentColor?: string;
+  fontFamily?: string;
+  headingFontFamily?: string;
+  borderRadius?: string;
+  backgroundColor?: string;
+  textColor?: string;
 }
 
 /** Context passed to AI to understand current builder state */
@@ -74,12 +105,22 @@ export interface AIBuilderContext {
   activeBreakpoint: string;
   /** Full page node map. Only present when config.includePageContext is enabled. */
   pageNodes?: Record<string, AIPageNode>;
+  /** Hierarchical page context: slim tree + focused nodes. Phase 3A optimization. */
+  pageNodesSummary?: AIPageNodeSummary;
   /**
    * Palette catalog summary — groups → types → preset items.
    * Only present when paletteCatalog is passed to buildAIContext.
    * Gives the AI concrete, named presets to reference instead of raw component types.
    */
   availablePresets?: AIPresetGroup[];
+  /** Compact component manifest — serializeComponentsCompact() output. Phase 1B. */
+  componentsManifest?: string;
+  /** Derived nesting rules — deriveNestingRules() output. Phase 1B. */
+  nestingRules?: string;
+  /** Compact preset summary — serializePresetsCompact() output. Phase 1C. */
+  availablePresetsCompact?: string;
+  /** Design tokens for consistent styling across all sections. Phase 2A. */
+  designTokens?: DesignTokens;
 }
 
 /** Slim representation of a palette group for the AI context */

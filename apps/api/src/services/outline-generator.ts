@@ -4,10 +4,14 @@
  * Given a user prompt + available components + presets, asks the LLM to
  * produce a structured page outline (list of SectionOutline objects).
  *
+ * Integrates UX Pattern Engine (Phase 2B) to enforce logical section ordering
+ * and uses compact preset summaries (Phase 1C) to reduce token overhead.
+ *
  * Uses Zod for validation so malformed AI output is caught early.
  */
 import { z } from "zod";
 import { callLLM } from "./llm-client.js";
+import { matchPattern, buildPatternConstraint } from "./page-patterns.js";
 import type { GeneratePageRequest, PageOutline, SectionOutline } from "../types/ai.types.js";
 
 // ── Zod schema for LLM output validation ──────────────────────────────────
@@ -32,7 +36,10 @@ const PageOutlineSchema = z.object({
 function buildSystemPrompt(request: GeneratePageRequest): string {
   const componentList = request.availableComponents.map((c) => `${c.type} (${c.category})`).join(", ");
 
-  const presetList = request.availablePresets
+  // Phase 1C: use compact preset summary if available, fall back to full list
+  const presetList = request.availablePresetsCompact
+    ? request.availablePresetsCompact
+    : request.availablePresets
     ? request.availablePresets
         .flatMap((g) =>
           g.types.flatMap((t) =>
@@ -42,6 +49,10 @@ function buildSystemPrompt(request: GeneratePageRequest): string {
         .join("\n")
     : "  (none)";
 
+  // Phase 2B: infer page structure pattern and add constraints
+  const pattern = matchPattern(request.prompt);
+  const patternConstraint = buildPatternConstraint(pattern);
+
   return `You are a professional web page architect. Your task is to analyze the user's request and produce a structured page outline.
 
 ## Available Components
@@ -49,6 +60,8 @@ ${componentList}
 
 ## Available Presets (use presetId when a preset matches a section)
 ${presetList}
+
+${patternConstraint}
 
 ## Output Requirements
 Return ONLY valid JSON matching this exact structure — no markdown, no code block, no explanation:
@@ -73,7 +86,6 @@ Return ONLY valid JSON matching this exact structure — no markdown, no code bl
 - layoutHint must be one of: centered, left-aligned, right-aligned, 2-col, 3-col-grid, 4-col-grid
 - sectionId must be unique: use format "section-{index}"
 - keyContent: 3-6 items describing the key UI elements this section needs
-- Always include a "header" near the top and a "footer" + "cta" near the bottom if appropriate
 - Do NOT generate table-of-contents sections
 - Respond in English regardless of input language`;
 }

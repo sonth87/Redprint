@@ -16,121 +16,6 @@ import type {
   AICommandSuggestion,
 } from "./types";
 
-// ── System prompt builder (kept for backward compat / chat context) ──────
-
-function buildSystemMessage(config: AIConfig, context: AIBuilderContext): string {
-  const base =
-    config.systemPrompt ||
-    "You are an AI assistant for a visual web page builder called Redprint. Help users build, modify, and improve their web page designs by generating precise builder commands.";
-
-  const componentList = context.availableComponents
-    .map((c) => {
-      const props = c.propSchema?.map((p) => `${p.key}(${p.type})`).join(", ") ?? "";
-      return `  - ${c.type} [${c.category}]${props ? ` — props: ${props}` : ""}`;
-    })
-    .join("\n");
-
-  const selectedNodeBlock = context.selectedNode
-    ? `- Selected node: ${context.selectedNode.type} (id: "${context.selectedNode.id}", name: "${context.selectedNode.name ?? "unnamed"}")
-  Props: ${JSON.stringify(context.selectedNode.props)}
-  Style: ${JSON.stringify(context.selectedNode.style)}`
-    : "- No node selected";
-
-  const pageContextBlock = context.pageNodes
-    ? `\n## Full Page Node Tree\nAll existing nodes with their real UUIDs — use these IDs in commands:\n${JSON.stringify(context.pageNodes, null, 2)}\n`
-    : "";
-
-  const presetsBlock = context.availablePresets
-    ? `\n## Available Presets (Palette Catalog)\nWhen the user asks to add a specific element, prefer using these preset props/styles directly in ADD_NODE instead of bare defaults. Each item has an id, componentType, props, style, and optional tags.\n${context.availablePresets
-        .map(
-          (g) =>
-            `### ${g.group}\n` +
-            g.types
-              .map(
-                (t) =>
-                  `#### ${t.type}\n` +
-                  t.items
-                    .map(
-                      (item) =>
-                        `  - id: "${item.id}", name: "${item.name}", componentType: "${item.componentType}"` +
-                        (item.tags?.length ? `, tags: [${item.tags.join(", ")}]` : "") +
-                        `\n    props: ${JSON.stringify(item.props)}` +
-                        (item.style && Object.keys(item.style).length
-                          ? `\n    style: ${JSON.stringify(item.style)}`
-                          : ""),
-                    )
-                    .join("\n"),
-              )
-              .join("\n"),
-        )
-        .join("\n")}\n`
-    : "";
-
-  return `${base}
-
-## Current Builder State
-- Document: "${context.document.name}" (${context.document.nodeCount} nodes, rootId: "${context.document.rootNodeId}")
-- Active breakpoint: ${context.activeBreakpoint}
-${selectedNodeBlock}
-
-## Available Components
-${componentList}
-${pageContextBlock}${presetsBlock}
-## Command Reference
-
-### ADD_NODE — Add a new component to the canvas
-{ "type": "ADD_NODE", "payload": { "componentType": "ComponentType", "parentId": "root", "nodeId": "temp-unique-id", "props": {}, "style": {}, "responsiveStyle": { "mobile": { "flexDirection": "column" } }, "responsiveProps": { "mobile": { "label": "Short" } }, "responsiveHidden": { "tablet": true } } }
-IMPORTANT:
-- The payload field MUST be "componentType" (NOT "type").
-- Use "root" as parentId for top-level sections/containers.
-- To build NESTED layouts, assign a temporary "nodeId" (e.g. "temp-hero", "temp-grid-1") in each ADD_NODE, then use that same ID as "parentId" in child ADD_NODE commands. The system resolves all IDs to real UUIDs automatically.
-- For RESPONSIVE DESIGN: Use "responsiveStyle", "responsiveProps", or "responsiveHidden" mapped by breakpoint ("desktop" | "tablet" | "mobile").
-
-### UPDATE_STYLE — Update CSS styles on an existing node
-{ "type": "UPDATE_STYLE", "payload": { "nodeId": "uuid", "style": { "backgroundColor": "#fff", "fontSize": "16px" } } }
-
-### UPDATE_PROPS — Update component content/configuration
-{ "type": "UPDATE_PROPS", "payload": { "nodeId": "uuid", "props": { "text": "content" } } }
-
-### RENAME_NODE — Rename a node in the layers panel
-{ "type": "RENAME_NODE", "payload": { "nodeId": "uuid", "name": "New Name" } }
-
-### UPDATE_RESPONSIVE_STYLE — Update styles for a specific breakpoint
-{ "type": "UPDATE_RESPONSIVE_STYLE", "payload": { "nodeId": "uuid", "breakpoint": "desktop|tablet|mobile", "style": {} } }
-
-### UPDATE_RESPONSIVE_PROPS — Update props for a specific breakpoint
-{ "type": "UPDATE_RESPONSIVE_PROPS", "payload": { "nodeId": "uuid", "breakpoint": "desktop|tablet|mobile", "props": {} } }
-
-### TOGGLE_RESPONSIVE_HIDDEN — Hide/show a node on a specific breakpoint
-{ "type": "TOGGLE_RESPONSIVE_HIDDEN", "payload": { "nodeId": "uuid", "breakpoint": "desktop|tablet|mobile" } }
-
-### RESET_RESPONSIVE_STYLE — Remove all breakpoint overrides and revert to base style
-{ "type": "RESET_RESPONSIVE_STYLE", "payload": { "nodeId": "uuid", "breakpoint": "desktop|tablet|mobile" } }
-
-### DUPLICATE_NODE — Duplicate an existing node
-{ "type": "DUPLICATE_NODE", "payload": { "nodeId": "uuid" } }
-
-### UPDATE_CANVAS_CONFIG — Update canvas-level settings
-{ "type": "UPDATE_CANVAS_CONFIG", "payload": { "config": {} } }
-
-### UPDATE_INTERACTIONS — Update interaction/event handlers on a node
-{ "type": "UPDATE_INTERACTIONS", "payload": { "nodeId": "uuid", "interactions": [] } }
-
-## Component Hierarchy Rules
-Container components (can have children): Section, Container, Grid, Column
-Leaf components (no children): Text, Button, Image, Divider
-Always build pages with proper nesting: Section → Column/Grid → leaf nodes.
-Never place leaf nodes directly into root — wrap them in a Section or Container first.
-
-## Output Format — CRITICAL
-Respond with EXACTLY ONE JSON object. No markdown, no code blocks, no preamble, no trailing text.
-{ "message": "Brief explanation of what you are doing", "commands": [ ... ] }
-If there are no commands to execute: { "message": "...", "commands": [] }
-For existing nodes, use real UUIDs from the context above. For NEW nodes, use temp IDs ("temp-xxx") and reference them as parentId in children.
-Generate COMPLETE, RICH layouts — include multiple sections, proper typography, colors, spacing, and enough content to fill a real page. Do NOT generate just 1-2 nodes.
-Always respond in the same language the user uses in their prompt.`;
-}
-
 // ── Response parser ────────────────────────────────────────────────────────
 
 function extractFirstJSON(text: string): string | null {
@@ -256,27 +141,36 @@ function getBackendUrl(config: AIConfig): string {
 /**
  * Send a chat message to the backend /api/ai/chat endpoint.
  * Returns parsed AIResponse (message + command suggestions).
+ *
+ * The backend owns the system prompt — the client sends only user/assistant messages
+ * plus the builder context. This eliminates the ~900-token command reference from
+ * the request payload (Phase 1A).
  */
 export async function sendAIMessage(
   messages: AIMessage[],
   context: AIBuilderContext,
   config: AIConfig,
 ): Promise<AIResponse> {
-  const systemContent = buildSystemMessage(config, context);
   const backendUrl = getBackendUrl(config);
 
   const payload = {
-    messages: [
-      { role: "system", content: systemContent },
-      ...messages.map((m) => ({ role: m.role, content: m.content })),
-    ],
+    // Filter out any legacy system messages — the backend builds its own.
+    messages: messages
+      .filter((m) => m.role !== "system")
+      .map((m) => ({ role: m.role, content: m.content })),
     builderContext: {
       document: context.document,
       selectedNode: context.selectedNode,
       availableComponents: context.availableComponents,
       activeBreakpoint: context.activeBreakpoint,
       pageNodes: context.pageNodes,
+      pageNodesSummary: context.pageNodesSummary,
       availablePresets: context.availablePresets,
+      // Phase 1B–2A–3A fields — populated by later phases; backend falls back gracefully when absent.
+      componentsManifest: context.componentsManifest,
+      nestingRules: context.nestingRules,
+      availablePresetsCompact: context.availablePresetsCompact,
+      designTokens: context.designTokens,
     },
   };
 

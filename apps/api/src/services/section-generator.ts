@@ -56,6 +56,15 @@ function buildSystemPrompt(
     ? `\n## Recommended Preset Reference\nUse styles/props from this preset as a starting point:\n${JSON.stringify(matchedPreset, null, 2)}`
     : "";
 
+  // Phase 1B: use derived nesting rules if available
+  const nestingRulesHint = request.nestingRules
+    ? `\n## Component Hierarchy Rules\n${request.nestingRules}`
+    : `\n## Component Hierarchy Rules
+Container components (can have children): Section, Container, Grid, Column
+Leaf components (no children): Text, Button, Image, Divider
+NEVER place leaf nodes directly under root — always wrap in Container/Grid/Column
+DO NOT generate a new "Section" component — the section already exists`;
+
   const previousSectionsHint =
     designContext.previousSections.length > 0
       ? `\n## Style Consistency (from already-generated sections)\n${designContext.previousSections
@@ -67,7 +76,7 @@ function buildSystemPrompt(
       : "";
 
   const designTokensHint = Object.keys(designContext.designTokens).length > 0
-    ? `\n## Canvas Design Tokens\n${JSON.stringify(designContext.designTokens, null, 2)}`
+    ? `\n## Design Tokens — MANDATORY\nUse ONLY these values for colors and typography. Do NOT invent arbitrary CSS values.\n${JSON.stringify(designContext.designTokens, null, 2)}`
     : "";
 
   return `You are a professional web page builder AI. Generate ADD_NODE commands to build a single page section.
@@ -75,11 +84,7 @@ function buildSystemPrompt(
 ## Available Components (ONLY use these)
 ${componentList}
 
-## Component Rules
-- Container components (can have children): Section, Container, Grid, Column
-- Leaf components (no children): Text, Button, Image, Divider
-- NEVER place leaf nodes directly under root — always wrap in Container/Grid/Column
-- DO NOT generate a new "Section" component — the section already exists
+${nestingRulesHint}
 
 ## Temporary Node ID Rules
 - ALWAYS provide a unique "nodeId" for every Container/Grid/Column

@@ -105,11 +105,15 @@ export function usePageGenerator(config: AIConfig, context: AIBuilderContext) {
         return;
       }
 
+      // Phase 1B/1C: send compact manifest + presets instead of full versions
       const requestBody = {
         prompt,
         availableComponents: context.availableComponents,
+        availablePresetsCompact: context.availablePresetsCompact,
+        nestingRules: context.nestingRules,
+        // Keep full presets for backward compat (phase may still need them)
         availablePresets: context.availablePresets,
-        designTokens: {},
+        designTokens: config.designTokens ?? {},
       };
 
       // Timeout logic

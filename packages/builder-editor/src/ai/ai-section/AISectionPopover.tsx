@@ -91,8 +91,11 @@ export function AISectionPopover({
   const { state: builderState, builder } = useBuilder();
 
   const getBuilderContext = useCallback(() => {
-    return buildAIContext(builderState, builder.registry.listComponents(), { includePageContext: true });
-  }, [builderState, builder]);
+    return buildAIContext(builderState, builder.registry.listComponents(), {
+      includePageContext: true,
+      designTokens: aiConfig.designTokens,
+    });
+  }, [builderState, builder, aiConfig.designTokens]);
 
   const handleClose = useCallback(() => setOpen(false), []);
 

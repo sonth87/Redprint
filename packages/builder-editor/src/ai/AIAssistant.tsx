@@ -1,10 +1,10 @@
 /**
  * AIAssistant — prompt dialog for AI-powered canvas generation.
  *
- * Flow: user types prompt → Generate → loading/streaming indicator
- * → commands parsed → applied to canvas → dialog closes automatically.
+ * Phase 4D Refactor: Removed settings panel, added quick selectors.
  *
- * With fullPageMode checkbox, user can generate a complete page (replacing all existing content).
+ * Flow: user selects template or color/tone → types/edits prompt → Generate
+ * → loading/streaming indicator → commands parsed → applied to canvas → dialog closes.
  */
 import React, { useCallback, useRef, useState, useEffect } from "react";
 import {
@@ -13,18 +13,17 @@ import {
   DialogHeader,
   DialogTitle,
   Button,
-  ScrollArea,
   Badge,
   Label,
   Checkbox,
 } from "@ui-builder/ui";
-import { Settings, Sparkles, Zap, Loader2 } from "lucide-react";
+import { Sparkles, Zap, Loader2 } from "lucide-react";
 import { useBuilder } from "@ui-builder/builder-react";
 import type { AIConfig, AIMessage, AIBuilderContext, AIResponse } from "./types";
 import { sendAIMessage, streamAIMessage, parseAIResponse } from "./AIService";
-import { AIConfigPanel } from "./AIConfig";
 import { normalizeAICommands } from "./normalizeAICommands";
 import { useTranslation } from "react-i18next";
+import { PROMPT_TEMPLATES, COLOR_PALETTES, TONE_STYLES, TEMPLATE_CATEGORIES } from "./ai-prompt-templates";
 
 // Commands the AI is allowed to dispatch — destructive/system commands are excluded
 const ALLOWED_AI_COMMANDS = new Set([
@@ -45,25 +44,25 @@ export interface AIAssistantProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   config: AIConfig;
-  onConfigChange?: (config: AIConfig) => void;
   context: AIBuilderContext;
 }
 
 // ── Component ───────────────────────────────────────────────────────────
 
-export function AIAssistant({ open, onOpenChange, config, onConfigChange, context }: AIAssistantProps) {
+export function AIAssistant({ open, onOpenChange, config, context }: AIAssistantProps) {
   const { t } = useTranslation();
   const { dispatch } = useBuilder();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef(false);
   const streamScrollRef = useRef<HTMLPreElement>(null);
 
-  const [view, setView] = useState<"generate" | "settings">("generate");
   const [prompt, setPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [streamingText, setStreamingText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [fullPageMode, setFullPageMode] = useState(false);
+  const [selectedColorPalette, setSelectedColorPalette] = useState<string>("");
+  const [selectedTone, setSelectedTone] = useState<string>("");
 
   // Reset all state when dialog closes
   useEffect(() => {
@@ -72,17 +71,16 @@ export function AIAssistant({ open, onOpenChange, config, onConfigChange, contex
       setError(null);
       setIsLoading(false);
       setStreamingText("");
-      setView("generate");
       abortRef.current = false;
     }
   }, [open]);
 
   // Focus textarea when dialog opens and is in idle state
   useEffect(() => {
-    if (open && view === "generate" && !isLoading) {
+    if (open && !isLoading) {
       setTimeout(() => textareaRef.current?.focus(), 100);
     }
-  }, [open, view, isLoading]);
+  }, [open, isLoading]);
 
   // Auto-scroll streaming text to bottom as tokens arrive
   useEffect(() => {
@@ -220,9 +218,28 @@ export function AIAssistant({ open, onOpenChange, config, onConfigChange, contex
 
   const isStreaming = config.streamingEnabled === true;
 
+  // Filter templates by selected category (if any)
+  const categorizedTemplates = TEMPLATE_CATEGORIES.map((cat) => ({
+    ...cat,
+    templates: PROMPT_TEMPLATES.filter((t) => t.category === cat.id),
+  }));
+
+  const handleTemplateClick = (template: typeof PROMPT_TEMPLATES[0]) => {
+    setPrompt(template.prompt);
+    textareaRef.current?.focus();
+  };
+
+  const handleColorPaletteClick = (paletteName: string) => {
+    setSelectedColorPalette(paletteName);
+  };
+
+  const handleToneClick = (toneId: string) => {
+    setSelectedTone(toneId);
+  };
+
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!isLoading) onOpenChange(v); }}>
-      <DialogContent className="sm:max-w-[560px] flex flex-col p-0 gap-0">
+      <DialogContent className="sm:max-w-[640px] flex flex-col p-0 gap-0 max-h-[90vh]">
         {/* Header */}
         <DialogHeader className="px-5 py-3.5 border-b shrink-0">
           <div className="flex items-center justify-between gap-4">
@@ -237,149 +254,202 @@ export function AIAssistant({ open, onOpenChange, config, onConfigChange, contex
               <Badge variant="outline" className="text-[10px]">
                 backend
               </Badge>
-              {!isLoading && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 w-6 p-0"
-                  onClick={() => setView(view === "generate" ? "settings" : "generate")}
-                  title={view === "generate" ? "Settings" : "Back"}
-                >
-                  <Settings className="h-4 w-4" />
-                </Button>
-              )}
             </div>
           </div>
         </DialogHeader>
 
-        {/* Generate view */}
-        {view === "generate" && (
-          <div className="px-5 py-5 flex flex-col gap-4">
-            {!isLoading ? (
-              <>
-                {/* Description */}
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {t("ai.generateDescription")}
-                </p>
+        {/* Content */}
+        <div className="px-5 py-5 flex flex-col gap-4 overflow-y-auto flex-1">
+          {!isLoading ? (
+            <>
+              {/* Description */}
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {t("ai.generateDescription")}
+              </p>
 
-                {/* Prompt textarea */}
+              {/* Template Categories (Phase 4D) */}
+              <div className="space-y-3">
+                <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Templates</p>
+                <div className="space-y-2.5">
+                  {categorizedTemplates.map((category) => (
+                    <div key={category.id}>
+                      <p className="text-xs font-medium text-muted-foreground mb-2" style={{ color: category.color }}>
+                        {category.label}
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {category.templates.map((template) => (
+                          <button
+                            key={template.id}
+                            onClick={() => handleTemplateClick(template)}
+                            className="text-left px-3 py-2.5 rounded-md border border-input bg-background hover:bg-accent hover:border-accent text-xs transition-colors"
+                          >
+                            <div className="font-medium truncate">{template.label}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Color Palette Selector (Phase 4D) */}
+              <div className="space-y-3 pt-2 border-t">
+                <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Color Palette</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {COLOR_PALETTES.map((palette) => (
+                    <button
+                      key={palette.name}
+                      onClick={() => handleColorPaletteClick(palette.name)}
+                      className={`h-12 rounded-md border-2 transition-all flex flex-col items-center justify-center gap-1 p-2 ${
+                        selectedColorPalette === palette.name
+                          ? "border-ring ring-2 ring-ring"
+                          : "border-input hover:border-foreground/50"
+                      }`}
+                      title={palette.name}
+                    >
+                      <div className="flex gap-1">
+                        <div className="w-3 h-3 rounded" style={{ backgroundColor: palette.primary }} />
+                        <div className="w-3 h-3 rounded" style={{ backgroundColor: palette.secondary }} />
+                        <div className="w-3 h-3 rounded" style={{ backgroundColor: palette.accent }} />
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">{palette.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tone/Style Selector (Phase 4D) */}
+              <div className="space-y-3 pt-2 border-t">
+                <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Tone & Style</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {TONE_STYLES.map((tone) => (
+                    <button
+                      key={tone.id}
+                      onClick={() => handleToneClick(tone.id)}
+                      className={`px-3 py-2.5 rounded-md border-2 transition-all text-left ${
+                        selectedTone === tone.id
+                          ? "border-ring ring-2 ring-ring bg-accent"
+                          : "border-input bg-background hover:border-foreground/50"
+                      }`}
+                      title={tone.description}
+                    >
+                      <div className="font-medium text-xs">{tone.label}</div>
+                      <div className="text-[10px] text-muted-foreground truncate">{tone.description}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Prompt textarea */}
+              <div className="space-y-2 pt-2 border-t">
+                <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
+                  Your Prompt
+                </label>
                 <textarea
                   ref={textareaRef}
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder={t("ai.placeholder")}
-                  rows={5}
+                  rows={4}
                   className="w-full rounded-md border bg-transparent px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
                 />
-
-                {/* Full Page Mode Checkbox */}
-                <div className="flex items-center gap-2.5">
-                  <Checkbox
-                    id="fullPageMode"
-                    checked={fullPageMode}
-                    onCheckedChange={(checked: boolean | "indeterminate") => {
-                      if (typeof checked === "boolean") {
-                        setFullPageMode(checked);
-                      }
-                    }}
-                    disabled={isLoading}
-                  />
-                  <Label htmlFor="fullPageMode" className="text-sm cursor-pointer select-none">
-                    {t("toolbar.fullPageMode")}
-                  </Label>
-                </div>
-
-                {/* Error */}
-                {error && <p className="text-xs text-destructive">{error}</p>}
-
-                {/* Actions */}
-                <div className="flex justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onOpenChange(false)}
-                  >
-                    {t("common.cancel")}
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => void handleGenerate()}
-                    disabled={!prompt.trim()}
-                    className="gap-1.5"
-                  >
-                    <Sparkles className="h-3.5 w-3.5" />
-                    {t("ai.generate")}
-                  </Button>
-                </div>
-              </>
-            ) : (
-              /* Loading / streaming state */
-              <div className="flex flex-col gap-4 py-2">
-                {/* Status row */}
-                <div className="flex items-center gap-3">
-                  {isStreaming ? (
-                    <>
-                      <span className="flex gap-0.5 shrink-0">
-                        {[0, 1, 2].map((i) => (
-                          <span
-                            key={i}
-                            className="inline-block w-1.5 h-1.5 rounded-full bg-primary animate-bounce"
-                            style={{ animationDelay: `${i * 0.15}s` }}
-                          />
-                        ))}
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        {t("ai.generating")}
-                      </span>
-                      <Badge variant="secondary" className="text-[10px] gap-1 ml-auto">
-                        <Zap className="h-2.5 w-2.5 animate-pulse" />
-                        Streaming
-                      </Badge>
-                    </>
-                  ) : (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin shrink-0 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">
-                        {t("ai.generating")}
-                      </span>
-                    </>
-                  )}
-                </div>
-
-                {/* Live streaming text preview */}
-                {isStreaming && streamingText && (
-                  <pre
-                    ref={streamScrollRef}
-                    className="text-[11px] font-mono text-muted-foreground whitespace-pre-wrap leading-relaxed bg-muted/40 rounded-md px-3 py-2 max-h-[160px] overflow-y-auto"
-                  >
-                    {streamingText}
-                    <span className="animate-pulse">▌</span>
-                  </pre>
-                )}
-
-                {/* Cancel */}
-                <div className="flex justify-end">
-                  <Button variant="outline" size="sm" onClick={handleCancel}>
-                    {t("common.cancel")}
-                  </Button>
-                </div>
               </div>
-            )}
-          </div>
-        )}
 
-        {/* Settings view */}
-        {view === "settings" && (
-          <ScrollArea className="max-h-[70vh]">
-            <AIConfigPanel
-              config={config}
-              onChange={(newConfig) => {
-                onConfigChange?.(newConfig);
-              }}
-            />
-          </ScrollArea>
-        )}
+              {/* Full Page Mode Checkbox */}
+              <div className="flex items-center gap-2.5 pt-2">
+                <Checkbox
+                  id="fullPageMode"
+                  checked={fullPageMode}
+                  onCheckedChange={(checked: boolean | "indeterminate") => {
+                    if (typeof checked === "boolean") {
+                      setFullPageMode(checked);
+                    }
+                  }}
+                  disabled={isLoading}
+                />
+                <Label htmlFor="fullPageMode" className="text-sm cursor-pointer select-none">
+                  {t("toolbar.fullPageMode")}
+                </Label>
+              </div>
+
+              {/* Error */}
+              {error && <p className="text-xs text-destructive">{error}</p>}
+
+              {/* Actions */}
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onOpenChange(false)}
+                >
+                  {t("common.cancel")}
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => void handleGenerate()}
+                  disabled={!prompt.trim()}
+                  className="gap-1.5"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  {t("ai.generate")}
+                </Button>
+              </div>
+            </>
+          ) : (
+            /* Loading / streaming state */
+            <div className="flex flex-col gap-4 py-2">
+              {/* Status row */}
+              <div className="flex items-center gap-3">
+                {isStreaming ? (
+                  <>
+                    <span className="flex gap-0.5 shrink-0">
+                      {[0, 1, 2].map((i) => (
+                        <span
+                          key={i}
+                          className="inline-block w-1.5 h-1.5 rounded-full bg-primary animate-bounce"
+                          style={{ animationDelay: `${i * 0.15}s` }}
+                        />
+                      ))}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      {t("ai.generating")}
+                    </span>
+                    <Badge variant="secondary" className="text-[10px] gap-1 ml-auto">
+                      <Zap className="h-2.5 w-2.5 animate-pulse" />
+                      Streaming
+                    </Badge>
+                  </>
+                ) : (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin shrink-0 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">
+                      {t("ai.generating")}
+                    </span>
+                  </>
+                )}
+              </div>
+
+              {/* Live streaming text preview */}
+              {isStreaming && streamingText && (
+                <pre
+                  ref={streamScrollRef}
+                  className="text-[11px] font-mono text-muted-foreground whitespace-pre-wrap leading-relaxed bg-muted/40 rounded-md px-3 py-2 max-h-[160px] overflow-y-auto"
+                >
+                  {streamingText}
+                  <span className="animate-pulse">▌</span>
+                </pre>
+              )}
+
+              {/* Cancel */}
+              <div className="flex justify-end">
+                <Button variant="outline" size="sm" onClick={handleCancel}>
+                  {t("common.cancel")}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
