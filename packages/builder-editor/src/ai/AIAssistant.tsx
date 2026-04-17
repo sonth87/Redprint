@@ -50,7 +50,7 @@ export interface AIAssistantProps {
 // ── Component ───────────────────────────────────────────────────────────
 
 export function AIAssistant({ open, onOpenChange, config, context }: AIAssistantProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { dispatch } = useBuilder();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef(false);
@@ -229,18 +229,30 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
     })),
   }));
 
-  const handleTemplateClick = (template: typeof PROMPT_TEMPLATES[0]) => {
-    setPrompt(template.prompt);
+  const handleTemplateClick = useCallback((template: typeof PROMPT_TEMPLATES[0]) => {
+    // Get translated prompt if available, otherwise use English
+    let promptText = template.prompt;
+
+    // If Vietnamese is selected, try to get translated prompt
+    if (i18n.language === 'vi') {
+      const translatedPrompt = t(`ai.promptTemplateTexts.${template.id}`, { defaultValue: template.prompt });
+      // Only use translated if it's different from the key (meaning translation exists)
+      if (!translatedPrompt.includes('ai.promptTemplateTexts')) {
+        promptText = translatedPrompt;
+      }
+    }
+
+    setPrompt(promptText);
     textareaRef.current?.focus();
-  };
+  }, [i18n.language, t]);
 
-  const handleColorPaletteClick = (paletteName: string) => {
+  const handleColorPaletteClick = useCallback((paletteName: string) => {
     setSelectedColorPalette(paletteName);
-  };
+  }, []);
 
-  const handleToneClick = (toneId: string) => {
+  const handleToneClick = useCallback((toneId: string) => {
     setSelectedTone(toneId);
-  };
+  }, []);
 
   // Map palette names to i18n keys
   const paletteI18nMap: Record<string, string> = {
