@@ -303,7 +303,7 @@ function EditorInner({
   const { handleDragStart, handlePaletteDragStart, handleDrop, handleDragOver, handleDragEnter } =
     useDragHandlers({ rootNodeId: document.rootNodeId, zoom, canvasFrameRef, dispatch, nodes: document.nodes, getContainerConfig, onAfterDrop: handlePaletteClose });
 
-  const { addItem: handlePaletteItemClick } = useClickToAdd({ rootNodeId: document.rootNodeId, zoom, panOffset, canvasContainerRef, dispatch, onAfterAdd: handlePaletteClose });
+  const { addItem: handlePaletteItemClick } = useClickToAdd({ rootNodeId: document.rootNodeId, nodes: document.nodes, selectedNodeIds, zoom, panOffset, canvasContainerRef, dispatch, onAfterAdd: handlePaletteClose });
 
   const { handlePointerDown } = usePointerDown({
     activeTool, zoom, rootNodeId: document.rootNodeId, nodes: document.nodes, canvasFrameRef, activeFrameRef,
@@ -365,6 +365,12 @@ function EditorInner({
       startSectionResize(nodeId, clientY, currentHeightPx, gid),
     isResizing: sectionResizing !== null,
     onSelect: (nodeId: string) => select([nodeId]),
+    selectedNodeIds,
+    onOpenPaletteGroup: handleGroupSelect,
+    aiConfig,
+    dispatch,
+    undo,
+    availableComponentTypes: allComponents.map((c) => c.type),
   } as const;
 
   // ── Render ────────────────────────────────────────────────────────────────

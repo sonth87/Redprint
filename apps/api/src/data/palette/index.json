@@ -2,6 +2,7 @@
   "version": "1.0.0",
   "_comment": "This file is auto-generated. Edit individual group files in this directory instead.",
   "groups": [
+    "designed_section",
     "text",
     "image",
     "button",

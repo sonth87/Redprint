@@ -31,6 +31,7 @@ const SIMPLE_PREVIEW_TYPES = new Set([
   "GalleryGrid",
   "GallerySlider",
   "GalleryPro",
+  "Section",
 ]);
 
 interface MiniPreviewProps {
@@ -174,13 +175,16 @@ const MiniPreview: React.FC<MiniPreviewProps> = ({ item }) => {
     }
   }
 
-  if (type === "Container") {
+  if (type === "Container" || type === "Section") {
     const bg = (s.background as string) || (s.backgroundColor as string);
     const border = s.border || (s.borderWidth ? `${s.borderWidth} ${s.borderStyle || "solid"} ${s.borderColor || "transparent"}` : undefined);
     return (
       <div className="flex items-center justify-center w-full h-full p-2">
         <div
-          className="w-full h-full flex flex-col items-center justify-center gap-1 border border-dashed border-muted-foreground/20 rounded"
+          className={cn(
+            "w-full h-full flex flex-col items-center justify-center gap-1 border rounded",
+            type === "Section" ? "border-solid border-muted-foreground/30 bg-muted/5" : "border-dashed border-muted-foreground/20"
+          )}
           style={{
             background: bg ?? "transparent",
             border: (border as string) ?? undefined,

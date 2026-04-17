@@ -175,7 +175,7 @@ export const FloatingPalette: React.FC<FloatingPaletteProps> = ({
         })}
 
         {/* Separator + open-first-group button */}
-        <div className="w-5 h-px bg-border/60 my-0.5" />
+        {/* <div className="w-5 h-px bg-border/60 my-0.5" />
         <button
           type="button"
           title={t("palette.title", { defaultValue: "Add Elements" })}
@@ -184,7 +184,7 @@ export const FloatingPalette: React.FC<FloatingPaletteProps> = ({
           className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent/70 transition-all"
         >
           <Plus className="w-4 h-4" />
-        </button>
+        </button> */}
       </div>
 
       {/* ── Layers button — separate floating card ── */}

@@ -48,24 +48,7 @@ export const SectionComponent: ComponentDefinition = {
         position: "relative",
       }}
     >
-      {(children as React.ReactNode) ?? (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            height: "100%",
-            minHeight: `${Number(node.props.minHeight ?? 400) - 32}px`,
-            color: "#9ca3af",
-            fontSize: 13,
-            border: "2px dashed #e5e7eb",
-            borderRadius: 8,
-            margin: 16,
-          }}
-        >
-          Drop components here
-        </div>
-      )}
+      {(children as React.ReactNode)}
     </div>
   ),
   runtimeRenderer: ({ node, children, style }) => (

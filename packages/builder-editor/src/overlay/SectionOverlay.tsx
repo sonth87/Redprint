@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useLayoutEffect, useRef, memo, useCallback, useMemo } from "react";
-import { Plus, UnfoldVertical } from "lucide-react";
+import { Plus, UnfoldVertical, LayoutTemplate, Sparkles, PlusSquare } from "lucide-react";
 import type { BuilderNode } from "@ui-builder/builder-core";
 import type { Point } from "@ui-builder/shared";
 import { SECTION_HOVER_ZONE, SECTION_OVERLAY_TRANSITION_FAST } from "../constants";
+import { AISectionPopover } from "../ai/ai-section/AISectionPopover";
 
 interface SectionBoundary {
   nodeId: string;
@@ -32,6 +33,12 @@ export interface SectionOverlayProps {
   onSelect?: (nodeId: string) => void;
   /** Whether a section resize is in progress (suppresses UI jitter) */
   isResizing: boolean;
+  selectedNodeIds?: string[];
+  onOpenPaletteGroup?: (groupId: string) => void;
+  aiConfig?: any; // Adjust type if imported
+  dispatch?: (action: any) => void;
+  undo?: () => void;
+  availableComponentTypes?: string[];
 }
 
 /**
@@ -49,6 +56,12 @@ export const SectionOverlay = memo(function SectionOverlay({
   onResizeStart,
   onSelect,
   isResizing,
+  selectedNodeIds,
+  onOpenPaletteGroup,
+  aiConfig,
+  dispatch,
+  undo,
+  availableComponentTypes,
 }: SectionOverlayProps) {
   const [boundaries, setBoundaries] = useState<SectionBoundary[]>([]);
   const [hovered, setHovered] = useState<string | null>(null);
@@ -111,9 +124,116 @@ export const SectionOverlay = memo(function SectionOverlay({
     <>
       {boundaries.map((b) => {
         const isHov = hovered === b.nodeId;
+        const isSel = selectedNodeIds?.includes(b.nodeId);
+        const sectionChildren = Object.values(nodes).filter((n) => n.parentId === b.nodeId);
+        const isEmpty = sectionChildren.length === 0;
 
         return (
           <div key={b.nodeId} style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+            {/* ── Empty State UI ── */}
+            {isEmpty && (isHov || isSel) && (
+              <>
+                {/* Main Section Hover Zone (only active when empty to avoid blocking components) */}
+                <div
+                  style={{
+                    position: "absolute",
+                    top: b.top,
+                    left: 0,
+                    width: "100%",
+                    height: b.height,
+                    pointerEvents: "auto",
+                    zIndex: 48,
+                  }}
+                  onMouseEnter={() => setHovered(b.nodeId)}
+                  onMouseLeave={() => setHovered(null)}
+                  onClick={(e) => {
+                    if (e.target === e.currentTarget) {
+                      onSelect?.(b.nodeId);
+                    }
+                  }}
+                />
+                
+                <div
+                  style={{
+                    position: "absolute",
+                    top: b.top,
+                    left: 0,
+                    width: "100%",
+                    height: b.height,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    pointerEvents: "none",
+                    zIndex: 50,
+                  }}
+                  onMouseEnter={() => setHovered(b.nodeId)}
+                  onMouseLeave={() => setHovered(null)}
+                >
+                  <div style={{ pointerEvents: "auto", display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+                    <p style={{ fontSize: 13, fontWeight: 500, color: "#6b7280", margin: 0, opacity: 0.8 }}>Choose your starting point</p>
+                    <div style={{ display: "flex", gap: 16 }}>
+                      <button
+                        onClick={() => onOpenPaletteGroup?.("designed-section")}
+                        style={{
+                          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                          gap: 8, width: 92, height: 92,
+                          background: "#fff", border: `1px solid #e5e7eb`, borderRadius: 8,
+                          cursor: "pointer", transition: "all 0.2s", boxShadow: `0 1px 3px rgba(0,0,0,0.05)`,
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#c7d2fe")}
+                        onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#e5e7eb")}
+                      >
+                        <LayoutTemplate size={24} color="#4b5563" strokeWidth={1.5} />
+                        <span style={{ fontSize: 11, color: "#4b5563", fontWeight: 500, lineHeight: 1.2 }}>Designed<br/>Section</span>
+                      </button>
+                      
+                      {aiConfig && dispatch && undo ? (
+                        <AISectionPopover
+                          sectionNodeId={b.nodeId}
+                          currentChildIds={[]}
+                          availableComponentTypes={availableComponentTypes ?? []}
+                          aiConfig={aiConfig}
+                          dispatch={dispatch}
+                          undo={undo}
+                          trigger={
+                            <button
+                              style={{
+                                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                                gap: 8, width: 92, height: 92,
+                                background: "#fff", border: `1px solid #e5e7eb`, borderRadius: 8,
+                                cursor: "pointer", transition: "all 0.2s", boxShadow: `0 1px 3px rgba(0,0,0,0.05)`,
+                              }}
+                              onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#c7d2fe")}
+                              onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#e5e7eb")}
+                            >
+                              <Sparkles size={24} color="#4b5563" strokeWidth={1.5} />
+                              <span style={{ fontSize: 11, color: "#4b5563", fontWeight: 500, lineHeight: 1.2 }}>AI Section<br/>Generator</span>
+                            </button>
+                          }
+                        />
+                      ) : null}
+
+                      <button
+                        onClick={() => onOpenPaletteGroup?.("text")}
+                        style={{
+                          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                          gap: 8, width: 92, height: 92,
+                          background: "#fff", border: `1px solid #e5e7eb`, borderRadius: 8,
+                          cursor: "pointer", transition: "all 0.2s", boxShadow: `0 1px 3px rgba(0,0,0,0.05)`,
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#c7d2fe")}
+                        onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#e5e7eb")}
+                      >
+                        <PlusSquare size={24} color="#4b5563" strokeWidth={1.5} />
+                        <span style={{ fontSize: 11, color: "#4b5563", fontWeight: 500, lineHeight: 1.2 }}>Add<br/>Elements</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
             {/* ── Section Gutter Handles ── */}
             {isHov && (
               <>

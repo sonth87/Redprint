@@ -4,6 +4,7 @@ import type { BuilderNode, PaletteDragData, Breakpoint, PaletteItem } from "@ui-
 import { v4 as uuidv4 } from "uuid";
 import { resolveContainerDropPosition } from "./useDropSlotResolver";
 import { resolveContainerLayoutType, type ContainerConfigResolver } from "./dragUtils";
+import { generateRecursiveAddActions } from "./presetUtils";
 
 interface UseDragHandlersOptions {
   rootNodeId: string;
@@ -68,6 +69,7 @@ export function useDragHandlers({
           style: item.style,
           responsiveStyle: item.responsiveStyle,
           responsiveProps: item.responsiveProps,
+          children: item.children,
         },
       };
       e.dataTransfer?.setData("text/plain", JSON.stringify(dragData));
@@ -180,45 +182,84 @@ export function useDragHandlers({
         }
       }
 
-      // ── 6. Dispatch ADD_NODE ─────────────────────────────────────────────
+      // ── 6. Handle Designed Section logic ────────────────────────────────
+      const isDesignedSection = componentType === "Section" && presetData?.children && presetData.children.length > 0;
       const nodeId = uuidv4();
       const groupId = presetData ? uuidv4() : undefined;
-      dispatch({
-        type: "ADD_NODE",
-        payload: {
-          nodeId,
-          parentId,
-          componentType,
-          position,
-          insertIndex,
-          ...(presetData?.props ? { props: presetData.props } : {}),
-          ...(presetData?.style ? { style: { ...presetData.style, ...(position ? { position: "absolute", left: `${position.x}px`, top: `${position.y}px` } : {}) } } : {}),
-        },
-        description: `Add ${componentType}`,
-        groupId,
-      });
 
-      // ── 7. Apply preset responsive overrides ─────────────────────────────
-      if (presetData?.responsiveStyle) {
-        for (const [bp, style] of Object.entries(presetData.responsiveStyle)) {
-          if (!style) continue;
+      if (isDesignedSection) {
+        // Redirection logic for Designed Sections
+        const targetNode = nodes?.[parentId];
+        const isEmptySection = targetNode?.type === "Section" && 
+          !Object.values(nodes || {}).some(n => n.parentId === parentId);
+
+        if (isEmptySection) {
+          // Drop into an existing empty section
+          generateRecursiveAddActions(presetData!.children!, parentId, groupId!, dispatch);
+        } else {
+          // Drop as a NEW section (always parent = rootNodeId for Section drops between sections)
+          const actualParentId = parentId === rootNodeId ? rootNodeId : (targetNode?.parentId ?? rootNodeId);
+          
           dispatch({
-            type: "UPDATE_RESPONSIVE_STYLE",
-            payload: { nodeId, breakpoint: bp as Breakpoint, style },
-            description: `Set responsive style (${bp})`,
+            type: "ADD_NODE",
+            payload: {
+              nodeId,
+              parentId: actualParentId,
+              componentType: "Section",
+              insertIndex,
+              props: presetData?.props,
+              style: presetData?.style,
+            },
+            description: `Add Designed Section`,
             groupId,
           });
+
+          generateRecursiveAddActions(presetData!.children!, nodeId, groupId!, dispatch);
         }
-      }
-      if (presetData?.responsiveProps) {
-        for (const [bp, props] of Object.entries(presetData.responsiveProps)) {
-          if (!props) continue;
-          dispatch({
-            type: "UPDATE_RESPONSIVE_PROPS",
-            payload: { nodeId, breakpoint: bp as Breakpoint, props },
-            description: `Set responsive props (${bp})`,
-            groupId,
-          });
+      } else {
+        // ── Standard ADD_NODE ─────────────────────────────────────────────
+        dispatch({
+          type: "ADD_NODE",
+          payload: {
+            nodeId,
+            parentId,
+            componentType,
+            position,
+            insertIndex,
+            ...(presetData?.props ? { props: presetData.props } : {}),
+            ...(presetData?.style ? { style: { ...presetData.style, ...(position ? { position: "absolute", left: `${position.x}px`, top: `${position.y}px` } : {}) } } : {}),
+          },
+          description: `Add ${componentType}`,
+          groupId,
+        });
+
+        // ── 7. Apply preset responsive overrides ─────────────────────────────
+        if (presetData?.responsiveStyle) {
+          for (const [bp, style] of Object.entries(presetData.responsiveStyle)) {
+            if (!style) continue;
+            dispatch({
+              type: "UPDATE_RESPONSIVE_STYLE",
+              payload: { nodeId, breakpoint: bp as Breakpoint, style },
+              description: `Set responsive style (${bp})`,
+              groupId,
+            });
+          }
+        }
+        if (presetData?.responsiveProps) {
+          for (const [bp, props] of Object.entries(presetData.responsiveProps)) {
+            if (!props) continue;
+            dispatch({
+              type: "UPDATE_RESPONSIVE_PROPS",
+              payload: { nodeId, breakpoint: bp as Breakpoint, props },
+              description: `Set responsive props (${bp})`,
+              groupId,
+            });
+          }
+        }
+
+        // Recursively add children if any (for non-Section containers)
+        if (presetData?.children && presetData.children.length > 0) {
+          generateRecursiveAddActions(presetData.children, nodeId, groupId!, dispatch);
         }
       }
 

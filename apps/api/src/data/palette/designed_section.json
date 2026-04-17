@@ -1,0 +1,210 @@
+{
+  "id": "designed_section",
+  "label": "Designed Section",
+  "icon": "layout-template",
+  "order": 0,
+  "i18n": {
+    "en": "Designed Section",
+    "vi": "Section Mẫu"
+  },
+  "types": [
+    {
+      "id": "welcome",
+      "label": "Welcome",
+      "order": 0,
+      "layout": "grid",
+      "i18n": {
+        "en": "Welcome",
+        "vi": "Chào mừng"
+      },
+      "items": [
+        {
+          "id": "welcome-1",
+          "componentType": "Section",
+          "name": "Hero Welcome",
+          "props": { "minHeight": 600 },
+          "style": { "backgroundColor": "#ffffff", "display": "flex", "alignItems": "center", "justifyContent": "center", "padding": "80px 0" },
+          "children": [
+            {
+              "componentType": "Container",
+              "style": { "display": "flex", "flexDirection": "column", "alignItems": "center", "textAlign": "center", "maxWidth": "800px" },
+              "children": [
+                {
+                  "componentType": "Text",
+                  "props": { "text": "<h1>WELCOME</h1>", "tag": "h1" },
+                  "style": { "fontSize": "56px", "fontWeight": "800", "letterSpacing": "-0.02em", "marginBottom": "24px" }
+                },
+                {
+                  "componentType": "Text",
+                  "props": { "text": "<p>Welcome visitors to your site with a short, engaging introduction. Double click to edit and add your own text.</p>", "tag": "p" },
+                  "style": { "fontSize": "18px", "color": "#6B7280", "lineHeight": "1.6", "marginBottom": "40px" }
+                },
+                {
+                  "componentType": "Button",
+                  "props": { "text": "Start Now", "variant": "primary" }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "about",
+      "label": "About",
+      "order": 1,
+      "layout": "grid",
+      "i18n": {
+        "en": "About",
+        "vi": "Giới thiệu"
+      },
+      "items": [
+        {
+          "id": "about-1",
+          "componentType": "Section",
+          "name": "Split About",
+          "props": { "minHeight": 500 },
+          "style": { "backgroundColor": "#F9FAFB", "display": "flex", "alignItems": "center", "padding": "80px 0" },
+          "children": [
+            {
+              "componentType": "Grid",
+              "props": { "columns": 2, "gap": 48 },
+              "style": { "width": "100%", "maxWidth": "1200px", "margin": "0 auto" },
+              "children": [
+                {
+                  "componentType": "Container",
+                  "children": [
+                    {
+                      "componentType": "Text",
+                      "props": { "text": "<h2>Our Mission</h2>", "tag": "h2" },
+                      "style": { "fontSize": "40px", "fontWeight": "700", "marginBottom": "20px" }
+                    },
+                    {
+                      "componentType": "Text",
+                      "props": { "text": "<p>We are dedicated to providing the best experience for our users. Our team works tirelessly to innovate and solve complex problems.</p>", "tag": "p" },
+                      "style": { "fontSize": "16px", "color": "#4B5563", "lineHeight": "1.7" }
+                    }
+                  ]
+                },
+                {
+                  "componentType": "Image",
+                  "props": { "src": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80" },
+                  "style": { "borderRadius": "12px", "width": "100%", "height": "auto" }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "services",
+      "label": "Services",
+      "order": 2,
+      "layout": "grid",
+      "i18n": {
+        "en": "Services",
+        "vi": "Dịch vụ"
+      },
+      "items": [
+        {
+          "id": "services-1",
+          "componentType": "Section",
+          "name": "Service Grid",
+          "props": { "minHeight": 600 },
+          "style": { "backgroundColor": "#ffffff", "padding": "80px 0" },
+          "children": [
+            {
+              "componentType": "Text",
+              "props": { "text": "<h2>Our Services</h2>", "tag": "h2" },
+              "style": { "fontSize": "36px", "fontWeight": "700", "textAlign": "center", "marginBottom": "60px" }
+            },
+            {
+              "componentType": "Grid",
+              "props": { "columns": 3, "gap": 32 },
+              "style": { "width": "100%", "maxWidth": "1200px", "margin": "0 auto" },
+              "children": [
+                {
+                  "componentType": "Container",
+                  "style": { "padding": "32px", "backgroundColor": "#F3F4F6", "borderRadius": "16px", "textAlign": "center" },
+                  "children": [
+                    { "componentType": "Text", "props": { "text": "<h3>Design</h3>", "tag": "h3" }, "style": { "fontSize": "20px", "fontWeight": "600", "marginBottom": "12px" } },
+                    { "componentType": "Text", "props": { "text": "<p>Creating beautiful and functional interfaces.</p>", "tag": "p" }, "style": { "fontSize": "15px", "color": "#6B7280" } }
+                  ]
+                },
+                {
+                  "componentType": "Container",
+                  "style": { "padding": "32px", "backgroundColor": "#F3F4F6", "borderRadius": "16px", "textAlign": "center" },
+                  "children": [
+                    { "componentType": "Text", "props": { "text": "<h3>Development</h3>", "tag": "h3" }, "style": { "fontSize": "20px", "fontWeight": "600", "marginBottom": "12px" } },
+                    { "componentType": "Text", "props": { "text": "<p>Building robust and scalable applications.</p>", "tag": "p" }, "style": { "fontSize": "15px", "color": "#6B7280" } }
+                  ]
+                },
+                {
+                  "componentType": "Container",
+                  "style": { "padding": "32px", "backgroundColor": "#F3F4F6", "borderRadius": "16px", "textAlign": "center" },
+                  "children": [
+                    { "componentType": "Text", "props": { "text": "<h3>Strategy</h3>", "tag": "h3" }, "style": { "fontSize": "20px", "fontWeight": "600", "marginBottom": "12px" } },
+                    { "componentType": "Text", "props": { "text": "<p>Planning for long-term success and growth.</p>", "tag": "p" }, "style": { "fontSize": "15px", "color": "#6B7280" } }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "team",
+      "label": "Team",
+      "order": 3,
+      "layout": "grid",
+      "i18n": {
+        "en": "Team",
+        "vi": "Đội ngũ"
+      },
+      "items": [
+        {
+          "id": "team-1",
+          "componentType": "Section",
+          "name": "Team Section",
+          "props": { "minHeight": 500 },
+          "style": { "backgroundColor": "#F9FAFB", "padding": "80px 0" },
+          "children": [
+            {
+              "componentType": "Text",
+              "props": { "text": "<h2>Meet Our Team</h2>", "tag": "h2" },
+              "style": { "fontSize": "36px", "fontWeight": "700", "textAlign": "center", "marginBottom": "60px" }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "contact",
+      "label": "Contact",
+      "order": 4,
+      "layout": "grid",
+      "i18n": {
+        "en": "Contact",
+        "vi": "Liên hệ"
+      },
+      "items": [
+        {
+          "id": "contact-1",
+          "componentType": "Section",
+          "name": "Contact Form Section",
+          "props": { "minHeight": 600 },
+          "style": { "backgroundColor": "#ffffff", "padding": "80px 0" },
+          "children": [
+            {
+              "componentType": "Text",
+              "props": { "text": "<h2>Get in Touch</h2>", "tag": "h2" },
+              "style": { "fontSize": "36px", "fontWeight": "700", "textAlign": "center", "marginBottom": "60px" }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

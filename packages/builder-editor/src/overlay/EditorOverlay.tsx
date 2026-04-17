@@ -90,7 +90,7 @@ export const SelectionOverlay = memo(function SelectionOverlay({
         <div
           data-selection-frame={!isSection ? "true" : undefined}
           data-node-id={(!isSection && selection.selectedIds.length === 1) ? selection.selectedIds[0] : undefined}
-          className={`absolute ${isSection ? "pointer-events-none" : "pointer-events-auto"}`}
+          className="absolute pointer-events-none"
           style={{
             left: boundingBox.x,
             top: boundingBox.y,
