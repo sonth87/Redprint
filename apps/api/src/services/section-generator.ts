@@ -8,6 +8,7 @@
  * Large page node trees are NOT sent here to avoid context fatigue.
  */
 import { callLLM } from "./llm-client.js";
+import { logger } from "./logger.js";
 import type {
   AICommandSuggestion,
   AIPresetGroup,
@@ -161,23 +162,32 @@ export async function generateSectionCommands(
       )
     : undefined;
 
+  const systemPrompt = buildSystemPrompt(request, outline, designContext, matchedPreset);
+  const userPrompt = buildUserPrompt(outline, designContext);
+
+  logger.section(outline.index, outline.sectionType, outline.tone, outline.layoutHint);
+  logger.systemMessage(systemPrompt);
+  logger.prompt("USER_PROMPT", userPrompt);
+
   const messages = [
     {
       role: "system" as const,
-      content: buildSystemPrompt(request, outline, designContext, matchedPreset),
+      content: systemPrompt,
     },
     {
       role: "user" as const,
-      content: buildUserPrompt(outline, designContext),
+      content: userPrompt,
     },
   ];
 
   const rawText = await callLLM(messages, true);
+  logger.response("AI_SECTION_RESPONSE", { responseLength: rawText.length, preview: rawText.slice(0, 200) });
 
   let parsed: unknown;
   try {
     parsed = extractJSON(rawText);
   } catch (err) {
+    logger.error("PARSE_ERROR", `Failed to parse response: ${String(err)}\nRaw text: ${rawText.slice(0, 500)}`);
     throw new Error(
       `Section generator failed to parse response for section "${outline.sectionType}": ${String(err)}`
     );
@@ -185,10 +195,11 @@ export async function generateSectionCommands(
 
   const obj = parsed as { commands?: unknown[] };
   if (!Array.isArray(obj.commands)) {
+    logger.error("COMMAND_ERROR", `No commands in response for "${outline.sectionType}"`);
     throw new Error(`Section generator returned no commands for "${outline.sectionType}"`);
   }
 
-  return obj.commands
+  const commands = obj.commands
     .filter(
       (c): c is AICommandSuggestion =>
         typeof c === "object" && c !== null && typeof (c as Record<string, unknown>).type === "string"
@@ -198,4 +209,7 @@ export async function generateSectionCommands(
       payload: (c.payload as Record<string, unknown>) ?? {},
       description: (c.description as string) || c.type,
     }));
+
+  logger.decision("SECTION_COMPLETE", `Generated ${commands.length} commands for ${outline.sectionType}`);
+  return commands;
 }

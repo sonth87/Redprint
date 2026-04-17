@@ -9,6 +9,7 @@ import { generatePageOutline } from "../services/outline-generator.js";
 import { generateSectionCommands, extractStyleSummary } from "../services/section-generator.js";
 import { callLLM } from "../services/llm-client.js";
 import { COMMAND_REFERENCE } from "../services/command-reference.js";
+import { logger } from "../services/logger.js";
 import type {
   ChatRequest,
   GeneratePageRequest,
@@ -54,13 +55,24 @@ aiRouter.post("/generate-page", async (req: Request, res: Response) => {
     return;
   }
 
+  logger.request("POST", "/api/ai/generate-page", body);
+  logger.debug("REQUEST", "Received generate-page request", {
+    promptLength: body.prompt.length,
+    hasDesignTokens: !!body.designTokens && Object.keys(body.designTokens).length > 0,
+    designTokens: body.designTokens,
+    componentCount: body.availableComponents?.length ?? 0,
+  });
+
   initSSE(res);
 
   try {
     // ── Step 1: Generate page outline ──────────────────────────────────────
     console.log(`[AI] Generating outline for: "${body.prompt.slice(0, 80)}..."`);
+    logger.debug("OUTLINE", "Starting page outline generation", { prompt: body.prompt.slice(0, 100) });
+
     const outline = await generatePageOutline(body);
     console.log(`[AI] Outline ready: ${outline.sections.length} sections`);
+    logger.response("outline_ready", { sections: outline.sections });
 
     sendSSE(res, "outline_ready", { sections: outline.sections });
 
@@ -70,6 +82,12 @@ aiRouter.post("/generate-page", async (req: Request, res: Response) => {
       previousSections: [],
       originalPrompt: body.prompt,
     };
+
+    logger.designTokens(designContext.designTokens as Record<string, unknown>);
+    logger.debug("DESIGN_CONTEXT", "Design context prepared", {
+      hasTokens: Object.keys(designContext.designTokens).length > 0,
+      tokens: designContext.designTokens,
+    });
 
     if (isParallelMode()) {
       // ── Parallel mode (batched) ──────────────────────────────────────────
