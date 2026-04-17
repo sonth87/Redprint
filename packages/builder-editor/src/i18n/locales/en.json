@@ -273,6 +273,10 @@
     "defaultSystemPrompt": "You are an AI assistant for a visual UI builder. Help users build, modify, and improve their web page designs.",
     "backendNotConfigured": "Backend URL is not configured. Please set it in AI settings.",
     "backendUnavailable": "Cannot reach AI backend. Please check the server is running.",
+    "templates": "Quick Templates",
+    "colorPalette": "Color Palette",
+    "toneStyle": "Tone & Style",
+    "yourPrompt": "Your Prompt",
     "pageGenerator": {
       "title": "Generate Full Page with AI",
       "description": "Describe the page you want to build. AI will analyse your request, create a section outline, then generate each section — appearing live on the canvas as it goes.",

@@ -273,6 +273,10 @@
     "defaultSystemPrompt": "Bạn là trợ lý AI cho trình xây dựng giao diện trực quan. Hãy giúp người dùng xây dựng, chỉnh sửa và cải thiện thiết kế trang web.",
     "backendNotConfigured": "Chưa cấu hình Backend URL. Vui lòng đặt URL trong cài đặt AI.",
     "backendUnavailable": "Không thể kết nối AI backend. Vui lòng kiểm tra server đang chạy.",
+    "templates": "Mẫu Nhanh",
+    "colorPalette": "Bảng Màu",
+    "toneStyle": "Tone & Phong Cách",
+    "yourPrompt": "Lời Nhắc Của Bạn",
     "pageGenerator": {
       "title": "Tạo Trang Bằng AI",
       "description": "Mô tả trang bạn muốn xây dựng. AI sẽ phân tích yêu cầu của bạn, tạo dàn ý, sau đó tạo từng section và hiển thị trực tiếp lên canvas.",

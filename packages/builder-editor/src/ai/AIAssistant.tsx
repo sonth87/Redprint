@@ -63,6 +63,7 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
   const [fullPageMode, setFullPageMode] = useState(false);
   const [selectedColorPalette, setSelectedColorPalette] = useState<string>("");
   const [selectedTone, setSelectedTone] = useState<string>("");
+  const [showTemplates, setShowTemplates] = useState(false);
 
   // Reset all state when dialog closes
   useEffect(() => {
@@ -239,111 +240,31 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!isLoading) onOpenChange(v); }}>
-      <DialogContent className="sm:max-w-[640px] flex flex-col p-0 gap-0 max-h-[90vh]">
+      <DialogContent className="sm:max-w-[700px] flex flex-col p-0 gap-0 max-h-[95vh]">
         {/* Header */}
-        <DialogHeader className="px-5 py-3.5 border-b shrink-0">
-          <div className="flex items-center justify-between gap-4">
-            <DialogTitle className="text-sm font-medium">{t("ai.title")}</DialogTitle>
-            <div className="flex items-center gap-2 pr-8">
-              {isStreaming && (
-                <Badge variant="secondary" className="text-[10px] gap-1">
-                  <Zap className="h-2.5 w-2.5" />
-                  Streaming
-                </Badge>
-              )}
-              <Badge variant="outline" className="text-[10px]">
-                backend
-              </Badge>
+        <DialogHeader className="px-6 py-4 border-b bg-gradient-to-r from-primary/5 to-transparent shrink-0">
+          <div className="flex items-center justify-between">
+            <div>
+              <DialogTitle className="text-base font-semibold">{t("ai.title")}</DialogTitle>
+              <p className="text-xs text-muted-foreground mt-1">{t("ai.generateDescription")}</p>
             </div>
+            {isStreaming && (
+              <Badge variant="secondary" className="text-xs gap-1.5 ml-4">
+                <Zap className="h-3 w-3" />
+                Streaming
+              </Badge>
+            )}
           </div>
         </DialogHeader>
 
         {/* Content */}
-        <div className="px-5 py-5 flex flex-col gap-4 overflow-y-auto flex-1">
+        <div className="px-6 py-4 flex flex-col gap-5 overflow-y-auto flex-1">
           {!isLoading ? (
             <>
-              {/* Description */}
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {t("ai.generateDescription")}
-              </p>
-
-              {/* Template Categories (Phase 4D) */}
-              <div className="space-y-3">
-                <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Templates</p>
-                <div className="space-y-2.5">
-                  {categorizedTemplates.map((category) => (
-                    <div key={category.id}>
-                      <p className="text-xs font-medium text-muted-foreground mb-2" style={{ color: category.color }}>
-                        {category.label}
-                      </p>
-                      <div className="grid grid-cols-2 gap-2">
-                        {category.templates.map((template) => (
-                          <button
-                            key={template.id}
-                            onClick={() => handleTemplateClick(template)}
-                            className="text-left px-3 py-2.5 rounded-md border border-input bg-background hover:bg-accent hover:border-accent text-xs transition-colors"
-                          >
-                            <div className="font-medium truncate">{template.label}</div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Color Palette Selector (Phase 4D) */}
-              <div className="space-y-3 pt-2 border-t">
-                <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Color Palette</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {COLOR_PALETTES.map((palette) => (
-                    <button
-                      key={palette.name}
-                      onClick={() => handleColorPaletteClick(palette.name)}
-                      className={`h-12 rounded-md border-2 transition-all flex flex-col items-center justify-center gap-1 p-2 ${
-                        selectedColorPalette === palette.name
-                          ? "border-ring ring-2 ring-ring"
-                          : "border-input hover:border-foreground/50"
-                      }`}
-                      title={palette.name}
-                    >
-                      <div className="flex gap-1">
-                        <div className="w-3 h-3 rounded" style={{ backgroundColor: palette.primary }} />
-                        <div className="w-3 h-3 rounded" style={{ backgroundColor: palette.secondary }} />
-                        <div className="w-3 h-3 rounded" style={{ backgroundColor: palette.accent }} />
-                      </div>
-                      <span className="text-[10px] text-muted-foreground">{palette.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Tone/Style Selector (Phase 4D) */}
-              <div className="space-y-3 pt-2 border-t">
-                <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Tone & Style</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {TONE_STYLES.map((tone) => (
-                    <button
-                      key={tone.id}
-                      onClick={() => handleToneClick(tone.id)}
-                      className={`px-3 py-2.5 rounded-md border-2 transition-all text-left ${
-                        selectedTone === tone.id
-                          ? "border-ring ring-2 ring-ring bg-accent"
-                          : "border-input bg-background hover:border-foreground/50"
-                      }`}
-                      title={tone.description}
-                    >
-                      <div className="font-medium text-xs">{tone.label}</div>
-                      <div className="text-[10px] text-muted-foreground truncate">{tone.description}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Prompt textarea */}
-              <div className="space-y-2 pt-2 border-t">
-                <label className="text-xs font-semibold text-foreground uppercase tracking-wide">
-                  Your Prompt
+              {/* Prompt textarea - Priority section */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  {t("ai.yourPrompt")}
                 </label>
                 <textarea
                   ref={textareaRef}
@@ -351,13 +272,100 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
                   onChange={(e) => setPrompt(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder={t("ai.placeholder")}
-                  rows={4}
-                  className="w-full rounded-md border bg-transparent px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+                  rows={5}
+                  className="w-full rounded-lg border bg-background px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
                 />
               </div>
 
-              {/* Full Page Mode Checkbox */}
-              <div className="flex items-center gap-2.5 pt-2">
+              {/* Quick Selectors Row */}
+              <div className="grid grid-cols-3 gap-3">
+                {/* Color Palette Quick Selector */}
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground">{t("ai.colorPalette")}</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {COLOR_PALETTES.slice(0, 4).map((palette) => (
+                      <button
+                        key={palette.name}
+                        onClick={() => handleColorPaletteClick(palette.name)}
+                        className={`h-10 rounded-lg border-2 transition-all flex items-center justify-center gap-1 p-1.5 ${
+                          selectedColorPalette === palette.name
+                            ? "border-primary ring-2 ring-primary/20"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                        title={palette.name}
+                      >
+                        <div className="flex gap-1">
+                          <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: palette.primary }} />
+                          <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: palette.secondary }} />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Tone/Style Quick Selector */}
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground">{t("ai.toneStyle")}</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {TONE_STYLES.slice(0, 4).map((tone) => (
+                      <button
+                        key={tone.id}
+                        onClick={() => handleToneClick(tone.id)}
+                        className={`px-2.5 py-2 rounded-lg border-2 transition-all text-left text-xs font-medium ${
+                          selectedTone === tone.id
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border bg-background hover:border-primary/50"
+                        }`}
+                        title={tone.description}
+                      >
+                        {tone.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Templates Quick Access */}
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground">{t("ai.templates")}</label>
+                  <button
+                    onClick={() => setShowTemplates(!showTemplates)}
+                    className="w-full px-3 py-2 rounded-lg border-2 border-border hover:border-primary/50 bg-background hover:bg-accent text-xs font-medium transition-all text-left"
+                  >
+                    {showTemplates ? "Hide" : "Browse"} Templates
+                  </button>
+                </div>
+              </div>
+
+              {/* Expandable Template Categories */}
+              {showTemplates && (
+                <div className="space-y-3 bg-muted/30 rounded-lg p-3 border border-border">
+                  {categorizedTemplates.map((category) => (
+                    <div key={category.id} className="space-y-2">
+                      <p className="text-xs font-semibold" style={{ color: category.color }}>
+                        {category.label}
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {category.templates.map((template) => (
+                          <button
+                            key={template.id}
+                            onClick={() => {
+                              handleTemplateClick(template);
+                              setShowTemplates(false);
+                            }}
+                            className="text-left px-3 py-2.5 rounded-md border border-border bg-background hover:bg-primary/5 hover:border-primary/50 text-xs font-medium transition-colors truncate"
+                            title={template.label}
+                          >
+                            {template.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Options */}
+              <div className="flex items-center gap-3 px-3 py-2.5 bg-muted/40 rounded-lg border border-border">
                 <Checkbox
                   id="fullPageMode"
                   checked={fullPageMode}
@@ -368,16 +376,20 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
                   }}
                   disabled={isLoading}
                 />
-                <Label htmlFor="fullPageMode" className="text-sm cursor-pointer select-none">
+                <Label htmlFor="fullPageMode" className="text-xs text-muted-foreground cursor-pointer select-none flex-1">
                   {t("toolbar.fullPageMode")}
                 </Label>
               </div>
 
               {/* Error */}
-              {error && <p className="text-xs text-destructive">{error}</p>}
+              {error && (
+                <div className="px-3 py-2.5 bg-destructive/10 text-destructive border border-destructive/30 rounded-lg text-xs">
+                  {error}
+                </div>
+              )}
 
               {/* Actions */}
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="flex justify-end gap-3 pt-2">
                 <Button
                   variant="outline"
                   size="sm"
@@ -389,64 +401,47 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
                   size="sm"
                   onClick={() => void handleGenerate()}
                   disabled={!prompt.trim()}
-                  className="gap-1.5"
+                  className="gap-2"
                 >
-                  <Sparkles className="h-3.5 w-3.5" />
+                  <Sparkles className="h-4 w-4" />
                   {t("ai.generate")}
                 </Button>
               </div>
             </>
           ) : (
             /* Loading / streaming state */
-            <div className="flex flex-col gap-4 py-2">
-              {/* Status row */}
-              <div className="flex items-center gap-3">
-                {isStreaming ? (
-                  <>
-                    <span className="flex gap-0.5 shrink-0">
-                      {[0, 1, 2].map((i) => (
-                        <span
-                          key={i}
-                          className="inline-block w-1.5 h-1.5 rounded-full bg-primary animate-bounce"
-                          style={{ animationDelay: `${i * 0.15}s` }}
-                        />
-                      ))}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      {t("ai.generating")}
-                    </span>
-                    <Badge variant="secondary" className="text-[10px] gap-1 ml-auto">
-                      <Zap className="h-2.5 w-2.5 animate-pulse" />
-                      Streaming
-                    </Badge>
-                  </>
-                ) : (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin shrink-0 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">
-                      {t("ai.generating")}
-                    </span>
-                  </>
-                )}
-              </div>
-
-              {/* Live streaming text preview */}
-              {isStreaming && streamingText && (
-                <pre
-                  ref={streamScrollRef}
-                  className="text-[11px] font-mono text-muted-foreground whitespace-pre-wrap leading-relaxed bg-muted/40 rounded-md px-3 py-2 max-h-[160px] overflow-y-auto"
-                >
-                  {streamingText}
-                  <span className="animate-pulse">▌</span>
-                </pre>
+            <div className="flex flex-col gap-5 py-8 items-center justify-center min-h-[300px]">
+              {isStreaming ? (
+                <>
+                  <span className="flex gap-1.5 shrink-0">
+                    {[0, 1, 2].map((i) => (
+                      <span
+                        key={i}
+                        className="inline-block w-2.5 h-2.5 rounded-full bg-primary animate-bounce"
+                        style={{ animationDelay: `${i * 0.15}s` }}
+                      />
+                    ))}
+                  </span>
+                  <span className="text-sm text-muted-foreground">{t("ai.generating")}</span>
+                  {streamingText && (
+                    <pre
+                      ref={streamScrollRef}
+                      className="text-[10px] font-mono text-muted-foreground whitespace-pre-wrap leading-relaxed bg-muted/40 rounded-lg px-3 py-2 w-full max-h-[200px] overflow-y-auto border border-border"
+                    >
+                      {streamingText}
+                      <span className="animate-pulse">▌</span>
+                    </pre>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">{t("ai.generating")}</span>
+                </>
               )}
-
-              {/* Cancel */}
-              <div className="flex justify-end">
-                <Button variant="outline" size="sm" onClick={handleCancel}>
-                  {t("common.cancel")}
-                </Button>
-              </div>
+              <Button variant="outline" size="sm" onClick={handleCancel} className="mt-4">
+                {t("common.cancel")}
+              </Button>
             </div>
           )}
         </div>
