@@ -43,6 +43,7 @@ const ALLOWED_COMMANDS = new Set([
   "UPDATE_RESPONSIVE_STYLE",
   "RENAME_NODE",
   "DUPLICATE_NODE",
+  "REMOVE_NODE",
   "UPDATE_CANVAS_CONFIG",
   "UPDATE_INTERACTIONS",
   "TOGGLE_RESPONSIVE_HIDDEN",
@@ -79,7 +80,7 @@ export function usePageGenerator(config: AIConfig, context: AIBuilderContext) {
   );
 
   const generate = useCallback(
-    async (prompt: string) => {
+    async (prompt: string, options?: { fullPageMode?: boolean }) => {
       if (!prompt.trim()) return;
 
       // Cancel any ongoing generation
@@ -105,9 +106,24 @@ export function usePageGenerator(config: AIConfig, context: AIBuilderContext) {
         return;
       }
 
+      // Clear existing nodes if fullPageMode is enabled
+      if (options?.fullPageMode && context.pageNodes) {
+        const childrenToRemove = Object.values(context.pageNodes).filter(
+          (node) => node.parentId === context.document.rootNodeId
+        );
+        for (const node of childrenToRemove) {
+          try {
+            dispatch({ type: "REMOVE_NODE", payload: { id: node.id } } as never);
+          } catch (err) {
+            console.warn("[PageGenerator] REMOVE_NODE failed for:", node.id, err);
+          }
+        }
+      }
+
       // Phase 1B/1C: send compact manifest + presets instead of full versions
       const requestBody = {
         prompt,
+        fullPageMode: options?.fullPageMode ?? false,
         availableComponents: context.availableComponents,
         availablePresetsCompact: context.availablePresetsCompact,
         nestingRules: context.nestingRules,

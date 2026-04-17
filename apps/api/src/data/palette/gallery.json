@@ -36,11 +36,7 @@
             "gap": 8,
             "aspectRatio": "1/1"
           },
-          "tags": [
-            "gallery",
-            "grid",
-            "3-column"
-          ]
+          "tags": ["gallery", "grid", "3-column"]
         },
         {
           "id": "gallery-grid-2col",
@@ -60,11 +56,7 @@
             "gap": 12,
             "aspectRatio": "4/3"
           },
-          "tags": [
-            "gallery",
-            "grid",
-            "2-column"
-          ]
+          "tags": ["gallery", "grid", "2-column"]
         },
         {
           "id": "gallery-grid-4col",
@@ -84,11 +76,7 @@
             "gap": 4,
             "aspectRatio": "1/1"
           },
-          "tags": [
-            "gallery",
-            "grid",
-            "4-column"
-          ]
+          "tags": ["gallery", "grid", "4-column"]
         },
         {
           "id": "gallery-grid-portrait",
@@ -108,11 +96,7 @@
             "gap": 8,
             "aspectRatio": "3/4"
           },
-          "tags": [
-            "gallery",
-            "grid",
-            "portrait"
-          ]
+          "tags": ["gallery", "grid", "portrait"]
         },
         {
           "id": "gallery-grid-widescreen",
@@ -132,11 +116,7 @@
             "gap": 16,
             "aspectRatio": "16/9"
           },
-          "tags": [
-            "gallery",
-            "grid",
-            "widescreen"
-          ]
+          "tags": ["gallery", "grid", "widescreen"]
         },
         {
           "id": "gallery-masonry-3",
@@ -148,11 +128,7 @@
             "gap": 8,
             "layout": "masonry"
           },
-          "tags": [
-            "masonry",
-            "gallery",
-            "3-col"
-          ]
+          "tags": ["masonry", "gallery", "3-col"]
         },
         {
           "id": "gallery-masonry-2",
@@ -164,18 +140,54 @@
             "gap": 12,
             "layout": "masonry"
           },
-          "tags": [
-            "masonry",
-            "gallery",
-            "2-col"
-          ]
+          "tags": ["masonry", "gallery", "2-col"]
         }
       ]
     },
     {
+      "id": "pro-galleries",
+      "label": "Pro Galleries",
+      "order": 1,
+      "layout": "preview",
+      "i18n": { "en": "Pro Galleries", "vi": "Thư viện chuyên nghiệp" },
+      "items": [
+        {
+          "id": "pro-mosaic",
+          "componentType": "GalleryPro",
+          "name": "Mosaic Large",
+          "props": { "layout": "mosaic", "gap": 8 }
+        },
+        {
+          "id": "pro-magazine",
+          "componentType": "GalleryPro",
+          "name": "Magazine Grid",
+          "props": { "layout": "magazine", "gap": 12 }
+        },
+        {
+          "id": "pro-strip",
+          "componentType": "GalleryPro",
+          "name": "Strip Layout",
+          "props": { "layout": "strip", "gap": 8 }
+        },
+        {
+          "id": "pro-editorial",
+          "componentType": "GalleryPro",
+          "name": "Editorial",
+          "props": { "layout": "editorial", "gap": 12 }
+        },
+        {
+          "id": "pro-showcase",
+          "componentType": "GalleryPro",
+          "name": "Showcase",
+          "props": { "layout": "showcase", "gap": 8 }
+        }
+      ]
+    },
+
+    {
       "id": "slider-galleries",
       "label": "Slider Galleries",
-      "order": 1,
+      "order": 2,
       "layout": "preview",
       "i18n": {
         "en": "Slider Galleries",
@@ -183,76 +195,49 @@
       },
       "items": [
         {
-          "id": "gallery-slider-basic",
+          "id": "slider-basic",
           "componentType": "GallerySlider",
           "name": "Basic Slider",
-          "thumbnail": null,
-          "i18n": {
-            "en": {
-              "name": "Basic Slider"
-            },
-            "vi": {
-              "name": "Trình chiếu đơn giản"
-            }
-          },
           "props": {
             "showArrows": true,
             "showDots": true,
-            "aspectRatio": "16/9"
-          },
-          "tags": [
-            "gallery",
-            "slider",
-            "basic"
-          ]
+            "aspectRatio": "16/9",
+            "shape": "rectangle"
+          }
         },
         {
-          "id": "gallery-slider-square",
+          "id": "slider-square",
           "componentType": "GallerySlider",
           "name": "Square Slider",
-          "thumbnail": null,
-          "i18n": {
-            "en": {
-              "name": "Square Slider"
-            },
-            "vi": {
-              "name": "Trình chiếu vuông"
-            }
-          },
           "props": {
             "showArrows": true,
             "showDots": true,
-            "aspectRatio": "1/1"
-          },
-          "tags": [
-            "gallery",
-            "slider",
-            "square"
-          ]
+            "aspectRatio": "1/1",
+            "shape": "rectangle"
+          }
         },
         {
-          "id": "gallery-slider-portrait",
+          "id": "slider-circle",
+          "componentType": "GallerySlider",
+          "name": "Circle Slider",
+          "props": { "showArrows": true, "showDots": true, "aspectRatio": "1/1", "shape": "circle" }
+        },
+        {
+          "id": "slider-oval",
+          "componentType": "GallerySlider",
+          "name": "Oval Slider",
+          "props": { "showArrows": true, "showDots": true, "aspectRatio": "4/3", "shape": "oval" }
+        },
+        {
+          "id": "slider-portrait",
           "componentType": "GallerySlider",
           "name": "Portrait Slider",
-          "thumbnail": null,
-          "i18n": {
-            "en": {
-              "name": "Portrait Slider"
-            },
-            "vi": {
-              "name": "Trình chiếu dọc"
-            }
-          },
           "props": {
             "showArrows": true,
             "showDots": false,
-            "aspectRatio": "4/3"
-          },
-          "tags": [
-            "gallery",
-            "slider",
-            "portrait"
-          ]
+            "aspectRatio": "4/3",
+            "shape": "rectangle"
+          }
         }
       ]
     }

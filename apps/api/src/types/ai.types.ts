@@ -96,6 +96,8 @@ export interface AIPageNodeSummary {
 
 export interface GeneratePageRequest {
   prompt: string;
+  /** If true, client will clear existing nodes before applying new sections */
+  fullPageMode?: boolean;
   /** Available components the AI can use */
   availableComponents: Array<{
     type: string;
@@ -133,6 +135,8 @@ export interface ChatRequest {
     availablePresetsCompact?: string;
     /** Design tokens for consistent styling. Phase 2A. */
     designTokens?: DesignTokens;
+    /** If true, backend will prepend REMOVE_NODE commands for all children of root node. */
+    fullPageMode?: boolean;
   };
 }
 
@@ -170,6 +174,9 @@ export interface SectionDesignContext {
     type: string;
     dominantColors: string[];
     fontSizes: string[];
+    fontFamilies: string[];
+    borderRadii: string[];
+    buttonStyles: Array<{ backgroundColor?: string; color?: string; borderRadius?: string }>;
   }>;
   /** The full original user prompt */
   originalPrompt: string;

@@ -98,9 +98,9 @@ const PATTERNS: PagePattern[] = [
 
 /**
  * Scores the prompt against all patterns and returns the best match.
- * Falls back to "generic-landing" when no keywords match.
+ * Falls back to "generic-landing" when no keywords match, flagged as semantic fallback.
  */
-export function matchPattern(prompt: string): PagePattern {
+export function matchPattern(prompt: string): PagePattern & { isSemanticFallback?: boolean } {
   const lower = prompt.toLowerCase();
   let best: PagePattern = PATTERNS[PATTERNS.length - 1]; // generic-landing fallback
   let bestScore = 0;
@@ -114,7 +114,7 @@ export function matchPattern(prompt: string): PagePattern {
     }
   }
 
-  return best;
+  return { ...best, isSemanticFallback: bestScore === 0 };
 }
 
 // ── Constraint builder ───────────────────────────────────────────────────────
@@ -122,8 +122,16 @@ export function matchPattern(prompt: string): PagePattern {
 /**
  * Produces a human-readable constraint block to inject into the outline prompt.
  * Describes recommended section order and required sections.
+ * If isSemanticFallback is true, emits a semantic guidance block instead.
  */
-export function buildPatternConstraint(pattern: PagePattern): string {
+export function buildPatternConstraint(pattern: PagePattern & { isSemanticFallback?: boolean }): string {
+  if (pattern.isSemanticFallback) {
+    return `## Page Structure
+Analyze the user's request to determine the most appropriate section structure.
+Choose from: hero, header, features, stats, testimonials, pricing, faq, cta, footer, custom.
+IMPORTANT: Never place cta or pricing before hero. Always end with footer. Max 8 sections.`;
+  }
+
   return `## Page Structure Pattern: ${pattern.name}
 Recommended section order (follow this sequence):
 ${pattern.recommendedOrder.map((s, i) => `  ${i + 1}. ${s}`).join("\n")}

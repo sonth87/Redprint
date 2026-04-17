@@ -121,6 +121,8 @@ export interface AIBuilderContext {
   availablePresetsCompact?: string;
   /** Design tokens for consistent styling across all sections. Phase 2A. */
   designTokens?: DesignTokens;
+  /** If true, backend will prepend REMOVE_NODE commands for all children of root node. */
+  fullPageMode?: boolean;
 }
 
 /** Slim representation of a palette group for the AI context */

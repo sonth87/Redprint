@@ -212,6 +212,32 @@ The AI is instructed to respond with `\`\`\`json [ { "type": "COMMAND", "payload
 
 ---
 
+## Full Page Mode
+
+When the **"Generate full page (replaces existing content)"** checkbox is enabled in the AI Assistant dialog,
+the backend automatically prepends `REMOVE_NODE` commands for all existing children of the root node
+before applying the AI-generated commands.
+
+**How it works:**
+
+1. User checks "Generate full page" checkbox
+2. Frontend passes `fullPageMode: true` in the context to the backend
+3. Backend identifies all children of the root node
+4. Backend generates a `REMOVE_NODE` command for each child
+5. These removal commands are prepended before AI-generated commands
+6. All commands execute atomically on the client: remove old content, then build new content
+
+**Logging:**
+
+When `fullPageMode` is active, the following debug information is logged (when `AI_DEBUG=true`):
+- Whether fullPageMode is enabled
+- Count of page nodes available
+- Count of nodes being removed
+- Node IDs and types being removed
+- Total command count after clear
+
+---
+
 ## Command Whitelist
 
 Only the following command types can be dispatched from AI suggestions. Any suggestion with a type
@@ -226,12 +252,15 @@ const ALLOWED_AI_COMMANDS = new Set([
   "UPDATE_RESPONSIVE_STYLE",
   "RENAME_NODE",
   "DUPLICATE_NODE",
+  "REMOVE_NODE",                  // ← Only generated internally by fullPageMode, not by AI
   "UPDATE_CANVAS_CONFIG",
   "UPDATE_INTERACTIONS",
 ]);
 ```
 
-Destructive commands (`REMOVE_NODE`, `MOVE_NODE`) are excluded.
+**Note:** `REMOVE_NODE` is only generated internally by the backend when `fullPageMode=true` to clear
+existing content before regenerating the entire page. The AI itself cannot generate `REMOVE_NODE`
+commands. `MOVE_NODE` is excluded.
 
 ---
 

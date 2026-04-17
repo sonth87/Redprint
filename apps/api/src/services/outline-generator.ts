@@ -87,7 +87,8 @@ Return ONLY valid JSON matching this exact structure — no markdown, no code bl
 - sectionId must be unique: use format "section-{index}"
 - keyContent: 3-6 items describing the key UI elements this section needs
 - Do NOT generate table-of-contents sections
-- Respond in English regardless of input language`;
+- Respond in the same language the user used in their request
+- For "sectionType", "layoutHint", and "tone" fields, always use English values (these are structural identifiers)`;
 }
 
 function buildUserPrompt(request: GeneratePageRequest): string {

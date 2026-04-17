@@ -39,13 +39,27 @@ export function buildAIContext(
     ? components.find((c) => c.type === selectedNode.type) ?? null
     : null;
 
-  // Phase 3A: Hierarchical page context (slim tree + focused nodes)
-  let pageNodes: Record<string, AIPageNode> | undefined;
+  // Always build pageNodes (needed for fullPageMode clearing)
+  // Phase 3A: Hierarchical page context (slim tree + focused nodes) when includePageContext is true
+  const allPageNodes: Record<string, AIPageNode> = {};
+  for (const node of Object.values(doc.nodes)) {
+    allPageNodes[node.id] = {
+      id: node.id,
+      type: node.type,
+      name: node.name,
+      parentId: node.parentId,
+      order: node.order,
+      props: node.props,
+      style: node.style as Record<string, unknown>,
+    };
+  }
+
+  const pageNodes = allPageNodes;
   let pageNodesSummary: AIPageNodeSummary | undefined;
+
   if (options.includePageContext) {
     // Build slim tree for ALL nodes (structure only)
     const tree: Record<string, AIPageNodeSlim> = {};
-    const fullNodes: Record<string, AIPageNode> = {};
     for (const node of Object.values(doc.nodes)) {
       tree[node.id] = {
         id: node.id,
@@ -53,15 +67,6 @@ export function buildAIContext(
         name: node.name,
         parentId: node.parentId,
         order: node.order,
-      };
-      fullNodes[node.id] = {
-        id: node.id,
-        type: node.type,
-        name: node.name,
-        parentId: node.parentId,
-        order: node.order,
-        props: node.props,
-        style: node.style as Record<string, unknown>,
       };
     }
 
@@ -84,12 +89,11 @@ export function buildAIContext(
     // Build focused nodes map with full detail
     const focusedNodes: Record<string, AIPageNode> = {};
     for (const nodeId of focusedIds) {
-      if (fullNodes[nodeId]) {
-        focusedNodes[nodeId] = fullNodes[nodeId];
+      if (allPageNodes[nodeId]) {
+        focusedNodes[nodeId] = allPageNodes[nodeId];
       }
     }
 
-    pageNodes = fullNodes; // Keep for backward compat
     pageNodesSummary = {
       tree,
       focusedNodes,

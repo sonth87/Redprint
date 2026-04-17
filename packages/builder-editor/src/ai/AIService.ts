@@ -171,6 +171,7 @@ export async function sendAIMessage(
       nestingRules: context.nestingRules,
       availablePresetsCompact: context.availablePresetsCompact,
       designTokens: context.designTokens,
+      fullPageMode: context.fullPageMode,
     },
   };
 

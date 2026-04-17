@@ -389,7 +389,7 @@ export const PaletteItemCard: React.FC<PaletteItemCardProps> = ({
           }}
         >
           {rawText}
-          {item.componentType === "TextMarquee" && " ↔"}
+          {item.componentType === "TextMarquee"}
         </span>
       </div>
     );

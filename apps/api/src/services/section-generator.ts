@@ -9,6 +9,7 @@
  */
 import { callLLM } from "./llm-client.js";
 import { logger } from "./logger.js";
+import { COMMAND_REFERENCE } from "./command-reference.js";
 import type {
   AICommandSuggestion,
   AIPresetGroup,
@@ -105,12 +106,18 @@ DO NOT generate a new "Section" component — the section already exists`;
 
   const previousSectionsHint =
     designContext.previousSections.length > 0
-      ? `\n## Style Consistency (from already-generated sections)\n${designContext.previousSections
-          .map(
-            (s) =>
-              `- ${s.type}: colors=[${s.dominantColors.join(", ")}], fontSizes=[${s.fontSizes.join(", ")}]`
-          )
-          .join("\n")}`
+      ? `\n## Style Consistency — MATCH THESE FROM PRIOR SECTIONS\n${designContext.previousSections
+          .map((s) => {
+            const parts = [`- ${s.type}:`];
+            if (s.dominantColors.length) parts.push(`colors=[${s.dominantColors.join(", ")}]`);
+            if (s.fontSizes.length) parts.push(`fontSizes=[${s.fontSizes.join(", ")}]`);
+            if (s.fontFamilies?.length) parts.push(`fonts=[${s.fontFamilies.join(", ")}]`);
+            if (s.borderRadii?.length) parts.push(`borderRadius=[${s.borderRadii.join(", ")}]`);
+            if (s.buttonStyles?.length) parts.push(`button=${JSON.stringify(s.buttonStyles[0])}`);
+            return parts.join(" ");
+          })
+          .join("\n")}
+Use the same button styling, border radii, and color palette for visual consistency.`
       : "";
 
   const designTokensHint = Object.keys(designContext.designTokens).length > 0
@@ -118,6 +125,7 @@ DO NOT generate a new "Section" component — the section already exists`;
     : "";
 
   return `You are a professional web page builder AI. Generate ADD_NODE commands to build a single page section.
+You write REAL, SPECIFIC content — never placeholder text. Every text element must contain genuine copy that reflects the user's business and tone. Content quality bar: imagine a professional copywriter wrote this for an actual client launch.
 
 ## Available Components (ONLY use these)
 ${componentList}
@@ -132,9 +140,17 @@ ${nestingRulesHint}
 - Never reuse the same nodeId
 ${presetHint}${previousSectionsHint}${designTokensHint}
 
-## Responsive Design
-- Add "responsiveStyle" and/or "responsiveProps" for mobile/tablet adaptations
-- Example: stack grids to 1 column on mobile via responsiveStyle: { mobile: { gridTemplateColumns: "1fr" } }
+## Responsive Design — MANDATORY FOR EVERY SECTION
+You MUST add responsive styles. Every section must include at least 3 nodes with responsiveStyle.
+
+Required behaviors:
+1. Headings (h1/h2): responsiveStyle: { mobile: { fontSize: "28px", lineHeight: "1.3" } }
+2. Grids (2+ cols): responsiveStyle: { mobile: { gridTemplateColumns: "1fr" }, tablet: { gridTemplateColumns: "1fr 1fr" } }
+3. Section padding: responsiveStyle: { mobile: { paddingTop: "40px", paddingBottom: "40px", paddingLeft: "16px", paddingRight: "16px" } }
+4. Images: responsiveStyle: { mobile: { width: "100%", height: "auto" } }
+5. Buttons: responsiveProps: { mobile: { label: "<short label>" } } if desktop label > 20 chars
+
+${COMMAND_REFERENCE}
 
 ## Output Format
 Return ONLY one JSON object — no markdown, no preamble:
@@ -151,6 +167,23 @@ function buildUserPrompt(
   outline: SectionOutline,
   designContext: SectionDesignContext
 ): string {
+  const contentExpansionMap: Record<string, string> = {
+    "headline": "main headline (8-12 words, action-oriented, specific benefit for this product/service)",
+    "subheadline": "supporting subtitle (15-25 words explaining the value proposition)",
+    "cta-button": "CTA button with specific label (e.g. 'Start Free Trial', 'Get Demo', 'Shop Now' — NOT 'Click Here')",
+    "body-text": "2-3 sentences of paragraph copy relevant to the topic",
+    "feature-list": "3-4 feature items each with a title (3-5 words) and description (10-15 words)",
+    "stat": "concrete metric with real number (e.g. '10,000+ customers', '99.9% uptime', '$2M saved')",
+    "testimonial": "customer quote (20-30 words) with name and title/company",
+    "price": "pricing amount with billing period (e.g. '$49/month', 'From $99')",
+  };
+
+  const expandedContent = outline.keyContent.map((item) => {
+    const key = item.toLowerCase().replace(/[^a-z-]/g, "");
+    const expansion = contentExpansionMap[key];
+    return expansion ? `- ${item}: ${expansion}` : `- ${item}: write specific, realistic content`;
+  }).join("\n");
+
   return `## Original User Request
 ${designContext.originalPrompt}
 
@@ -158,11 +191,19 @@ ${designContext.originalPrompt}
 - Type: ${outline.sectionType}
 - Purpose: ${outline.purpose}
 - Layout: ${outline.layoutHint}
-- Key Content Required: ${outline.keyContent.join(", ")}
 - Tone: ${outline.tone ?? "professional"}
 
-Build this section now. The parent Section node has parentId "root".
-Generate rich, complete content — not just placeholders.`;
+## Content Requirements — WRITE REAL COPY, NO PLACEHOLDERS
+${expandedContent}
+
+RULES:
+- DO NOT use placeholder text like "Lorem ipsum", "Your headline here", "Feature title"
+- ALL text props must contain specific, realistic content based on: "${designContext.originalPrompt.slice(0, 120)}"
+- Headlines must be benefit-oriented (NOT "Welcome" — YES "Cut Costs by 40% with Smart Automation")
+- Stats must look real (NOT "100%" — YES "12,847 customers" or "94.3% satisfaction rate")
+- CTAs must be action-specific (NOT "Click Here" — YES "Start Free Trial", "Book Consultation")
+
+Build this section now. The parent Section node has parentId "root".`;
 }
 
 // ── Extract style summary from generated commands ─────────────────────────
@@ -170,18 +211,35 @@ Generate rich, complete content — not just placeholders.`;
 export function extractStyleSummary(commands: AICommandSuggestion[]) {
   const colors: string[] = [];
   const fontSizes: string[] = [];
+  const fontFamilies: string[] = [];
+  const borderRadii: string[] = [];
+  const buttonStyles: Array<{ backgroundColor?: string; color?: string; borderRadius?: string }> = [];
 
   for (const cmd of commands) {
-    const style = cmd.payload.style as Record<string, string> | undefined;
+    if (cmd.type !== "ADD_NODE") continue;
+    const payload = cmd.payload as Record<string, unknown>;
+    const style = payload.style as Record<string, string> | undefined;
     if (!style) continue;
     if (style.backgroundColor) colors.push(style.backgroundColor);
     if (style.color) colors.push(style.color);
     if (style.fontSize) fontSizes.push(style.fontSize);
+    if (style.fontFamily) fontFamilies.push(style.fontFamily);
+    if (style.borderRadius) borderRadii.push(style.borderRadius);
+    if ((payload.componentType as string) === "Button") {
+      buttonStyles.push({
+        backgroundColor: style.backgroundColor,
+        color: style.color,
+        borderRadius: style.borderRadius,
+      });
+    }
   }
 
   return {
     dominantColors: [...new Set(colors)].slice(0, 5),
     fontSizes: [...new Set(fontSizes)].slice(0, 5),
+    fontFamilies: [...new Set(fontFamilies)].slice(0, 3),
+    borderRadii: [...new Set(borderRadii)].slice(0, 3),
+    buttonStyles: buttonStyles.slice(0, 2),
   };
 }
 

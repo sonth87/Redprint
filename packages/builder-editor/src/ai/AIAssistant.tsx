@@ -19,7 +19,7 @@ import {
 } from "@ui-builder/ui";
 import { Sparkles, Zap, Loader2 } from "lucide-react";
 import { useBuilder } from "@ui-builder/builder-react";
-import type { AIConfig, AIMessage, AIBuilderContext, AIResponse } from "./types";
+import type { AIConfig, AIMessage, AIBuilderContext, AIResponse, DesignTokens } from "./types";
 import { sendAIMessage, streamAIMessage, parseAIResponse } from "./AIService";
 import { normalizeAICommands } from "./normalizeAICommands";
 import { useTranslation } from "react-i18next";
@@ -34,6 +34,7 @@ const ALLOWED_AI_COMMANDS = new Set([
   "UPDATE_RESPONSIVE_STYLE",
   "RENAME_NODE",
   "DUPLICATE_NODE",
+  "REMOVE_NODE",
   "UPDATE_CANVAS_CONFIG",
   "UPDATE_INTERACTIONS",
 ]);
@@ -93,36 +94,13 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
   const applyAndClose = useCallback(
     (response: AIResponse) => {
       if (abortRef.current) return;
-      
-      // If fullPageMode is enabled, clear all existing nodes first (except root)
-      if (fullPageMode) {
-        // Get current state to find children of root
-        const state = (dispatch as unknown as { getState?: () => { document?: { rootNodeId: string; nodes?: Record<string, unknown> } } }).getState?.() || { document: { rootNodeId: context.document.rootNodeId, nodes: {} } };
-        const rootNodeId = context.document.rootNodeId;
-        const nodes = state.document?.nodes || {};
-        
-        // Find and remove all children of root node
-        const childrenToRemove = Object.values(nodes).filter(
-          (n: unknown) => {
-            const node = n as { parentId?: string; id?: string };
-            return node.parentId === rootNodeId && node.id !== rootNodeId;
-          }
-        );
-        
-        for (const child of childrenToRemove) {
-          try {
-            const childNode = child as { id: string };
-            dispatch({ type: "REMOVE_NODE", payload: { nodeId: childNode.id } } as never);
-          } catch (err) {
-            const nodeId = (child as { id?: string }).id || 'unknown';
-            console.warn(`[AI] Failed to remove node ${nodeId}:`, err);
-          }
-        }
-      }
-      
+
       if (response.suggestions && response.suggestions.length > 0) {
         const commands = normalizeAICommands(response.suggestions, context.document.rootNodeId);
         const errors: string[] = [];
+
+        // fullPageMode: backend will prepend REMOVE_NODE commands for all children
+        // So we just apply all commands in order
         for (const s of commands) {
           if (!ALLOWED_AI_COMMANDS.has(s.type)) continue;
           try {
@@ -140,7 +118,7 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
       }
       onOpenChange(false);
     },
-    [dispatch, onOpenChange, context.document.rootNodeId, fullPageMode],
+    [dispatch, onOpenChange, context.document.rootNodeId],
   );
 
   const handleGenerate = useCallback(async () => {
@@ -156,17 +134,49 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
     setError(null);
     abortRef.current = false;
 
+    // Wire color palette to design tokens
+    const selectedPalette = selectedColorPalette
+      ? COLOR_PALETTES.find((p) => p.name === selectedColorPalette)
+      : undefined;
+    const paletteTokens: DesignTokens | undefined = selectedPalette
+      ? {
+          primaryColor: selectedPalette.primary,
+          secondaryColor: selectedPalette.secondary,
+          accentColor: selectedPalette.accent,
+        }
+      : undefined;
+
+    // Wire tone to user message
+    const selectedToneStyle = selectedTone ? TONE_STYLES.find((t) => t.id === selectedTone) : undefined;
+    const toneInstruction = selectedToneStyle
+      ? `\n\n[Tone: ${selectedToneStyle.label} — ${selectedToneStyle.description}]`
+      : "";
+
     const userMessage: AIMessage = {
       id: crypto.randomUUID(),
       role: "user",
-      content: text,
+      content: text + toneInstruction,
       timestamp: Date.now(),
     };
+
+    // Include fullPageMode flag and palette tokens in context
+    const contextWithMode = {
+      ...context,
+      fullPageMode,
+      designTokens: paletteTokens ? { ...context.designTokens, ...paletteTokens } : context.designTokens,
+    };
+
+    if (fullPageMode) {
+      console.warn(
+        "[AI] Full page mode enabled — existing content will be cleared",
+        { nodeCount: context.document.nodeCount }
+      );
+    }
 
     try {
       if (config.streamingEnabled === true) {
         // ── Streaming mode ──
-        await streamAIMessage([userMessage], context, config, {
+        await streamAIMessage([userMessage], contextWithMode, config, {
           onToken: (token) => {
             if (abortRef.current) return;
             setStreamingText((prev) => prev + token);
@@ -185,7 +195,7 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
         });
       } else {
         // ── Non-streaming mode ──
-        const response = await sendAIMessage([userMessage], context, config);
+        const response = await sendAIMessage([userMessage], contextWithMode, config);
         if (!abortRef.current) {
           setIsLoading(false);
           applyAndClose(response);
@@ -198,7 +208,7 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
         setError(err instanceof Error ? err.message : "Unknown error");
       }
     }
-  }, [prompt, isLoading, config, context, applyAndClose]);
+  }, [prompt, isLoading, config, context, applyAndClose, fullPageMode, selectedColorPalette, selectedTone]);
 
   const handleCancel = useCallback(() => {
     abortRef.current = true;

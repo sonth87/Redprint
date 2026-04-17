@@ -19,98 +19,79 @@
       },
       "items": [
         {
-          "id": "text-themed-classic",
+          "id": "text-h1",
           "componentType": "Text",
-          "name": "Classic",
-          "description": "Clean serif heading for elegant sites",
-          "thumbnail": null,
-          "i18n": {
-            "en": {
-              "name": "Classic"
-            },
-            "vi": {
-              "name": "Cổ điển"
-            }
-          },
-          "props": {
-            "text": "<p>Classic Heading</p>",
-            "tag": "h2"
-          },
+          "name": "Heading 1",
+          "i18n": { "en": { "name": "Heading 1" } },
+          "props": { "text": "<h1>Add a Title</h1>", "tag": "h1" },
           "style": {
-            "fontFamily": "Georgia, serif",
-            "fontSize": "32px",
-            "fontWeight": "400",
-            "color": "#1a1a1a",
-            "lineHeight": "1.3"
-          },
-          "tags": [
-            "classic",
-            "serif",
-            "elegant"
-          ]
-        },
-        {
-          "id": "text-themed-modern",
-          "componentType": "Text",
-          "name": "Modern",
-          "description": "Bold sans-serif for contemporary design",
-          "thumbnail": null,
-          "i18n": {
-            "en": {
-              "name": "Modern"
-            },
-            "vi": {
-              "name": "Hiện đại"
-            }
-          },
-          "props": {
-            "text": "<p>Modern Heading</p>",
-            "tag": "h2"
-          },
-          "style": {
-            "fontFamily": "system-ui, sans-serif",
-            "fontSize": "36px",
-            "fontWeight": "800",
+            "fontSize": "52px",
+            "fontWeight": "700",
             "color": "#111827",
-            "letterSpacing": "-0.02em",
             "lineHeight": "1.1"
-          },
-          "tags": [
-            "modern",
-            "bold",
-            "sans-serif"
-          ]
+          }
         },
         {
-          "id": "text-themed-decorative",
+          "id": "text-h2",
           "componentType": "Text",
-          "name": "Decorative",
-          "description": "Expressive script-style heading",
-          "thumbnail": null,
-          "i18n": {
-            "en": {
-              "name": "Decorative"
-            },
-            "vi": {
-              "name": "Trang trí"
-            }
-          },
+          "name": "Heading 2",
+          "props": { "text": "<h2>Add a Heading</h2>", "tag": "h2" },
+          "style": { "fontSize": "40px", "fontWeight": "700", "color": "#111827" }
+        },
+        {
+          "id": "text-h3",
+          "componentType": "Text",
+          "name": "Heading 3",
+          "props": { "text": "<h3>Add a Heading</h3>", "tag": "h3" },
+          "style": { "fontSize": "28px", "fontWeight": "600", "color": "#111827" }
+        },
+        {
+          "id": "text-h4",
+          "componentType": "Text",
+          "name": "Heading 4",
+          "props": { "text": "<h4>Add a Heading</h4>", "tag": "h4" },
+          "style": { "fontSize": "22px", "fontWeight": "600", "color": "#111827" }
+        },
+        {
+          "id": "text-h5",
+          "componentType": "Text",
+          "name": "Heading 5",
+          "props": { "text": "<h5>Add a Heading</h5>", "tag": "h5" },
+          "style": { "fontSize": "18px", "fontWeight": "600", "color": "#374151" }
+        },
+        {
+          "id": "text-h6",
+          "componentType": "Text",
+          "name": "Heading 6",
+          "props": { "text": "<h6>Add a Heading</h6>", "tag": "h6" },
+          "style": { "fontSize": "14px", "fontWeight": "700", "color": "#374151" }
+        },
+        {
+          "id": "text-body-lg",
+          "componentType": "Text",
+          "name": "Body Large",
           "props": {
-            "text": "<p>Decorative Title</p>",
-            "tag": "h2"
+            "text": "<p>I'm a paragraph. Click here to add your own text.</p>",
+            "tag": "p"
           },
-          "style": {
-            "fontFamily": "cursive",
-            "fontSize": "40px",
-            "fontWeight": "400",
-            "color": "#7c3aed",
-            "lineHeight": "1.2"
+          "style": { "fontSize": "18px", "color": "#374151", "lineHeight": "1.7" }
+        },
+        {
+          "id": "text-body-md",
+          "componentType": "Text",
+          "name": "Body Medium",
+          "props": {
+            "text": "<p>I'm a paragraph. Click here to add your own text.</p>",
+            "tag": "p"
           },
-          "tags": [
-            "decorative",
-            "cursive",
-            "stylish"
-          ]
+          "style": { "fontSize": "16px", "color": "#374151", "lineHeight": "1.6" }
+        },
+        {
+          "id": "text-body-sm",
+          "componentType": "Text",
+          "name": "Body Small",
+          "props": { "text": "<p>I'm a small paragraph.</p>", "tag": "p" },
+          "style": { "fontSize": "14px", "color": "#6b7280", "lineHeight": "1.5" }
         }
       ]
     },
@@ -125,207 +106,166 @@
       },
       "items": [
         {
-          "id": "text-h1",
+          "id": "title-big",
           "componentType": "Text",
-          "name": "Heading 1",
-          "thumbnail": null,
-          "i18n": {
-            "en": {
-              "name": "Heading 1"
-            },
-            "vi": {
-              "name": "Tiêu đề 1"
-            }
-          },
-          "props": {
-            "text": "<h1>Add a Title</h1>",
-            "tag": "h1"
-          },
-          "style": {
-            "fontSize": "52px",
-            "fontWeight": "700",
-            "color": "#111827",
-            "lineHeight": "1.1",
-            "letterSpacing": "-0.02em"
-          },
-          "responsiveStyle": {
-            "tablet": {
-              "fontSize": "40px"
-            },
-            "mobile": {
-              "fontSize": "28px"
-            }
-          },
-          "tags": [
-            "h1",
-            "heading",
-            "title",
-            "hero"
-          ]
+          "name": "Big Title",
+          "props": { "text": "<p>Big Title</p>", "tag": "h1" },
+          "style": { "fontSize": "72px", "fontWeight": "900", "color": "#111827" }
         },
         {
-          "id": "text-h2",
+          "id": "title-caps",
           "componentType": "Text",
-          "name": "Heading 2",
-          "thumbnail": null,
-          "i18n": {
-            "en": {
-              "name": "Heading 2"
-            },
-            "vi": {
-              "name": "Tiêu đề 2"
-            }
-          },
-          "props": {
-            "text": "<h2>Section Title</h2>",
-            "tag": "h2"
-          },
+          "name": "CAPS TITLE",
+          "props": { "text": "<p>CAPS TITLE</p>", "tag": "h2" },
+          "style": {
+            "fontSize": "32px",
+            "fontWeight": "800",
+            "color": "#ff6b35",
+            "textTransform": "uppercase",
+            "letterSpacing": "0.15em"
+          }
+        },
+        {
+          "id": "title-small",
+          "componentType": "Text",
+          "name": "Small Title",
+          "props": { "text": "<p>Small Title</p>", "tag": "h3" },
+          "style": { "fontSize": "20px", "fontWeight": "700", "color": "#c97c4f" }
+        },
+        {
+          "id": "title-business",
+          "componentType": "Text",
+          "name": "Business Title",
+          "props": { "text": "<p>Business Title</p>", "tag": "h3" },
+          "style": { "fontSize": "28px", "fontWeight": "400", "color": "#3b5bdb" }
+        },
+        {
+          "id": "title-huge",
+          "componentType": "Text",
+          "name": "Huge Title",
+          "props": { "text": "<p>Huge Title</p>", "tag": "h1" },
+          "style": { "fontSize": "96px", "fontWeight": "900", "color": "#111827" }
+        },
+        {
+          "id": "title-bold",
+          "componentType": "Text",
+          "name": "Bold Title",
+          "props": { "text": "<p>Bold Title</p>", "tag": "h2" },
+          "style": { "fontSize": "40px", "fontWeight": "800", "color": "#111827" }
+        },
+        {
+          "id": "title-elegant",
+          "componentType": "Text",
+          "name": "Elegant Title",
+          "props": { "text": "<p>Elegant Title</p>", "tag": "h2" },
+          "style": {
+            "fontSize": "40px",
+            "fontWeight": "400",
+            "fontStyle": "italic",
+            "color": "#8b5fbf",
+            "fontFamily": "Playfair Display, serif"
+          }
+        },
+        {
+          "id": "title-classic",
+          "componentType": "Text",
+          "name": "Classic Title",
+          "props": { "text": "<p>Classic Title</p>", "tag": "h2" },
+          "style": {
+            "fontSize": "36px",
+            "fontWeight": "400",
+            "color": "#6b7280",
+            "fontFamily": "Playfair Display, serif"
+          }
+        },
+        {
+          "id": "title-magazine",
+          "componentType": "Text",
+          "name": "MAGAZINE TITLE",
+          "props": { "text": "<p>MAGAZINE TITLE</p>", "tag": "h1" },
+          "style": {
+            "fontSize": "52px",
+            "fontWeight": "400",
+            "color": "#10b981",
+            "fontFamily": "Bebas Neue, sans-serif",
+            "letterSpacing": "0.1em",
+            "textTransform": "uppercase"
+          }
+        },
+        {
+          "id": "title-tall",
+          "componentType": "Text",
+          "name": "TALL TITLE",
+          "props": { "text": "<p>TALL TITLE</p>", "tag": "h1" },
+          "style": {
+            "fontSize": "48px",
+            "fontWeight": "700",
+            "color": "#111827",
+            "fontFamily": "Oswald, sans-serif",
+            "textTransform": "uppercase"
+          }
+        },
+        {
+          "id": "title-running",
+          "componentType": "Text",
+          "name": "Small Running Title",
+          "props": { "text": "<p>Small Running Title</p>", "tag": "h4" },
+          "style": {
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "color": "#6b7280",
+            "letterSpacing": "0.2em"
+          }
+        },
+        {
+          "id": "title-fashion",
+          "componentType": "Text",
+          "name": "FASHION TITLE",
+          "props": { "text": "<p>FASHION TITLE</p>", "tag": "h1" },
+          "style": {
+            "fontSize": "36px",
+            "fontWeight": "700",
+            "color": "#ef4444",
+            "fontFamily": "Anton, sans-serif",
+            "textTransform": "uppercase"
+          }
+        },
+        {
+          "id": "title-thin",
+          "componentType": "Text",
+          "name": "Thin Title",
+          "props": { "text": "<p>Thin Title</p>", "tag": "h1" },
+          "style": {
+            "fontSize": "60px",
+            "fontWeight": "100",
+            "color": "#6b7280",
+            "fontFamily": "Raleway, sans-serif",
+            "letterSpacing": "0.1em"
+          }
+        },
+        {
+          "id": "title-lobster",
+          "componentType": "Text",
+          "name": "Lobster Title",
+          "props": { "text": "<p>Lobster Title</p>", "tag": "h2" },
+          "style": {
+            "fontSize": "48px",
+            "fontWeight": "400",
+            "color": "#111827",
+            "fontFamily": "Lobster, cursive"
+          }
+        },
+        {
+          "id": "title-writing",
+          "componentType": "Text",
+          "name": "Writing Title",
+          "props": { "text": "<p>Writing Title</p>", "tag": "h2" },
           "style": {
             "fontSize": "40px",
             "fontWeight": "700",
-            "color": "#111827",
-            "lineHeight": "1.2"
-          },
-          "responsiveStyle": {
-            "tablet": {
-              "fontSize": "32px"
-            },
-            "mobile": {
-              "fontSize": "24px"
-            }
-          },
-          "tags": [
-            "h2",
-            "heading",
-            "section"
-          ]
-        },
-        {
-          "id": "text-h3",
-          "componentType": "Text",
-          "name": "Heading 3",
-          "thumbnail": null,
-          "i18n": {
-            "en": {
-              "name": "Heading 3"
-            },
-            "vi": {
-              "name": "Tiêu đề 3"
-            }
-          },
-          "props": {
-            "text": "<h3>Subsection Title</h3>",
-            "tag": "h3"
-          },
-          "style": {
-            "fontSize": "28px",
-            "fontWeight": "600",
-            "color": "#111827",
-            "lineHeight": "1.3"
-          },
-          "responsiveStyle": {
-            "mobile": {
-              "fontSize": "20px"
-            }
-          },
-          "tags": [
-            "h3",
-            "heading",
-            "subsection"
-          ]
-        },
-        {
-          "id": "text-h4",
-          "componentType": "Text",
-          "name": "Heading 4",
-          "thumbnail": null,
-          "i18n": {
-            "en": {
-              "name": "Heading 4"
-            },
-            "vi": {
-              "name": "Tiêu đề 4"
-            }
-          },
-          "props": {
-            "text": "<h4>Card Title</h4>",
-            "tag": "h4"
-          },
-          "style": {
-            "fontSize": "22px",
-            "fontWeight": "600",
-            "color": "#111827",
-            "lineHeight": "1.4"
-          },
-          "responsiveStyle": {
-            "mobile": {
-              "fontSize": "18px"
-            }
-          },
-          "tags": [
-            "h4",
-            "heading",
-            "card"
-          ]
-        },
-        {
-          "id": "text-h5",
-          "componentType": "Text",
-          "name": "Heading 5",
-          "thumbnail": null,
-          "i18n": {
-            "en": {
-              "name": "Heading 5"
-            },
-            "vi": {
-              "name": "Tiêu đề 5"
-            }
-          },
-          "props": {
-            "text": "<h5>Label Title</h5>",
-            "tag": "h5"
-          },
-          "style": {
-            "fontSize": "18px",
-            "fontWeight": "600",
-            "color": "#374151",
-            "lineHeight": "1.5"
-          },
-          "tags": [
-            "h5",
-            "heading",
-            "label"
-          ]
-        },
-        {
-          "id": "text-h6",
-          "componentType": "Text",
-          "name": "Heading 6",
-          "thumbnail": null,
-          "i18n": {
-            "en": {
-              "name": "Heading 6"
-            },
-            "vi": {
-              "name": "Tiêu đề 6"
-            }
-          },
-          "props": {
-            "text": "<h6>Small Title</h6>",
-            "tag": "h6"
-          },
-          "style": {
-            "fontSize": "14px",
-            "fontWeight": "700",
-            "color": "#374151",
-            "textTransform": "uppercase",
-            "letterSpacing": "0.08em"
-          },
-          "tags": [
-            "h6",
-            "heading",
-            "overline"
-          ]
+            "color": "#6366f1",
+            "fontFamily": "Dancing Script, cursive"
+          }
         }
       ]
     },
@@ -361,11 +301,7 @@
             "color": "#374151",
             "lineHeight": "1.7"
           },
-          "tags": [
-            "paragraph",
-            "body",
-            "large"
-          ]
+          "tags": ["paragraph", "body", "large"]
         },
         {
           "id": "text-body-medium",
@@ -389,11 +325,7 @@
             "color": "#374151",
             "lineHeight": "1.6"
           },
-          "tags": [
-            "paragraph",
-            "body",
-            "medium"
-          ]
+          "tags": ["paragraph", "body", "medium"]
         },
         {
           "id": "text-body-small",
@@ -417,12 +349,7 @@
             "color": "#6b7280",
             "lineHeight": "1.5"
           },
-          "tags": [
-            "paragraph",
-            "body",
-            "small",
-            "caption"
-          ]
+          "tags": ["paragraph", "body", "small", "caption"]
         },
         {
           "id": "text-lead",
@@ -452,11 +379,7 @@
               "fontSize": "16px"
             }
           },
-          "tags": [
-            "paragraph",
-            "lead",
-            "intro"
-          ]
+          "tags": ["paragraph", "lead", "intro"]
         },
         {
           "id": "text-quote",
@@ -484,11 +407,7 @@
             "paddingLeft": "20px",
             "marginLeft": "0"
           },
-          "tags": [
-            "quote",
-            "blockquote",
-            "citation"
-          ]
+          "tags": ["quote", "blockquote", "citation"]
         }
       ]
     },
@@ -526,11 +445,7 @@
             "color": "#374151",
             "lineHeight": "1.6"
           },
-          "tags": [
-            "collapsible",
-            "read-more",
-            "expandable"
-          ]
+          "tags": ["collapsible", "read-more", "expandable"]
         },
         {
           "id": "collapsible-show-more",
@@ -556,10 +471,7 @@
             "color": "#6b7280",
             "lineHeight": "1.7"
           },
-          "tags": [
-            "collapsible",
-            "show-more"
-          ]
+          "tags": ["collapsible", "show-more"]
         },
         {
           "id": "collapsible-link",
@@ -585,11 +497,7 @@
             "color": "#374151",
             "lineHeight": "1.6"
           },
-          "tags": [
-            "collapsible",
-            "link",
-            "article"
-          ]
+          "tags": ["collapsible", "link", "article"]
         }
       ]
     },
@@ -628,11 +536,7 @@
             "color": "#111827",
             "padding": "12px 0"
           },
-          "tags": [
-            "marquee",
-            "ticker",
-            "scrolling"
-          ]
+          "tags": ["marquee", "ticker", "scrolling"]
         },
         {
           "id": "marquee-promo",
@@ -662,12 +566,7 @@
             "textTransform": "uppercase",
             "letterSpacing": "0.05em"
           },
-          "tags": [
-            "marquee",
-            "promo",
-            "banner",
-            "shipping"
-          ]
+          "tags": ["marquee", "promo", "banner", "shipping"]
         },
         {
           "id": "marquee-new-arrivals",
@@ -694,11 +593,7 @@
             "color": "#111827",
             "padding": "16px 0"
           },
-          "tags": [
-            "marquee",
-            "new-arrivals",
-            "fashion"
-          ]
+          "tags": ["marquee", "new-arrivals", "fashion"]
         },
         {
           "id": "marquee-hello",
@@ -726,11 +621,7 @@
             "color": "#7c3aed",
             "padding": "14px 0"
           },
-          "tags": [
-            "marquee",
-            "elegant",
-            "italic"
-          ]
+          "tags": ["marquee", "elegant", "italic"]
         }
       ]
     },
@@ -763,11 +654,7 @@
             "fontSize": "100px",
             "fontWeight": "900"
           },
-          "tags": [
-            "text-mask",
-            "gradient",
-            "purple"
-          ]
+          "tags": ["text-mask", "gradient", "purple"]
         },
         {
           "id": "textmask-sunset",
@@ -788,11 +675,7 @@
             "fontSize": "90px",
             "fontWeight": "900"
           },
-          "tags": [
-            "text-mask",
-            "gradient",
-            "warm"
-          ]
+          "tags": ["text-mask", "gradient", "warm"]
         },
         {
           "id": "textmask-ocean",
@@ -813,12 +696,7 @@
             "fontSize": "100px",
             "fontWeight": "900"
           },
-          "tags": [
-            "text-mask",
-            "gradient",
-            "blue",
-            "teal"
-          ]
+          "tags": ["text-mask", "gradient", "blue", "teal"]
         }
       ]
     }

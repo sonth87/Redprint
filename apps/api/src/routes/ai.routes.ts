@@ -260,6 +260,15 @@ aiRouter.post("/chat", async (req: Request, res: Response) => {
   try {
     const systemContent = buildChatSystemPrompt(body.builderContext);
 
+    logger.systemMessage(systemContent);
+    logger.debug("CHAT_CONTEXT", "Chat request context", {
+      documentName: body.builderContext.document.name,
+      nodeCount: body.builderContext.document.nodeCount,
+      fullPageMode: body.builderContext.fullPageMode ?? false,
+      messageCount: body.messages.length,
+      lastUserMessage: body.messages.filter((m) => m.role === "user").at(-1)?.content?.slice(0, 100),
+    });
+
     // body.messages contains only user/assistant messages (no system role).
     // The client no longer sends a system message — the backend owns that.
     const messages = [
@@ -279,12 +288,55 @@ aiRouter.post("/chat", async (req: Request, res: Response) => {
     }
 
     const obj = parsed as { message?: string; commands?: unknown[] };
-    const commands = Array.isArray(obj.commands)
+    let commands = Array.isArray(obj.commands)
       ? obj.commands.filter(
           (c): c is AICommandSuggestion =>
             typeof c === "object" && c !== null && typeof (c as Record<string, unknown>).type === "string"
         )
       : [];
+
+    // Handle fullPageMode: prepend REMOVE_NODE commands for all children of root
+    if (body.builderContext.fullPageMode) {
+      logger.debug("FULL_PAGE_MODE", "fullPageMode is enabled", {
+        hasPageNodes: !!body.builderContext.pageNodes,
+        nodeCount: body.builderContext.pageNodes ? Object.keys(body.builderContext.pageNodes).length : 0,
+        rootNodeId: body.builderContext.document.rootNodeId
+      });
+
+      if (body.builderContext.pageNodes) {
+        const rootNodeId = body.builderContext.document.rootNodeId;
+        const childrenToRemove = Object.values(body.builderContext.pageNodes).filter(
+          (node) => node.parentId === rootNodeId
+        );
+
+        if (childrenToRemove.length > 0) {
+          const removeCommands: AICommandSuggestion[] = childrenToRemove.map((node) => ({
+            type: "REMOVE_NODE",
+            payload: { id: node.id },
+            description: `Remove ${node.type} node`,
+          }));
+
+          logger.decision(
+            "FULL_PAGE_MODE",
+            `Clearing ${childrenToRemove.length} existing nodes from root before generating new content`,
+            {
+              nodeIds: childrenToRemove.map((n) => n.id),
+              nodeTypes: childrenToRemove.map((n) => n.type),
+              aiCommandsCount: commands.length,
+              totalCommandsAfterClear: removeCommands.length + commands.length
+            }
+          );
+
+          commands = [...removeCommands, ...commands];
+        } else {
+          logger.debug("FULL_PAGE_MODE", "No children to remove under root node", { rootNodeId });
+        }
+      } else {
+        logger.debug("FULL_PAGE_MODE", "fullPageMode enabled but no pageNodes available", {
+          hasPageNodes: false
+        });
+      }
+    }
 
     res.json({ message: obj.message ?? "", commands });
   } catch (err) {

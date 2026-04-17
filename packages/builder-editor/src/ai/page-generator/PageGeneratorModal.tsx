@@ -14,6 +14,8 @@ import {
   DialogTitle,
   Button,
   Badge,
+  Checkbox,
+  Label,
 } from "@ui-builder/ui";
 import { useTranslation } from "react-i18next";
 import { Sparkles, CheckCircle2, XCircle, Loader2, LayoutTemplate } from "lucide-react";
@@ -104,6 +106,7 @@ export function PageGeneratorModal({
 }: PageGeneratorModalProps) {
   const { t } = useTranslation();
   const [prompt, setPrompt] = useState("");
+  const [fullPageMode, setFullPageMode] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { state, generate, cancel, reset } = usePageGenerator(config, context);
 
@@ -140,8 +143,8 @@ export function PageGeneratorModal({
 
   const handleGenerate = useCallback(async () => {
     if (!prompt.trim() || isBusy) return;
-    await generate(prompt.trim());
-  }, [prompt, isBusy, generate]);
+    await generate(prompt.trim(), { fullPageMode });
+  }, [prompt, isBusy, generate, fullPageMode]);
 
   const handleCancel = useCallback(() => {
     if (isBusy) {
@@ -201,6 +204,22 @@ export function PageGeneratorModal({
                   rows={4}
                   className="w-full rounded-md border bg-transparent px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
                 />
+              </div>
+              {/* Full page mode checkbox */}
+              <div className="flex items-center gap-3 px-3 py-2.5 bg-muted/40 rounded-lg border border-border">
+                <Checkbox
+                  id="fullPageMode"
+                  checked={fullPageMode}
+                  onCheckedChange={(checked: boolean | "indeterminate") => {
+                    if (typeof checked === "boolean") {
+                      setFullPageMode(checked);
+                    }
+                  }}
+                  disabled={isBusy}
+                />
+                <Label htmlFor="fullPageMode" className="text-xs text-muted-foreground cursor-pointer select-none flex-1">
+                  {t("toolbar.fullPageMode")}
+                </Label>
               </div>
               {isError && (
                 <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2">

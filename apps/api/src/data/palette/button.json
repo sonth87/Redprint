@@ -19,20 +19,89 @@
       },
       "items": [
         {
-          "id": "btn-view-more",
+          "id": "btn-primary",
           "componentType": "Button",
           "name": "View More",
-          "thumbnail": null,
-          "i18n": {
-            "en": {
-              "name": "View More"
-            },
-            "vi": {
-              "name": "Xem thêm"
-            }
-          },
           "props": {
             "label": "<p>View More</p>",
+            "variant": "primary",
+            "size": "md",
+            "hoverStyle": { "backgroundColor": "#1f2937" }
+          },
+          "style": {
+            "backgroundColor": "#111827",
+            "color": "#ffffff",
+            "borderRadius": "4px",
+            "padding": "8px 16px",
+            "fontSize": "14px",
+            "fontWeight": "500"
+          }
+        },
+        {
+          "id": "btn-outline",
+          "componentType": "Button",
+          "name": "Read More",
+          "props": {
+            "label": "<p>Read More</p>",
+            "variant": "outline",
+            "size": "md",
+            "hoverStyle": { "backgroundColor": "#f3f4f6" }
+          },
+          "style": {
+            "backgroundColor": "transparent",
+            "color": "#111827",
+            "border": "1px solid #111827",
+            "borderRadius": "4px",
+            "padding": "8px 16px",
+            "fontSize": "14px"
+          }
+        },
+        {
+          "id": "btn-shop",
+          "componentType": "Button",
+          "name": "SHOP →",
+          "props": {
+            "label": "<p>SHOP →</p>",
+            "variant": "primary",
+            "size": "md",
+            "hoverStyle": { "backgroundColor": "#3d6456" }
+          },
+          "style": {
+            "backgroundColor": "#4d7c6e",
+            "color": "#ffffff",
+            "borderRadius": "24px",
+            "padding": "8px 16px",
+            "fontSize": "13px",
+            "letterSpacing": "0.08em",
+            "fontWeight": "600"
+          }
+        },
+        {
+          "id": "btn-send",
+          "componentType": "Button",
+          "name": "SEND",
+          "props": {
+            "label": "<p>SEND</p>",
+            "variant": "primary",
+            "size": "md",
+            "hoverStyle": { "backgroundColor": "#1f2937" }
+          },
+          "style": {
+            "backgroundColor": "#111827",
+            "color": "#ffffff",
+            "borderRadius": "2px",
+            "padding": "8px 16px",
+            "fontSize": "13px",
+            "letterSpacing": "0.1em",
+            "fontWeight": "700"
+          }
+        },
+        {
+          "id": "btn-explore",
+          "componentType": "Button",
+          "name": "Explore",
+          "props": {
+            "label": "<p>Explore</p>",
             "variant": "primary",
             "size": "md",
             "hoverStyle": {
@@ -44,181 +113,54 @@
             "backgroundColor": "#111827",
             "color": "#ffffff",
             "borderRadius": "4px",
-            "width": "160px",
-            "height": "40px",
+            "padding": "8px 16px",
             "fontSize": "14px",
-            "fontWeight": "500"
-          },
-          "tags": [
-            "button",
-            "view-more",
-            "cta"
-          ]
+            "fontWeight": "600"
+          }
         },
         {
-          "id": "btn-read-more",
+          "id": "btn-say-hello",
           "componentType": "Button",
-          "name": "Read More",
-          "thumbnail": null,
-          "i18n": {
-            "en": {
-              "name": "Read More"
-            },
-            "vi": {
-              "name": "Đọc thêm"
-            }
-          },
+          "name": "Say Hello",
           "props": {
-            "label": "<p>Read More</p>",
-            "variant": "outline",
-            "size": "md",
-            "hoverStyle": {
-              "backgroundColor": "#f3f4f6"
-            }
-          },
-          "style": {
-            "backgroundColor": "transparent",
-            "color": "#111827",
-            "border": "1px solid #111827",
-            "borderRadius": "4px",
-            "width": "160px",
-            "height": "40px",
-            "fontSize": "14px"
-          },
-          "tags": [
-            "button",
-            "read-more",
-            "outline"
-          ]
-        },
-        {
-          "id": "btn-shop",
-          "componentType": "Button",
-          "name": "Shop",
-          "thumbnail": null,
-          "i18n": {
-            "en": {
-              "name": "Shop →"
-            },
-            "vi": {
-              "name": "Mua ngay →"
-            }
-          },
-          "props": {
-            "label": "<p>SHOP →</p>",
+            "label": "<p>Say Hello</p>",
             "variant": "primary",
             "size": "md",
-            "hoverStyle": {
-              "backgroundColor": "#374151"
-            }
+            "hoverStyle": { "transform": "scale(1.02)" }
           },
           "style": {
-            "backgroundColor": "#4d7c6e",
+            "background": "linear-gradient(135deg, #7c3aed 0%, #d946ef 100%)",
             "color": "#ffffff",
             "borderRadius": "24px",
-            "width": "160px",
-            "height": "40px",
-            "fontSize": "13px",
-            "letterSpacing": "0.08em",
+            "padding": "8px 16px",
+            "fontSize": "14px",
             "fontWeight": "600"
-          },
-          "tags": [
-            "button",
-            "shop",
-            "ecommerce",
-            "pill"
-          ]
+          }
         },
         {
-          "id": "btn-send",
+          "id": "btn-join",
           "componentType": "Button",
-          "name": "Send",
-          "thumbnail": null,
-          "i18n": {
-            "en": {
-              "name": "Send"
-            },
-            "vi": {
-              "name": "Gửi"
-            }
-          },
-          "props": {
-            "label": "<p>SEND</p>",
-            "variant": "primary",
-            "size": "md",
-            "hoverStyle": {
-              "backgroundColor": "#374151"
-            }
-          },
-          "style": {
-            "backgroundColor": "#111827",
-            "color": "#ffffff",
-            "borderRadius": "2px",
-            "width": "160px",
-            "height": "40px",
-            "fontSize": "13px",
-            "letterSpacing": "0.1em",
-            "fontWeight": "700"
-          },
-          "tags": [
-            "button",
-            "send",
-            "form",
-            "submit"
-          ]
-        },
-        {
-          "id": "btn-join-us",
-          "componentType": "Button",
-          "name": "Join Us",
-          "thumbnail": null,
-          "i18n": {
-            "en": {
-              "name": "Join Us"
-            },
-            "vi": {
-              "name": "Tham gia"
-            }
-          },
+          "name": "JOIN US",
           "props": {
             "label": "<p>JOIN US</p>",
             "variant": "secondary",
             "size": "md",
-            "hoverStyle": {
-              "backgroundColor": "#374151"
-            }
+            "hoverStyle": { "backgroundColor": "#e0e7ff" }
           },
           "style": {
             "backgroundColor": "transparent",
             "color": "#4f46e5",
             "border": "2px solid #4f46e5",
             "borderRadius": "24px",
-            "width": "160px",
-            "height": "40px",
+            "padding": "6px 16px",
             "fontSize": "14px",
-            "fontWeight": "600",
-            "letterSpacing": "0.05em"
-          },
-          "tags": [
-            "button",
-            "join",
-            "community",
-            "outline"
-          ]
+            "fontWeight": "600"
+          }
         },
         {
           "id": "btn-download",
           "componentType": "Button",
-          "name": "Download",
-          "thumbnail": null,
-          "i18n": {
-            "en": {
-              "name": "Download"
-            },
-            "vi": {
-              "name": "Tải xuống"
-            }
-          },
+          "name": "DOWNLOAD",
           "props": {
             "label": "<p>DOWNLOAD</p>",
             "variant": "primary",
@@ -236,163 +178,170 @@
             "fontSize": "14px",
             "fontWeight": "700",
             "letterSpacing": "0.08em"
-          },
-          "tags": [
-            "button",
-            "download",
-            "cta"
-          ]
-        },
-        {
-          "id": "btn-let-s-go",
-          "componentType": "Button",
-          "name": "Let's Go",
-          "thumbnail": null,
-          "i18n": {
-            "en": {
-              "name": "Let's Go"
-            },
-            "vi": {
-              "name": "Bắt đầu"
-            }
-          },
-          "props": {
-            "label": "<p>Let's Go</p>",
-            "variant": "outline",
-            "size": "md",
-            "hoverStyle": {
-              "backgroundColor": "#374151"
-            }
-          },
-          "style": {
-            "backgroundColor": "transparent",
-            "color": "#4f46e5",
-            "border": "2px solid #4f46e5",
-            "borderRadius": "4px",
-            "width": "160px",
-            "height": "40px",
-            "fontSize": "15px",
-            "fontWeight": "600"
-          },
-          "tags": [
-            "button",
-            "lets-go",
-            "outline",
-            "indigo"
-          ]
-        },
-        {
-          "id": "btn-apply-now",
-          "componentType": "Button",
-          "name": "Apply Now",
-          "thumbnail": null,
-          "i18n": {
-            "en": {
-              "name": "Apply Now"
-            },
-            "vi": {
-              "name": "Ứng tuyển ngay"
-            }
-          },
-          "props": {
-            "label": "<p>Apply Now</p>",
-            "variant": "primary",
-            "size": "md",
-            "hoverStyle": {
-              "backgroundColor": "#374151"
-            }
-          },
-          "style": {
-            "backgroundColor": "#374151",
-            "color": "#ffffff",
-            "borderRadius": "4px",
-            "width": "160px",
-            "height": "40px",
-            "fontSize": "15px",
-            "fontStyle": "italic",
-            "fontWeight": "600"
-          },
-          "tags": [
-            "button",
-            "apply",
-            "jobs",
-            "italic"
-          ]
+          }
         },
         {
           "id": "btn-get-started",
           "componentType": "Button",
           "name": "Get Started",
-          "thumbnail": null,
-          "i18n": {
-            "en": {
-              "name": "Get Started"
-            },
-            "vi": {
-              "name": "Bắt đầu ngay"
-            }
-          },
           "props": {
             "label": "<p>Get Started</p>",
             "variant": "primary",
             "size": "lg",
-            "hoverStyle": {
-              "transform": "scale(1.02)"
-            }
+            "hoverStyle": { "backgroundColor": "#d45f2a" }
           },
           "style": {
             "backgroundColor": "transparent",
             "color": "#e57330",
             "border": "2px solid #e57330",
             "borderRadius": "24px",
-            "width": "160px",
-            "height": "40px",
+            "padding": "8px 16px",
             "fontSize": "15px",
             "fontWeight": "600"
-          },
-          "tags": [
-            "button",
-            "get-started",
-            "orange",
-            "pill"
-          ]
+          }
         },
         {
-          "id": "btn-chat-now",
+          "id": "btn-apply",
+          "componentType": "Button",
+          "name": "Apply Now",
+          "props": {
+            "label": "<p>Apply Now</p>",
+            "variant": "primary",
+            "size": "md",
+            "hoverStyle": { "backgroundColor": "#4b5563" }
+          },
+          "style": {
+            "backgroundColor": "#374151",
+            "color": "#ffffff",
+            "borderRadius": "4px",
+            "padding": "8px 16px",
+            "fontSize": "15px",
+            "fontStyle": "italic",
+            "fontWeight": "600"
+          }
+        },
+        {
+          "id": "btn-chat",
           "componentType": "Button",
           "name": "Chat Now",
-          "thumbnail": null,
-          "i18n": {
-            "en": {
-              "name": "Chat Now"
-            },
-            "vi": {
-              "name": "Nhắn tin ngay"
-            }
-          },
           "props": {
             "label": "<p>Chat Now 💬</p>",
             "variant": "primary",
             "size": "md",
-            "hoverStyle": {
-              "backgroundColor": "#374151"
-            }
+            "hoverStyle": { "backgroundColor": "#f5f3ed" }
           },
           "style": {
             "backgroundColor": "#f6f4ef",
             "color": "#111827",
             "borderRadius": "24px",
-            "width": "160px",
-            "height": "40px",
+            "padding": "8px 16px",
             "fontSize": "14px",
             "fontWeight": "600"
+          }
+        },
+        {
+          "id": "btn-featured",
+          "componentType": "Button",
+          "name": "Featured",
+          "props": {
+            "label": "<p>Featured</p>",
+            "variant": "outline",
+            "size": "md",
+            "hoverStyle": { "backgroundColor": "#f0f0f0", "borderColor": "#1f2937" }
           },
-          "tags": [
-            "button",
-            "chat",
-            "messenger",
-            "pill"
-          ]
+          "style": {
+            "backgroundColor": "#ffffff",
+            "color": "#111827",
+            "border": "1px solid #d1d5db",
+            "borderRadius": "4px",
+            "padding": "8px 16px",
+            "fontSize": "14px",
+            "fontWeight": "500"
+          }
+        },
+        {
+          "id": "btn-back-to-top",
+          "componentType": "Button",
+          "name": "BACK TO TOP",
+          "props": {
+            "label": "<p>BACK TO TOP</p>",
+            "variant": "primary",
+            "size": "md",
+            "hoverStyle": { "backgroundColor": "#374151" }
+          },
+          "style": {
+            "backgroundColor": "#111827",
+            "color": "#ffffff",
+            "borderRadius": "4px",
+            "padding": "6px 12px",
+            "fontSize": "12px",
+            "fontWeight": "700",
+            "textTransform": "uppercase",
+            "letterSpacing": "0.05em"
+          }
+        },
+        {
+          "id": "btn-yellow-send",
+          "componentType": "Button",
+          "name": "Send",
+          "props": {
+            "label": "<p>Send</p>",
+            "variant": "primary",
+            "size": "md",
+            "hoverStyle": { "backgroundColor": "#e5cc00" }
+          },
+          "style": {
+            "backgroundColor": "#fcd34d",
+            "color": "#111827",
+            "borderRadius": "4px",
+            "padding": "8px 16px",
+            "fontSize": "14px",
+            "fontWeight": "600"
+          }
+        },
+        {
+          "id": "btn-location",
+          "componentType": "Button",
+          "name": "📍 Location",
+          "props": {
+            "label": "<p>📍</p>",
+            "variant": "primary",
+            "size": "md",
+            "hoverStyle": { "backgroundColor": "#b91c1c" }
+          },
+          "style": {
+            "backgroundColor": "#dc2626",
+            "color": "#ffffff",
+            "borderRadius": "50%",
+            "width": "40px",
+            "height": "40px",
+            "padding": "0",
+            "display": "flex",
+            "alignItems": "center",
+            "justifyContent": "center"
+          }
+        },
+        {
+          "id": "btn-icon-download",
+          "componentType": "Button",
+          "name": "⬇ Download",
+          "props": {
+            "label": "<p>⬇</p>",
+            "variant": "primary",
+            "size": "md",
+            "hoverStyle": { "backgroundColor": "#1e40af" }
+          },
+          "style": {
+            "backgroundColor": "#3b82f6",
+            "color": "#ffffff",
+            "borderRadius": "50%",
+            "width": "40px",
+            "height": "40px",
+            "padding": "0",
+            "display": "flex",
+            "alignItems": "center",
+            "justifyContent": "center"
+          }
         }
       ]
     }
