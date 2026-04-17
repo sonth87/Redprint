@@ -59,6 +59,7 @@ export function useNodeHandlers({
   const handlePropChange = useCallback(
     (key: string, value: unknown) => {
       if (!selectedNodeId) return;
+      if (nodes[selectedNodeId]?.locked) return;
       if (!breakpoint || breakpoint === "desktop") {
         dispatch({
           type: "UPDATE_PROPS",
@@ -73,19 +74,20 @@ export function useNodeHandlers({
         });
       }
     },
-    [selectedNodeId, breakpoint, dispatch],
+    [selectedNodeId, breakpoint, dispatch, nodes],
   );
 
   const handleStyleChange = useCallback(
     (key: string, value: unknown) => {
       if (!selectedNodeId) return;
+      if (nodes[selectedNodeId]?.locked) return;
       dispatch({
         type: "UPDATE_STYLE",
         payload: { nodeId: selectedNodeId, style: { [key]: value } as never, breakpoint },
         description: `Set style.${key}`,
       });
     },
-    [selectedNodeId, breakpoint, dispatch],
+    [selectedNodeId, breakpoint, dispatch, nodes],
   );
 
   const handleCanvasConfigChange = useCallback(

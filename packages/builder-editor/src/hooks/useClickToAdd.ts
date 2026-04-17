@@ -23,6 +23,17 @@ export function useClickToAdd({
   dispatch,
   onAfterAdd,
 }: UseClickToAddOptions) {
+  const buildPresetProps = useCallback((item: PaletteItem) => {
+    if (!item.icon || item.props?.icon) {
+      return item.props ?? {};
+    }
+
+    return {
+      ...(item.props ?? {}),
+      icon: item.icon,
+    };
+  }, []);
+
   const addItem = useCallback(
     (item: PaletteItem) => {
       // Compute canvas-space centre of the visible viewport
@@ -45,7 +56,7 @@ export function useClickToAdd({
           nodeId,
           parentId: rootNodeId,
           componentType: item.componentType,
-          props: item.props ?? {},
+          props: buildPresetProps(item),
           style: {
             ...(item.style ?? {}),
             position: "absolute",
@@ -87,7 +98,7 @@ export function useClickToAdd({
         onAfterAdd();
       }
     },
-    [rootNodeId, zoom, panOffset, canvasContainerRef, dispatch, onAfterAdd],
+    [rootNodeId, zoom, panOffset, canvasContainerRef, dispatch, onAfterAdd, buildPresetProps],
   );
 
   return { addItem };

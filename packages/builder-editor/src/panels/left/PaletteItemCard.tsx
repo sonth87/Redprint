@@ -1,8 +1,19 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { GripHorizontal } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 import { cn } from "@ui-builder/ui";
 import type { PaletteItem } from "@ui-builder/builder-core";
 import { useTranslation } from "react-i18next";
+
+// ── Helper to dynamically load lucide icons ─────────────────────────────────
+
+function getLucideIcon(name: string): React.ElementType {
+  const pascal = name
+    .split("-")
+    .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+    .join("");
+  return (LucideIcons as Record<string, unknown>)[pascal] as React.ElementType ?? LucideIcons.GripHorizontal;
+}
 
 // ── Simple-type live preview ───────────────────────────────────────────────
 
@@ -27,6 +38,7 @@ interface MiniPreviewProps {
 }
 
 const MiniPreview: React.FC<MiniPreviewProps> = ({ item }) => {
+  const [hovered, setHovered] = useState(false);
   const type = item.componentType;
   const s = item.style ?? {};
   const p = item.props ?? {};
@@ -76,33 +88,76 @@ const MiniPreview: React.FC<MiniPreviewProps> = ({ item }) => {
 
   if (type === "Button") {
     const label = String(p.label ?? item.name).replace(/<[^>]+>/g, "");
-    const bg = s.backgroundColor as string | undefined;
-    const color = s.color as string | undefined;
-    const radius = s.borderRadius as string | undefined;
-    const border = s.border as string | undefined;
-    const fs = (s as Record<string, unknown>).fontStyle as string | undefined;
-    const tt = s.textTransform as React.CSSProperties["textTransform"];
+    const iconName = (p.icon as string | undefined) || (item.icon as string | undefined);
+    const iconPosition = p.iconPosition === "end" ? "end" : "start";
+    const showOnlyIcon = Boolean(iconName && !label.trim());
+    const hoverStyle = (p.hoverStyle as React.CSSProperties | undefined) ?? {};
+    const mergedStyle = {
+      ...(s as React.CSSProperties),
+      ...(hovered ? hoverStyle : {}),
+    } satisfies React.CSSProperties;
+    const parsedFontSize =
+      typeof mergedStyle.fontSize === "string"
+        ? parseFloat(mergedStyle.fontSize)
+        : Number(mergedStyle.fontSize ?? 14);
+    const previewFontSize = Number.isFinite(parsedFontSize) ? `${Math.max(12, Math.min(parsedFontSize, 16))}px` : "14px";
+    const iconSize = showOnlyIcon ? 18 : 16;
+    const previewButtonStyle: React.CSSProperties = {
+      ...mergedStyle,
+      background: mergedStyle.background ?? mergedStyle.backgroundColor ?? "#111827",
+      color: mergedStyle.color ?? "#fff",
+      borderRadius: mergedStyle.borderRadius ?? "4px",
+      padding: showOnlyIcon ? (mergedStyle.padding ?? "0") : (mergedStyle.padding ?? "8px 16px"),
+      fontSize: previewFontSize,
+      fontWeight: mergedStyle.fontWeight ?? 600,
+      fontStyle: mergedStyle.fontStyle,
+      textTransform: mergedStyle.textTransform,
+      letterSpacing: mergedStyle.letterSpacing,
+      lineHeight: 1,
+      whiteSpace: "nowrap",
+      boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+      boxSizing: "border-box",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: showOnlyIcon ? 0 : "6px",
+      width: mergedStyle.width ?? undefined,
+      height: mergedStyle.height ?? undefined,
+      minWidth: showOnlyIcon ? (mergedStyle.width ?? "40px") : undefined,
+      minHeight: showOnlyIcon ? (mergedStyle.height ?? "40px") : undefined,
+      maxWidth: "100%",
+      overflow: "visible",
+      transition: "all 150ms ease",
+    };
+
+    if (mergedStyle.border) {
+      previewButtonStyle.border = mergedStyle.border;
+    }
+
+    if (mergedStyle.borderBottom) {
+      previewButtonStyle.borderBottom = mergedStyle.borderBottom;
+    }
 
     return (
-      <div className="flex items-center justify-center w-full h-full p-1.5">
-        <div
-          style={{
-            background: bg ?? "#111827",
-            color: color ?? "#fff",
-            borderRadius: radius ?? "4px",
-            border: border ?? undefined,
-            padding: "4px 10px",
-            fontSize: "10px",
-            fontWeight: 600,
-            fontStyle: fs,
-            textTransform: tt,
-            whiteSpace: "nowrap",
-            transform: "scale(0.85)",
-            transformOrigin: "center center",
-            boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-          }}
-        >
-          {label.length > 16 ? label.slice(0, 16) + "…" : label}
+      <div
+        className="flex items-center justify-center w-full h-full"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        <div style={previewButtonStyle}>
+          {iconName && iconPosition === "start" && (() => {
+            const Icon = getLucideIcon(iconName);
+            return <Icon size={iconSize} />;
+          })()}
+          {!showOnlyIcon && (
+            <span>
+              {label.length > 16 ? label.slice(0, 16) + "…" : label}
+            </span>
+          )}
+          {iconName && iconPosition === "end" && !showOnlyIcon && (() => {
+            const Icon = getLucideIcon(iconName);
+            return <Icon size={iconSize} />;
+          })()}
         </div>
       </div>
     );
@@ -284,40 +339,45 @@ export const PaletteItemCard: React.FC<PaletteItemCardProps> = ({
           if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); }
         }}
         className={cn(
-          "min-h-12 flex items-center justify-center rounded-lg overflow-hidden cursor-grab active:cursor-grabbing",
-          "hover:scale-[1.02] transition-all",
+          "min-h-16 flex items-center justify-center rounded-lg overflow-hidden cursor-grab active:cursor-grabbing",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring select-none group",
-          !showThumbnail && "border border-border/40 bg-muted/10"
+          // !showThumbnail && "border border-border/40 bg-muted/10"
         )}
         title={displayName}
       >
         {showThumbnail ? (
           <img src={effectiveThumbnail!} alt={displayName} className="max-h-full max-w-full object-contain" draggable={false} />
         ) : SIMPLE_PREVIEW_TYPES.has(item.componentType) ? (
-          <div
-            className="w-full flex items-center justify-center"
-            style={item.componentType === "Button" || item.componentType === "Text" ? {
-              background: (s.backgroundColor as string | undefined) ?? (s.background as string | undefined) ?? "transparent",
-              color: (s.color as string | undefined) ?? "#111827",
-              borderRadius: (s.borderRadius as string | undefined) ?? "4px",
-              border,
-              padding: "8px 16px",
-              fontSize: "14px",
-              fontWeight: (s.fontWeight as string | number | undefined) ?? 500,
-              fontFamily: (s.fontFamily as string | undefined),
-              fontStyle: ((s as Record<string, unknown>).fontStyle as string | undefined),
-              textTransform: (s.textTransform as React.CSSProperties["textTransform"]),
-              letterSpacing: (s.letterSpacing as string | undefined),
-              textAlign: "center",
-              width: "100%",
-              boxShadow: s.boxShadow as string,
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            } : { width: "100%", height: 60 }}
-          >
-            {item.componentType === "Button" || item.componentType === "Text" ? label : <MiniPreview item={item} />}
-          </div>
+          item.componentType === "Text" ? (
+            <div
+              className="w-full flex items-center justify-center"
+              style={{
+                background: (s.backgroundColor as string | undefined) ?? (s.background as string | undefined) ?? "transparent",
+                color: (s.color as string | undefined) ?? "#111827",
+                borderRadius: (s.borderRadius as string | undefined) ?? "4px",
+                border,
+                padding: "8px 16px",
+                fontSize: "14px",
+                fontWeight: (s.fontWeight as string | number | undefined) ?? 500,
+                fontFamily: s.fontFamily as string | undefined,
+                fontStyle: (s as Record<string, unknown>).fontStyle as string | undefined,
+                textTransform: s.textTransform as React.CSSProperties["textTransform"],
+                letterSpacing: s.letterSpacing as string | undefined,
+                textAlign: "center",
+                width: "100%",
+                boxShadow: s.boxShadow as string,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {label}
+            </div>
+          ) : (
+            <div className="w-full h-[72px]">
+              <MiniPreview item={item} />
+            </div>
+          )
         ) : (
           <div className="flex items-center justify-center w-full h-12 text-muted-foreground/30">
             <GripHorizontal className="w-5 h-5" />

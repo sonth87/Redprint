@@ -23,7 +23,8 @@
   },
   "dependencies": {
     "@ui-builder/builder-core": "workspace:*",
-    "dompurify": "^3.2.4"
+    "dompurify": "^3.2.4",
+    "lucide-react": "^1.7.0"
   },
   "peerDependencies": {
     "react": ">=18.0.0",

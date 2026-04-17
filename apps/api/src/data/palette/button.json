@@ -13,6 +13,7 @@
       "label": "Text & Icon Buttons",
       "order": 0,
       "layout": "preview",
+      "columns": 2,
       "i18n": {
         "en": "Text & Icon Buttons",
         "vi": "Nút văn bản & biểu tượng"
@@ -32,8 +33,8 @@
             "backgroundColor": "#111827",
             "color": "#ffffff",
             "borderRadius": "4px",
-            "padding": "8px 16px",
-            "fontSize": "14px",
+            "padding": "16px 24px",
+            "fontSize": "16px",
             "fontWeight": "500"
           }
         },
@@ -52,7 +53,7 @@
             "color": "#111827",
             "border": "1px solid #111827",
             "borderRadius": "4px",
-            "padding": "8px 16px",
+            "padding": "16px 24px",
             "fontSize": "14px"
           }
         },
@@ -70,7 +71,7 @@
             "backgroundColor": "#4d7c6e",
             "color": "#ffffff",
             "borderRadius": "24px",
-            "padding": "8px 16px",
+            "padding": "16px 24px",
             "fontSize": "13px",
             "letterSpacing": "0.08em",
             "fontWeight": "600"
@@ -90,7 +91,7 @@
             "backgroundColor": "#111827",
             "color": "#ffffff",
             "borderRadius": "2px",
-            "padding": "8px 16px",
+            "padding": "16px 24px",
             "fontSize": "13px",
             "letterSpacing": "0.1em",
             "fontWeight": "700"
@@ -113,8 +114,8 @@
             "backgroundColor": "#111827",
             "color": "#ffffff",
             "borderRadius": "4px",
-            "padding": "8px 16px",
-            "fontSize": "14px",
+            "padding": "16px 24px",
+            "fontSize": "16px",
             "fontWeight": "600"
           }
         },
@@ -132,8 +133,8 @@
             "background": "linear-gradient(135deg, #7c3aed 0%, #d946ef 100%)",
             "color": "#ffffff",
             "borderRadius": "24px",
-            "padding": "8px 16px",
-            "fontSize": "14px",
+            "padding": "16px 24px",
+            "fontSize": "16px",
             "fontWeight": "600"
           }
         },
@@ -153,7 +154,7 @@
             "border": "2px solid #4f46e5",
             "borderRadius": "24px",
             "padding": "6px 16px",
-            "fontSize": "14px",
+            "fontSize": "16px",
             "fontWeight": "600"
           }
         },
@@ -175,7 +176,7 @@
             "color": "#ffffff",
             "borderRadius": "6px",
             "padding": "14px 32px",
-            "fontSize": "14px",
+            "fontSize": "16px",
             "fontWeight": "700",
             "letterSpacing": "0.08em"
           }
@@ -195,7 +196,7 @@
             "color": "#e57330",
             "border": "2px solid #e57330",
             "borderRadius": "24px",
-            "padding": "8px 16px",
+            "padding": "16px 24px",
             "fontSize": "15px",
             "fontWeight": "600"
           }
@@ -214,7 +215,7 @@
             "backgroundColor": "#374151",
             "color": "#ffffff",
             "borderRadius": "4px",
-            "padding": "8px 16px",
+            "padding": "16px 24px",
             "fontSize": "15px",
             "fontStyle": "italic",
             "fontWeight": "600"
@@ -225,7 +226,7 @@
           "componentType": "Button",
           "name": "Chat Now",
           "props": {
-            "label": "<p>Chat Now 💬</p>",
+            "label": "<p>Chat Now</p>",
             "variant": "primary",
             "size": "md",
             "hoverStyle": { "backgroundColor": "#f5f3ed" }
@@ -234,8 +235,8 @@
             "backgroundColor": "#f6f4ef",
             "color": "#111827",
             "borderRadius": "24px",
-            "padding": "8px 16px",
-            "fontSize": "14px",
+            "padding": "16px 24px",
+            "fontSize": "16px",
             "fontWeight": "600"
           }
         },
@@ -254,8 +255,8 @@
             "color": "#111827",
             "border": "1px solid #d1d5db",
             "borderRadius": "4px",
-            "padding": "8px 16px",
-            "fontSize": "14px",
+            "padding": "16px 24px",
+            "fontSize": "16px",
             "fontWeight": "500"
           }
         },
@@ -294,17 +295,18 @@
             "backgroundColor": "#fcd34d",
             "color": "#111827",
             "borderRadius": "4px",
-            "padding": "8px 16px",
-            "fontSize": "14px",
+            "padding": "16px 24px",
+            "fontSize": "16px",
             "fontWeight": "600"
           }
         },
         {
           "id": "btn-location",
           "componentType": "Button",
-          "name": "📍 Location",
+          "name": "Location",
+          "icon": "map-pin",
           "props": {
-            "label": "<p>📍</p>",
+            "label": "",
             "variant": "primary",
             "size": "md",
             "hoverStyle": { "backgroundColor": "#b91c1c" }
@@ -324,9 +326,10 @@
         {
           "id": "btn-icon-download",
           "componentType": "Button",
-          "name": "⬇ Download",
+          "name": "Download",
+          "icon": "download",
           "props": {
-            "label": "<p>⬇</p>",
+            "label": "",
             "variant": "primary",
             "size": "md",
             "hoverStyle": { "backgroundColor": "#1e40af" }
@@ -341,6 +344,399 @@
             "display": "flex",
             "alignItems": "center",
             "justifyContent": "center"
+          }
+        },
+        {
+          "id": "btn-view-all",
+          "componentType": "Button",
+          "name": "VIEW ALL",
+          "props": {
+            "label": "<p>VIEW ALL</p>",
+            "variant": "outline",
+            "size": "md",
+            "hoverStyle": { "color": "#1e40af", "borderBottomColor": "#1e40af" }
+          },
+          "style": {
+            "backgroundColor": "transparent",
+            "color": "#3b82f6",
+            "border": "none",
+            "borderBottom": "2px solid #3b82f6",
+            "borderRadius": "0",
+            "padding": "4px 0",
+            "fontSize": "13px",
+            "fontWeight": "700",
+            "textTransform": "uppercase",
+            "letterSpacing": "0.05em"
+          }
+        },
+        {
+          "id": "btn-lets-go",
+          "componentType": "Button",
+          "name": "Let's Go",
+          "props": {
+            "label": "<p>Let's Go</p>",
+            "variant": "outline",
+            "size": "lg",
+            "hoverStyle": { "backgroundColor": "#dbeafe", "borderColor": "#1e40af" }
+          },
+          "style": {
+            "backgroundColor": "#ffffff",
+            "color": "#3b82f6",
+            "border": "2px solid #3b82f6",
+            "borderRadius": "6px",
+            "padding": "12px 32px",
+            "fontSize": "16px",
+            "fontWeight": "600"
+          }
+        },
+        {
+          "id": "btn-join-teal",
+          "componentType": "Button",
+          "name": "JOIN US",
+          "props": {
+            "label": "<p>JOIN US</p>",
+            "variant": "primary",
+            "size": "lg",
+            "hoverStyle": { "backgroundColor": "#0d9488" }
+          },
+          "style": {
+            "backgroundColor": "#14b8a6",
+            "color": "#ffffff",
+            "borderRadius": "24px",
+            "padding": "10px 24px",
+            "fontSize": "15px",
+            "fontWeight": "600"
+          }
+        },
+        {
+          "id": "btn-icon-home",
+          "componentType": "Button",
+          "name": "Home",
+          "icon": "home",
+          "props": {
+            "label": "",
+            "variant": "primary",
+            "size": "md",
+            "hoverStyle": { "backgroundColor": "#4f7ff0" }
+          },
+          "style": {
+            "backgroundColor": "#6b9bff",
+            "color": "#ffffff",
+            "borderRadius": "50%",
+            "width": "40px",
+            "height": "40px",
+            "padding": "0",
+            "display": "flex",
+            "alignItems": "center",
+            "justifyContent": "center"
+          }
+        },
+        {
+          "id": "btn-icon-up",
+          "componentType": "Button",
+          "name": "Up",
+          "icon": "arrow-up",
+          "props": {
+            "label": "",
+            "variant": "primary",
+            "size": "md",
+            "hoverStyle": { "backgroundColor": "#64748b" }
+          },
+          "style": {
+            "backgroundColor": "#78909c",
+            "color": "#ffffff",
+            "borderRadius": "50%",
+            "width": "40px",
+            "height": "40px",
+            "padding": "0",
+            "display": "flex",
+            "alignItems": "center",
+            "justifyContent": "center"
+          }
+        },
+        {
+          "id": "btn-icon-teal",
+          "componentType": "Button",
+          "name": "Tool",
+          "icon": "wrench",
+          "props": {
+            "label": "",
+            "variant": "primary",
+            "size": "md",
+            "hoverStyle": { "backgroundColor": "#0f766e" }
+          },
+          "style": {
+            "backgroundColor": "#14b8a6",
+            "color": "#ffffff",
+            "borderRadius": "50%",
+            "width": "40px",
+            "height": "40px",
+            "padding": "0",
+            "display": "flex",
+            "alignItems": "center",
+            "justifyContent": "center"
+          }
+        },
+        {
+          "id": "btn-icon-envelope",
+          "componentType": "Button",
+          "name": "Mail",
+          "icon": "mail",
+          "props": {
+            "label": "",
+            "variant": "primary",
+            "size": "md",
+            "hoverStyle": { "backgroundColor": "#64748b" }
+          },
+          "style": {
+            "backgroundColor": "#94a3b8",
+            "color": "#ffffff",
+            "borderRadius": "50%",
+            "width": "40px",
+            "height": "40px",
+            "padding": "0",
+            "display": "flex",
+            "alignItems": "center",
+            "justifyContent": "center"
+          }
+        },
+        {
+          "id": "btn-icon-lock",
+          "componentType": "Button",
+          "name": "Lock",
+          "icon": "lock",
+          "props": {
+            "label": "",
+            "variant": "primary",
+            "size": "md",
+            "hoverStyle": { "backgroundColor": "#65a30d" }
+          },
+          "style": {
+            "backgroundColor": "#84cc16",
+            "color": "#ffffff",
+            "borderRadius": "50%",
+            "width": "40px",
+            "height": "40px",
+            "padding": "0",
+            "display": "flex",
+            "alignItems": "center",
+            "justifyContent": "center"
+          }
+        },
+        {
+          "id": "btn-download-outlined",
+          "componentType": "Button",
+          "name": "Download",
+          "props": {
+            "label": "<p>Download</p>",
+            "variant": "outline",
+            "size": "md",
+            "hoverStyle": { "backgroundColor": "#f5deb3", "borderColor": "#8b6914" }
+          },
+          "style": {
+            "backgroundColor": "#ffffff",
+            "color": "#8b6914",
+            "border": "2px solid #8b6914",
+            "borderRadius": "24px",
+            "padding": "16px 24px",
+            "fontSize": "16px",
+            "fontWeight": "500"
+          }
+        },
+        {
+          "id": "btn-call-us",
+          "componentType": "Button",
+          "name": "Call Us",
+          "props": {
+            "label": "<p>Call Us</p>",
+            "variant": "primary",
+            "size": "md",
+            "hoverStyle": { "backgroundColor": "#92400e" }
+          },
+          "style": {
+            "backgroundColor": "#b45309",
+            "color": "#ffffff",
+            "borderRadius": "24px",
+            "padding": "16px 24px",
+            "fontSize": "16px",
+            "fontWeight": "600"
+          }
+        },
+        {
+          "id": "btn-close",
+          "componentType": "Button",
+          "name": "Close",
+          "icon": "x",
+          "props": {
+            "label": "",
+            "variant": "primary",
+            "size": "md",
+            "hoverStyle": { "backgroundColor": "#374151" }
+          },
+          "style": {
+            "backgroundColor": "#111827",
+            "color": "#ffffff",
+            "borderRadius": "50%",
+            "width": "40px",
+            "height": "40px",
+            "padding": "0",
+            "display": "flex",
+            "alignItems": "center",
+            "justifyContent": "center"
+          }
+        },
+        {
+          "id": "btn-new",
+          "componentType": "Button",
+          "name": "NEW",
+          "props": {
+            "label": "<p>NEW</p>",
+            "variant": "primary",
+            "size": "lg",
+            "hoverStyle": { "transform": "scale(1.05)" }
+          },
+          "style": {
+            "background": "linear-gradient(135deg, #db7093 0%, #da70d6 100%)",
+            "color": "#111827",
+            "borderRadius": "50%",
+            "width": "60px",
+            "height": "60px",
+            "padding": "0",
+            "display": "flex",
+            "alignItems": "center",
+            "justifyContent": "center",
+            "fontSize": "13px",
+            "fontWeight": "700"
+          }
+        },
+        {
+          "id": "btn-send-light",
+          "componentType": "Button",
+          "name": "SEND",
+          "props": {
+            "label": "<p>SEND</p>",
+            "variant": "primary",
+            "size": "md",
+            "hoverStyle": { "backgroundColor": "#ddd6fe" }
+          },
+          "style": {
+            "backgroundColor": "#ede9fe",
+            "color": "#6d28d9",
+            "border": "1px solid #c4b5fd",
+            "borderRadius": "24px",
+            "padding": "16px 24px",
+            "fontSize": "13px",
+            "fontWeight": "600",
+            "letterSpacing": "0.08em"
+          }
+        },
+        {
+          "id": "btn-sale",
+          "componentType": "Button",
+          "name": "SALE",
+          "props": {
+            "label": "<p>SALE</p>",
+            "variant": "outline",
+            "size": "lg",
+            "hoverStyle": { "backgroundColor": "#fee2e2" }
+          },
+          "style": {
+            "backgroundColor": "#ffffff",
+            "color": "#dc2626",
+            "border": "2px solid #dc2626",
+            "borderRadius": "4px",
+            "padding": "8px 12px",
+            "fontSize": "16px",
+            "fontWeight": "700",
+            "transform": "rotate(-15deg)",
+            "letterSpacing": "0.1em"
+          }
+        },
+        {
+          "id": "btn-go",
+          "componentType": "Button",
+          "name": "GO",
+          "props": {
+            "label": "<p>GO</p>",
+            "variant": "primary",
+            "size": "lg",
+            "hoverStyle": { "backgroundColor": "#1d4ed8" }
+          },
+          "style": {
+            "backgroundColor": "#3b82f6",
+            "color": "#ffffff",
+            "borderRadius": "24px",
+            "padding": "10px 20px",
+            "fontSize": "15px",
+            "fontWeight": "700"
+          }
+        },
+        {
+          "id": "btn-arrow-right",
+          "componentType": "Button",
+          "name": "Arrow",
+          "icon": "chevron-right",
+          "props": {
+            "label": "",
+            "iconPosition": "end",
+            "variant": "primary",
+            "size": "md",
+            "hoverStyle": { "backgroundColor": "#eab308" }
+          },
+          "style": {
+            "backgroundColor": "#fcd34d",
+            "color": "#111827",
+            "borderRadius": "4px",
+            "padding": "6px 10px",
+            "fontSize": "18px",
+            "fontWeight": "700",
+            "width": "40px",
+            "height": "40px",
+            "display": "flex",
+            "alignItems": "center",
+            "justifyContent": "center"
+          }
+        },
+        {
+          "id": "btn-search",
+          "componentType": "Button",
+          "name": "Search",
+          "icon": "search",
+          "props": {
+            "label": "<p>Search</p>",
+            "iconPosition": "start",
+            "variant": "primary",
+            "size": "md",
+            "hoverStyle": { "backgroundColor": "#1f2937" }
+          },
+          "style": {
+            "backgroundColor": "#111827",
+            "color": "#ffffff",
+            "borderRadius": "4px",
+            "padding": "16px 24px",
+            "fontSize": "16px",
+            "fontWeight": "600"
+          }
+        },
+        {
+          "id": "btn-share",
+          "componentType": "Button",
+          "name": "Share",
+          "icon": "share-2",
+          "props": {
+            "label": "<p>Share</p>",
+            "iconPosition": "end",
+            "variant": "primary",
+            "size": "md",
+            "hoverStyle": { "backgroundColor": "#0f766e" }
+          },
+          "style": {
+            "backgroundColor": "#14b8a6",
+            "color": "#ffffff",
+            "borderRadius": "4px",
+            "padding": "16px 24px",
+            "fontSize": "16px",
+            "fontWeight": "600"
           }
         }
       ]

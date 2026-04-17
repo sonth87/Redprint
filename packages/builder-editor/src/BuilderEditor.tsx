@@ -23,7 +23,7 @@ import {
   TRANSITION_FAST_CSS,
   TRANSITION_MID_CSS,
 } from "@ui-builder/shared";
-import { Monitor, Smartphone, LocateFixed, LayoutTemplate, Sparkles } from "lucide-react";
+import { Monitor, Smartphone, LocateFixed, LayoutTemplate, Sparkles, Layers } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { cn } from "@ui-builder/ui";
 
@@ -293,7 +293,7 @@ function EditorInner({
   });
 
 
-  const { hoverRect, handleMouseOver, handleMouseOut } = useHoverRect({
+  const { hoverRect, handleMouseOver, handleMouseOut, setHoveredNodeIdFromLayer } = useHoverRect({
     selectedNodeIds, rootNodeId: document.rootNodeId, zoom, panOffset, nodes: document.nodes, canvasFrameRef, nodeQueryRef: activeFrameRef,
   });
 
@@ -416,10 +416,11 @@ function EditorInner({
 
         {/* Layers */}
         {layersOpen && (
-          <FloatingPanel id="layers" title="Layers" defaultPosition={layersPanelPos} onClose={handleLayersToggle}>
-            <div className="h-[30vh] min-h-[250px] overflow-hidden">
+          <FloatingPanel id="layers" title="Layers" icon={<Layers className="h-3.5 w-3.5" />} defaultPosition={layersPanelPos} onClose={handleLayersToggle}>
+            <div className="h-[48vh] min-h-[250px] overflow-hidden">
               <LayerTree document={document} selectedIds={selectedNodeIds} onSelect={select}
-                onToggleHidden={handleToggleHidden} onToggleLocked={handleToggleLocked} />
+                onToggleHidden={handleToggleHidden} onToggleLocked={handleToggleLocked}
+                onNodeHover={setHoveredNodeIdFromLayer} />
             </div>
           </FloatingPanel>
         )}
@@ -580,6 +581,7 @@ function EditorInner({
               onDoubleClick={handleCanvasDoubleClick}
               onResizeStart={(handle, e) => {
                 if (!selectionRect || !selectedNodeId) return;
+                if (document.nodes[selectedNodeId]?.locked) return;
                 setResizing({
                   handle, nodeId: selectedNodeId,
                   startPoint: { x: e.clientX, y: e.clientY },
@@ -589,6 +591,7 @@ function EditorInner({
               }}
               onRotateStart={(e) => {
                 if (!selectionRect || !selectedNodeId) return;
+                if (document.nodes[selectedNodeId]?.locked) return;
                 const queryRoot = activeFrameRef.current ?? canvasFrameRef.current;
                 if (!queryRoot) return;
                 const el = queryRoot.querySelector(`[data-node-id="${selectedNodeId}"]`) as HTMLElement;

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from "react";
-import { Move, Minus, Plus, X } from "lucide-react";
+import { Minus, Plus, X } from "lucide-react";
 import { cn } from "@ui-builder/ui";
 
 export interface FloatingPanelProps {
@@ -9,6 +9,7 @@ export interface FloatingPanelProps {
   defaultPosition: { x?: number; y: number; right?: number };
   width?: number;
   defaultExpanded?: boolean;
+  icon?: React.ReactNode;
   /**
    * When provided, replaces the collapse toggle with a close (X) button.
    * The panel is always fully expanded — no collapse state.
@@ -22,6 +23,7 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
   defaultPosition,
   width = 280,
   defaultExpanded = true,
+  icon,
   onClose,
 }) => {
   // Compute initial position synchronously so the panel renders at the correct
@@ -100,7 +102,7 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
         onPointerDown={handlePointerDown}
       >
         <div className="flex items-center gap-2">
-          <Move className="w-3.5 h-3.5 text-muted-foreground" />
+          {icon && <div className="text-muted-foreground">{icon}</div>}
           <span className="text-xs font-semibold uppercase tracking-wider text-foreground/80">
             {title}
           </span>

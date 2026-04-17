@@ -40,6 +40,17 @@ export function useDragHandlers({
   getContainerConfig,
   onAfterDrop,
 }: UseDragHandlersOptions): UseDragHandlersReturn {
+  const buildPresetProps = useCallback((item: PaletteItem) => {
+    if (!item.icon || item.props?.icon) {
+      return item.props ?? {};
+    }
+
+    return {
+      ...(item.props ?? {}),
+      icon: item.icon,
+    };
+  }, []);
+
   const handleDragStart = useCallback(
     (componentType: string, e: React.DragEvent) => {
       e.dataTransfer?.setData("application/builder-component-type", componentType);
@@ -53,7 +64,7 @@ export function useDragHandlers({
         source: "palette-item",
         componentType: item.componentType,
         presetData: {
-          props: item.props ?? {},
+          props: buildPresetProps(item),
           style: item.style,
           responsiveStyle: item.responsiveStyle,
           responsiveProps: item.responsiveProps,
@@ -62,7 +73,7 @@ export function useDragHandlers({
       e.dataTransfer?.setData("text/plain", JSON.stringify(dragData));
       e.dataTransfer?.setData("application/builder-component-type", item.componentType);
     },
-    [],
+    [buildPresetProps],
   );
 
   const handleDrop = useCallback(
