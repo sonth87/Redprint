@@ -1,0 +1,15 @@
+{
+  "version": "1.0.0",
+  "_comment": "This file is auto-generated. Edit individual group files in this directory instead.",
+  "groups": [
+    "text",
+    "image",
+    "button",
+    "gallery",
+    "decorative",
+    "menu",
+    "collection",
+    "container",
+    "card"
+  ]
+}

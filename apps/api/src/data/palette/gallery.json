@@ -1,0 +1,260 @@
+{
+  "id": "gallery",
+  "label": "Gallery",
+  "icon": "images",
+  "order": 3,
+  "i18n": {
+    "en": "Gallery",
+    "vi": "Thư viện ảnh"
+  },
+  "types": [
+    {
+      "id": "grid-galleries",
+      "label": "Grid Galleries",
+      "order": 0,
+      "layout": "preview",
+      "i18n": {
+        "en": "Grid Galleries",
+        "vi": "Bộ sưu tập lưới"
+      },
+      "items": [
+        {
+          "id": "gallery-grid-3col",
+          "componentType": "GalleryGrid",
+          "name": "3-Column Grid",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "3-Column Grid"
+            },
+            "vi": {
+              "name": "Lưới 3 cột"
+            }
+          },
+          "props": {
+            "columns": 3,
+            "gap": 8,
+            "aspectRatio": "1/1"
+          },
+          "tags": [
+            "gallery",
+            "grid",
+            "3-column"
+          ]
+        },
+        {
+          "id": "gallery-grid-2col",
+          "componentType": "GalleryGrid",
+          "name": "2-Column Grid",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "2-Column Grid"
+            },
+            "vi": {
+              "name": "Lưới 2 cột"
+            }
+          },
+          "props": {
+            "columns": 2,
+            "gap": 12,
+            "aspectRatio": "4/3"
+          },
+          "tags": [
+            "gallery",
+            "grid",
+            "2-column"
+          ]
+        },
+        {
+          "id": "gallery-grid-4col",
+          "componentType": "GalleryGrid",
+          "name": "4-Column Grid",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "4-Column Grid"
+            },
+            "vi": {
+              "name": "Lưới 4 cột"
+            }
+          },
+          "props": {
+            "columns": 4,
+            "gap": 4,
+            "aspectRatio": "1/1"
+          },
+          "tags": [
+            "gallery",
+            "grid",
+            "4-column"
+          ]
+        },
+        {
+          "id": "gallery-grid-portrait",
+          "componentType": "GalleryGrid",
+          "name": "Portrait Grid",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Portrait Grid"
+            },
+            "vi": {
+              "name": "Lưới dọc"
+            }
+          },
+          "props": {
+            "columns": 3,
+            "gap": 8,
+            "aspectRatio": "3/4"
+          },
+          "tags": [
+            "gallery",
+            "grid",
+            "portrait"
+          ]
+        },
+        {
+          "id": "gallery-grid-widescreen",
+          "componentType": "GalleryGrid",
+          "name": "Widescreen Grid",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Widescreen Grid"
+            },
+            "vi": {
+              "name": "Lưới màn hình rộng"
+            }
+          },
+          "props": {
+            "columns": 2,
+            "gap": 16,
+            "aspectRatio": "16/9"
+          },
+          "tags": [
+            "gallery",
+            "grid",
+            "widescreen"
+          ]
+        },
+        {
+          "id": "gallery-masonry-3",
+          "componentType": "GalleryGrid",
+          "name": "Masonry 3-Col",
+          "thumbnail": null,
+          "props": {
+            "columns": 3,
+            "gap": 8,
+            "layout": "masonry"
+          },
+          "tags": [
+            "masonry",
+            "gallery",
+            "3-col"
+          ]
+        },
+        {
+          "id": "gallery-masonry-2",
+          "componentType": "GalleryGrid",
+          "name": "Masonry 2-Col",
+          "thumbnail": null,
+          "props": {
+            "columns": 2,
+            "gap": 12,
+            "layout": "masonry"
+          },
+          "tags": [
+            "masonry",
+            "gallery",
+            "2-col"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "slider-galleries",
+      "label": "Slider Galleries",
+      "order": 1,
+      "layout": "preview",
+      "i18n": {
+        "en": "Slider Galleries",
+        "vi": "Bộ sưu tập trình chiếu"
+      },
+      "items": [
+        {
+          "id": "gallery-slider-basic",
+          "componentType": "GallerySlider",
+          "name": "Basic Slider",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Basic Slider"
+            },
+            "vi": {
+              "name": "Trình chiếu đơn giản"
+            }
+          },
+          "props": {
+            "showArrows": true,
+            "showDots": true,
+            "aspectRatio": "16/9"
+          },
+          "tags": [
+            "gallery",
+            "slider",
+            "basic"
+          ]
+        },
+        {
+          "id": "gallery-slider-square",
+          "componentType": "GallerySlider",
+          "name": "Square Slider",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Square Slider"
+            },
+            "vi": {
+              "name": "Trình chiếu vuông"
+            }
+          },
+          "props": {
+            "showArrows": true,
+            "showDots": true,
+            "aspectRatio": "1/1"
+          },
+          "tags": [
+            "gallery",
+            "slider",
+            "square"
+          ]
+        },
+        {
+          "id": "gallery-slider-portrait",
+          "componentType": "GallerySlider",
+          "name": "Portrait Slider",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Portrait Slider"
+            },
+            "vi": {
+              "name": "Trình chiếu dọc"
+            }
+          },
+          "props": {
+            "showArrows": true,
+            "showDots": false,
+            "aspectRatio": "4/3"
+          },
+          "tags": [
+            "gallery",
+            "slider",
+            "portrait"
+          ]
+        }
+      ]
+    }
+  ]
+}

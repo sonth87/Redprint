@@ -1,0 +1,3284 @@
+{
+  "version": "1.0.0",
+  "groups": [
+    {
+      "id": "text",
+      "label": "Text",
+      "icon": "type",
+      "order": 0,
+      "i18n": {
+        "en": "Text",
+        "vi": "Văn bản"
+      },
+      "types": [
+        {
+          "id": "themed-text",
+          "label": "Themed Text",
+          "order": 0,
+          "layout": "list",
+          "i18n": {
+            "en": "Themed Text",
+            "vi": "Văn bản chủ đề"
+          },
+          "items": [
+            {
+              "id": "text-themed-classic",
+              "componentType": "Text",
+              "name": "Classic",
+              "description": "Clean serif heading for elegant sites",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Classic"
+                },
+                "vi": {
+                  "name": "Cổ điển"
+                }
+              },
+              "props": {
+                "text": "<p>Classic Heading</p>",
+                "tag": "h2"
+              },
+              "style": {
+                "fontFamily": "Georgia, serif",
+                "fontSize": "32px",
+                "fontWeight": "400",
+                "color": "#1a1a1a",
+                "lineHeight": "1.3"
+              },
+              "tags": [
+                "classic",
+                "serif",
+                "elegant"
+              ]
+            },
+            {
+              "id": "text-themed-modern",
+              "componentType": "Text",
+              "name": "Modern",
+              "description": "Bold sans-serif for contemporary design",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Modern"
+                },
+                "vi": {
+                  "name": "Hiện đại"
+                }
+              },
+              "props": {
+                "text": "<p>Modern Heading</p>",
+                "tag": "h2"
+              },
+              "style": {
+                "fontFamily": "system-ui, sans-serif",
+                "fontSize": "36px",
+                "fontWeight": "800",
+                "color": "#111827",
+                "letterSpacing": "-0.02em",
+                "lineHeight": "1.1"
+              },
+              "tags": [
+                "modern",
+                "bold",
+                "sans-serif"
+              ]
+            },
+            {
+              "id": "text-themed-decorative",
+              "componentType": "Text",
+              "name": "Decorative",
+              "description": "Expressive script-style heading",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Decorative"
+                },
+                "vi": {
+                  "name": "Trang trí"
+                }
+              },
+              "props": {
+                "text": "<p>Decorative Title</p>",
+                "tag": "h2"
+              },
+              "style": {
+                "fontFamily": "cursive",
+                "fontSize": "40px",
+                "fontWeight": "400",
+                "color": "#7c3aed",
+                "lineHeight": "1.2"
+              },
+              "tags": [
+                "decorative",
+                "cursive",
+                "stylish"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "titles",
+          "label": "Titles",
+          "order": 1,
+          "layout": "list",
+          "i18n": {
+            "en": "Titles",
+            "vi": "Tiêu đề"
+          },
+          "items": [
+            {
+              "id": "text-h1",
+              "componentType": "Text",
+              "name": "Heading 1",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Heading 1"
+                },
+                "vi": {
+                  "name": "Tiêu đề 1"
+                }
+              },
+              "props": {
+                "text": "<h1>Add a Title</h1>",
+                "tag": "h1"
+              },
+              "style": {
+                "fontSize": "52px",
+                "fontWeight": "700",
+                "color": "#111827",
+                "lineHeight": "1.1",
+                "letterSpacing": "-0.02em"
+              },
+              "responsiveStyle": {
+                "tablet": {
+                  "fontSize": "40px"
+                },
+                "mobile": {
+                  "fontSize": "28px"
+                }
+              },
+              "tags": [
+                "h1",
+                "heading",
+                "title",
+                "hero"
+              ]
+            },
+            {
+              "id": "text-h2",
+              "componentType": "Text",
+              "name": "Heading 2",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Heading 2"
+                },
+                "vi": {
+                  "name": "Tiêu đề 2"
+                }
+              },
+              "props": {
+                "text": "<h2>Section Title</h2>",
+                "tag": "h2"
+              },
+              "style": {
+                "fontSize": "40px",
+                "fontWeight": "700",
+                "color": "#111827",
+                "lineHeight": "1.2"
+              },
+              "responsiveStyle": {
+                "tablet": {
+                  "fontSize": "32px"
+                },
+                "mobile": {
+                  "fontSize": "24px"
+                }
+              },
+              "tags": [
+                "h2",
+                "heading",
+                "section"
+              ]
+            },
+            {
+              "id": "text-h3",
+              "componentType": "Text",
+              "name": "Heading 3",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Heading 3"
+                },
+                "vi": {
+                  "name": "Tiêu đề 3"
+                }
+              },
+              "props": {
+                "text": "<h3>Subsection Title</h3>",
+                "tag": "h3"
+              },
+              "style": {
+                "fontSize": "28px",
+                "fontWeight": "600",
+                "color": "#111827",
+                "lineHeight": "1.3"
+              },
+              "responsiveStyle": {
+                "mobile": {
+                  "fontSize": "20px"
+                }
+              },
+              "tags": [
+                "h3",
+                "heading",
+                "subsection"
+              ]
+            },
+            {
+              "id": "text-h4",
+              "componentType": "Text",
+              "name": "Heading 4",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Heading 4"
+                },
+                "vi": {
+                  "name": "Tiêu đề 4"
+                }
+              },
+              "props": {
+                "text": "<h4>Card Title</h4>",
+                "tag": "h4"
+              },
+              "style": {
+                "fontSize": "22px",
+                "fontWeight": "600",
+                "color": "#111827",
+                "lineHeight": "1.4"
+              },
+              "responsiveStyle": {
+                "mobile": {
+                  "fontSize": "18px"
+                }
+              },
+              "tags": [
+                "h4",
+                "heading",
+                "card"
+              ]
+            },
+            {
+              "id": "text-h5",
+              "componentType": "Text",
+              "name": "Heading 5",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Heading 5"
+                },
+                "vi": {
+                  "name": "Tiêu đề 5"
+                }
+              },
+              "props": {
+                "text": "<h5>Label Title</h5>",
+                "tag": "h5"
+              },
+              "style": {
+                "fontSize": "18px",
+                "fontWeight": "600",
+                "color": "#374151",
+                "lineHeight": "1.5"
+              },
+              "tags": [
+                "h5",
+                "heading",
+                "label"
+              ]
+            },
+            {
+              "id": "text-h6",
+              "componentType": "Text",
+              "name": "Heading 6",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Heading 6"
+                },
+                "vi": {
+                  "name": "Tiêu đề 6"
+                }
+              },
+              "props": {
+                "text": "<h6>Small Title</h6>",
+                "tag": "h6"
+              },
+              "style": {
+                "fontSize": "14px",
+                "fontWeight": "700",
+                "color": "#374151",
+                "textTransform": "uppercase",
+                "letterSpacing": "0.08em"
+              },
+              "tags": [
+                "h6",
+                "heading",
+                "overline"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "paragraphs",
+          "label": "Paragraphs",
+          "order": 2,
+          "layout": "list",
+          "i18n": {
+            "en": "Paragraphs",
+            "vi": "Đoạn văn"
+          },
+          "items": [
+            {
+              "id": "text-body-large",
+              "componentType": "Text",
+              "name": "Body Large",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Body Large"
+                },
+                "vi": {
+                  "name": "Văn bản lớn"
+                }
+              },
+              "props": {
+                "text": "<p>Add a paragraph. Click here to change the font, size, colour and more.</p>",
+                "tag": "p"
+              },
+              "style": {
+                "fontSize": "18px",
+                "color": "#374151",
+                "lineHeight": "1.7"
+              },
+              "tags": [
+                "paragraph",
+                "body",
+                "large"
+              ]
+            },
+            {
+              "id": "text-body-medium",
+              "componentType": "Text",
+              "name": "Body Medium",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Body Medium"
+                },
+                "vi": {
+                  "name": "Văn bản vừa"
+                }
+              },
+              "props": {
+                "text": "<p>Add a paragraph. Click here to change the font, size, colour and more.</p>",
+                "tag": "p"
+              },
+              "style": {
+                "fontSize": "16px",
+                "color": "#374151",
+                "lineHeight": "1.6"
+              },
+              "tags": [
+                "paragraph",
+                "body",
+                "medium"
+              ]
+            },
+            {
+              "id": "text-body-small",
+              "componentType": "Text",
+              "name": "Body Small",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Body Small"
+                },
+                "vi": {
+                  "name": "Văn bản nhỏ"
+                }
+              },
+              "props": {
+                "text": "<p>Add a small paragraph for captions, footnotes, and supplementary text.</p>",
+                "tag": "p"
+              },
+              "style": {
+                "fontSize": "14px",
+                "color": "#6b7280",
+                "lineHeight": "1.5"
+              },
+              "tags": [
+                "paragraph",
+                "body",
+                "small",
+                "caption"
+              ]
+            },
+            {
+              "id": "text-lead",
+              "componentType": "Text",
+              "name": "Lead Paragraph",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Lead Paragraph"
+                },
+                "vi": {
+                  "name": "Đoạn dẫn"
+                }
+              },
+              "props": {
+                "text": "<p>This is a lead paragraph. It's larger and draws attention to the opening text of a section.</p>",
+                "tag": "p"
+              },
+              "style": {
+                "fontSize": "20px",
+                "color": "#374151",
+                "lineHeight": "1.7",
+                "fontWeight": "400"
+              },
+              "responsiveStyle": {
+                "mobile": {
+                  "fontSize": "16px"
+                }
+              },
+              "tags": [
+                "paragraph",
+                "lead",
+                "intro"
+              ]
+            },
+            {
+              "id": "text-quote",
+              "componentType": "Text",
+              "name": "Blockquote",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Blockquote"
+                },
+                "vi": {
+                  "name": "Trích dẫn"
+                }
+              },
+              "props": {
+                "text": "<p>Design is not just what it looks like and feels like. Design is how it works.</p>",
+                "tag": "p"
+              },
+              "style": {
+                "fontSize": "20px",
+                "color": "#374151",
+                "lineHeight": "1.6",
+                "fontStyle": "italic",
+                "borderLeft": "4px solid #6366f1",
+                "paddingLeft": "20px",
+                "marginLeft": "0"
+              },
+              "tags": [
+                "quote",
+                "blockquote",
+                "citation"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "collapsible-text",
+          "label": "Collapsible Text",
+          "order": 3,
+          "layout": "list",
+          "i18n": {
+            "en": "Collapsible Text",
+            "vi": "Văn bản thu gọn"
+          },
+          "items": [
+            {
+              "id": "collapsible-read-more",
+              "componentType": "CollapsibleText",
+              "name": "Read More",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Read More"
+                },
+                "vi": {
+                  "name": "Đọc thêm"
+                }
+              },
+              "props": {
+                "text": "<p>Collapsible text is great for longer section titles and descriptions. It gives people access to all the info they need, while keeping your design clean.</p>",
+                "previewLines": 2,
+                "expandLabel": "Read more",
+                "collapseLabel": "Show less"
+              },
+              "style": {
+                "fontSize": "16px",
+                "color": "#374151",
+                "lineHeight": "1.6"
+              },
+              "tags": [
+                "collapsible",
+                "read-more",
+                "expandable"
+              ]
+            },
+            {
+              "id": "collapsible-show-more",
+              "componentType": "CollapsibleText",
+              "name": "Show More",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Show More"
+                },
+                "vi": {
+                  "name": "Xem thêm"
+                }
+              },
+              "props": {
+                "text": "<p>This is a longer piece of text that can be expanded. Perfect for product descriptions, bios, and detailed content sections.</p>",
+                "previewLines": 3,
+                "expandLabel": "Show more →",
+                "collapseLabel": "← Show less"
+              },
+              "style": {
+                "fontSize": "15px",
+                "color": "#6b7280",
+                "lineHeight": "1.7"
+              },
+              "tags": [
+                "collapsible",
+                "show-more"
+              ]
+            },
+            {
+              "id": "collapsible-link",
+              "componentType": "CollapsibleText",
+              "name": "Link to Article",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Link to Article"
+                },
+                "vi": {
+                  "name": "Liên kết bài viết"
+                }
+              },
+              "props": {
+                "text": "<p>Get the highlights here. For the full story and all the details, follow the link below to read the complete article.</p>",
+                "previewLines": 2,
+                "expandLabel": "Link to full article →",
+                "collapseLabel": "Show less"
+              },
+              "style": {
+                "fontSize": "16px",
+                "color": "#374151",
+                "lineHeight": "1.6"
+              },
+              "tags": [
+                "collapsible",
+                "link",
+                "article"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "text-marquee",
+          "label": "Text Marquee",
+          "order": 4,
+          "layout": "list",
+          "i18n": {
+            "en": "Text Marquee",
+            "vi": "Văn bản chạy"
+          },
+          "items": [
+            {
+              "id": "marquee-casual",
+              "componentType": "TextMarquee",
+              "name": "Casual Ticker",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Casual Ticker"
+                },
+                "vi": {
+                  "name": "Ticker thông thường"
+                }
+              },
+              "props": {
+                "text": "Let's Talk 👋",
+                "speed": 20,
+                "direction": "left",
+                "separator": "  •  "
+              },
+              "style": {
+                "fontSize": "18px",
+                "fontWeight": "500",
+                "color": "#111827",
+                "padding": "12px 0"
+              },
+              "tags": [
+                "marquee",
+                "ticker",
+                "scrolling"
+              ]
+            },
+            {
+              "id": "marquee-promo",
+              "componentType": "TextMarquee",
+              "name": "Promo Banner",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Promo Banner"
+                },
+                "vi": {
+                  "name": "Banner khuyến mãi"
+                }
+              },
+              "props": {
+                "text": "FREE SHIPPING WORLDWIDE 🌍",
+                "speed": 15,
+                "direction": "left",
+                "separator": "   🎁   "
+              },
+              "style": {
+                "fontSize": "14px",
+                "fontWeight": "700",
+                "color": "#ffffff",
+                "backgroundColor": "#111827",
+                "padding": "10px 0",
+                "textTransform": "uppercase",
+                "letterSpacing": "0.05em"
+              },
+              "tags": [
+                "marquee",
+                "promo",
+                "banner",
+                "shipping"
+              ]
+            },
+            {
+              "id": "marquee-new-arrivals",
+              "componentType": "TextMarquee",
+              "name": "New Arrivals",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "New Arrivals"
+                },
+                "vi": {
+                  "name": "Hàng mới về"
+                }
+              },
+              "props": {
+                "text": "New Arrivals 🛍️",
+                "speed": 25,
+                "direction": "left",
+                "separator": "  ★  "
+              },
+              "style": {
+                "fontSize": "28px",
+                "fontWeight": "800",
+                "color": "#111827",
+                "padding": "16px 0"
+              },
+              "tags": [
+                "marquee",
+                "new-arrivals",
+                "fashion"
+              ]
+            },
+            {
+              "id": "marquee-hello",
+              "componentType": "TextMarquee",
+              "name": "Hello Beautiful",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Hello Beautiful"
+                },
+                "vi": {
+                  "name": "Xin chào"
+                }
+              },
+              "props": {
+                "text": "Hello Beautiful ♥",
+                "speed": 30,
+                "direction": "right",
+                "separator": "  ✦  "
+              },
+              "style": {
+                "fontSize": "24px",
+                "fontWeight": "400",
+                "fontStyle": "italic",
+                "color": "#7c3aed",
+                "padding": "14px 0"
+              },
+              "tags": [
+                "marquee",
+                "elegant",
+                "italic"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "text-mask",
+          "label": "Text Mask",
+          "order": 5,
+          "layout": "list",
+          "i18n": {
+            "en": "Text Mask",
+            "vi": "Hiệu ứng mặt nạ"
+          },
+          "items": [
+            {
+              "id": "textmask-purple-gradient",
+              "componentType": "TextMask",
+              "name": "Purple Gradient",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Purple Gradient"
+                },
+                "vi": {
+                  "name": "Chuyển màu tím"
+                }
+              },
+              "props": {
+                "text": "CREATIVE",
+                "gradient": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                "fontSize": "100px",
+                "fontWeight": "900"
+              },
+              "tags": [
+                "text-mask",
+                "gradient",
+                "purple"
+              ]
+            },
+            {
+              "id": "textmask-sunset",
+              "componentType": "TextMask",
+              "name": "Sunset",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Sunset"
+                },
+                "vi": {
+                  "name": "Hoàng hôn"
+                }
+              },
+              "props": {
+                "text": "BEAUTIFUL",
+                "gradient": "linear-gradient(135deg, #f6d365 0%, #fda085 100%)",
+                "fontSize": "90px",
+                "fontWeight": "900"
+              },
+              "tags": [
+                "text-mask",
+                "gradient",
+                "warm"
+              ]
+            },
+            {
+              "id": "textmask-ocean",
+              "componentType": "TextMask",
+              "name": "Ocean",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Ocean"
+                },
+                "vi": {
+                  "name": "Đại dương"
+                }
+              },
+              "props": {
+                "text": "INSPIRE",
+                "gradient": "linear-gradient(135deg, #0093E9 0%, #80D0C7 100%)",
+                "fontSize": "100px",
+                "fontWeight": "900"
+              },
+              "tags": [
+                "text-mask",
+                "gradient",
+                "blue",
+                "teal"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "image",
+      "label": "Image",
+      "icon": "image",
+      "order": 1,
+      "i18n": {
+        "en": "Image",
+        "vi": "Hình ảnh"
+      },
+      "types": [
+        {
+          "id": "single-image",
+          "label": "Single Image",
+          "order": 0,
+          "i18n": {
+            "en": "Single Image",
+            "vi": "Ảnh đơn"
+          },
+          "items": [
+            {
+              "id": "image-full-width",
+              "componentType": "Image",
+              "name": "Full Width",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Full Width"
+                },
+                "vi": {
+                  "name": "Toàn chiều rộng"
+                }
+              },
+              "props": {
+                "src": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&q=80",
+                "alt": "Full width image",
+                "objectFit": "cover"
+              },
+              "style": {
+                "width": "100%",
+                "height": "400px",
+                "borderRadius": "0"
+              },
+              "responsiveStyle": {
+                "mobile": {
+                  "height": "200px"
+                }
+              },
+              "tags": [
+                "image",
+                "full-width",
+                "hero"
+              ]
+            },
+            {
+              "id": "image-card",
+              "componentType": "Image",
+              "name": "Card Image",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Card Image"
+                },
+                "vi": {
+                  "name": "Ảnh thẻ"
+                }
+              },
+              "props": {
+                "src": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80",
+                "alt": "Card image",
+                "objectFit": "cover"
+              },
+              "style": {
+                "width": "100%",
+                "height": "220px",
+                "borderRadius": "12px"
+              },
+              "tags": [
+                "image",
+                "card",
+                "rounded"
+              ]
+            },
+            {
+              "id": "image-circle",
+              "componentType": "Image",
+              "name": "Circle",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Circle"
+                },
+                "vi": {
+                  "name": "Tròn"
+                }
+              },
+              "props": {
+                "src": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80",
+                "alt": "Profile photo",
+                "objectFit": "cover"
+              },
+              "style": {
+                "width": "120px",
+                "height": "120px",
+                "borderRadius": "50%"
+              },
+              "tags": [
+                "image",
+                "circle",
+                "avatar",
+                "profile"
+              ]
+            },
+            {
+              "id": "image-polaroid",
+              "componentType": "Image",
+              "name": "Polaroid",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Polaroid"
+                },
+                "vi": {
+                  "name": "Ảnh polaroid"
+                }
+              },
+              "props": {
+                "src": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&q=80",
+                "alt": "Polaroid photo",
+                "objectFit": "cover"
+              },
+              "style": {
+                "width": "200px",
+                "height": "180px",
+                "borderRadius": "2px",
+                "padding": "12px",
+                "paddingBottom": "40px",
+                "backgroundColor": "#ffffff",
+                "boxShadow": "0 4px 16px rgba(0,0,0,0.15)"
+              },
+              "tags": [
+                "image",
+                "polaroid",
+                "vintage",
+                "photo"
+              ]
+            },
+            {
+              "id": "image-banner",
+              "componentType": "Image",
+              "name": "Banner",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Banner"
+                },
+                "vi": {
+                  "name": "Biểu ngữ"
+                }
+              },
+              "props": {
+                "src": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80",
+                "alt": "Banner image",
+                "objectFit": "cover"
+              },
+              "style": {
+                "width": "100%",
+                "height": "280px",
+                "borderRadius": "8px"
+              },
+              "responsiveStyle": {
+                "mobile": {
+                  "height": "160px"
+                }
+              },
+              "tags": [
+                "image",
+                "banner",
+                "landscape"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "button",
+      "label": "Button",
+      "icon": "square-mouse-pointer",
+      "order": 2,
+      "i18n": {
+        "en": "Button",
+        "vi": "Nút bấm"
+      },
+      "types": [
+        {
+          "id": "text-icon-buttons",
+          "label": "Text & Icon Buttons",
+          "order": 0,
+          "layout": "preview",
+          "i18n": {
+            "en": "Text & Icon Buttons",
+            "vi": "Nút văn bản & biểu tượng"
+          },
+          "items": [
+            {
+              "id": "btn-view-more",
+              "componentType": "Button",
+              "name": "View More",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "View More"
+                },
+                "vi": {
+                  "name": "Xem thêm"
+                }
+              },
+              "props": {
+                "label": "<p>View More</p>",
+                "variant": "primary",
+                "size": "md",
+                "hoverStyle": {
+                  "backgroundColor": "#1f2937",
+                  "boxShadow": "0 4px 12px rgba(17, 24, 39, 0.3)"
+                }
+              },
+              "style": {
+                "backgroundColor": "#111827",
+                "color": "#ffffff",
+                "borderRadius": "4px",
+                "width": "160px",
+                "height": "40px",
+                "fontSize": "14px",
+                "fontWeight": "500"
+              },
+              "tags": [
+                "button",
+                "view-more",
+                "cta"
+              ]
+            },
+            {
+              "id": "btn-read-more",
+              "componentType": "Button",
+              "name": "Read More",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Read More"
+                },
+                "vi": {
+                  "name": "Đọc thêm"
+                }
+              },
+              "props": {
+                "label": "<p>Read More</p>",
+                "variant": "outline",
+                "size": "md",
+                "hoverStyle": {
+                  "backgroundColor": "#f3f4f6"
+                }
+              },
+              "style": {
+                "backgroundColor": "transparent",
+                "color": "#111827",
+                "border": "1px solid #111827",
+                "borderRadius": "4px",
+                "width": "160px",
+                "height": "40px",
+                "fontSize": "14px"
+              },
+              "tags": [
+                "button",
+                "read-more",
+                "outline"
+              ]
+            },
+            {
+              "id": "btn-shop",
+              "componentType": "Button",
+              "name": "Shop",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Shop →"
+                },
+                "vi": {
+                  "name": "Mua ngay →"
+                }
+              },
+              "props": {
+                "label": "<p>SHOP →</p>",
+                "variant": "primary",
+                "size": "md",
+                "hoverStyle": {
+                  "backgroundColor": "#374151"
+                }
+              },
+              "style": {
+                "backgroundColor": "#4d7c6e",
+                "color": "#ffffff",
+                "borderRadius": "24px",
+                "width": "160px",
+                "height": "40px",
+                "fontSize": "13px",
+                "letterSpacing": "0.08em",
+                "fontWeight": "600"
+              },
+              "tags": [
+                "button",
+                "shop",
+                "ecommerce",
+                "pill"
+              ]
+            },
+            {
+              "id": "btn-send",
+              "componentType": "Button",
+              "name": "Send",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Send"
+                },
+                "vi": {
+                  "name": "Gửi"
+                }
+              },
+              "props": {
+                "label": "<p>SEND</p>",
+                "variant": "primary",
+                "size": "md",
+                "hoverStyle": {
+                  "backgroundColor": "#374151"
+                }
+              },
+              "style": {
+                "backgroundColor": "#111827",
+                "color": "#ffffff",
+                "borderRadius": "2px",
+                "width": "160px",
+                "height": "40px",
+                "fontSize": "13px",
+                "letterSpacing": "0.1em",
+                "fontWeight": "700"
+              },
+              "tags": [
+                "button",
+                "send",
+                "form",
+                "submit"
+              ]
+            },
+            {
+              "id": "btn-join-us",
+              "componentType": "Button",
+              "name": "Join Us",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Join Us"
+                },
+                "vi": {
+                  "name": "Tham gia"
+                }
+              },
+              "props": {
+                "label": "<p>JOIN US</p>",
+                "variant": "secondary",
+                "size": "md",
+                "hoverStyle": {
+                  "backgroundColor": "#374151"
+                }
+              },
+              "style": {
+                "backgroundColor": "transparent",
+                "color": "#4f46e5",
+                "border": "2px solid #4f46e5",
+                "borderRadius": "24px",
+                "width": "160px",
+                "height": "40px",
+                "fontSize": "14px",
+                "fontWeight": "600",
+                "letterSpacing": "0.05em"
+              },
+              "tags": [
+                "button",
+                "join",
+                "community",
+                "outline"
+              ]
+            },
+            {
+              "id": "btn-download",
+              "componentType": "Button",
+              "name": "Download",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Download"
+                },
+                "vi": {
+                  "name": "Tải xuống"
+                }
+              },
+              "props": {
+                "label": "<p>DOWNLOAD</p>",
+                "variant": "primary",
+                "size": "lg",
+                "hoverStyle": {
+                  "backgroundColor": "#1f2937",
+                  "boxShadow": "0 4px 12px rgba(17, 24, 39, 0.3)"
+                }
+              },
+              "style": {
+                "backgroundColor": "#111827",
+                "color": "#ffffff",
+                "borderRadius": "6px",
+                "padding": "14px 32px",
+                "fontSize": "14px",
+                "fontWeight": "700",
+                "letterSpacing": "0.08em"
+              },
+              "tags": [
+                "button",
+                "download",
+                "cta"
+              ]
+            },
+            {
+              "id": "btn-let-s-go",
+              "componentType": "Button",
+              "name": "Let's Go",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Let's Go"
+                },
+                "vi": {
+                  "name": "Bắt đầu"
+                }
+              },
+              "props": {
+                "label": "<p>Let's Go</p>",
+                "variant": "outline",
+                "size": "md",
+                "hoverStyle": {
+                  "backgroundColor": "#374151"
+                }
+              },
+              "style": {
+                "backgroundColor": "transparent",
+                "color": "#4f46e5",
+                "border": "2px solid #4f46e5",
+                "borderRadius": "4px",
+                "width": "160px",
+                "height": "40px",
+                "fontSize": "15px",
+                "fontWeight": "600"
+              },
+              "tags": [
+                "button",
+                "lets-go",
+                "outline",
+                "indigo"
+              ]
+            },
+            {
+              "id": "btn-apply-now",
+              "componentType": "Button",
+              "name": "Apply Now",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Apply Now"
+                },
+                "vi": {
+                  "name": "Ứng tuyển ngay"
+                }
+              },
+              "props": {
+                "label": "<p>Apply Now</p>",
+                "variant": "primary",
+                "size": "md",
+                "hoverStyle": {
+                  "backgroundColor": "#374151"
+                }
+              },
+              "style": {
+                "backgroundColor": "#374151",
+                "color": "#ffffff",
+                "borderRadius": "4px",
+                "width": "160px",
+                "height": "40px",
+                "fontSize": "15px",
+                "fontStyle": "italic",
+                "fontWeight": "600"
+              },
+              "tags": [
+                "button",
+                "apply",
+                "jobs",
+                "italic"
+              ]
+            },
+            {
+              "id": "btn-get-started",
+              "componentType": "Button",
+              "name": "Get Started",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Get Started"
+                },
+                "vi": {
+                  "name": "Bắt đầu ngay"
+                }
+              },
+              "props": {
+                "label": "<p>Get Started</p>",
+                "variant": "primary",
+                "size": "lg",
+                "hoverStyle": {
+                  "transform": "scale(1.02)"
+                }
+              },
+              "style": {
+                "backgroundColor": "transparent",
+                "color": "#e57330",
+                "border": "2px solid #e57330",
+                "borderRadius": "24px",
+                "width": "160px",
+                "height": "40px",
+                "fontSize": "15px",
+                "fontWeight": "600"
+              },
+              "tags": [
+                "button",
+                "get-started",
+                "orange",
+                "pill"
+              ]
+            },
+            {
+              "id": "btn-chat-now",
+              "componentType": "Button",
+              "name": "Chat Now",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Chat Now"
+                },
+                "vi": {
+                  "name": "Nhắn tin ngay"
+                }
+              },
+              "props": {
+                "label": "<p>Chat Now 💬</p>",
+                "variant": "primary",
+                "size": "md",
+                "hoverStyle": {
+                  "backgroundColor": "#374151"
+                }
+              },
+              "style": {
+                "backgroundColor": "#f6f4ef",
+                "color": "#111827",
+                "borderRadius": "24px",
+                "width": "160px",
+                "height": "40px",
+                "fontSize": "14px",
+                "fontWeight": "600"
+              },
+              "tags": [
+                "button",
+                "chat",
+                "messenger",
+                "pill"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gallery",
+      "label": "Gallery",
+      "icon": "images",
+      "order": 3,
+      "i18n": {
+        "en": "Gallery",
+        "vi": "Thư viện ảnh"
+      },
+      "types": [
+        {
+          "id": "grid-galleries",
+          "label": "Grid Galleries",
+          "order": 0,
+          "layout": "preview",
+          "i18n": {
+            "en": "Grid Galleries",
+            "vi": "Bộ sưu tập lưới"
+          },
+          "items": [
+            {
+              "id": "gallery-grid-3col",
+              "componentType": "GalleryGrid",
+              "name": "3-Column Grid",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "3-Column Grid"
+                },
+                "vi": {
+                  "name": "Lưới 3 cột"
+                }
+              },
+              "props": {
+                "columns": 3,
+                "gap": 8,
+                "aspectRatio": "1/1"
+              },
+              "tags": [
+                "gallery",
+                "grid",
+                "3-column"
+              ]
+            },
+            {
+              "id": "gallery-grid-2col",
+              "componentType": "GalleryGrid",
+              "name": "2-Column Grid",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "2-Column Grid"
+                },
+                "vi": {
+                  "name": "Lưới 2 cột"
+                }
+              },
+              "props": {
+                "columns": 2,
+                "gap": 12,
+                "aspectRatio": "4/3"
+              },
+              "tags": [
+                "gallery",
+                "grid",
+                "2-column"
+              ]
+            },
+            {
+              "id": "gallery-grid-4col",
+              "componentType": "GalleryGrid",
+              "name": "4-Column Grid",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "4-Column Grid"
+                },
+                "vi": {
+                  "name": "Lưới 4 cột"
+                }
+              },
+              "props": {
+                "columns": 4,
+                "gap": 4,
+                "aspectRatio": "1/1"
+              },
+              "tags": [
+                "gallery",
+                "grid",
+                "4-column"
+              ]
+            },
+            {
+              "id": "gallery-grid-portrait",
+              "componentType": "GalleryGrid",
+              "name": "Portrait Grid",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Portrait Grid"
+                },
+                "vi": {
+                  "name": "Lưới dọc"
+                }
+              },
+              "props": {
+                "columns": 3,
+                "gap": 8,
+                "aspectRatio": "3/4"
+              },
+              "tags": [
+                "gallery",
+                "grid",
+                "portrait"
+              ]
+            },
+            {
+              "id": "gallery-grid-widescreen",
+              "componentType": "GalleryGrid",
+              "name": "Widescreen Grid",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Widescreen Grid"
+                },
+                "vi": {
+                  "name": "Lưới màn hình rộng"
+                }
+              },
+              "props": {
+                "columns": 2,
+                "gap": 16,
+                "aspectRatio": "16/9"
+              },
+              "tags": [
+                "gallery",
+                "grid",
+                "widescreen"
+              ]
+            },
+            {
+              "id": "gallery-masonry-3",
+              "componentType": "GalleryGrid",
+              "name": "Masonry 3-Col",
+              "thumbnail": null,
+              "props": {
+                "columns": 3,
+                "gap": 8,
+                "layout": "masonry"
+              },
+              "tags": [
+                "masonry",
+                "gallery",
+                "3-col"
+              ]
+            },
+            {
+              "id": "gallery-masonry-2",
+              "componentType": "GalleryGrid",
+              "name": "Masonry 2-Col",
+              "thumbnail": null,
+              "props": {
+                "columns": 2,
+                "gap": 12,
+                "layout": "masonry"
+              },
+              "tags": [
+                "masonry",
+                "gallery",
+                "2-col"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "slider-galleries",
+          "label": "Slider Galleries",
+          "order": 1,
+          "layout": "preview",
+          "i18n": {
+            "en": "Slider Galleries",
+            "vi": "Bộ sưu tập trình chiếu"
+          },
+          "items": [
+            {
+              "id": "gallery-slider-basic",
+              "componentType": "GallerySlider",
+              "name": "Basic Slider",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Basic Slider"
+                },
+                "vi": {
+                  "name": "Trình chiếu đơn giản"
+                }
+              },
+              "props": {
+                "showArrows": true,
+                "showDots": true,
+                "aspectRatio": "16/9"
+              },
+              "tags": [
+                "gallery",
+                "slider",
+                "basic"
+              ]
+            },
+            {
+              "id": "gallery-slider-square",
+              "componentType": "GallerySlider",
+              "name": "Square Slider",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Square Slider"
+                },
+                "vi": {
+                  "name": "Trình chiếu vuông"
+                }
+              },
+              "props": {
+                "showArrows": true,
+                "showDots": true,
+                "aspectRatio": "1/1"
+              },
+              "tags": [
+                "gallery",
+                "slider",
+                "square"
+              ]
+            },
+            {
+              "id": "gallery-slider-portrait",
+              "componentType": "GallerySlider",
+              "name": "Portrait Slider",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Portrait Slider"
+                },
+                "vi": {
+                  "name": "Trình chiếu dọc"
+                }
+              },
+              "props": {
+                "showArrows": true,
+                "showDots": false,
+                "aspectRatio": "4/3"
+              },
+              "tags": [
+                "gallery",
+                "slider",
+                "portrait"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "decorative",
+      "label": "Decorative",
+      "icon": "sparkles",
+      "order": 4,
+      "i18n": {
+        "en": "Decorative",
+        "vi": "Trang trí"
+      },
+      "types": [
+        {
+          "id": "basic-shapes",
+          "label": "Basic Shapes",
+          "order": 0,
+          "i18n": {
+            "en": "Basic Shapes",
+            "vi": "Hình cơ bản"
+          },
+          "items": [
+            {
+              "id": "shape-rectangle",
+              "componentType": "Shape",
+              "name": "Rectangle",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Rectangle"
+                },
+                "vi": {
+                  "name": "Hình chữ nhật"
+                }
+              },
+              "props": {
+                "shape": "rectangle",
+                "fill": "#111827"
+              },
+              "style": {
+                "width": "120px",
+                "height": "80px"
+              },
+              "tags": [
+                "shape",
+                "rectangle",
+                "box"
+              ]
+            },
+            {
+              "id": "shape-circle",
+              "componentType": "Shape",
+              "name": "Circle",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Circle"
+                },
+                "vi": {
+                  "name": "Hình tròn"
+                }
+              },
+              "props": {
+                "shape": "circle",
+                "fill": "#4f46e5"
+              },
+              "style": {
+                "width": "100px",
+                "height": "100px"
+              },
+              "tags": [
+                "shape",
+                "circle",
+                "round"
+              ]
+            },
+            {
+              "id": "shape-triangle",
+              "componentType": "Shape",
+              "name": "Triangle",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Triangle"
+                },
+                "vi": {
+                  "name": "Hình tam giác"
+                }
+              },
+              "props": {
+                "shape": "triangle",
+                "fill": "#f59e0b"
+              },
+              "style": {
+                "width": "100px",
+                "height": "100px"
+              },
+              "tags": [
+                "shape",
+                "triangle"
+              ]
+            },
+            {
+              "id": "shape-star",
+              "componentType": "Shape",
+              "name": "Star",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Star"
+                },
+                "vi": {
+                  "name": "Ngôi sao"
+                }
+              },
+              "props": {
+                "shape": "star",
+                "fill": "#f59e0b"
+              },
+              "style": {
+                "width": "100px",
+                "height": "100px"
+              },
+              "tags": [
+                "shape",
+                "star",
+                "favorite"
+              ]
+            },
+            {
+              "id": "shape-heart",
+              "componentType": "Shape",
+              "name": "Heart",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Heart"
+                },
+                "vi": {
+                  "name": "Trái tim"
+                }
+              },
+              "props": {
+                "shape": "heart",
+                "fill": "#ef4444"
+              },
+              "style": {
+                "width": "100px",
+                "height": "100px"
+              },
+              "tags": [
+                "shape",
+                "heart",
+                "love"
+              ]
+            },
+            {
+              "id": "shape-hexagon",
+              "componentType": "Shape",
+              "name": "Hexagon",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Hexagon"
+                },
+                "vi": {
+                  "name": "Lục giác"
+                }
+              },
+              "props": {
+                "shape": "hexagon",
+                "fill": "#10b981"
+              },
+              "style": {
+                "width": "100px",
+                "height": "100px"
+              },
+              "tags": [
+                "shape",
+                "hexagon"
+              ]
+            },
+            {
+              "id": "shape-diamond",
+              "componentType": "Shape",
+              "name": "Diamond",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Diamond"
+                },
+                "vi": {
+                  "name": "Kim cương"
+                }
+              },
+              "props": {
+                "shape": "diamond",
+                "fill": "#3b82f6"
+              },
+              "style": {
+                "width": "80px",
+                "height": "80px"
+              },
+              "tags": [
+                "shape",
+                "diamond"
+              ]
+            },
+            {
+              "id": "shape-blob",
+              "componentType": "Shape",
+              "name": "Blob",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Blob"
+                },
+                "vi": {
+                  "name": "Hình loang"
+                }
+              },
+              "props": {
+                "shape": "blob",
+                "fill": "#a78bfa"
+              },
+              "style": {
+                "width": "150px",
+                "height": "150px"
+              },
+              "tags": [
+                "shape",
+                "blob",
+                "organic",
+                "decorative"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "arrows",
+          "label": "Arrows",
+          "order": 1,
+          "i18n": {
+            "en": "Arrows",
+            "vi": "Mũi tên"
+          },
+          "items": [
+            {
+              "id": "shape-arrow-right",
+              "componentType": "Shape",
+              "name": "Arrow Right",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Arrow Right"
+                },
+                "vi": {
+                  "name": "Mũi tên phải"
+                }
+              },
+              "props": {
+                "shape": "arrow-right",
+                "fill": "#374151"
+              },
+              "style": {
+                "width": "80px",
+                "height": "50px"
+              },
+              "tags": [
+                "arrow",
+                "right",
+                "direction"
+              ]
+            },
+            {
+              "id": "shape-arrow-left",
+              "componentType": "Shape",
+              "name": "Arrow Left",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Arrow Left"
+                },
+                "vi": {
+                  "name": "Mũi tên trái"
+                }
+              },
+              "props": {
+                "shape": "arrow-left",
+                "fill": "#374151"
+              },
+              "style": {
+                "width": "80px",
+                "height": "50px"
+              },
+              "tags": [
+                "arrow",
+                "left",
+                "direction"
+              ]
+            },
+            {
+              "id": "shape-arrow-up",
+              "componentType": "Shape",
+              "name": "Arrow Up",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Arrow Up"
+                },
+                "vi": {
+                  "name": "Mũi tên lên"
+                }
+              },
+              "props": {
+                "shape": "arrow-up",
+                "fill": "#374151"
+              },
+              "style": {
+                "width": "50px",
+                "height": "80px"
+              },
+              "tags": [
+                "arrow",
+                "up",
+                "direction"
+              ]
+            },
+            {
+              "id": "shape-arrow-down",
+              "componentType": "Shape",
+              "name": "Arrow Down",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Arrow Down"
+                },
+                "vi": {
+                  "name": "Mũi tên xuống"
+                }
+              },
+              "props": {
+                "shape": "arrow-down",
+                "fill": "#374151"
+              },
+              "style": {
+                "width": "50px",
+                "height": "80px"
+              },
+              "tags": [
+                "arrow",
+                "down",
+                "direction"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lines",
+          "label": "Lines",
+          "order": 2,
+          "i18n": {
+            "en": "Lines",
+            "vi": "Đường kẻ"
+          },
+          "items": [
+            {
+              "id": "divider-solid",
+              "componentType": "Divider",
+              "name": "Solid Line",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Solid Line"
+                },
+                "vi": {
+                  "name": "Đường liền"
+                }
+              },
+              "props": {
+                "orientation": "horizontal",
+                "thickness": 1,
+                "color": "#e5e7eb"
+              },
+              "style": {
+                "width": "100%"
+              },
+              "tags": [
+                "divider",
+                "line",
+                "solid"
+              ]
+            },
+            {
+              "id": "divider-thick",
+              "componentType": "Divider",
+              "name": "Thick Line",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Thick Line"
+                },
+                "vi": {
+                  "name": "Đường dày"
+                }
+              },
+              "props": {
+                "orientation": "horizontal",
+                "thickness": 3,
+                "color": "#111827"
+              },
+              "style": {
+                "width": "80px"
+              },
+              "tags": [
+                "divider",
+                "line",
+                "thick",
+                "accent"
+              ]
+            },
+            {
+              "id": "divider-accent",
+              "componentType": "Divider",
+              "name": "Accent Line",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Accent Line"
+                },
+                "vi": {
+                  "name": "Đường nhấn"
+                }
+              },
+              "props": {
+                "orientation": "horizontal",
+                "thickness": 4,
+                "color": "#4f46e5"
+              },
+              "style": {
+                "width": "60px"
+              },
+              "tags": [
+                "divider",
+                "line",
+                "accent",
+                "color"
+              ]
+            },
+            {
+              "id": "divider-vertical",
+              "componentType": "Divider",
+              "name": "Vertical Line",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Vertical Line"
+                },
+                "vi": {
+                  "name": "Đường dọc"
+                }
+              },
+              "props": {
+                "orientation": "vertical",
+                "thickness": 1,
+                "color": "#e5e7eb"
+              },
+              "style": {
+                "height": "80px",
+                "width": "1px"
+              },
+              "tags": [
+                "divider",
+                "line",
+                "vertical"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "menu",
+      "label": "Menu & Anchor",
+      "icon": "more-horizontal",
+      "order": 5,
+      "i18n": {
+        "en": "Menu & Anchor",
+        "vi": "Menu & Neo"
+      },
+      "types": [
+        {
+          "id": "horizontal-menus",
+          "label": "Horizontal Menus",
+          "order": 0,
+          "layout": "preview",
+          "i18n": {
+            "en": "Horizontal Menus",
+            "vi": "Menu ngang"
+          },
+          "items": [
+            {
+              "id": "menu-classic-horizontal",
+              "componentType": "NavigationMenu",
+              "name": "Classic Nav",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Classic Nav"
+                },
+                "vi": {
+                  "name": "Menu cổ điển"
+                }
+              },
+              "props": {
+                "items": [
+                  {
+                    "label": "Home",
+                    "href": "#"
+                  },
+                  {
+                    "label": "About",
+                    "href": "#"
+                  },
+                  {
+                    "label": "Services",
+                    "href": "#"
+                  },
+                  {
+                    "label": "Contact",
+                    "href": "#"
+                  }
+                ],
+                "layout": "horizontal",
+                "textColor": "#111827",
+                "fontSize": "14px",
+                "gap": 28,
+                "activeIndex": 0,
+                "itemStyle": "plain",
+                "activeBg": "#f3f4f6",
+                "activeColor": "#4f46e5"
+              },
+              "tags": [
+                "menu",
+                "horizontal",
+                "classic",
+                "navigation"
+              ]
+            },
+            {
+              "id": "menu-modern-horizontal",
+              "componentType": "NavigationMenu",
+              "name": "Modern Nav",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Modern Nav"
+                },
+                "vi": {
+                  "name": "Menu hiện đại"
+                }
+              },
+              "props": {
+                "items": [
+                  {
+                    "label": "Home",
+                    "href": "#"
+                  },
+                  {
+                    "label": "Work",
+                    "href": "#"
+                  },
+                  {
+                    "label": "Blog",
+                    "href": "#"
+                  },
+                  {
+                    "label": "Contact",
+                    "href": "#"
+                  }
+                ],
+                "layout": "horizontal",
+                "textColor": "#374151",
+                "activeColor": "#4f46e5",
+                "fontSize": "15px",
+                "gap": 32,
+                "activeIndex": 0,
+                "itemStyle": "plain",
+                "activeBg": "#f3f4f6"
+              },
+              "tags": [
+                "menu",
+                "horizontal",
+                "modern"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "hamburger-menus",
+          "label": "Hamburger Menus",
+          "order": 1,
+          "layout": "preview",
+          "i18n": {
+            "en": "Hamburger Menus",
+            "vi": "Menu hamburger"
+          },
+          "items": [
+            {
+              "id": "menu-hamburger-basic",
+              "componentType": "NavigationMenu",
+              "name": "Hamburger Menu",
+              "thumbnail": null,
+              "description": "Responsive: shows as hamburger, expands on mobile",
+              "i18n": {
+                "en": {
+                  "name": "Hamburger Menu",
+                  "description": "Best for mobile-first layouts"
+                },
+                "vi": {
+                  "name": "Menu hamburger"
+                }
+              },
+              "props": {
+                "items": [
+                  {
+                    "label": "Home",
+                    "href": "#"
+                  },
+                  {
+                    "label": "About",
+                    "href": "#"
+                  },
+                  {
+                    "label": "Portfolio",
+                    "href": "#"
+                  },
+                  {
+                    "label": "Contact",
+                    "href": "#"
+                  }
+                ],
+                "layout": "hamburger",
+                "textColor": "#111827"
+              },
+              "responsiveProps": {
+                "desktop": {
+                  "layout": "horizontal"
+                },
+                "mobile": {
+                  "layout": "hamburger"
+                }
+              },
+              "tags": [
+                "menu",
+                "hamburger",
+                "responsive",
+                "mobile"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "anchors",
+          "label": "Anchors",
+          "order": 2,
+          "layout": "preview",
+          "i18n": {
+            "en": "Anchors",
+            "vi": "Neo cuộn"
+          },
+          "items": [
+            {
+              "id": "anchor-section",
+              "componentType": "Anchor",
+              "name": "Section Anchor",
+              "description": "Invisible anchor point for scroll-to navigation",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Section Anchor"
+                },
+                "vi": {
+                  "name": "Neo phần"
+                }
+              },
+              "props": {
+                "anchorId": "section-1",
+                "label": "Section 1"
+              },
+              "tags": [
+                "anchor",
+                "scroll",
+                "navigation",
+                "target"
+              ]
+            },
+            {
+              "id": "anchor-top",
+              "componentType": "Anchor",
+              "name": "Top Anchor",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Top Anchor"
+                },
+                "vi": {
+                  "name": "Neo đầu trang"
+                }
+              },
+              "props": {
+                "anchorId": "top",
+                "label": "Top of Page"
+              },
+              "tags": [
+                "anchor",
+                "scroll",
+                "top"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "collection",
+      "label": "List",
+      "icon": "layout-list",
+      "order": 6,
+      "i18n": {
+        "en": "List",
+        "vi": "Danh sách"
+      },
+      "types": [
+        {
+          "id": "repeaters",
+          "label": "Repeaters",
+          "order": 0,
+          "layout": "list",
+          "i18n": {
+            "en": "Repeaters",
+            "vi": "Phần lặp"
+          },
+          "items": [
+            {
+              "id": "repeater-card-grid",
+              "componentType": "Repeater",
+              "name": "Card Grid",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Card Grid"
+                },
+                "vi": {
+                  "name": "Lưới thẻ"
+                }
+              },
+              "props": {
+                "count": 3,
+                "columns": 3,
+                "gap": 16
+              },
+              "tags": [
+                "repeater",
+                "card",
+                "grid",
+                "list"
+              ]
+            },
+            {
+              "id": "repeater-2col",
+              "componentType": "Repeater",
+              "name": "2-Column List",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "2-Column List"
+                },
+                "vi": {
+                  "name": "Danh sách 2 cột"
+                }
+              },
+              "props": {
+                "count": 4,
+                "columns": 2,
+                "gap": 20
+              },
+              "responsiveProps": {
+                "mobile": {
+                  "columns": 1
+                }
+              },
+              "tags": [
+                "repeater",
+                "2-column",
+                "list"
+              ]
+            },
+            {
+              "id": "repeater-horizontal-row",
+              "componentType": "Repeater",
+              "name": "Horizontal Row",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Horizontal Row"
+                },
+                "vi": {
+                  "name": "Hàng ngang"
+                }
+              },
+              "props": {
+                "count": 4,
+                "columns": 4,
+                "gap": 16
+              },
+              "responsiveProps": {
+                "mobile": {
+                  "columns": 2
+                }
+              },
+              "tags": [
+                "repeater",
+                "horizontal",
+                "row"
+              ]
+            },
+            {
+              "id": "repeater-testimonials",
+              "componentType": "Repeater",
+              "name": "Testimonials",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Testimonials"
+                },
+                "vi": {
+                  "name": "Đánh giá"
+                }
+              },
+              "props": {
+                "count": 3,
+                "columns": 3,
+                "gap": 24
+              },
+              "responsiveProps": {
+                "mobile": {
+                  "columns": 1
+                }
+              },
+              "tags": [
+                "repeater",
+                "testimonials",
+                "reviews"
+              ]
+            },
+            {
+              "id": "repeater-team",
+              "componentType": "Repeater",
+              "name": "Team Grid",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Team Grid"
+                },
+                "vi": {
+                  "name": "Lưới nhóm"
+                }
+              },
+              "props": {
+                "count": 4,
+                "columns": 4,
+                "gap": 24
+              },
+              "responsiveProps": {
+                "tablet": {
+                  "columns": 2
+                },
+                "mobile": {
+                  "columns": 2
+                }
+              },
+              "tags": [
+                "repeater",
+                "team",
+                "profiles"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "container",
+      "label": "Box",
+      "icon": "box",
+      "order": 7,
+      "i18n": {
+        "en": "Box",
+        "vi": "Hộp"
+      },
+      "types": [
+        {
+          "id": "container-boxes",
+          "label": "Container Boxes",
+          "order": 0,
+          "i18n": {
+            "en": "Container Boxes",
+            "vi": "Hộp chứa"
+          },
+          "items": [
+            {
+              "id": "box-flex-column",
+              "componentType": "Container",
+              "name": "Flex Column",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Flex Column"
+                },
+                "vi": {
+                  "name": "Cột flex"
+                }
+              },
+              "props": {
+                "display": "flex",
+                "direction": "column",
+                "gap": 16,
+                "padding": 24
+              },
+              "style": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "16px",
+                "padding": "24px",
+                "width": "100%",
+                "minHeight": "80px"
+              },
+              "tags": [
+                "container",
+                "flex",
+                "column",
+                "layout"
+              ]
+            },
+            {
+              "id": "box-flex-row",
+              "componentType": "Container",
+              "name": "Flex Row",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Flex Row"
+                },
+                "vi": {
+                  "name": "Hàng flex"
+                }
+              },
+              "props": {
+                "display": "flex",
+                "direction": "row",
+                "gap": 16,
+                "padding": 24
+              },
+              "style": {
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "16px",
+                "padding": "24px",
+                "width": "100%",
+                "minHeight": "80px"
+              },
+              "responsiveStyle": {
+                "mobile": {
+                  "flexDirection": "column"
+                }
+              },
+              "tags": [
+                "container",
+                "flex",
+                "row",
+                "horizontal"
+              ]
+            },
+            {
+              "id": "box-card",
+              "componentType": "Container",
+              "name": "Card",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Card"
+                },
+                "vi": {
+                  "name": "Thẻ"
+                }
+              },
+              "props": {
+                "display": "flex",
+                "direction": "column",
+                "gap": 12,
+                "padding": 20
+              },
+              "style": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "12px",
+                "padding": "20px",
+                "width": "100%",
+                "borderRadius": "12px",
+                "backgroundColor": "#ffffff",
+                "boxShadow": "0 2px 8px rgba(0,0,0,0.08)",
+                "border": "1px solid #f3f4f6"
+              },
+              "tags": [
+                "container",
+                "card",
+                "shadow",
+                "rounded"
+              ]
+            },
+            {
+              "id": "box-centered",
+              "componentType": "Container",
+              "name": "Centered Box",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Centered Box"
+                },
+                "vi": {
+                  "name": "Hộp căn giữa"
+                }
+              },
+              "props": {
+                "display": "flex",
+                "direction": "column",
+                "gap": 16,
+                "padding": 48
+              },
+              "style": {
+                "display": "flex",
+                "flexDirection": "column",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "gap": "16px",
+                "padding": "48px",
+                "width": "100%",
+                "textAlign": "center",
+                "minHeight": "200px"
+              },
+              "responsiveStyle": {
+                "mobile": {
+                  "padding": "24px"
+                }
+              },
+              "tags": [
+                "container",
+                "centered",
+                "hero",
+                "column"
+              ]
+            },
+            {
+              "id": "box-sidebar",
+              "componentType": "Container",
+              "name": "Sidebar Layout",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Sidebar Layout"
+                },
+                "vi": {
+                  "name": "Bố cục cạnh"
+                }
+              },
+              "props": {
+                "display": "flex",
+                "direction": "row",
+                "gap": 32,
+                "padding": 0
+              },
+              "style": {
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "32px",
+                "width": "100%",
+                "minHeight": "200px"
+              },
+              "responsiveStyle": {
+                "mobile": {
+                  "flexDirection": "column"
+                }
+              },
+              "tags": [
+                "container",
+                "sidebar",
+                "two-column",
+                "row"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "styled-boxes",
+          "label": "Styled Boxes",
+          "order": 1,
+          "i18n": {
+            "en": "Styled Boxes",
+            "vi": "Hộp có kiểu dáng"
+          },
+          "items": [
+            {
+              "id": "box-glassmorphism",
+              "componentType": "Container",
+              "name": "Glass",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Glass"
+                },
+                "vi": {
+                  "name": "Kính"
+                }
+              },
+              "props": {
+                "display": "flex",
+                "direction": "column",
+                "gap": 12,
+                "padding": 24
+              },
+              "style": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "12px",
+                "padding": "24px",
+                "borderRadius": "16px",
+                "backgroundColor": "rgba(255,255,255,0.15)",
+                "backdropFilter": "blur(10px)",
+                "border": "1px solid rgba(255,255,255,0.3)",
+                "boxShadow": "0 8px 32px rgba(0,0,0,0.1)"
+              },
+              "tags": [
+                "container",
+                "glass",
+                "glassmorphism",
+                "blur",
+                "transparent"
+              ]
+            },
+            {
+              "id": "box-gradient",
+              "componentType": "Container",
+              "name": "Gradient",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Gradient"
+                },
+                "vi": {
+                  "name": "Chuyển màu"
+                }
+              },
+              "props": {
+                "display": "flex",
+                "direction": "column",
+                "gap": 16,
+                "padding": 32
+              },
+              "style": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "16px",
+                "padding": "32px",
+                "borderRadius": "16px",
+                "background": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                "color": "#ffffff"
+              },
+              "tags": [
+                "container",
+                "gradient",
+                "colorful"
+              ]
+            },
+            {
+              "id": "box-bordered",
+              "componentType": "Container",
+              "name": "Bordered",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Bordered"
+                },
+                "vi": {
+                  "name": "Có viền"
+                }
+              },
+              "props": {
+                "display": "flex",
+                "direction": "column",
+                "gap": 12,
+                "padding": 24
+              },
+              "style": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "12px",
+                "padding": "24px",
+                "borderRadius": "8px",
+                "border": "2px solid #e5e7eb",
+                "backgroundColor": "#ffffff"
+              },
+              "tags": [
+                "container",
+                "bordered",
+                "outline",
+                "white"
+              ]
+            },
+            {
+              "id": "box-dark",
+              "componentType": "Container",
+              "name": "Dark Box",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Dark Box"
+                },
+                "vi": {
+                  "name": "Hộp tối"
+                }
+              },
+              "props": {
+                "display": "flex",
+                "direction": "column",
+                "gap": 16,
+                "padding": 28
+              },
+              "style": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "16px",
+                "padding": "28px",
+                "borderRadius": "12px",
+                "backgroundColor": "#111827",
+                "color": "#f9fafb"
+              },
+              "tags": [
+                "container",
+                "dark",
+                "black",
+                "contrast"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "card",
+      "label": "Cards",
+      "icon": "layout-template",
+      "order": 99,
+      "i18n": {
+        "en": "Cards",
+        "vi": "Thẻ"
+      },
+      "types": [
+        {
+          "id": "testimonial",
+          "label": "Testimonial",
+          "order": 0,
+          "layout": "grid",
+          "i18n": {
+            "en": "Testimonial",
+            "vi": "Đánh giá"
+          },
+          "items": [
+            {
+              "id": "testimonial-indigo",
+              "componentType": "TestimonialCard",
+              "name": "Indigo",
+              "description": "Classic testimonial card with indigo accent",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Indigo"
+                },
+                "vi": {
+                  "name": "Xanh indigo"
+                }
+              },
+              "props": {
+                "quote": "This product changed our workflow completely. Highly recommended!",
+                "author": "Jane Smith",
+                "role": "Product Manager, Acme Corp",
+                "accentColor": "#4f46e5",
+                "bgColor": "#ffffff",
+                "starCount": 5
+              },
+              "style": {
+                "width": "320px",
+                "padding": "24px",
+                "borderRadius": "12px"
+              },
+              "tags": [
+                "testimonial",
+                "quote",
+                "review"
+              ]
+            },
+            {
+              "id": "testimonial-emerald",
+              "componentType": "TestimonialCard",
+              "name": "Emerald",
+              "description": "Testimonial card with green accent",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Emerald"
+                },
+                "vi": {
+                  "name": "Xanh lá"
+                }
+              },
+              "props": {
+                "quote": "Incredible results in just two weeks. Our team loves it!",
+                "author": "Mark Johnson",
+                "role": "CTO, Startup Inc",
+                "accentColor": "#059669",
+                "bgColor": "#f0fdf4",
+                "starCount": 5
+              },
+              "style": {
+                "width": "320px",
+                "padding": "24px",
+                "borderRadius": "12px"
+              },
+              "tags": [
+                "testimonial",
+                "quote",
+                "green"
+              ]
+            },
+            {
+              "id": "testimonial-rose",
+              "componentType": "TestimonialCard",
+              "name": "Rose",
+              "description": "Testimonial card with rose accent",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Rose"
+                },
+                "vi": {
+                  "name": "Hồng"
+                }
+              },
+              "props": {
+                "quote": "The best investment we made this year. 10/10.",
+                "author": "Sara Lee",
+                "role": "Head of Design, Agency Co",
+                "accentColor": "#e11d48",
+                "bgColor": "#fff1f2",
+                "starCount": 4
+              },
+              "style": {
+                "width": "320px",
+                "padding": "24px",
+                "borderRadius": "12px"
+              },
+              "tags": [
+                "testimonial",
+                "quote",
+                "rose"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pricing",
+          "label": "Pricing",
+          "order": 1,
+          "layout": "grid",
+          "i18n": {
+            "en": "Pricing",
+            "vi": "Giá cả"
+          },
+          "items": [
+            {
+              "id": "pricing-basic",
+              "componentType": "PricingCard",
+              "name": "Basic",
+              "description": "Standard pricing tier card",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Basic"
+                },
+                "vi": {
+                  "name": "Cơ bản"
+                }
+              },
+              "props": {
+                "planName": "Starter",
+                "price": "$9",
+                "period": "/ month",
+                "description": "Perfect for individuals and small projects.",
+                "features": "3 projects\n1 team member\nEmail support\n5 GB storage",
+                "ctaLabel": "Get started",
+                "accentColor": "#6b7280",
+                "highlighted": false
+              },
+              "style": {
+                "width": "280px",
+                "padding": "28px 24px",
+                "borderRadius": "16px"
+              },
+              "tags": [
+                "pricing",
+                "plan",
+                "starter"
+              ]
+            },
+            {
+              "id": "pricing-pro",
+              "componentType": "PricingCard",
+              "name": "Pro (highlighted)",
+              "description": "Highlighted popular pricing tier",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Pro (highlighted)"
+                },
+                "vi": {
+                  "name": "Pro (nổi bật)"
+                }
+              },
+              "props": {
+                "planName": "Pro",
+                "price": "$49",
+                "period": "/ month",
+                "description": "Everything you need to grow your business.",
+                "features": "Unlimited projects\n10 team members\nPriority support\nAdvanced analytics\nCustom domains",
+                "ctaLabel": "Get started",
+                "accentColor": "#4f46e5",
+                "highlighted": true
+              },
+              "style": {
+                "width": "280px",
+                "padding": "28px 24px",
+                "borderRadius": "16px"
+              },
+              "tags": [
+                "pricing",
+                "plan",
+                "pro",
+                "popular"
+              ]
+            },
+            {
+              "id": "pricing-enterprise",
+              "componentType": "PricingCard",
+              "name": "Enterprise",
+              "description": "Enterprise pricing tier card",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Enterprise"
+                },
+                "vi": {
+                  "name": "Doanh nghiệp"
+                }
+              },
+              "props": {
+                "planName": "Enterprise",
+                "price": "$199",
+                "period": "/ month",
+                "description": "Tailored solutions for large organizations.",
+                "features": "Unlimited everything\nDedicated support\nSSO & compliance\nSLA guarantee\nCustom integrations",
+                "ctaLabel": "Contact sales",
+                "accentColor": "#1d4ed8",
+                "highlighted": false
+              },
+              "style": {
+                "width": "280px",
+                "padding": "28px 24px",
+                "borderRadius": "16px"
+              },
+              "tags": [
+                "pricing",
+                "plan",
+                "enterprise"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "hero-banner",
+          "label": "Hero Banner",
+          "order": 2,
+          "layout": "list",
+          "i18n": {
+            "en": "Hero Banner",
+            "vi": "Banner hero"
+          },
+          "items": [
+            {
+              "id": "hero-indigo-violet",
+              "componentType": "HeroBanner",
+              "name": "Indigo → Violet",
+              "description": "Bold hero heading with indigo-to-violet gradient",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Indigo → Violet"
+                },
+                "vi": {
+                  "name": "Indigo → Tím"
+                }
+              },
+              "props": {
+                "text": "Build faster,\nship smarter.",
+                "fontSize": "52px",
+                "fontWeight": "800",
+                "textAlign": "center",
+                "color": "#fff",
+                "gradientFrom": "#4f46e5",
+                "gradientTo": "#7c3aed"
+              },
+              "style": {
+                "width": "100%",
+                "padding": "80px 40px"
+              },
+              "tags": [
+                "hero",
+                "gradient",
+                "heading",
+                "indigo"
+              ]
+            },
+            {
+              "id": "hero-rose-orange",
+              "componentType": "HeroBanner",
+              "name": "Rose → Orange",
+              "description": "Warm hero heading with rose-to-orange gradient",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Rose → Orange"
+                },
+                "vi": {
+                  "name": "Hồng → Cam"
+                }
+              },
+              "props": {
+                "text": "Create.\nInspire.\nRepeat.",
+                "fontSize": "56px",
+                "fontWeight": "900",
+                "textAlign": "center",
+                "color": "#fff",
+                "gradientFrom": "#e11d48",
+                "gradientTo": "#f97316"
+              },
+              "style": {
+                "width": "100%",
+                "padding": "80px 40px"
+              },
+              "tags": [
+                "hero",
+                "gradient",
+                "heading",
+                "warm"
+              ]
+            },
+            {
+              "id": "hero-dark",
+              "componentType": "HeroBanner",
+              "name": "Dark",
+              "description": "Dark background hero heading",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Dark"
+                },
+                "vi": {
+                  "name": "Tối"
+                }
+              },
+              "props": {
+                "text": "Your vision.\nOur platform.",
+                "fontSize": "48px",
+                "fontWeight": "800",
+                "textAlign": "center",
+                "color": "#f9fafb",
+                "gradientFrom": "#111827",
+                "gradientTo": "#1f2937"
+              },
+              "style": {
+                "width": "100%",
+                "padding": "80px 40px"
+              },
+              "tags": [
+                "hero",
+                "dark",
+                "heading"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

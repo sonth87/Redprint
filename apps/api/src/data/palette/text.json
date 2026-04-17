@@ -1,0 +1,826 @@
+{
+  "id": "text",
+  "label": "Text",
+  "icon": "type",
+  "order": 0,
+  "i18n": {
+    "en": "Text",
+    "vi": "Văn bản"
+  },
+  "types": [
+    {
+      "id": "themed-text",
+      "label": "Themed Text",
+      "order": 0,
+      "layout": "list",
+      "i18n": {
+        "en": "Themed Text",
+        "vi": "Văn bản chủ đề"
+      },
+      "items": [
+        {
+          "id": "text-themed-classic",
+          "componentType": "Text",
+          "name": "Classic",
+          "description": "Clean serif heading for elegant sites",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Classic"
+            },
+            "vi": {
+              "name": "Cổ điển"
+            }
+          },
+          "props": {
+            "text": "<p>Classic Heading</p>",
+            "tag": "h2"
+          },
+          "style": {
+            "fontFamily": "Georgia, serif",
+            "fontSize": "32px",
+            "fontWeight": "400",
+            "color": "#1a1a1a",
+            "lineHeight": "1.3"
+          },
+          "tags": [
+            "classic",
+            "serif",
+            "elegant"
+          ]
+        },
+        {
+          "id": "text-themed-modern",
+          "componentType": "Text",
+          "name": "Modern",
+          "description": "Bold sans-serif for contemporary design",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Modern"
+            },
+            "vi": {
+              "name": "Hiện đại"
+            }
+          },
+          "props": {
+            "text": "<p>Modern Heading</p>",
+            "tag": "h2"
+          },
+          "style": {
+            "fontFamily": "system-ui, sans-serif",
+            "fontSize": "36px",
+            "fontWeight": "800",
+            "color": "#111827",
+            "letterSpacing": "-0.02em",
+            "lineHeight": "1.1"
+          },
+          "tags": [
+            "modern",
+            "bold",
+            "sans-serif"
+          ]
+        },
+        {
+          "id": "text-themed-decorative",
+          "componentType": "Text",
+          "name": "Decorative",
+          "description": "Expressive script-style heading",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Decorative"
+            },
+            "vi": {
+              "name": "Trang trí"
+            }
+          },
+          "props": {
+            "text": "<p>Decorative Title</p>",
+            "tag": "h2"
+          },
+          "style": {
+            "fontFamily": "cursive",
+            "fontSize": "40px",
+            "fontWeight": "400",
+            "color": "#7c3aed",
+            "lineHeight": "1.2"
+          },
+          "tags": [
+            "decorative",
+            "cursive",
+            "stylish"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "titles",
+      "label": "Titles",
+      "order": 1,
+      "layout": "list",
+      "i18n": {
+        "en": "Titles",
+        "vi": "Tiêu đề"
+      },
+      "items": [
+        {
+          "id": "text-h1",
+          "componentType": "Text",
+          "name": "Heading 1",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Heading 1"
+            },
+            "vi": {
+              "name": "Tiêu đề 1"
+            }
+          },
+          "props": {
+            "text": "<h1>Add a Title</h1>",
+            "tag": "h1"
+          },
+          "style": {
+            "fontSize": "52px",
+            "fontWeight": "700",
+            "color": "#111827",
+            "lineHeight": "1.1",
+            "letterSpacing": "-0.02em"
+          },
+          "responsiveStyle": {
+            "tablet": {
+              "fontSize": "40px"
+            },
+            "mobile": {
+              "fontSize": "28px"
+            }
+          },
+          "tags": [
+            "h1",
+            "heading",
+            "title",
+            "hero"
+          ]
+        },
+        {
+          "id": "text-h2",
+          "componentType": "Text",
+          "name": "Heading 2",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Heading 2"
+            },
+            "vi": {
+              "name": "Tiêu đề 2"
+            }
+          },
+          "props": {
+            "text": "<h2>Section Title</h2>",
+            "tag": "h2"
+          },
+          "style": {
+            "fontSize": "40px",
+            "fontWeight": "700",
+            "color": "#111827",
+            "lineHeight": "1.2"
+          },
+          "responsiveStyle": {
+            "tablet": {
+              "fontSize": "32px"
+            },
+            "mobile": {
+              "fontSize": "24px"
+            }
+          },
+          "tags": [
+            "h2",
+            "heading",
+            "section"
+          ]
+        },
+        {
+          "id": "text-h3",
+          "componentType": "Text",
+          "name": "Heading 3",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Heading 3"
+            },
+            "vi": {
+              "name": "Tiêu đề 3"
+            }
+          },
+          "props": {
+            "text": "<h3>Subsection Title</h3>",
+            "tag": "h3"
+          },
+          "style": {
+            "fontSize": "28px",
+            "fontWeight": "600",
+            "color": "#111827",
+            "lineHeight": "1.3"
+          },
+          "responsiveStyle": {
+            "mobile": {
+              "fontSize": "20px"
+            }
+          },
+          "tags": [
+            "h3",
+            "heading",
+            "subsection"
+          ]
+        },
+        {
+          "id": "text-h4",
+          "componentType": "Text",
+          "name": "Heading 4",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Heading 4"
+            },
+            "vi": {
+              "name": "Tiêu đề 4"
+            }
+          },
+          "props": {
+            "text": "<h4>Card Title</h4>",
+            "tag": "h4"
+          },
+          "style": {
+            "fontSize": "22px",
+            "fontWeight": "600",
+            "color": "#111827",
+            "lineHeight": "1.4"
+          },
+          "responsiveStyle": {
+            "mobile": {
+              "fontSize": "18px"
+            }
+          },
+          "tags": [
+            "h4",
+            "heading",
+            "card"
+          ]
+        },
+        {
+          "id": "text-h5",
+          "componentType": "Text",
+          "name": "Heading 5",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Heading 5"
+            },
+            "vi": {
+              "name": "Tiêu đề 5"
+            }
+          },
+          "props": {
+            "text": "<h5>Label Title</h5>",
+            "tag": "h5"
+          },
+          "style": {
+            "fontSize": "18px",
+            "fontWeight": "600",
+            "color": "#374151",
+            "lineHeight": "1.5"
+          },
+          "tags": [
+            "h5",
+            "heading",
+            "label"
+          ]
+        },
+        {
+          "id": "text-h6",
+          "componentType": "Text",
+          "name": "Heading 6",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Heading 6"
+            },
+            "vi": {
+              "name": "Tiêu đề 6"
+            }
+          },
+          "props": {
+            "text": "<h6>Small Title</h6>",
+            "tag": "h6"
+          },
+          "style": {
+            "fontSize": "14px",
+            "fontWeight": "700",
+            "color": "#374151",
+            "textTransform": "uppercase",
+            "letterSpacing": "0.08em"
+          },
+          "tags": [
+            "h6",
+            "heading",
+            "overline"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "paragraphs",
+      "label": "Paragraphs",
+      "order": 2,
+      "layout": "list",
+      "i18n": {
+        "en": "Paragraphs",
+        "vi": "Đoạn văn"
+      },
+      "items": [
+        {
+          "id": "text-body-large",
+          "componentType": "Text",
+          "name": "Body Large",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Body Large"
+            },
+            "vi": {
+              "name": "Văn bản lớn"
+            }
+          },
+          "props": {
+            "text": "<p>Add a paragraph. Click here to change the font, size, colour and more.</p>",
+            "tag": "p"
+          },
+          "style": {
+            "fontSize": "18px",
+            "color": "#374151",
+            "lineHeight": "1.7"
+          },
+          "tags": [
+            "paragraph",
+            "body",
+            "large"
+          ]
+        },
+        {
+          "id": "text-body-medium",
+          "componentType": "Text",
+          "name": "Body Medium",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Body Medium"
+            },
+            "vi": {
+              "name": "Văn bản vừa"
+            }
+          },
+          "props": {
+            "text": "<p>Add a paragraph. Click here to change the font, size, colour and more.</p>",
+            "tag": "p"
+          },
+          "style": {
+            "fontSize": "16px",
+            "color": "#374151",
+            "lineHeight": "1.6"
+          },
+          "tags": [
+            "paragraph",
+            "body",
+            "medium"
+          ]
+        },
+        {
+          "id": "text-body-small",
+          "componentType": "Text",
+          "name": "Body Small",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Body Small"
+            },
+            "vi": {
+              "name": "Văn bản nhỏ"
+            }
+          },
+          "props": {
+            "text": "<p>Add a small paragraph for captions, footnotes, and supplementary text.</p>",
+            "tag": "p"
+          },
+          "style": {
+            "fontSize": "14px",
+            "color": "#6b7280",
+            "lineHeight": "1.5"
+          },
+          "tags": [
+            "paragraph",
+            "body",
+            "small",
+            "caption"
+          ]
+        },
+        {
+          "id": "text-lead",
+          "componentType": "Text",
+          "name": "Lead Paragraph",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Lead Paragraph"
+            },
+            "vi": {
+              "name": "Đoạn dẫn"
+            }
+          },
+          "props": {
+            "text": "<p>This is a lead paragraph. It's larger and draws attention to the opening text of a section.</p>",
+            "tag": "p"
+          },
+          "style": {
+            "fontSize": "20px",
+            "color": "#374151",
+            "lineHeight": "1.7",
+            "fontWeight": "400"
+          },
+          "responsiveStyle": {
+            "mobile": {
+              "fontSize": "16px"
+            }
+          },
+          "tags": [
+            "paragraph",
+            "lead",
+            "intro"
+          ]
+        },
+        {
+          "id": "text-quote",
+          "componentType": "Text",
+          "name": "Blockquote",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Blockquote"
+            },
+            "vi": {
+              "name": "Trích dẫn"
+            }
+          },
+          "props": {
+            "text": "<p>Design is not just what it looks like and feels like. Design is how it works.</p>",
+            "tag": "p"
+          },
+          "style": {
+            "fontSize": "20px",
+            "color": "#374151",
+            "lineHeight": "1.6",
+            "fontStyle": "italic",
+            "borderLeft": "4px solid #6366f1",
+            "paddingLeft": "20px",
+            "marginLeft": "0"
+          },
+          "tags": [
+            "quote",
+            "blockquote",
+            "citation"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "collapsible-text",
+      "label": "Collapsible Text",
+      "order": 3,
+      "layout": "list",
+      "i18n": {
+        "en": "Collapsible Text",
+        "vi": "Văn bản thu gọn"
+      },
+      "items": [
+        {
+          "id": "collapsible-read-more",
+          "componentType": "CollapsibleText",
+          "name": "Read More",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Read More"
+            },
+            "vi": {
+              "name": "Đọc thêm"
+            }
+          },
+          "props": {
+            "text": "<p>Collapsible text is great for longer section titles and descriptions. It gives people access to all the info they need, while keeping your design clean.</p>",
+            "previewLines": 2,
+            "expandLabel": "Read more",
+            "collapseLabel": "Show less"
+          },
+          "style": {
+            "fontSize": "16px",
+            "color": "#374151",
+            "lineHeight": "1.6"
+          },
+          "tags": [
+            "collapsible",
+            "read-more",
+            "expandable"
+          ]
+        },
+        {
+          "id": "collapsible-show-more",
+          "componentType": "CollapsibleText",
+          "name": "Show More",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Show More"
+            },
+            "vi": {
+              "name": "Xem thêm"
+            }
+          },
+          "props": {
+            "text": "<p>This is a longer piece of text that can be expanded. Perfect for product descriptions, bios, and detailed content sections.</p>",
+            "previewLines": 3,
+            "expandLabel": "Show more →",
+            "collapseLabel": "← Show less"
+          },
+          "style": {
+            "fontSize": "15px",
+            "color": "#6b7280",
+            "lineHeight": "1.7"
+          },
+          "tags": [
+            "collapsible",
+            "show-more"
+          ]
+        },
+        {
+          "id": "collapsible-link",
+          "componentType": "CollapsibleText",
+          "name": "Link to Article",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Link to Article"
+            },
+            "vi": {
+              "name": "Liên kết bài viết"
+            }
+          },
+          "props": {
+            "text": "<p>Get the highlights here. For the full story and all the details, follow the link below to read the complete article.</p>",
+            "previewLines": 2,
+            "expandLabel": "Link to full article →",
+            "collapseLabel": "Show less"
+          },
+          "style": {
+            "fontSize": "16px",
+            "color": "#374151",
+            "lineHeight": "1.6"
+          },
+          "tags": [
+            "collapsible",
+            "link",
+            "article"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "text-marquee",
+      "label": "Text Marquee",
+      "order": 4,
+      "layout": "list",
+      "i18n": {
+        "en": "Text Marquee",
+        "vi": "Văn bản chạy"
+      },
+      "items": [
+        {
+          "id": "marquee-casual",
+          "componentType": "TextMarquee",
+          "name": "Casual Ticker",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Casual Ticker"
+            },
+            "vi": {
+              "name": "Ticker thông thường"
+            }
+          },
+          "props": {
+            "text": "Let's Talk 👋",
+            "speed": 20,
+            "direction": "left",
+            "separator": "  •  "
+          },
+          "style": {
+            "fontSize": "18px",
+            "fontWeight": "500",
+            "color": "#111827",
+            "padding": "12px 0"
+          },
+          "tags": [
+            "marquee",
+            "ticker",
+            "scrolling"
+          ]
+        },
+        {
+          "id": "marquee-promo",
+          "componentType": "TextMarquee",
+          "name": "Promo Banner",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Promo Banner"
+            },
+            "vi": {
+              "name": "Banner khuyến mãi"
+            }
+          },
+          "props": {
+            "text": "FREE SHIPPING WORLDWIDE 🌍",
+            "speed": 15,
+            "direction": "left",
+            "separator": "   🎁   "
+          },
+          "style": {
+            "fontSize": "14px",
+            "fontWeight": "700",
+            "color": "#ffffff",
+            "backgroundColor": "#111827",
+            "padding": "10px 0",
+            "textTransform": "uppercase",
+            "letterSpacing": "0.05em"
+          },
+          "tags": [
+            "marquee",
+            "promo",
+            "banner",
+            "shipping"
+          ]
+        },
+        {
+          "id": "marquee-new-arrivals",
+          "componentType": "TextMarquee",
+          "name": "New Arrivals",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "New Arrivals"
+            },
+            "vi": {
+              "name": "Hàng mới về"
+            }
+          },
+          "props": {
+            "text": "New Arrivals 🛍️",
+            "speed": 25,
+            "direction": "left",
+            "separator": "  ★  "
+          },
+          "style": {
+            "fontSize": "28px",
+            "fontWeight": "800",
+            "color": "#111827",
+            "padding": "16px 0"
+          },
+          "tags": [
+            "marquee",
+            "new-arrivals",
+            "fashion"
+          ]
+        },
+        {
+          "id": "marquee-hello",
+          "componentType": "TextMarquee",
+          "name": "Hello Beautiful",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Hello Beautiful"
+            },
+            "vi": {
+              "name": "Xin chào"
+            }
+          },
+          "props": {
+            "text": "Hello Beautiful ♥",
+            "speed": 30,
+            "direction": "right",
+            "separator": "  ✦  "
+          },
+          "style": {
+            "fontSize": "24px",
+            "fontWeight": "400",
+            "fontStyle": "italic",
+            "color": "#7c3aed",
+            "padding": "14px 0"
+          },
+          "tags": [
+            "marquee",
+            "elegant",
+            "italic"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "text-mask",
+      "label": "Text Mask",
+      "order": 5,
+      "layout": "list",
+      "i18n": {
+        "en": "Text Mask",
+        "vi": "Hiệu ứng mặt nạ"
+      },
+      "items": [
+        {
+          "id": "textmask-purple-gradient",
+          "componentType": "TextMask",
+          "name": "Purple Gradient",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Purple Gradient"
+            },
+            "vi": {
+              "name": "Chuyển màu tím"
+            }
+          },
+          "props": {
+            "text": "CREATIVE",
+            "gradient": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            "fontSize": "100px",
+            "fontWeight": "900"
+          },
+          "tags": [
+            "text-mask",
+            "gradient",
+            "purple"
+          ]
+        },
+        {
+          "id": "textmask-sunset",
+          "componentType": "TextMask",
+          "name": "Sunset",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Sunset"
+            },
+            "vi": {
+              "name": "Hoàng hôn"
+            }
+          },
+          "props": {
+            "text": "BEAUTIFUL",
+            "gradient": "linear-gradient(135deg, #f6d365 0%, #fda085 100%)",
+            "fontSize": "90px",
+            "fontWeight": "900"
+          },
+          "tags": [
+            "text-mask",
+            "gradient",
+            "warm"
+          ]
+        },
+        {
+          "id": "textmask-ocean",
+          "componentType": "TextMask",
+          "name": "Ocean",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Ocean"
+            },
+            "vi": {
+              "name": "Đại dương"
+            }
+          },
+          "props": {
+            "text": "INSPIRE",
+            "gradient": "linear-gradient(135deg, #0093E9 0%, #80D0C7 100%)",
+            "fontSize": "100px",
+            "fontWeight": "900"
+          },
+          "tags": [
+            "text-mask",
+            "gradient",
+            "blue",
+            "teal"
+          ]
+        }
+      ]
+    }
+  ]
+}

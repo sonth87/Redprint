@@ -1,0 +1,168 @@
+{
+  "id": "collection",
+  "label": "List",
+  "icon": "layout-list",
+  "order": 6,
+  "i18n": {
+    "en": "List",
+    "vi": "Danh sách"
+  },
+  "types": [
+    {
+      "id": "repeaters",
+      "label": "Repeaters",
+      "order": 0,
+      "layout": "list",
+      "i18n": {
+        "en": "Repeaters",
+        "vi": "Phần lặp"
+      },
+      "items": [
+        {
+          "id": "repeater-card-grid",
+          "componentType": "Repeater",
+          "name": "Card Grid",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Card Grid"
+            },
+            "vi": {
+              "name": "Lưới thẻ"
+            }
+          },
+          "props": {
+            "count": 3,
+            "columns": 3,
+            "gap": 16
+          },
+          "tags": [
+            "repeater",
+            "card",
+            "grid",
+            "list"
+          ]
+        },
+        {
+          "id": "repeater-2col",
+          "componentType": "Repeater",
+          "name": "2-Column List",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "2-Column List"
+            },
+            "vi": {
+              "name": "Danh sách 2 cột"
+            }
+          },
+          "props": {
+            "count": 4,
+            "columns": 2,
+            "gap": 20
+          },
+          "responsiveProps": {
+            "mobile": {
+              "columns": 1
+            }
+          },
+          "tags": [
+            "repeater",
+            "2-column",
+            "list"
+          ]
+        },
+        {
+          "id": "repeater-horizontal-row",
+          "componentType": "Repeater",
+          "name": "Horizontal Row",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Horizontal Row"
+            },
+            "vi": {
+              "name": "Hàng ngang"
+            }
+          },
+          "props": {
+            "count": 4,
+            "columns": 4,
+            "gap": 16
+          },
+          "responsiveProps": {
+            "mobile": {
+              "columns": 2
+            }
+          },
+          "tags": [
+            "repeater",
+            "horizontal",
+            "row"
+          ]
+        },
+        {
+          "id": "repeater-testimonials",
+          "componentType": "Repeater",
+          "name": "Testimonials",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Testimonials"
+            },
+            "vi": {
+              "name": "Đánh giá"
+            }
+          },
+          "props": {
+            "count": 3,
+            "columns": 3,
+            "gap": 24
+          },
+          "responsiveProps": {
+            "mobile": {
+              "columns": 1
+            }
+          },
+          "tags": [
+            "repeater",
+            "testimonials",
+            "reviews"
+          ]
+        },
+        {
+          "id": "repeater-team",
+          "componentType": "Repeater",
+          "name": "Team Grid",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Team Grid"
+            },
+            "vi": {
+              "name": "Lưới nhóm"
+            }
+          },
+          "props": {
+            "count": 4,
+            "columns": 4,
+            "gap": 24
+          },
+          "responsiveProps": {
+            "tablet": {
+              "columns": 2
+            },
+            "mobile": {
+              "columns": 2
+            }
+          },
+          "tags": [
+            "repeater",
+            "team",
+            "profiles"
+          ]
+        }
+      ]
+    }
+  ]
+}

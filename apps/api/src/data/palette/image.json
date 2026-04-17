@@ -1,0 +1,184 @@
+{
+  "id": "image",
+  "label": "Image",
+  "icon": "image",
+  "order": 1,
+  "i18n": {
+    "en": "Image",
+    "vi": "Hình ảnh"
+  },
+  "types": [
+    {
+      "id": "single-image",
+      "label": "Single Image",
+      "order": 0,
+      "i18n": {
+        "en": "Single Image",
+        "vi": "Ảnh đơn"
+      },
+      "items": [
+        {
+          "id": "image-full-width",
+          "componentType": "Image",
+          "name": "Full Width",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Full Width"
+            },
+            "vi": {
+              "name": "Toàn chiều rộng"
+            }
+          },
+          "props": {
+            "src": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&q=80",
+            "alt": "Full width image",
+            "objectFit": "cover"
+          },
+          "style": {
+            "width": "100%",
+            "height": "400px",
+            "borderRadius": "0"
+          },
+          "responsiveStyle": {
+            "mobile": {
+              "height": "200px"
+            }
+          },
+          "tags": [
+            "image",
+            "full-width",
+            "hero"
+          ]
+        },
+        {
+          "id": "image-card",
+          "componentType": "Image",
+          "name": "Card Image",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Card Image"
+            },
+            "vi": {
+              "name": "Ảnh thẻ"
+            }
+          },
+          "props": {
+            "src": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80",
+            "alt": "Card image",
+            "objectFit": "cover"
+          },
+          "style": {
+            "width": "100%",
+            "height": "220px",
+            "borderRadius": "12px"
+          },
+          "tags": [
+            "image",
+            "card",
+            "rounded"
+          ]
+        },
+        {
+          "id": "image-circle",
+          "componentType": "Image",
+          "name": "Circle",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Circle"
+            },
+            "vi": {
+              "name": "Tròn"
+            }
+          },
+          "props": {
+            "src": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80",
+            "alt": "Profile photo",
+            "objectFit": "cover"
+          },
+          "style": {
+            "width": "120px",
+            "height": "120px",
+            "borderRadius": "50%"
+          },
+          "tags": [
+            "image",
+            "circle",
+            "avatar",
+            "profile"
+          ]
+        },
+        {
+          "id": "image-polaroid",
+          "componentType": "Image",
+          "name": "Polaroid",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Polaroid"
+            },
+            "vi": {
+              "name": "Ảnh polaroid"
+            }
+          },
+          "props": {
+            "src": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&q=80",
+            "alt": "Polaroid photo",
+            "objectFit": "cover"
+          },
+          "style": {
+            "width": "200px",
+            "height": "180px",
+            "borderRadius": "2px",
+            "padding": "12px",
+            "paddingBottom": "40px",
+            "backgroundColor": "#ffffff",
+            "boxShadow": "0 4px 16px rgba(0,0,0,0.15)"
+          },
+          "tags": [
+            "image",
+            "polaroid",
+            "vintage",
+            "photo"
+          ]
+        },
+        {
+          "id": "image-banner",
+          "componentType": "Image",
+          "name": "Banner",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Banner"
+            },
+            "vi": {
+              "name": "Biểu ngữ"
+            }
+          },
+          "props": {
+            "src": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80",
+            "alt": "Banner image",
+            "objectFit": "cover"
+          },
+          "style": {
+            "width": "100%",
+            "height": "280px",
+            "borderRadius": "8px"
+          },
+          "responsiveStyle": {
+            "mobile": {
+              "height": "160px"
+            }
+          },
+          "tags": [
+            "image",
+            "banner",
+            "landscape"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,243 @@
+{
+  "id": "menu",
+  "label": "Menu & Anchor",
+  "icon": "more-horizontal",
+  "order": 5,
+  "i18n": {
+    "en": "Menu & Anchor",
+    "vi": "Menu & Neo"
+  },
+  "types": [
+    {
+      "id": "horizontal-menus",
+      "label": "Horizontal Menus",
+      "order": 0,
+      "layout": "preview",
+      "i18n": {
+        "en": "Horizontal Menus",
+        "vi": "Menu ngang"
+      },
+      "items": [
+        {
+          "id": "menu-classic-horizontal",
+          "componentType": "NavigationMenu",
+          "name": "Classic Nav",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Classic Nav"
+            },
+            "vi": {
+              "name": "Menu cổ điển"
+            }
+          },
+          "props": {
+            "items": [
+              {
+                "label": "Home",
+                "href": "#"
+              },
+              {
+                "label": "About",
+                "href": "#"
+              },
+              {
+                "label": "Services",
+                "href": "#"
+              },
+              {
+                "label": "Contact",
+                "href": "#"
+              }
+            ],
+            "layout": "horizontal",
+            "textColor": "#111827",
+            "fontSize": "14px",
+            "gap": 28,
+            "activeIndex": 0,
+            "itemStyle": "plain",
+            "activeBg": "#f3f4f6",
+            "activeColor": "#4f46e5"
+          },
+          "tags": [
+            "menu",
+            "horizontal",
+            "classic",
+            "navigation"
+          ]
+        },
+        {
+          "id": "menu-modern-horizontal",
+          "componentType": "NavigationMenu",
+          "name": "Modern Nav",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Modern Nav"
+            },
+            "vi": {
+              "name": "Menu hiện đại"
+            }
+          },
+          "props": {
+            "items": [
+              {
+                "label": "Home",
+                "href": "#"
+              },
+              {
+                "label": "Work",
+                "href": "#"
+              },
+              {
+                "label": "Blog",
+                "href": "#"
+              },
+              {
+                "label": "Contact",
+                "href": "#"
+              }
+            ],
+            "layout": "horizontal",
+            "textColor": "#374151",
+            "activeColor": "#4f46e5",
+            "fontSize": "15px",
+            "gap": 32,
+            "activeIndex": 0,
+            "itemStyle": "plain",
+            "activeBg": "#f3f4f6"
+          },
+          "tags": [
+            "menu",
+            "horizontal",
+            "modern"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hamburger-menus",
+      "label": "Hamburger Menus",
+      "order": 1,
+      "layout": "preview",
+      "i18n": {
+        "en": "Hamburger Menus",
+        "vi": "Menu hamburger"
+      },
+      "items": [
+        {
+          "id": "menu-hamburger-basic",
+          "componentType": "NavigationMenu",
+          "name": "Hamburger Menu",
+          "thumbnail": null,
+          "description": "Responsive: shows as hamburger, expands on mobile",
+          "i18n": {
+            "en": {
+              "name": "Hamburger Menu",
+              "description": "Best for mobile-first layouts"
+            },
+            "vi": {
+              "name": "Menu hamburger"
+            }
+          },
+          "props": {
+            "items": [
+              {
+                "label": "Home",
+                "href": "#"
+              },
+              {
+                "label": "About",
+                "href": "#"
+              },
+              {
+                "label": "Portfolio",
+                "href": "#"
+              },
+              {
+                "label": "Contact",
+                "href": "#"
+              }
+            ],
+            "layout": "hamburger",
+            "textColor": "#111827"
+          },
+          "responsiveProps": {
+            "desktop": {
+              "layout": "horizontal"
+            },
+            "mobile": {
+              "layout": "hamburger"
+            }
+          },
+          "tags": [
+            "menu",
+            "hamburger",
+            "responsive",
+            "mobile"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "anchors",
+      "label": "Anchors",
+      "order": 2,
+      "layout": "preview",
+      "i18n": {
+        "en": "Anchors",
+        "vi": "Neo cuộn"
+      },
+      "items": [
+        {
+          "id": "anchor-section",
+          "componentType": "Anchor",
+          "name": "Section Anchor",
+          "description": "Invisible anchor point for scroll-to navigation",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Section Anchor"
+            },
+            "vi": {
+              "name": "Neo phần"
+            }
+          },
+          "props": {
+            "anchorId": "section-1",
+            "label": "Section 1"
+          },
+          "tags": [
+            "anchor",
+            "scroll",
+            "navigation",
+            "target"
+          ]
+        },
+        {
+          "id": "anchor-top",
+          "componentType": "Anchor",
+          "name": "Top Anchor",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Top Anchor"
+            },
+            "vi": {
+              "name": "Neo đầu trang"
+            }
+          },
+          "props": {
+            "anchorId": "top",
+            "label": "Top of Page"
+          },
+          "tags": [
+            "anchor",
+            "scroll",
+            "top"
+          ]
+        }
+      ]
+    }
+  ]
+}

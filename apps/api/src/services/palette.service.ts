@@ -1,14 +1,8 @@
-import fs from "fs/promises";
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const PALETTE_DATA_PATH = path.resolve(__dirname, "../data/palette.json");
+import { loadPalette } from "../data/palette/loader.js";
 
 export class PaletteService {
   private static async getRawData() {
-    const data = await fs.readFile(PALETTE_DATA_PATH, "utf-8");
-    return JSON.parse(data);
+    return await loadPalette();
   }
 
   /**

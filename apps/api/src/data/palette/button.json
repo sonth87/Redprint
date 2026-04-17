@@ -1,0 +1,400 @@
+{
+  "id": "button",
+  "label": "Button",
+  "icon": "square-mouse-pointer",
+  "order": 2,
+  "i18n": {
+    "en": "Button",
+    "vi": "Nút bấm"
+  },
+  "types": [
+    {
+      "id": "text-icon-buttons",
+      "label": "Text & Icon Buttons",
+      "order": 0,
+      "layout": "preview",
+      "i18n": {
+        "en": "Text & Icon Buttons",
+        "vi": "Nút văn bản & biểu tượng"
+      },
+      "items": [
+        {
+          "id": "btn-view-more",
+          "componentType": "Button",
+          "name": "View More",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "View More"
+            },
+            "vi": {
+              "name": "Xem thêm"
+            }
+          },
+          "props": {
+            "label": "<p>View More</p>",
+            "variant": "primary",
+            "size": "md",
+            "hoverStyle": {
+              "backgroundColor": "#1f2937",
+              "boxShadow": "0 4px 12px rgba(17, 24, 39, 0.3)"
+            }
+          },
+          "style": {
+            "backgroundColor": "#111827",
+            "color": "#ffffff",
+            "borderRadius": "4px",
+            "width": "160px",
+            "height": "40px",
+            "fontSize": "14px",
+            "fontWeight": "500"
+          },
+          "tags": [
+            "button",
+            "view-more",
+            "cta"
+          ]
+        },
+        {
+          "id": "btn-read-more",
+          "componentType": "Button",
+          "name": "Read More",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Read More"
+            },
+            "vi": {
+              "name": "Đọc thêm"
+            }
+          },
+          "props": {
+            "label": "<p>Read More</p>",
+            "variant": "outline",
+            "size": "md",
+            "hoverStyle": {
+              "backgroundColor": "#f3f4f6"
+            }
+          },
+          "style": {
+            "backgroundColor": "transparent",
+            "color": "#111827",
+            "border": "1px solid #111827",
+            "borderRadius": "4px",
+            "width": "160px",
+            "height": "40px",
+            "fontSize": "14px"
+          },
+          "tags": [
+            "button",
+            "read-more",
+            "outline"
+          ]
+        },
+        {
+          "id": "btn-shop",
+          "componentType": "Button",
+          "name": "Shop",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Shop →"
+            },
+            "vi": {
+              "name": "Mua ngay →"
+            }
+          },
+          "props": {
+            "label": "<p>SHOP →</p>",
+            "variant": "primary",
+            "size": "md",
+            "hoverStyle": {
+              "backgroundColor": "#374151"
+            }
+          },
+          "style": {
+            "backgroundColor": "#4d7c6e",
+            "color": "#ffffff",
+            "borderRadius": "24px",
+            "width": "160px",
+            "height": "40px",
+            "fontSize": "13px",
+            "letterSpacing": "0.08em",
+            "fontWeight": "600"
+          },
+          "tags": [
+            "button",
+            "shop",
+            "ecommerce",
+            "pill"
+          ]
+        },
+        {
+          "id": "btn-send",
+          "componentType": "Button",
+          "name": "Send",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Send"
+            },
+            "vi": {
+              "name": "Gửi"
+            }
+          },
+          "props": {
+            "label": "<p>SEND</p>",
+            "variant": "primary",
+            "size": "md",
+            "hoverStyle": {
+              "backgroundColor": "#374151"
+            }
+          },
+          "style": {
+            "backgroundColor": "#111827",
+            "color": "#ffffff",
+            "borderRadius": "2px",
+            "width": "160px",
+            "height": "40px",
+            "fontSize": "13px",
+            "letterSpacing": "0.1em",
+            "fontWeight": "700"
+          },
+          "tags": [
+            "button",
+            "send",
+            "form",
+            "submit"
+          ]
+        },
+        {
+          "id": "btn-join-us",
+          "componentType": "Button",
+          "name": "Join Us",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Join Us"
+            },
+            "vi": {
+              "name": "Tham gia"
+            }
+          },
+          "props": {
+            "label": "<p>JOIN US</p>",
+            "variant": "secondary",
+            "size": "md",
+            "hoverStyle": {
+              "backgroundColor": "#374151"
+            }
+          },
+          "style": {
+            "backgroundColor": "transparent",
+            "color": "#4f46e5",
+            "border": "2px solid #4f46e5",
+            "borderRadius": "24px",
+            "width": "160px",
+            "height": "40px",
+            "fontSize": "14px",
+            "fontWeight": "600",
+            "letterSpacing": "0.05em"
+          },
+          "tags": [
+            "button",
+            "join",
+            "community",
+            "outline"
+          ]
+        },
+        {
+          "id": "btn-download",
+          "componentType": "Button",
+          "name": "Download",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Download"
+            },
+            "vi": {
+              "name": "Tải xuống"
+            }
+          },
+          "props": {
+            "label": "<p>DOWNLOAD</p>",
+            "variant": "primary",
+            "size": "lg",
+            "hoverStyle": {
+              "backgroundColor": "#1f2937",
+              "boxShadow": "0 4px 12px rgba(17, 24, 39, 0.3)"
+            }
+          },
+          "style": {
+            "backgroundColor": "#111827",
+            "color": "#ffffff",
+            "borderRadius": "6px",
+            "padding": "14px 32px",
+            "fontSize": "14px",
+            "fontWeight": "700",
+            "letterSpacing": "0.08em"
+          },
+          "tags": [
+            "button",
+            "download",
+            "cta"
+          ]
+        },
+        {
+          "id": "btn-let-s-go",
+          "componentType": "Button",
+          "name": "Let's Go",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Let's Go"
+            },
+            "vi": {
+              "name": "Bắt đầu"
+            }
+          },
+          "props": {
+            "label": "<p>Let's Go</p>",
+            "variant": "outline",
+            "size": "md",
+            "hoverStyle": {
+              "backgroundColor": "#374151"
+            }
+          },
+          "style": {
+            "backgroundColor": "transparent",
+            "color": "#4f46e5",
+            "border": "2px solid #4f46e5",
+            "borderRadius": "4px",
+            "width": "160px",
+            "height": "40px",
+            "fontSize": "15px",
+            "fontWeight": "600"
+          },
+          "tags": [
+            "button",
+            "lets-go",
+            "outline",
+            "indigo"
+          ]
+        },
+        {
+          "id": "btn-apply-now",
+          "componentType": "Button",
+          "name": "Apply Now",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Apply Now"
+            },
+            "vi": {
+              "name": "Ứng tuyển ngay"
+            }
+          },
+          "props": {
+            "label": "<p>Apply Now</p>",
+            "variant": "primary",
+            "size": "md",
+            "hoverStyle": {
+              "backgroundColor": "#374151"
+            }
+          },
+          "style": {
+            "backgroundColor": "#374151",
+            "color": "#ffffff",
+            "borderRadius": "4px",
+            "width": "160px",
+            "height": "40px",
+            "fontSize": "15px",
+            "fontStyle": "italic",
+            "fontWeight": "600"
+          },
+          "tags": [
+            "button",
+            "apply",
+            "jobs",
+            "italic"
+          ]
+        },
+        {
+          "id": "btn-get-started",
+          "componentType": "Button",
+          "name": "Get Started",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Get Started"
+            },
+            "vi": {
+              "name": "Bắt đầu ngay"
+            }
+          },
+          "props": {
+            "label": "<p>Get Started</p>",
+            "variant": "primary",
+            "size": "lg",
+            "hoverStyle": {
+              "transform": "scale(1.02)"
+            }
+          },
+          "style": {
+            "backgroundColor": "transparent",
+            "color": "#e57330",
+            "border": "2px solid #e57330",
+            "borderRadius": "24px",
+            "width": "160px",
+            "height": "40px",
+            "fontSize": "15px",
+            "fontWeight": "600"
+          },
+          "tags": [
+            "button",
+            "get-started",
+            "orange",
+            "pill"
+          ]
+        },
+        {
+          "id": "btn-chat-now",
+          "componentType": "Button",
+          "name": "Chat Now",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Chat Now"
+            },
+            "vi": {
+              "name": "Nhắn tin ngay"
+            }
+          },
+          "props": {
+            "label": "<p>Chat Now 💬</p>",
+            "variant": "primary",
+            "size": "md",
+            "hoverStyle": {
+              "backgroundColor": "#374151"
+            }
+          },
+          "style": {
+            "backgroundColor": "#f6f4ef",
+            "color": "#111827",
+            "borderRadius": "24px",
+            "width": "160px",
+            "height": "40px",
+            "fontSize": "14px",
+            "fontWeight": "600"
+          },
+          "tags": [
+            "button",
+            "chat",
+            "messenger",
+            "pill"
+          ]
+        }
+      ]
+    }
+  ]
+}
