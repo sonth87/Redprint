@@ -219,10 +219,14 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
 
   const isStreaming = config.streamingEnabled === true;
 
-  // Filter templates by selected category (if any)
+  // Filter templates by selected category with i18n labels
   const categorizedTemplates = TEMPLATE_CATEGORIES.map((cat) => ({
     ...cat,
-    templates: PROMPT_TEMPLATES.filter((t) => t.category === cat.id),
+    label: t(`ai.templateCategories.${cat.id}`),
+    templates: PROMPT_TEMPLATES.filter((t) => t.category === cat.id).map((template) => ({
+      ...template,
+      label: t(`ai.promptTemplates.${template.id}`),
+    })),
   }));
 
   const handleTemplateClick = (template: typeof PROMPT_TEMPLATES[0]) => {
@@ -236,6 +240,16 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
 
   const handleToneClick = (toneId: string) => {
     setSelectedTone(toneId);
+  };
+
+  // Map palette names to i18n keys
+  const paletteI18nMap: Record<string, string> = {
+    "Blue & White": "blue-white",
+    "Dark Modern": "dark-modern",
+    "Green Accent": "green-accent",
+    "Orange Warm": "orange-warm",
+    "Purple Elegant": "purple-elegant",
+    "Navy Professional": "navy-professional",
   };
 
   return (
@@ -283,23 +297,27 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-muted-foreground">{t("ai.colorPalette")}</label>
                   <div className="grid grid-cols-2 gap-2">
-                    {COLOR_PALETTES.slice(0, 4).map((palette) => (
-                      <button
-                        key={palette.name}
-                        onClick={() => handleColorPaletteClick(palette.name)}
-                        className={`h-10 rounded-lg border-2 transition-all flex items-center justify-center gap-1 p-1.5 ${
-                          selectedColorPalette === palette.name
-                            ? "border-primary ring-2 ring-primary/20"
-                            : "border-border hover:border-primary/50"
-                        }`}
-                        title={palette.name}
-                      >
-                        <div className="flex gap-1">
-                          <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: palette.primary }} />
-                          <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: palette.secondary }} />
-                        </div>
-                      </button>
-                    ))}
+                    {COLOR_PALETTES.slice(0, 4).map((palette) => {
+                      const paletteKey = paletteI18nMap[palette.name];
+                      const paletteName = t(`ai.colorPalettes.${paletteKey}`);
+                      return (
+                        <button
+                          key={palette.name}
+                          onClick={() => handleColorPaletteClick(palette.name)}
+                          className={`h-10 rounded-lg border-2 transition-all flex items-center justify-center gap-1 p-1.5 ${
+                            selectedColorPalette === palette.name
+                              ? "border-primary ring-2 ring-primary/20"
+                              : "border-border hover:border-primary/50"
+                          }`}
+                          title={paletteName}
+                        >
+                          <div className="flex gap-1">
+                            <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: palette.primary }} />
+                            <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: palette.secondary }} />
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -316,9 +334,9 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
                             ? "border-primary bg-primary/10 text-primary"
                             : "border-border bg-background hover:border-primary/50"
                         }`}
-                        title={tone.description}
+                        title={t(`ai.toneDescriptions.${tone.id}`)}
                       >
-                        {tone.label}
+                        {t(`ai.toneStyles.${tone.id}`)}
                       </button>
                     ))}
                   </div>
@@ -342,7 +360,7 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
                   {categorizedTemplates.map((category) => (
                     <div key={category.id} className="space-y-2">
                       <p className="text-xs font-semibold" style={{ color: category.color }}>
-                        {category.label}
+                        {t(`ai.templateCategories.${category.id}`)}
                       </p>
                       <div className="grid grid-cols-2 gap-2">
                         {category.templates.map((template) => (
@@ -353,9 +371,9 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
                               setShowTemplates(false);
                             }}
                             className="text-left px-3 py-2.5 rounded-md border border-border bg-background hover:bg-primary/5 hover:border-primary/50 text-xs font-medium transition-colors truncate"
-                            title={template.label}
+                            title={t(`ai.promptTemplates.${template.id}`)}
                           >
-                            {template.label}
+                            {t(`ai.promptTemplates.${template.id}`)}
                           </button>
                         ))}
                       </div>

@@ -277,6 +277,52 @@
     "colorPalette": "Bảng Màu",
     "toneStyle": "Tone & Phong Cách",
     "yourPrompt": "Lời Nhắc Của Bạn",
+    "templateCategories": {
+      "product": "Sản Phẩm",
+      "education": "Giáo Dục",
+      "tech": "Công Nghệ",
+      "automotive": "Ô Tô",
+      "pets": "Thú Cưng",
+      "healthcare": "Y Tế"
+    },
+    "promptTemplates": {
+      "product-saas": "Sản Phẩm SaaS",
+      "product-ecommerce": "Cửa Hàng E-commerce",
+      "education-online": "Khóa Học Trực Tuyến",
+      "education-university": "Trường Đại Học/Trường",
+      "tech-startup": "Startup Công Nghệ",
+      "tech-ai": "Sản Phẩm AI/ML",
+      "automotive-dealer": "Đại Lý Bán Ô Tô",
+      "automotive-rental": "Dịch Vụ Cho Thuê Ô Tô",
+      "pets-veterinary": "Phòng Khám Thú Y",
+      "pets-boarding": "Nơi Cắm Trại/Chăm Sóc Thú Cưng",
+      "healthcare-clinic": "Phòng Khám Y Tế",
+      "healthcare-dental": "Phòng Khám Nha Khoa"
+    },
+    "colorPalettes": {
+      "blue-white": "Xanh & Trắng",
+      "dark-modern": "Hiện Đại Tối",
+      "green-accent": "Nhấn Xanh Lá",
+      "orange-warm": "Cam Ấm Áp",
+      "purple-elegant": "Tím Thanh Lịch",
+      "navy-professional": "Xanh Thẫm Chuyên Nghiệp"
+    },
+    "toneStyles": {
+      "professional": "Chuyên Nghiệp",
+      "playful": "Vui Tươi",
+      "minimal": "Tối Giản",
+      "bold": "Đậm Đà",
+      "elegant": "Thanh Lịch",
+      "modern": "Hiện Đại"
+    },
+    "toneDescriptions": {
+      "professional": "Công ty, đáng tin cậy, trang trọng",
+      "playful": "Vui nhộn, thân thiện, hấp dẫn",
+      "minimal": "Sạch sẽ, đơn giản, tập trung",
+      "bold": "Mạnh mẽ, năng động, tác động",
+      "elegant": "Tinh tế, sang trọng, cao cấp",
+      "modern": "Tiên tiến, hướng công nghệ, xu hướng"
+    },
     "pageGenerator": {
       "title": "Tạo Trang Bằng AI",
       "description": "Mô tả trang bạn muốn xây dựng. AI sẽ phân tích yêu cầu của bạn, tạo dàn ý, sau đó tạo từng section và hiển thị trực tiếp lên canvas.",

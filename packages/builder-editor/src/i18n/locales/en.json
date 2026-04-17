@@ -277,6 +277,52 @@
     "colorPalette": "Color Palette",
     "toneStyle": "Tone & Style",
     "yourPrompt": "Your Prompt",
+    "templateCategories": {
+      "product": "Product",
+      "education": "Education",
+      "tech": "Technology",
+      "automotive": "Automotive",
+      "pets": "Pets",
+      "healthcare": "Healthcare"
+    },
+    "promptTemplates": {
+      "product-saas": "SaaS Product",
+      "product-ecommerce": "E-commerce Store",
+      "education-online": "Online Course",
+      "education-university": "University/School",
+      "tech-startup": "Tech Startup",
+      "tech-ai": "AI/ML Product",
+      "automotive-dealer": "Car Dealership",
+      "automotive-rental": "Car Rental Service",
+      "pets-veterinary": "Veterinary Clinic",
+      "pets-boarding": "Pet Boarding/Daycare",
+      "healthcare-clinic": "Medical Clinic",
+      "healthcare-dental": "Dental Practice"
+    },
+    "colorPalettes": {
+      "blue-white": "Blue & White",
+      "dark-modern": "Dark Modern",
+      "green-accent": "Green Accent",
+      "orange-warm": "Orange Warm",
+      "purple-elegant": "Purple Elegant",
+      "navy-professional": "Navy Professional"
+    },
+    "toneStyles": {
+      "professional": "Professional",
+      "playful": "Playful",
+      "minimal": "Minimal",
+      "bold": "Bold",
+      "elegant": "Elegant",
+      "modern": "Modern"
+    },
+    "toneDescriptions": {
+      "professional": "Corporate, trustworthy, formal",
+      "playful": "Fun, friendly, engaging",
+      "minimal": "Clean, simple, focused",
+      "bold": "Strong, energetic, impactful",
+      "elegant": "Refined, sophisticated, premium",
+      "modern": "Cutting-edge, tech-forward, trendy"
+    },
     "pageGenerator": {
       "title": "Generate Full Page with AI",
       "description": "Describe the page you want to build. AI will analyse your request, create a section outline, then generate each section — appearing live on the canvas as it goes.",
