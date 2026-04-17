@@ -25,6 +25,17 @@ export const GallerySliderComponent: ComponentDefinition = {
     { key: "showArrows", label: "Show Arrows", type: "boolean", default: true },
     { key: "showDots", label: "Show Dots", type: "boolean", default: true },
     {
+      key: "shape",
+      label: "Shape",
+      type: "select",
+      options: [
+        { value: "rectangle", label: "Rectangle" },
+        { value: "circle", label: "Circle" },
+        { value: "oval", label: "Oval" },
+      ],
+      default: "rectangle",
+    },
+    {
       key: "aspectRatio",
       label: "Aspect Ratio",
       type: "select",
@@ -46,16 +57,24 @@ export const GallerySliderComponent: ComponentDefinition = {
     autoPlaySpeed: 3000,
     showArrows: true,
     showDots: true,
+    shape: "rectangle",
     aspectRatio: "16/9",
   },
   defaultStyle: { width: "100%", position: "relative" },
   editorRenderer: ({ node, style }) => {
     const imgs = Array.isArray(node.props.images) ? (node.props.images as { src: string; alt: string }[]) : [];
     const aspect = String(node.props.aspectRatio ?? "16/9");
+    const shape = String(node.props.shape ?? "rectangle");
+
+    const getBorderRadius = () => {
+      if (shape === "circle") return "50%";
+      if (shape === "oval") return "50% / 30%";
+      return "4px";
+    };
 
     return (
       <div data-node-id={node.id} style={{ ...(style as React.CSSProperties), position: "relative", overflow: "hidden" }}>
-        <div style={{ aspectRatio: aspect, overflow: "hidden", borderRadius: 4, background: "#f3f4f6" }}>
+        <div style={{ aspectRatio: aspect, overflow: "hidden", borderRadius: getBorderRadius(), background: "#f3f4f6" }}>
           {imgs[0] ? (
             <img src={imgs[0].src} alt={imgs[0].alt} style={{ width: "100%", height: "100%", objectFit: "cover" }} draggable={false} />
           ) : (
@@ -83,11 +102,18 @@ export const GallerySliderComponent: ComponentDefinition = {
   runtimeRenderer: ({ node, style }) => {
     const imgs = Array.isArray(node.props.images) ? (node.props.images as { src: string; alt: string }[]) : [];
     const aspect = String(node.props.aspectRatio ?? "16/9");
+    const shape = String(node.props.shape ?? "rectangle");
     const [current, setCurrent] = React.useState(0);
+
+    const getBorderRadius = () => {
+      if (shape === "circle") return "50%";
+      if (shape === "oval") return "50% / 30%";
+      return "4px";
+    };
 
     return (
       <div style={{ ...(style as React.CSSProperties), position: "relative", overflow: "hidden" }}>
-        <div style={{ aspectRatio: aspect, overflow: "hidden" }}>
+        <div style={{ aspectRatio: aspect, overflow: "hidden", borderRadius: getBorderRadius() }}>
           {imgs[current] && (
             <img src={imgs[current].src} alt={imgs[current].alt} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           )}

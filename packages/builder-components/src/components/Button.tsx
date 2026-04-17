@@ -52,8 +52,9 @@ export const ButtonComponent: ComponentDefinition = {
       default: "md",
     },
     { key: "disabled", label: "Disabled", type: "boolean", default: false },
+    { key: "hoverStyle", label: "Hover Style (JSON)", type: "json" },
   ],
-  defaultProps: { label: "<p>Click me</p>", variant: "primary", size: "md", disabled: false },
+  defaultProps: { label: "<p>Click me</p>", variant: "primary", size: "md", disabled: false, hoverStyle: {} },
   defaultStyle: {
     display: "inline-flex",
     alignItems: "center",
@@ -66,22 +67,35 @@ export const ButtonComponent: ComponentDefinition = {
     backgroundColor: "#111827",
     color: "#ffffff",
   },
-  editorRenderer: ({ node, style }) => (
-    <button
-      data-node-id={node.id}
-      style={style as React.CSSProperties}
-      disabled={Boolean(node.props.disabled)}
-      className="select-none"
-      // eslint-disable-next-line react/no-danger
-      dangerouslySetInnerHTML={{ __html: sanitizeHtml(String(node.props.label ?? "<p>Button</p>")) }}
-    />
-  ),
-  runtimeRenderer: ({ node, style }) => (
-    <button
-      style={style as React.CSSProperties}
-      disabled={Boolean(node.props.disabled)}
-      // eslint-disable-next-line react/no-danger
-      dangerouslySetInnerHTML={{ __html: sanitizeHtml(String(node.props.label ?? "<p>Button</p>")) }}
-    />
-  ),
+  editorRenderer: ({ node, style }) => {
+    const [hovered, setHovered] = React.useState(false);
+    const hs = (node.props.hoverStyle ?? {}) as React.CSSProperties;
+    return (
+      <button
+        data-node-id={node.id}
+        style={{ ...(style as React.CSSProperties), ...(hovered ? hs : {}) }}
+        disabled={Boolean(node.props.disabled)}
+        className="select-none transition-all"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(String(node.props.label ?? "<p>Button</p>")) }}
+      />
+    );
+  },
+  runtimeRenderer: ({ node, style }) => {
+    const [hovered, setHovered] = React.useState(false);
+    const hs = (node.props.hoverStyle ?? {}) as React.CSSProperties;
+    return (
+      <button
+        style={{ ...(style as React.CSSProperties), ...(hovered ? hs : {}) }}
+        disabled={Boolean(node.props.disabled)}
+        className="transition-all"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(String(node.props.label ?? "<p>Button</p>")) }}
+      />
+    );
+  },
 };

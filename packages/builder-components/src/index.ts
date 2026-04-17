@@ -12,6 +12,7 @@ export { CollapsibleTextComponent } from "./components/CollapsibleText";
 export { TextMaskComponent } from "./components/TextMask";
 export { GalleryGridComponent } from "./components/GalleryGrid";
 export { GallerySliderComponent } from "./components/GallerySlider";
+export { GalleryProComponent } from "./components/GalleryPro";
 export { ShapeComponent } from "./components/Shape";
 export { NavigationMenuComponent } from "./components/NavigationMenu";
 export { RepeaterComponent } from "./components/Repeater";
@@ -38,6 +39,7 @@ import { CollapsibleTextComponent } from "./components/CollapsibleText";
 import { TextMaskComponent } from "./components/TextMask";
 import { GalleryGridComponent } from "./components/GalleryGrid";
 import { GallerySliderComponent } from "./components/GallerySlider";
+import { GalleryProComponent } from "./components/GalleryPro";
 import { ShapeComponent } from "./components/Shape";
 import { NavigationMenuComponent } from "./components/NavigationMenu";
 import { RepeaterComponent } from "./components/Repeater";
@@ -57,6 +59,7 @@ export const BASE_COMPONENTS: ComponentDefinition[] = [
   TextMaskComponent,
   GalleryGridComponent,
   GallerySliderComponent,
+  GalleryProComponent,
   ShapeComponent,
   NavigationMenuComponent,
   RepeaterComponent,

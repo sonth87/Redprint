@@ -23,6 +23,16 @@ export const GalleryGridComponent: ComponentDefinition = {
     { key: "gap", label: "Gap (px)", type: "number", default: 8, min: 0, max: 48 },
     { key: "images", label: "Images (JSON array of {src, alt})", type: "json" },
     {
+      key: "layout",
+      label: "Layout",
+      type: "select",
+      options: [
+        { value: "grid", label: "Grid" },
+        { value: "masonry", label: "Masonry" },
+      ],
+      default: "grid",
+    },
+    {
       key: "aspectRatio",
       label: "Cell Aspect Ratio",
       type: "select",
@@ -38,6 +48,7 @@ export const GalleryGridComponent: ComponentDefinition = {
   defaultProps: {
     columns: 3,
     gap: 8,
+    layout: "grid",
     aspectRatio: "1/1",
     images: [
       { src: "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=400&q=80", alt: "Image 1" },
@@ -52,8 +63,30 @@ export const GalleryGridComponent: ComponentDefinition = {
   editorRenderer: ({ node, style }) => {
     const cols = Number(node.props.columns ?? 3);
     const gap = Number(node.props.gap ?? 8);
+    const layout = String(node.props.layout ?? "grid");
     const aspect = String(node.props.aspectRatio ?? "1/1");
     const imgs = Array.isArray(node.props.images) ? (node.props.images as { src: string; alt: string }[]) : [];
+
+    if (layout === "masonry") {
+      return (
+        <div
+          data-node-id={node.id}
+          style={{ ...(style as React.CSSProperties), columnCount: cols, columnGap: `${gap}px` } as React.CSSProperties}
+        >
+          {imgs.map((img, i) => (
+            <div key={i} style={{ breakInside: "avoid", marginBottom: `${gap}px`, overflow: "hidden", borderRadius: 4, background: "#f3f4f6" }}>
+              <img src={img.src} alt={img.alt} style={{ width: "100%", display: "block" }} draggable={false} />
+            </div>
+          ))}
+          {imgs.length === 0 &&
+            Array.from({ length: cols * 2 }, (_, i) => (
+              <div key={i} style={{ breakInside: "avoid", marginBottom: `${gap}px`, background: "#f3f4f6", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af", fontSize: 11, height: "150px" }}>
+                {i + 1}
+              </div>
+            ))}
+        </div>
+      );
+    }
 
     return (
       <div
@@ -77,8 +110,21 @@ export const GalleryGridComponent: ComponentDefinition = {
   runtimeRenderer: ({ node, style }) => {
     const cols = Number(node.props.columns ?? 3);
     const gap = Number(node.props.gap ?? 8);
+    const layout = String(node.props.layout ?? "grid");
     const aspect = String(node.props.aspectRatio ?? "1/1");
     const imgs = Array.isArray(node.props.images) ? (node.props.images as { src: string; alt: string }[]) : [];
+
+    if (layout === "masonry") {
+      return (
+        <div style={{ ...(style as React.CSSProperties), columnCount: cols, columnGap: `${gap}px` } as React.CSSProperties}>
+          {imgs.map((img, i) => (
+            <div key={i} style={{ breakInside: "avoid", marginBottom: `${gap}px`, overflow: "hidden", borderRadius: 4 }}>
+              <img src={img.src} alt={img.alt} style={{ width: "100%", display: "block" }} />
+            </div>
+          ))}
+        </div>
+      );
+    }
 
     return (
       <div style={{ ...(style as React.CSSProperties), display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: `${gap}px` }}>

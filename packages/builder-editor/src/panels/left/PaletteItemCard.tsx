@@ -17,6 +17,9 @@ const SIMPLE_PREVIEW_TYPES = new Set([
   "Anchor",
   "Image",
   "Container",
+  "GalleryGrid",
+  "GallerySlider",
+  "GalleryPro",
 ]);
 
 interface MiniPreviewProps {
@@ -132,6 +135,35 @@ const MiniPreview: React.FC<MiniPreviewProps> = ({ item }) => {
         >
           <div className="w-4 h-0.5 bg-muted-foreground/20 rounded-full" />
           <div className="w-6 h-0.5 bg-muted-foreground/10 rounded-full" />
+        </div>
+      </div>
+    );
+  }
+
+  if (type === "GalleryGrid") {
+    const cols = Number(p.columns ?? 3);
+    const gap = Number(p.gap ?? 8);
+    return (
+      <div
+        className="flex items-center justify-center w-full h-full p-2"
+        style={{
+          display: "grid",
+          gridTemplateColumns: `repeat(${Math.min(cols, 3)}, 1fr)`,
+          gap: `${gap / 2}px`,
+        }}
+      >
+        {Array.from({ length: Math.min(cols * 2, 6) }, (_, i) => (
+          <div key={i} style={{ background: "#d1d5db", borderRadius: 2, aspectRatio: "1/1" }} />
+        ))}
+      </div>
+    );
+  }
+
+  if (type === "GallerySlider" || type === "GalleryPro") {
+    return (
+      <div className="flex items-center justify-center w-full h-full p-2 bg-gradient-to-br from-muted to-muted-foreground/10 rounded">
+        <div style={{ fontSize: 12, fontWeight: 500, color: "#6b7280", textAlign: "center" }}>
+          {type === "GallerySlider" ? "🎬 Slider" : "🎨 Pro"}
         </div>
       </div>
     );
@@ -343,10 +375,10 @@ export const PaletteItemCard: React.FC<PaletteItemCardProps> = ({
             fontFamily: ff,
             fontStyle: fs,
             color: color ?? undefined,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
             lineHeight: 1.2,
+            whiteSpace: "normal",
+            overflow: "visible",
+            wordBreak: "break-word",
             ...(item.componentType === "TextMask" ? {
               backgroundImage: (item.props?.gradient as string) ?? "linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)",
               WebkitBackgroundClip: "text",
@@ -356,7 +388,7 @@ export const PaletteItemCard: React.FC<PaletteItemCardProps> = ({
             ...(item.componentType === "CollapsibleText" ? { textDecoration: "underline", textDecorationColor: "rgba(0,0,0,0.2)" } : {})
           }}
         >
-          {rawText.length > 50 ? rawText.slice(0, 50) + "…" : rawText}
+          {rawText}
           {item.componentType === "TextMarquee" && " ↔"}
         </span>
       </div>
@@ -390,11 +422,11 @@ export const PaletteItemCard: React.FC<PaletteItemCardProps> = ({
 
         {/* Label */}
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium text-foreground/80 group-hover:text-foreground truncate leading-tight">
+          <p className="text-xs font-medium text-foreground/80 group-hover:text-foreground line-clamp-2 whitespace-normal break-words leading-tight">
             {displayName}
           </p>
           {item.description && (
-            <p className="text-[10px] text-muted-foreground/60 truncate mt-0.5 leading-tight">
+            <p className="text-[10px] text-muted-foreground/60 line-clamp-2 whitespace-normal break-words mt-0.5 leading-tight">
               {item.description}
             </p>
           )}
@@ -429,7 +461,7 @@ export const PaletteItemCard: React.FC<PaletteItemCardProps> = ({
 
       {/* Label */}
       <div className="px-2 pb-2">
-        <p className="text-[11px] font-medium text-foreground/80 group-hover:text-foreground truncate leading-tight">
+        <p className="text-[11px] font-medium text-foreground/80 group-hover:text-foreground line-clamp-2 whitespace-normal break-words leading-tight">
           {displayName}
         </p>
       </div>
