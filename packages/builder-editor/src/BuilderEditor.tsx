@@ -90,6 +90,7 @@ import { useNodeHandlers } from "./hooks/useNodeHandlers";
 import { useDragHandleGesture } from "./hooks/useDragHandleGesture";
 import { useRubberBandSelect } from "./hooks/useRubberBandSelect";
 import { useCanvasActions } from "./hooks/useCanvasActions";
+import { useBeforeUnload } from "./hooks/useBeforeUnload";
 
 import {
   DEFAULT_COMPONENTS_PANEL_POS,
@@ -112,11 +113,13 @@ function EditorInner({
   paletteCatalog,
   remotePaletteProvider,
   locale,
+  warnOnLeave,
 }: {
   groupRegistry?: GroupRegistry;
   paletteCatalog?: PaletteCatalog;
   remotePaletteProvider?: RemotePaletteProvider;
   locale?: string;
+  warnOnLeave?: boolean;
 }) {
   const { t } = useTranslation();
   const { builder, state, dispatch } = useBuilder();
@@ -124,6 +127,8 @@ function EditorInner({
   const { document } = useDocument();
   const { breakpoint, setBreakpoint } = useBreakpoint();
   const { undo, redo, canUndo, canRedo } = useHistory();
+
+  useBeforeUnload((warnOnLeave ?? true) && canUndo);
 
   const canvasMode: CanvasMode = state.editor.canvasMode ?? "single";
   const editingNodeId  = state.editor.editingNodeId  ?? null;
@@ -767,6 +772,8 @@ export interface BuilderEditorProps {
   i18nResources?: Record<string, { translation: Record<string, unknown> }>;
   /** Key separator for i18n. Default: "." Set to false to disable nesting. */
   i18nKeySeparator?: string | false;
+  /** Show browser leave-confirmation when there are unsaved changes. Default: true */
+  warnOnLeave?: boolean;
 }
 
 export function BuilderEditor({
@@ -780,6 +787,7 @@ export function BuilderEditor({
   locale,
   i18nResources,
   i18nKeySeparator,
+  warnOnLeave,
 }: BuilderEditorProps) {
   React.useEffect(() => {
     if (locale || i18nResources || i18nKeySeparator !== undefined) {
@@ -791,11 +799,12 @@ export function BuilderEditor({
     <BuilderProvider builder={builder} config={config}>
       <RemotePaletteContext.Provider value={remotePaletteProvider ?? null}>
         <div className={cn("h-full w-full", className)}>
-          <EditorInner 
-            groupRegistry={groupRegistry} 
-            paletteCatalog={paletteCatalog} 
-            remotePaletteProvider={remotePaletteProvider} 
-            locale={locale} 
+          <EditorInner
+            groupRegistry={groupRegistry}
+            paletteCatalog={paletteCatalog}
+            remotePaletteProvider={remotePaletteProvider}
+            locale={locale}
+            warnOnLeave={warnOnLeave}
           />
         </div>
       </RemotePaletteContext.Provider>

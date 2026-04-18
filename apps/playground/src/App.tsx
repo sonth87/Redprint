@@ -135,6 +135,7 @@ export function App() {
             locale={locale}
             i18nResources={i18nResources}
             className="h-full"
+            warnOnLeave={true}
           />
         </div>
 
