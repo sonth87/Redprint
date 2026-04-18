@@ -58,10 +58,11 @@ export function buildMovingSnapshots(
     let startLeft = 0;
     let startTop = 0;
 
-    if (style.position === "absolute") {
-      startLeft = parseFloat(String(style.left ?? "0")) || 0;
-      startTop = parseFloat(String(style.top ?? "0")) || 0;
-    } else if (el) {
+    if (el) {
+      // Use the DOM element's actual rendered position so that responsive-style
+      // overrides (e.g. responsiveStyle.mobile.left) are reflected correctly.
+      // For position:absolute nodes, offsetLeft/offsetTop equal the effective
+      // CSS left/top relative to the offsetParent — the same value UPDATE_STYLE sets.
       startLeft = el.offsetLeft;
       startTop = el.offsetTop;
 
@@ -70,6 +71,9 @@ export function buildMovingSnapshots(
         startLeft = (elRect.left - frameRect.left) / zoom;
         startTop = (elRect.top - frameRect.top) / zoom;
       }
+    } else if (style.position === "absolute") {
+      startLeft = parseFloat(String(style.left ?? "0")) || 0;
+      startTop = parseFloat(String(style.top ?? "0")) || 0;
     }
 
     return {

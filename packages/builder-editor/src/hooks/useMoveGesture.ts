@@ -382,8 +382,15 @@ export function useMoveGesture({
           const w = nodeEl.offsetWidth;
           const h = nodeEl.offsetHeight;
           const fr = frameEl.getBoundingClientRect();
-          const rawCanvasX = rawLeft + canvasOffsetRef.current.x;
-          const rawCanvasY = rawTop + canvasOffsetRef.current.y;
+          // Use the desktop frame (canvasFrameRef) as the canvas-space origin so that
+          // snap guide positions are in CanvasRoot coordinates. In dual mode the mobile
+          // frame is offset to the right, so using fr.left directly would place guides
+          // at mobile-frame-local X values that fall on the desktop canvas when rendered.
+          const originRect = canvasFrameRef.current.getBoundingClientRect();
+          const frameOffsetX = (fr.left - originRect.left) / zoom;
+          const frameOffsetY = (fr.top - originRect.top) / zoom;
+          const rawCanvasX = rawLeft + canvasOffsetRef.current.x + frameOffsetX;
+          const rawCanvasY = rawTop + canvasOffsetRef.current.y + frameOffsetY;
           const movingRectInCanvas: Rect = { x: rawCanvasX, y: rawCanvasY, width: w, height: h };
           const siblings: Rect[] = [];
           if (node?.parentId) {
@@ -392,22 +399,22 @@ export function useMoveGesture({
                 const el = frameEl.querySelector(`[data-node-id="${n.id}"]`) as HTMLElement;
                 if (el) {
                   const er = el.getBoundingClientRect();
-                  siblings.push({ x: (er.left - fr.left) / zoom, y: (er.top - fr.top) / zoom, width: er.width / zoom, height: er.height / zoom });
+                  siblings.push({ x: (er.left - originRect.left) / zoom, y: (er.top - originRect.top) / zoom, width: er.width / zoom, height: er.height / zoom });
                 }
               }
             }
           }
           const result = snapEngine.snap(movingRectInCanvas, siblings);
           guides = result.guides;
-          finalLeft = Math.round(result.snappedPoint.x - canvasOffsetRef.current.x);
-          finalTop = Math.round(result.snappedPoint.y - canvasOffsetRef.current.y);
+          finalLeft = Math.round(result.snappedPoint.x - canvasOffsetRef.current.x - frameOffsetX);
+          finalTop = Math.round(result.snappedPoint.y - canvasOffsetRef.current.y - frameOffsetY);
           const snappedMovingRectInCanvas: Rect = { x: result.snappedPoint.x, y: result.snappedPoint.y, width: w, height: h };
           const allOtherRects: Rect[] = [];
           const allNodeEls = Array.from(frameEl.querySelectorAll("[data-node-id]")) as HTMLElement[];
           for (const el of allNodeEls) {
             if (el.getAttribute("data-node-id") === moving.nodeId) continue;
             const er = el.getBoundingClientRect();
-            allOtherRects.push({ x: (er.left - fr.left) / zoom, y: (er.top - fr.top) / zoom, width: er.width / zoom, height: er.height / zoom });
+            allOtherRects.push({ x: (er.left - originRect.left) / zoom, y: (er.top - originRect.top) / zoom, width: er.width / zoom, height: er.height / zoom });
           }
           const crossGuides = snapEngine.alignmentGuides(snappedMovingRectInCanvas, allOtherRects);
           guides = [...guides, ...crossGuides];
