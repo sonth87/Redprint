@@ -17,6 +17,7 @@ interface MovingState {
   nodes: NodeMovingSnapshot[];
   startPoint: Point;
   gestureGroupId: string;
+  fromToolbar?: boolean;
 }
 
 interface UseMoveGestureOptions {
@@ -479,8 +480,15 @@ export function useMoveGesture({
       else if (dragStartedRef.current && upFrameEl && rootNodeId && !isMultiSelect) {
         // Geometric check for Section dropping
         const primaryNode = nodes[moving.nodeId];
-        // If not dragged into a specific flow container, see which section it dropped on
-        const dropSectionId = getDropTargetSection(e.clientY, upFrameEl, nodes, rootNodeId);
+        // If not dragged into a specific flow container, see which section it dropped on.
+        // When dragging from the toolbar, use the node's rendered top position instead of
+        // the mouse cursor (which may be outside the component's bounds).
+        let sectionHitY = e.clientY;
+        if (moving.fromToolbar) {
+          const primaryEl = upFrameEl.querySelector(`[data-node-id="${moving.nodeId}"]`) as HTMLElement | null;
+          if (primaryEl) sectionHitY = primaryEl.getBoundingClientRect().top;
+        }
+        const dropSectionId = getDropTargetSection(sectionHitY, upFrameEl, nodes, rootNodeId);
         
         if (dropSectionId && dropSectionId !== primaryNode?.parentId && dropSectionId !== rootNodeId) {
           const nodeEl = upFrameEl.querySelector(`[data-node-id="${moving.nodeId}"]`) as HTMLElement | null;
