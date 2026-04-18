@@ -121,6 +121,19 @@ export const SectionOverlay = memo(function SectionOverlay({
     measureBoundaries();
   }, [measureBoundaries]);
 
+  // ResizeObserver re-measures whenever the canvas frame changes size.
+  // This is the reliable fallback for cases where the initial useLayoutEffect
+  // fires before the browser has fully settled layout (e.g. after switching
+  // between single/dual canvas modes in production builds where StrictMode
+  // doesn't double-invoke effects to self-heal the timing).
+  useEffect(() => {
+    const frame = canvasFrameRef.current;
+    if (!frame) return;
+    const ro = new ResizeObserver(() => measureBoundaries());
+    ro.observe(frame);
+    return () => ro.disconnect();
+  }, [measureBoundaries]);
+
   useEffect(() => {
     if (!isResizing) return;
     const loop = () => {
