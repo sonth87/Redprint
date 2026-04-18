@@ -426,11 +426,7 @@
                 "color": "#374151",
                 "lineHeight": "1.7"
               },
-              "tags": [
-                "paragraph",
-                "body",
-                "large"
-              ]
+              "tags": ["paragraph", "body", "large"]
             },
             {
               "id": "text-body-medium",
@@ -454,11 +450,7 @@
                 "color": "#374151",
                 "lineHeight": "1.6"
               },
-              "tags": [
-                "paragraph",
-                "body",
-                "medium"
-              ]
+              "tags": ["paragraph", "body", "medium"]
             },
             {
               "id": "text-body-small",
@@ -482,12 +474,7 @@
                 "color": "#6b7280",
                 "lineHeight": "1.5"
               },
-              "tags": [
-                "paragraph",
-                "body",
-                "small",
-                "caption"
-              ]
+              "tags": ["paragraph", "body", "small", "caption"]
             },
             {
               "id": "text-lead",
@@ -517,11 +504,7 @@
                   "fontSize": "16px"
                 }
               },
-              "tags": [
-                "paragraph",
-                "lead",
-                "intro"
-              ]
+              "tags": ["paragraph", "lead", "intro"]
             },
             {
               "id": "text-quote",
@@ -549,11 +532,7 @@
                 "paddingLeft": "20px",
                 "marginLeft": "0"
               },
-              "tags": [
-                "quote",
-                "blockquote",
-                "citation"
-              ]
+              "tags": ["quote", "blockquote", "citation"]
             }
           ]
         },
@@ -591,11 +570,7 @@
                 "color": "#374151",
                 "lineHeight": "1.6"
               },
-              "tags": [
-                "collapsible",
-                "read-more",
-                "expandable"
-              ]
+              "tags": ["collapsible", "read-more", "expandable"]
             },
             {
               "id": "collapsible-show-more",
@@ -621,10 +596,7 @@
                 "color": "#6b7280",
                 "lineHeight": "1.7"
               },
-              "tags": [
-                "collapsible",
-                "show-more"
-              ]
+              "tags": ["collapsible", "show-more"]
             },
             {
               "id": "collapsible-link",
@@ -650,11 +622,7 @@
                 "color": "#374151",
                 "lineHeight": "1.6"
               },
-              "tags": [
-                "collapsible",
-                "link",
-                "article"
-              ]
+              "tags": ["collapsible", "link", "article"]
             }
           ]
         },
@@ -693,11 +661,7 @@
                 "color": "#111827",
                 "padding": "12px 0"
               },
-              "tags": [
-                "marquee",
-                "ticker",
-                "scrolling"
-              ]
+              "tags": ["marquee", "ticker", "scrolling"]
             },
             {
               "id": "marquee-promo",
@@ -727,12 +691,7 @@
                 "textTransform": "uppercase",
                 "letterSpacing": "0.05em"
               },
-              "tags": [
-                "marquee",
-                "promo",
-                "banner",
-                "shipping"
-              ]
+              "tags": ["marquee", "promo", "banner", "shipping"]
             },
             {
               "id": "marquee-new-arrivals",
@@ -759,11 +718,7 @@
                 "color": "#111827",
                 "padding": "16px 0"
               },
-              "tags": [
-                "marquee",
-                "new-arrivals",
-                "fashion"
-              ]
+              "tags": ["marquee", "new-arrivals", "fashion"]
             },
             {
               "id": "marquee-hello",
@@ -791,11 +746,7 @@
                 "color": "#7c3aed",
                 "padding": "14px 0"
               },
-              "tags": [
-                "marquee",
-                "elegant",
-                "italic"
-              ]
+              "tags": ["marquee", "elegant", "italic"]
             }
           ]
         },
@@ -828,11 +779,7 @@
                 "fontSize": "100px",
                 "fontWeight": "900"
               },
-              "tags": [
-                "text-mask",
-                "gradient",
-                "purple"
-              ]
+              "tags": ["text-mask", "gradient", "purple"]
             },
             {
               "id": "textmask-sunset",
@@ -853,11 +800,7 @@
                 "fontSize": "90px",
                 "fontWeight": "900"
               },
-              "tags": [
-                "text-mask",
-                "gradient",
-                "warm"
-              ]
+              "tags": ["text-mask", "gradient", "warm"]
             },
             {
               "id": "textmask-ocean",
@@ -878,12 +821,7 @@
                 "fontSize": "100px",
                 "fontWeight": "900"
               },
-              "tags": [
-                "text-mask",
-                "gradient",
-                "blue",
-                "teal"
-              ]
+              "tags": ["text-mask", "gradient", "blue", "teal"]
             }
           ]
         }
@@ -936,11 +874,7 @@
                   "height": "200px"
                 }
               },
-              "tags": [
-                "image",
-                "full-width",
-                "hero"
-              ]
+              "tags": ["image", "full-width", "hero"]
             },
             {
               "id": "image-card",
@@ -965,11 +899,7 @@
                 "height": "220px",
                 "borderRadius": "12px"
               },
-              "tags": [
-                "image",
-                "card",
-                "rounded"
-              ]
+              "tags": ["image", "card", "rounded"]
             },
             {
               "id": "image-circle",
@@ -994,12 +924,7 @@
                 "height": "120px",
                 "borderRadius": "50%"
               },
-              "tags": [
-                "image",
-                "circle",
-                "avatar",
-                "profile"
-              ]
+              "tags": ["image", "circle", "avatar", "profile"]
             },
             {
               "id": "image-polaroid",
@@ -1028,12 +953,7 @@
                 "backgroundColor": "#ffffff",
                 "boxShadow": "0 4px 16px rgba(0,0,0,0.15)"
               },
-              "tags": [
-                "image",
-                "polaroid",
-                "vintage",
-                "photo"
-              ]
+              "tags": ["image", "polaroid", "vintage", "photo"]
             },
             {
               "id": "image-banner",
@@ -1063,11 +983,7 @@
                   "height": "160px"
                 }
               },
-              "tags": [
-                "image",
-                "banner",
-                "landscape"
-              ]
+              "tags": ["image", "banner", "landscape"]
             }
           ]
         }
@@ -1924,11 +1840,7 @@
                 "gap": 8,
                 "aspectRatio": "1/1"
               },
-              "tags": [
-                "gallery",
-                "grid",
-                "3-column"
-              ]
+              "tags": ["gallery", "grid", "3-column"]
             },
             {
               "id": "gallery-grid-2col",
@@ -1948,11 +1860,7 @@
                 "gap": 12,
                 "aspectRatio": "4/3"
               },
-              "tags": [
-                "gallery",
-                "grid",
-                "2-column"
-              ]
+              "tags": ["gallery", "grid", "2-column"]
             },
             {
               "id": "gallery-grid-4col",
@@ -1972,11 +1880,7 @@
                 "gap": 4,
                 "aspectRatio": "1/1"
               },
-              "tags": [
-                "gallery",
-                "grid",
-                "4-column"
-              ]
+              "tags": ["gallery", "grid", "4-column"]
             },
             {
               "id": "gallery-grid-portrait",
@@ -1996,11 +1900,7 @@
                 "gap": 8,
                 "aspectRatio": "3/4"
               },
-              "tags": [
-                "gallery",
-                "grid",
-                "portrait"
-              ]
+              "tags": ["gallery", "grid", "portrait"]
             },
             {
               "id": "gallery-grid-widescreen",
@@ -2020,11 +1920,7 @@
                 "gap": 16,
                 "aspectRatio": "16/9"
               },
-              "tags": [
-                "gallery",
-                "grid",
-                "widescreen"
-              ]
+              "tags": ["gallery", "grid", "widescreen"]
             },
             {
               "id": "gallery-masonry-3",
@@ -2036,11 +1932,7 @@
                 "gap": 8,
                 "layout": "masonry"
               },
-              "tags": [
-                "masonry",
-                "gallery",
-                "3-col"
-              ]
+              "tags": ["masonry", "gallery", "3-col"]
             },
             {
               "id": "gallery-masonry-2",
@@ -2052,11 +1944,7 @@
                 "gap": 12,
                 "layout": "masonry"
               },
-              "tags": [
-                "masonry",
-                "gallery",
-                "2-col"
-              ]
+              "tags": ["masonry", "gallery", "2-col"]
             }
           ]
         },
@@ -2226,11 +2114,7 @@
                 "width": "120px",
                 "height": "80px"
               },
-              "tags": [
-                "shape",
-                "rectangle",
-                "box"
-              ]
+              "tags": ["shape", "rectangle", "box"]
             },
             {
               "id": "shape-circle",
@@ -2253,11 +2137,7 @@
                 "width": "100px",
                 "height": "100px"
               },
-              "tags": [
-                "shape",
-                "circle",
-                "round"
-              ]
+              "tags": ["shape", "circle", "round"]
             },
             {
               "id": "shape-triangle",
@@ -2280,10 +2160,7 @@
                 "width": "100px",
                 "height": "100px"
               },
-              "tags": [
-                "shape",
-                "triangle"
-              ]
+              "tags": ["shape", "triangle"]
             },
             {
               "id": "shape-star",
@@ -2306,11 +2183,7 @@
                 "width": "100px",
                 "height": "100px"
               },
-              "tags": [
-                "shape",
-                "star",
-                "favorite"
-              ]
+              "tags": ["shape", "star", "favorite"]
             },
             {
               "id": "shape-heart",
@@ -2333,11 +2206,7 @@
                 "width": "100px",
                 "height": "100px"
               },
-              "tags": [
-                "shape",
-                "heart",
-                "love"
-              ]
+              "tags": ["shape", "heart", "love"]
             },
             {
               "id": "shape-hexagon",
@@ -2360,10 +2229,7 @@
                 "width": "100px",
                 "height": "100px"
               },
-              "tags": [
-                "shape",
-                "hexagon"
-              ]
+              "tags": ["shape", "hexagon"]
             },
             {
               "id": "shape-diamond",
@@ -2386,10 +2252,7 @@
                 "width": "80px",
                 "height": "80px"
               },
-              "tags": [
-                "shape",
-                "diamond"
-              ]
+              "tags": ["shape", "diamond"]
             },
             {
               "id": "shape-blob",
@@ -2412,12 +2275,7 @@
                 "width": "150px",
                 "height": "150px"
               },
-              "tags": [
-                "shape",
-                "blob",
-                "organic",
-                "decorative"
-              ]
+              "tags": ["shape", "blob", "organic", "decorative"]
             }
           ]
         },
@@ -2451,11 +2309,7 @@
                 "width": "80px",
                 "height": "50px"
               },
-              "tags": [
-                "arrow",
-                "right",
-                "direction"
-              ]
+              "tags": ["arrow", "right", "direction"]
             },
             {
               "id": "shape-arrow-left",
@@ -2478,11 +2332,7 @@
                 "width": "80px",
                 "height": "50px"
               },
-              "tags": [
-                "arrow",
-                "left",
-                "direction"
-              ]
+              "tags": ["arrow", "left", "direction"]
             },
             {
               "id": "shape-arrow-up",
@@ -2505,11 +2355,7 @@
                 "width": "50px",
                 "height": "80px"
               },
-              "tags": [
-                "arrow",
-                "up",
-                "direction"
-              ]
+              "tags": ["arrow", "up", "direction"]
             },
             {
               "id": "shape-arrow-down",
@@ -2532,11 +2378,7 @@
                 "width": "50px",
                 "height": "80px"
               },
-              "tags": [
-                "arrow",
-                "down",
-                "direction"
-              ]
+              "tags": ["arrow", "down", "direction"]
             }
           ]
         },
@@ -2570,11 +2412,7 @@
               "style": {
                 "width": "100%"
               },
-              "tags": [
-                "divider",
-                "line",
-                "solid"
-              ]
+              "tags": ["divider", "line", "solid"]
             },
             {
               "id": "divider-thick",
@@ -2597,12 +2435,7 @@
               "style": {
                 "width": "80px"
               },
-              "tags": [
-                "divider",
-                "line",
-                "thick",
-                "accent"
-              ]
+              "tags": ["divider", "line", "thick", "accent"]
             },
             {
               "id": "divider-accent",
@@ -2625,12 +2458,7 @@
               "style": {
                 "width": "60px"
               },
-              "tags": [
-                "divider",
-                "line",
-                "accent",
-                "color"
-              ]
+              "tags": ["divider", "line", "accent", "color"]
             },
             {
               "id": "divider-vertical",
@@ -2654,11 +2482,7 @@
                 "height": "80px",
                 "width": "1px"
               },
-              "tags": [
-                "divider",
-                "line",
-                "vertical"
-              ]
+              "tags": ["divider", "line", "vertical"]
             }
           ]
         }
@@ -2675,9 +2499,111 @@
       },
       "types": [
         {
+          "id": "themed-menus",
+          "label": "Themed Menus",
+          "order": 0,
+          "layout": "preview",
+          "i18n": {
+            "en": "Themed Menus",
+            "vi": "Menu theo chủ đề"
+          },
+          "items": [
+            {
+              "id": "menu-themed-plain",
+              "componentType": "NavigationMenu",
+              "name": "Plain Menu",
+              "thumbnail": null,
+              "i18n": {
+                "en": { "name": "Plain Menu" },
+                "vi": { "name": "Menu đơn giản" }
+              },
+              "props": {
+                "items": [
+                  { "label": "Home", "href": "#" },
+                  { "label": "About", "href": "#" },
+                  { "label": "Gallery", "href": "#" },
+                  { "label": "Contact", "href": "#" }
+                ],
+                "layout": "horizontal",
+                "mobileHamburger": true,
+                "textColor": "#111827",
+                "activeColor": "#111827",
+                "activeBg": "",
+                "itemBg": "",
+                "navBg": "",
+                "fontSize": "14px",
+                "gap": 28,
+                "activeIndex": 0,
+                "itemStyle": "plain"
+              },
+              "tags": ["menu", "horizontal", "plain", "navigation", "themed"]
+            },
+            {
+              "id": "menu-themed-underline-all",
+              "componentType": "NavigationMenu",
+              "name": "Underline Menu",
+              "thumbnail": null,
+              "i18n": {
+                "en": { "name": "Underline Menu" },
+                "vi": { "name": "Menu gạch chân" }
+              },
+              "props": {
+                "items": [
+                  { "label": "Home", "href": "#" },
+                  { "label": "About", "href": "#" },
+                  { "label": "Gallery", "href": "#" },
+                  { "label": "Contact", "href": "#" }
+                ],
+                "layout": "horizontal",
+                "mobileHamburger": true,
+                "textColor": "#111827",
+                "activeColor": "#111827",
+                "activeBg": "",
+                "itemBg": "",
+                "navBg": "",
+                "fontSize": "14px",
+                "gap": 28,
+                "activeIndex": 0,
+                "itemStyle": "underline-all"
+              },
+              "tags": ["menu", "horizontal", "underline", "navigation", "themed"]
+            },
+            {
+              "id": "menu-themed-boxed-all",
+              "componentType": "NavigationMenu",
+              "name": "Boxed Menu",
+              "thumbnail": null,
+              "i18n": {
+                "en": { "name": "Boxed Menu" },
+                "vi": { "name": "Menu viền khung" }
+              },
+              "props": {
+                "items": [
+                  { "label": "Home", "href": "#" },
+                  { "label": "About", "href": "#" },
+                  { "label": "Gallery", "href": "#" },
+                  { "label": "Contact", "href": "#" }
+                ],
+                "layout": "horizontal",
+                "mobileHamburger": true,
+                "textColor": "#111827",
+                "activeColor": "#111827",
+                "activeBg": "",
+                "itemBg": "",
+                "navBg": "",
+                "fontSize": "14px",
+                "gap": 12,
+                "activeIndex": 0,
+                "itemStyle": "boxed-all"
+              },
+              "tags": ["menu", "horizontal", "boxed", "navigation", "themed"]
+            }
+          ]
+        },
+        {
           "id": "horizontal-menus",
           "label": "Horizontal Menus",
-          "order": 0,
+          "order": 1,
           "layout": "preview",
           "i18n": {
             "en": "Horizontal Menus",
@@ -2690,101 +2616,191 @@
               "name": "Classic Nav",
               "thumbnail": null,
               "i18n": {
-                "en": {
-                  "name": "Classic Nav"
-                },
-                "vi": {
-                  "name": "Menu cổ điển"
-                }
+                "en": { "name": "Classic Nav" },
+                "vi": { "name": "Menu cổ điển" }
               },
               "props": {
                 "items": [
-                  {
-                    "label": "Home",
-                    "href": "#"
-                  },
-                  {
-                    "label": "About",
-                    "href": "#"
-                  },
-                  {
-                    "label": "Services",
-                    "href": "#"
-                  },
-                  {
-                    "label": "Contact",
-                    "href": "#"
-                  }
+                  { "label": "Home", "href": "#" },
+                  { "label": "About", "href": "#" },
+                  { "label": "Gallery", "href": "#" },
+                  { "label": "Contact", "href": "#" }
                 ],
                 "layout": "horizontal",
+                "mobileHamburger": true,
                 "textColor": "#111827",
+                "activeColor": "#4f46e5",
+                "activeBg": "",
+                "itemBg": "",
+                "navBg": "",
                 "fontSize": "14px",
                 "gap": 28,
-                "activeIndex": 0,
-                "itemStyle": "plain",
-                "activeBg": "#f3f4f6",
-                "activeColor": "#4f46e5"
+                "activeIndex": 1,
+                "itemStyle": "plain"
               },
-              "tags": [
-                "menu",
-                "horizontal",
-                "classic",
-                "navigation"
-              ]
+              "tags": ["menu", "horizontal", "classic", "navigation"]
             },
             {
-              "id": "menu-modern-horizontal",
+              "id": "menu-horizontal-pill-outlined",
               "componentType": "NavigationMenu",
-              "name": "Modern Nav",
+              "name": "Pill Nav (Green)",
               "thumbnail": null,
               "i18n": {
-                "en": {
-                  "name": "Modern Nav"
-                },
-                "vi": {
-                  "name": "Menu hiện đại"
-                }
+                "en": { "name": "Pill Nav (Green)" },
+                "vi": { "name": "Menu viên thuốc xanh" }
               },
               "props": {
                 "items": [
-                  {
-                    "label": "Home",
-                    "href": "#"
-                  },
-                  {
-                    "label": "Work",
-                    "href": "#"
-                  },
-                  {
-                    "label": "Blog",
-                    "href": "#"
-                  },
-                  {
-                    "label": "Contact",
-                    "href": "#"
-                  }
+                  { "label": "Home", "href": "#" },
+                  { "label": "About", "href": "#" },
+                  { "label": "Gallery", "href": "#" },
+                  { "label": "Contact", "href": "#" }
                 ],
                 "layout": "horizontal",
+                "mobileHamburger": true,
                 "textColor": "#374151",
-                "activeColor": "#4f46e5",
-                "fontSize": "15px",
-                "gap": 32,
-                "activeIndex": 0,
-                "itemStyle": "plain",
-                "activeBg": "#f3f4f6"
+                "activeColor": "#16a34a",
+                "activeBg": "#ffffff",
+                "itemBg": "",
+                "navBg": "#d1fae5",
+                "navBorderRadius": "12px",
+                "navPadding": "6px 12px",
+                "fontSize": "14px",
+                "gap": 4,
+                "activeIndex": 1,
+                "itemStyle": "pill-outlined"
               },
-              "tags": [
-                "menu",
-                "horizontal",
-                "modern"
-              ]
+              "tags": ["menu", "horizontal", "pill", "outlined", "green"]
+            },
+            {
+              "id": "menu-horizontal-dark-active",
+              "componentType": "NavigationMenu",
+              "name": "Dark Active Nav",
+              "thumbnail": null,
+              "i18n": {
+                "en": { "name": "Dark Active Nav" },
+                "vi": { "name": "Menu nền tối" }
+              },
+              "props": {
+                "items": [
+                  { "label": "Home", "href": "#" },
+                  { "label": "About", "href": "#" },
+                  { "label": "Gallery", "href": "#" },
+                  { "label": "Contact", "href": "#" }
+                ],
+                "layout": "horizontal",
+                "mobileHamburger": true,
+                "textColor": "#111827",
+                "activeColor": "#111827",
+                "activeBg": "#111827",
+                "itemBg": "",
+                "navBg": "#ffffff",
+                "navBorder": "1px solid #111827",
+                "navPadding": "4px 8px",
+                "fontSize": "14px",
+                "gap": 0,
+                "activeIndex": 1,
+                "itemStyle": "filled"
+              },
+              "tags": ["menu", "horizontal", "dark", "filled", "bordered"]
+            },
+            {
+              "id": "menu-horizontal-underline-spaced",
+              "componentType": "NavigationMenu",
+              "name": "Underline Spaced Nav",
+              "thumbnail": null,
+              "i18n": {
+                "en": { "name": "Underline Spaced Nav" },
+                "vi": { "name": "Menu gạch chân cách chữ" }
+              },
+              "props": {
+                "items": [
+                  { "label": "Home", "href": "#" },
+                  { "label": "About", "href": "#" },
+                  { "label": "Gallery", "href": "#" },
+                  { "label": "Contact", "href": "#" }
+                ],
+                "layout": "horizontal",
+                "mobileHamburger": true,
+                "textColor": "#111827",
+                "activeColor": "#7c3aed",
+                "activeBg": "",
+                "itemBg": "",
+                "navBg": "",
+                "fontSize": "14px",
+                "letterSpacing": "0.05em",
+                "gap": 20,
+                "activeIndex": 1,
+                "itemStyle": "underline"
+              },
+              "tags": ["menu", "horizontal", "underline", "spaced", "purple"]
+            },
+            {
+              "id": "menu-horizontal-pill-all-coral",
+              "componentType": "NavigationMenu",
+              "name": "Pill All Nav (Coral)",
+              "thumbnail": null,
+              "i18n": {
+                "en": { "name": "Pill All Nav (Coral)" },
+                "vi": { "name": "Menu viên thuốc san hô" }
+              },
+              "props": {
+                "items": [
+                  { "label": "Home", "href": "#" },
+                  { "label": "About", "href": "#" },
+                  { "label": "Gallery", "href": "#" },
+                  { "label": "Contact", "href": "#" }
+                ],
+                "layout": "horizontal",
+                "mobileHamburger": true,
+                "textColor": "#ea580c",
+                "activeColor": "#ea580c",
+                "activeBg": "",
+                "itemBg": "#fed7aa",
+                "navBg": "",
+                "fontSize": "14px",
+                "gap": 8,
+                "activeIndex": 1,
+                "itemStyle": "pill-all"
+              },
+              "tags": ["menu", "horizontal", "pill", "coral", "orange"]
+            },
+            {
+              "id": "menu-horizontal-button-all",
+              "componentType": "NavigationMenu",
+              "name": "Button Nav (Blue)",
+              "thumbnail": null,
+              "i18n": {
+                "en": { "name": "Button Nav (Blue)" },
+                "vi": { "name": "Menu nút xanh" }
+              },
+              "props": {
+                "items": [
+                  { "label": "Home", "href": "#" },
+                  { "label": "About", "href": "#" },
+                  { "label": "Gallery", "href": "#" },
+                  { "label": "Contact", "href": "#" }
+                ],
+                "layout": "horizontal",
+                "mobileHamburger": true,
+                "textColor": "#ffffff",
+                "activeColor": "#2563eb",
+                "activeBg": "#2563eb",
+                "itemBg": "",
+                "navBg": "",
+                "fontSize": "14px",
+                "gap": 8,
+                "activeIndex": 1,
+                "itemStyle": "button-all"
+              },
+              "tags": ["menu", "horizontal", "button", "blue", "solid"]
             }
           ]
         },
         {
           "id": "hamburger-menus",
           "label": "Hamburger Menus",
-          "order": 1,
+          "order": 2,
           "layout": "preview",
           "i18n": {
             "en": "Hamburger Menus",
@@ -2802,53 +2818,29 @@
                   "name": "Hamburger Menu",
                   "description": "Best for mobile-first layouts"
                 },
-                "vi": {
-                  "name": "Menu hamburger"
-                }
+                "vi": { "name": "Menu hamburger" }
               },
               "props": {
                 "items": [
-                  {
-                    "label": "Home",
-                    "href": "#"
-                  },
-                  {
-                    "label": "About",
-                    "href": "#"
-                  },
-                  {
-                    "label": "Portfolio",
-                    "href": "#"
-                  },
-                  {
-                    "label": "Contact",
-                    "href": "#"
-                  }
+                  { "label": "Home", "href": "#" },
+                  { "label": "About", "href": "#" },
+                  { "label": "Portfolio", "href": "#" },
+                  { "label": "Contact", "href": "#" }
                 ],
                 "layout": "hamburger",
-                "textColor": "#111827"
+                "mobileHamburger": true,
+                "textColor": "#111827",
+                "activeColor": "#4f46e5",
+                "itemStyle": "plain"
               },
-              "responsiveProps": {
-                "desktop": {
-                  "layout": "horizontal"
-                },
-                "mobile": {
-                  "layout": "hamburger"
-                }
-              },
-              "tags": [
-                "menu",
-                "hamburger",
-                "responsive",
-                "mobile"
-              ]
+              "tags": ["menu", "hamburger", "responsive", "mobile"]
             }
           ]
         },
         {
           "id": "anchors",
           "label": "Anchors",
-          "order": 2,
+          "order": 3,
           "layout": "preview",
           "i18n": {
             "en": "Anchors",
@@ -2862,23 +2854,14 @@
               "description": "Invisible anchor point for scroll-to navigation",
               "thumbnail": null,
               "i18n": {
-                "en": {
-                  "name": "Section Anchor"
-                },
-                "vi": {
-                  "name": "Neo phần"
-                }
+                "en": { "name": "Section Anchor" },
+                "vi": { "name": "Neo phần" }
               },
               "props": {
                 "anchorId": "section-1",
                 "label": "Section 1"
               },
-              "tags": [
-                "anchor",
-                "scroll",
-                "navigation",
-                "target"
-              ]
+              "tags": ["anchor", "scroll", "navigation", "target"]
             },
             {
               "id": "anchor-top",
@@ -2886,22 +2869,14 @@
               "name": "Top Anchor",
               "thumbnail": null,
               "i18n": {
-                "en": {
-                  "name": "Top Anchor"
-                },
-                "vi": {
-                  "name": "Neo đầu trang"
-                }
+                "en": { "name": "Top Anchor" },
+                "vi": { "name": "Neo đầu trang" }
               },
               "props": {
                 "anchorId": "top",
                 "label": "Top of Page"
               },
-              "tags": [
-                "anchor",
-                "scroll",
-                "top"
-              ]
+              "tags": ["anchor", "scroll", "top"]
             }
           ]
         }
@@ -2945,12 +2920,7 @@
                 "columns": 3,
                 "gap": 16
               },
-              "tags": [
-                "repeater",
-                "card",
-                "grid",
-                "list"
-              ]
+              "tags": ["repeater", "card", "grid", "list"]
             },
             {
               "id": "repeater-2col",
@@ -2975,11 +2945,7 @@
                   "columns": 1
                 }
               },
-              "tags": [
-                "repeater",
-                "2-column",
-                "list"
-              ]
+              "tags": ["repeater", "2-column", "list"]
             },
             {
               "id": "repeater-horizontal-row",
@@ -3004,11 +2970,7 @@
                   "columns": 2
                 }
               },
-              "tags": [
-                "repeater",
-                "horizontal",
-                "row"
-              ]
+              "tags": ["repeater", "horizontal", "row"]
             },
             {
               "id": "repeater-testimonials",
@@ -3033,11 +2995,7 @@
                   "columns": 1
                 }
               },
-              "tags": [
-                "repeater",
-                "testimonials",
-                "reviews"
-              ]
+              "tags": ["repeater", "testimonials", "reviews"]
             },
             {
               "id": "repeater-team",
@@ -3065,11 +3023,7 @@
                   "columns": 2
                 }
               },
-              "tags": [
-                "repeater",
-                "team",
-                "profiles"
-              ]
+              "tags": ["repeater", "team", "profiles"]
             }
           ]
         }
@@ -3121,12 +3075,7 @@
                 "width": "100%",
                 "minHeight": "80px"
               },
-              "tags": [
-                "container",
-                "flex",
-                "column",
-                "layout"
-              ]
+              "tags": ["container", "flex", "column", "layout"]
             },
             {
               "id": "box-flex-row",
@@ -3160,12 +3109,7 @@
                   "flexDirection": "column"
                 }
               },
-              "tags": [
-                "container",
-                "flex",
-                "row",
-                "horizontal"
-              ]
+              "tags": ["container", "flex", "row", "horizontal"]
             },
             {
               "id": "box-card",
@@ -3197,12 +3141,7 @@
                 "boxShadow": "0 2px 8px rgba(0,0,0,0.08)",
                 "border": "1px solid #f3f4f6"
               },
-              "tags": [
-                "container",
-                "card",
-                "shadow",
-                "rounded"
-              ]
+              "tags": ["container", "card", "shadow", "rounded"]
             },
             {
               "id": "box-centered",
@@ -3239,12 +3178,7 @@
                   "padding": "24px"
                 }
               },
-              "tags": [
-                "container",
-                "centered",
-                "hero",
-                "column"
-              ]
+              "tags": ["container", "centered", "hero", "column"]
             },
             {
               "id": "box-sidebar",
@@ -3277,12 +3211,7 @@
                   "flexDirection": "column"
                 }
               },
-              "tags": [
-                "container",
-                "sidebar",
-                "two-column",
-                "row"
-              ]
+              "tags": ["container", "sidebar", "two-column", "row"]
             }
           ]
         },
@@ -3325,13 +3254,7 @@
                 "border": "1px solid rgba(255,255,255,0.3)",
                 "boxShadow": "0 8px 32px rgba(0,0,0,0.1)"
               },
-              "tags": [
-                "container",
-                "glass",
-                "glassmorphism",
-                "blur",
-                "transparent"
-              ]
+              "tags": ["container", "glass", "glassmorphism", "blur", "transparent"]
             },
             {
               "id": "box-gradient",
@@ -3361,11 +3284,7 @@
                 "background": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                 "color": "#ffffff"
               },
-              "tags": [
-                "container",
-                "gradient",
-                "colorful"
-              ]
+              "tags": ["container", "gradient", "colorful"]
             },
             {
               "id": "box-bordered",
@@ -3395,12 +3314,7 @@
                 "border": "2px solid #e5e7eb",
                 "backgroundColor": "#ffffff"
               },
-              "tags": [
-                "container",
-                "bordered",
-                "outline",
-                "white"
-              ]
+              "tags": ["container", "bordered", "outline", "white"]
             },
             {
               "id": "box-dark",
@@ -3430,12 +3344,7 @@
                 "backgroundColor": "#111827",
                 "color": "#f9fafb"
               },
-              "tags": [
-                "container",
-                "dark",
-                "black",
-                "contrast"
-              ]
+              "tags": ["container", "dark", "black", "contrast"]
             }
           ]
         }
@@ -3488,11 +3397,7 @@
                 "padding": "24px",
                 "borderRadius": "12px"
               },
-              "tags": [
-                "testimonial",
-                "quote",
-                "review"
-              ]
+              "tags": ["testimonial", "quote", "review"]
             },
             {
               "id": "testimonial-emerald",
@@ -3521,11 +3426,7 @@
                 "padding": "24px",
                 "borderRadius": "12px"
               },
-              "tags": [
-                "testimonial",
-                "quote",
-                "green"
-              ]
+              "tags": ["testimonial", "quote", "green"]
             },
             {
               "id": "testimonial-rose",
@@ -3554,11 +3455,7 @@
                 "padding": "24px",
                 "borderRadius": "12px"
               },
-              "tags": [
-                "testimonial",
-                "quote",
-                "rose"
-              ]
+              "tags": ["testimonial", "quote", "rose"]
             }
           ]
         },
@@ -3601,11 +3498,7 @@
                 "padding": "28px 24px",
                 "borderRadius": "16px"
               },
-              "tags": [
-                "pricing",
-                "plan",
-                "starter"
-              ]
+              "tags": ["pricing", "plan", "starter"]
             },
             {
               "id": "pricing-pro",
@@ -3636,12 +3529,7 @@
                 "padding": "28px 24px",
                 "borderRadius": "16px"
               },
-              "tags": [
-                "pricing",
-                "plan",
-                "pro",
-                "popular"
-              ]
+              "tags": ["pricing", "plan", "pro", "popular"]
             },
             {
               "id": "pricing-enterprise",
@@ -3672,11 +3560,7 @@
                 "padding": "28px 24px",
                 "borderRadius": "16px"
               },
-              "tags": [
-                "pricing",
-                "plan",
-                "enterprise"
-              ]
+              "tags": ["pricing", "plan", "enterprise"]
             }
           ]
         },
@@ -3717,12 +3601,7 @@
                 "width": "100%",
                 "padding": "80px 40px"
               },
-              "tags": [
-                "hero",
-                "gradient",
-                "heading",
-                "indigo"
-              ]
+              "tags": ["hero", "gradient", "heading", "indigo"]
             },
             {
               "id": "hero-rose-orange",
@@ -3751,12 +3630,7 @@
                 "width": "100%",
                 "padding": "80px 40px"
               },
-              "tags": [
-                "hero",
-                "gradient",
-                "heading",
-                "warm"
-              ]
+              "tags": ["hero", "gradient", "heading", "warm"]
             },
             {
               "id": "hero-dark",
@@ -3785,11 +3659,7 @@
                 "width": "100%",
                 "padding": "80px 40px"
               },
-              "tags": [
-                "hero",
-                "dark",
-                "heading"
-              ]
+              "tags": ["hero", "dark", "heading"]
             }
           ]
         }
