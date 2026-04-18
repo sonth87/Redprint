@@ -36,7 +36,7 @@ export const CollapsibleTextComponent: ComponentDefinition = {
     expandLabel: "Read more",
     collapseLabel: "Show less",
   },
-  defaultStyle: { fontSize: "16px", color: "#374151", lineHeight: "1.6" },
+  defaultStyle: { fontSize: "16px", color: "#374151", lineHeight: "1.6", width: "200px" },
   editorRenderer: ({ node, style }) => {
     const html = String(node.props.text ?? "<p>Text…</p>");
     const label = String(node.props.expandLabel ?? "Read more");

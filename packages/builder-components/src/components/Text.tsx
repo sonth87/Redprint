@@ -51,7 +51,7 @@ export const TextComponent: ComponentDefinition = {
     },
   ],
   defaultProps: { text: "<p>Hello World</p>", tag: "p" },
-  defaultStyle: { fontSize: "16px", color: "#111827", lineHeight: "1.6" },
+  defaultStyle: { fontSize: "16px", color: "#111827", lineHeight: "1.6", width: "360px" },
   editorRenderer: ({ node, style }) => {
     const Tag = (node.props.tag ?? "p") as keyof React.JSX.IntrinsicElements;
     const html = String(node.props.text ?? "<p>Text</p>");
