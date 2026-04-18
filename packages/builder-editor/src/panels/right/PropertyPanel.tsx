@@ -610,24 +610,24 @@ export const PropertyPanel = memo(function PropertyPanel({
       </div>
 
       <Tabs defaultValue="design" className="flex flex-col flex-1 min-h-0">
-        <TabsList className="mx-2 mt-2 h-8 grid grid-cols-5">
-          <TabsTrigger value="design" className="text-[10px] gap-0.5 px-1">
+        <TabsList className="mx-2 mt-2 h-12 grid grid-cols-5">
+          <TabsTrigger value="design" className="text-[10px] gap-0.5 px-1 flex flex-col">
             <Paintbrush className="h-3 w-3" />
             <span className="hidden sm:inline">{t("propertyPanel.design")}</span>
           </TabsTrigger>
-          <TabsTrigger value="events" className="text-[10px] gap-0.5 px-1">
+          <TabsTrigger value="events" className="text-[10px] gap-0.5 px-1 flex flex-col">
             <Zap className="h-3 w-3" />
             <span className="hidden sm:inline">{t("propertyPanel.events")}</span>
           </TabsTrigger>
-          <TabsTrigger value="effects" className="text-[10px] gap-0.5 px-1">
+          <TabsTrigger value="effects" className="text-[10px] gap-0.5 px-1 flex flex-col">
             <Sparkles className="h-3 w-3" />
             <span className="hidden sm:inline">{t("propertyPanel.effects")}</span>
           </TabsTrigger>
-          <TabsTrigger value="data" className="text-[10px] gap-0.5 px-1">
+          <TabsTrigger value="data" className="text-[10px] gap-0.5 px-1 flex flex-col">
             <Database className="h-3 w-3" />
             <span className="hidden sm:inline">{t("propertyPanel.data")}</span>
           </TabsTrigger>
-          <TabsTrigger value="advanced" className="text-[10px] gap-0.5 px-1">
+          <TabsTrigger value="advanced" className="text-[10px] gap-0.5 px-1 flex flex-col">
             <Settings2 className="h-3 w-3" />
             <span className="hidden sm:inline">{t("propertyPanel.advanced")}</span>
           </TabsTrigger>

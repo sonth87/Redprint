@@ -5,7 +5,8 @@
 >
 > **Version:** 1.2 | **Last updated:** 2026-04 | **Updated by:** Tech Lead
 > **Changelog:**
-> - v1.2 — Added `builder-components` package (17 built-in ComponentDefinitions, `extendComponent()`, `BASE_COMPONENTS[]`); updated architecture diagram, dependency rules, and package table; added Built-in Component Library section
+> - v1.3 — Implemented **Spatial Reparenting**: Component ownership is now determined by geometric position (hit-testing) rather than DOM hierarchy. Updated AI prompts to enforce strict `parentId` assignment to sections, preventing "root" clutter.
+- v1.2 — Added `builder-components` package (17 built-in ComponentDefinitions, `extendComponent()`, `BASE_COMPONENTS[]`); updated architecture diagram, dependency rules, and package table; added Built-in Component Library section
 > - v1.1 — Expanded with comprehensive type contracts, design principles, command system, panel specs, event catalogue, error boundaries, and keyboard shortcuts from Technical Specification v2.1
 
 ---
@@ -480,6 +481,7 @@ interface DropTarget {
 ```
 
 **Validation rules:** All drops validated against `ContainerConfig` of target — type restrictions, max children limit, self-nesting prevention, slot availability. Invalid drops must show clear visual feedback (red color, forbidden icon).
+**Spatial Hit-Testing:** Ownership for absolute-positioned components is determined by geometric overlap with `Section` containers (Spatial Reparenting), bypassing traditional DOM event bubbling to ensure robust nesting even when components overlap.
 
 ---
 

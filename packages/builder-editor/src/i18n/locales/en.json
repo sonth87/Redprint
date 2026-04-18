@@ -514,5 +514,13 @@
     "title": "Delete component?",
     "description": "This component contains <1>{{count}}</1> nested component(s). All will be permanently deleted. Are you sure?",
     "confirm": "Delete all"
+  },
+  "section": {
+    "addNew": "Add New Section",
+    "startingPoint": "Choose your starting point",
+    "designedSection": "Designed Section",
+    "aiGenerator": "AI Section Generator",
+    "addElements": "Add Elements",
+    "resizeHint": "Drag to change height"
   }
 }

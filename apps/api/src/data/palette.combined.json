@@ -2189,7 +2189,7 @@
     {
       "id": "decorative",
       "label": "Decorative",
-      "icon": "sparkles",
+      "icon": "shapes",
       "order": 4,
       "i18n": {
         "en": "Decorative",

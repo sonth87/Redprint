@@ -528,5 +528,13 @@
     "title": "Xóa component?",
     "description": "Component này chứa <1>{{count}}</1> component con bên trong. Tất cả sẽ bị xóa vĩnh viễn. Bạn có chắc không?",
     "confirm": "Xóa tất cả"
+  },
+  "section": {
+    "addNew": "Thêm mới Section",
+    "startingPoint": "Lựa chọn điểm bắt đầu",
+    "designedSection": "Sử dụng Mẫu",
+    "aiGenerator": "Tạo bằng AI",
+    "addElements": "Thêm linh kiện",
+    "resizeHint": "Kéo để thay đổi chiều cao"
   }
 }

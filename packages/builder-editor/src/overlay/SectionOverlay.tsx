@@ -4,6 +4,7 @@ import type { BuilderNode } from "@ui-builder/builder-core";
 import type { Point } from "@ui-builder/shared";
 import { SECTION_HOVER_ZONE, SECTION_OVERLAY_TRANSITION_FAST } from "../constants";
 import { AISectionPopover } from "../ai/ai-section/AISectionPopover";
+import { useTranslation } from "react-i18next";
 
 interface SectionBoundary {
   nodeId: string;
@@ -73,6 +74,7 @@ export const SectionOverlay = memo(function SectionOverlay({
   undo,
   availableComponentTypes,
 }: SectionOverlayProps) {
+  const { t } = useTranslation();
   const [boundaries, setBoundaries] = useState<SectionBoundary[]>([]);
   const [hovered, setHovered] = useState<string | null>(null);
   // Tracks which empty section is being hovered while dragging a Designed Section
@@ -251,7 +253,7 @@ export const SectionOverlay = memo(function SectionOverlay({
                       letterSpacing: "-0.01em",
                       textTransform: "uppercase" as const
                     }}>
-                      Choose your starting point
+                      {t("section.startingPoint")}
                     </p>
                     <div style={{ display: "flex", gap: 20 }}>
                       <button
@@ -285,7 +287,7 @@ export const SectionOverlay = memo(function SectionOverlay({
                           <LayoutTemplate size={24} strokeWidth={1.5} />
                         </div>
                         <span style={{ fontSize: 12, color: "#475569", fontWeight: 600, textAlign: "center", lineHeight: 1.2 }}>
-                          Designed<br/>Section
+                          {t("section.designedSection")}
                         </span>
                       </button>
                       
@@ -328,7 +330,7 @@ export const SectionOverlay = memo(function SectionOverlay({
                                 <Sparkles size={24} strokeWidth={1.5} />
                               </div>
                               <span style={{ fontSize: 12, color: "#475569", fontWeight: 600, textAlign: "center", lineHeight: 1.2 }}>
-                                AI Section<br/>Generator
+                                {t("section.aiGenerator")}
                               </span>
                             </button>
                           }
@@ -366,7 +368,7 @@ export const SectionOverlay = memo(function SectionOverlay({
                           <PlusSquare size={24} strokeWidth={1.5} />
                         </div>
                         <span style={{ fontSize: 12, color: "#475569", fontWeight: 600, textAlign: "center", lineHeight: 1.2 }}>
-                          Add<br/>Elements
+                          {t("section.addElements")}
                         </span>
                       </button>
                     </div>
@@ -512,7 +514,7 @@ export const SectionOverlay = memo(function SectionOverlay({
               >
                 {/* Add section button */}
                 <button
-                  title="Thêm mới Section"
+                  title={t("section.addNew")}
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -542,13 +544,13 @@ export const SectionOverlay = memo(function SectionOverlay({
                 onAddSection(b.order);
                   }}
                 >
-                  Thêm mới Section
+                  {t("section.addNew")}
                   <Plus size={10 / zoom} />
                 </button>
 
                 {/* Resize handle */}
                 <button
-                  title="Kéo để thay đổi chiều cao"
+                  title={t("section.resizeHint")}
                   style={{
                     display: "flex",
                     alignItems: "center",

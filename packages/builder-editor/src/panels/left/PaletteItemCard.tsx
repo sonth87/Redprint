@@ -506,7 +506,7 @@ export const PaletteItemCard: React.FC<PaletteItemCardProps> = ({
       className={cn(sharedClasses, "flex flex-col gap-1")}
     >
       {/* Preview area */}
-      <div className="relative h-16 w-full overflow-hidden bg-background/60 border-b border-border/30">
+      <div className="relative h-16 w-full overflow-hidden">
         {showThumbnail ? (
           <img
             src={effectiveThumbnail!}
@@ -524,7 +524,7 @@ export const PaletteItemCard: React.FC<PaletteItemCardProps> = ({
       </div>
 
       {/* Label */}
-      <div className="px-2 pb-2">
+      <div className="px-2 pb-2 text-center">
         <p className="text-[11px] font-medium text-foreground/80 group-hover:text-foreground line-clamp-2 whitespace-normal break-words leading-tight">
           {displayName}
         </p>
