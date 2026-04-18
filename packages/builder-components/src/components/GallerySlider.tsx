@@ -35,8 +35,8 @@ function EditorRenderer({ node, style }: RendererProps) {
     <div
       data-node-id={node.id}
       style={{
-        ...(style as React.CSSProperties),
         position: "relative",
+        ...(style as React.CSSProperties),
         overflow: "hidden",
         userSelect: "none",
         ...(!hasExplicitHeight && { aspectRatio: aspect }),
@@ -202,8 +202,8 @@ function RuntimeRenderer({ node, style }: RendererProps) {
   return (
     <div
       style={{
-        ...(style as React.CSSProperties),
         position: "relative",
+        ...(style as React.CSSProperties),
         overflow: "hidden",
         ...(!hasExplicitHeight && { aspectRatio: aspect }),
       }}

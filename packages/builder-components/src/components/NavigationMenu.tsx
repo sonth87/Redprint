@@ -253,7 +253,7 @@ export const NavigationMenuComponent: ComponentDefinition = {
 
     if (effectiveLayout === "hamburger") {
       return (
-        <div style={{ ...(style as React.CSSProperties), position: "relative" }}>
+        <div style={{ position: "relative", ...(style as React.CSSProperties) }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span style={{ fontWeight: "700", color: textColor }}>LOGO</span>
             <button style={{ background: "none", border: "none", cursor: "pointer" }} onClick={() => setOpen((o) => !o)}>

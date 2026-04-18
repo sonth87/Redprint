@@ -42,10 +42,10 @@ export const SectionComponent: ComponentDefinition = {
       data-node-id={node.id}
       data-section
       style={{
+        position: "relative",
         ...(style as React.CSSProperties),
         width: "100%",
         minHeight: `${node.props.minHeight ?? 400}px`,
-        position: "relative",
       }}
     >
       {(children as React.ReactNode)}
@@ -54,10 +54,10 @@ export const SectionComponent: ComponentDefinition = {
   runtimeRenderer: ({ node, children, style }) => (
     <div
       style={{
+        position: "relative",
         ...(style as React.CSSProperties),
         width: "100%",
         minHeight: `${node.props.minHeight ?? 400}px`,
-        position: "relative",
       }}
     >
       {children as React.ReactNode}
