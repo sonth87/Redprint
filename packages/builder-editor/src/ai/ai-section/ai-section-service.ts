@@ -48,7 +48,7 @@ function buildSectionPrompt(request: GenerateSectionRequest): string {
     `- Available component types (use ONLY these): ${availableComponentList}`,
     `- Container components (can have children): Container, Grid, Column (DO NOT use Section)`,
     `- Leaf components (no children): Text, Button, Image, Divider`,
-    `- The target Section node already exists with nodeId "root". Add children INTO it using parentId "root".`,
+    `- The target Section node already exists with nodeId "${request.sectionNodeId}". Add children INTO it using parentId "${request.sectionNodeId}".`,
     `- DO NOT generate a "Section" component. Use "Container" or "Grid" as your highest-level wrapper.`,
     ``,
     `CRITICAL - NODEIDS FOR CONTAINERS:`,

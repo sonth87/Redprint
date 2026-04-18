@@ -3,7 +3,7 @@ import type { Point } from "@ui-builder/shared";
 import type { BuilderNode, PaletteDragData, Breakpoint, PaletteItem } from "@ui-builder/builder-core";
 import { v4 as uuidv4 } from "uuid";
 import { resolveContainerDropPosition } from "./useDropSlotResolver";
-import { resolveContainerLayoutType, type ContainerConfigResolver } from "./dragUtils";
+import { resolveContainerLayoutType, type ContainerConfigResolver, getDropTargetSection } from "./dragUtils";
 import { generateRecursiveAddActions } from "./presetUtils";
 
 interface UseDragHandlersOptions {
@@ -115,43 +115,71 @@ export function useDragHandlers({
       if (!componentType) return;
 
       // ── 2. Resolve drop target parent, respecting disallowedChildTypes ───
-      const targetEl = (e.target as HTMLElement).closest("[data-node-id]");
-      let parentId = targetEl?.getAttribute("data-node-id") ?? rootNodeId;
+      let parentId = rootNodeId;
 
-      if (nodes && getContainerConfig) {
-        // Walk up the DOM until we find a parent that accepts this component type
-        let candidateEl: HTMLElement | null = targetEl as HTMLElement | null;
-        while (candidateEl) {
-          const candidateId = candidateEl.getAttribute("data-node-id") ?? rootNodeId;
-          const candidateNode = nodes[candidateId];
-          if (candidateNode) {
-            const cfg = getContainerConfig(candidateNode);
-            if (!cfg?.disallowedChildTypes?.includes(componentType)) {
-              parentId = candidateId;
-              break;
+      if (nodes && getContainerConfig && canvasFrameRef.current) {
+        if (componentType === "Section") {
+          parentId = rootNodeId;
+        } else {
+          const targetEl = (e.target as HTMLElement).closest("[data-node-id]");
+          let candidateEl = targetEl as HTMLElement | null;
+          let isValidFlowTarget = false;
+          
+          while (candidateEl) {
+            const candidateId = candidateEl.getAttribute("data-node-id") ?? rootNodeId;
+            const candidateNode = nodes[candidateId];
+            if (candidateNode) {
+              const cfg = getContainerConfig(candidateNode);
+              const layoutType = resolveContainerLayoutType(candidateNode, getContainerConfig as ContainerConfigResolver | undefined);
+              
+              // If we find a flow container that accepts this child, we drop into it.
+              if (layoutType !== "absolute" && !cfg?.disallowedChildTypes?.includes(componentType)) {
+                parentId = candidateId;
+                isValidFlowTarget = true;
+                break;
+              }
             }
+            candidateEl = candidateEl.parentElement?.closest("[data-node-id]") as HTMLElement | null;
           }
-          // Move up one level
-          candidateEl = candidateEl.parentElement?.closest("[data-node-id]") as HTMLElement | null;
-        }
-        // If we walked all the way up without a valid parent, fall back to root
-        const finalNode = nodes[parentId];
-        if (finalNode) {
-          const cfg = getContainerConfig(finalNode);
-          if (cfg?.disallowedChildTypes?.includes(componentType)) {
-            parentId = rootNodeId;
+          
+          // If we didn't find a valid flow container target organically, use geometric hit test for the Section parent!
+          if (!isValidFlowTarget) {
+            parentId = getDropTargetSection(e.clientY, canvasFrameRef.current, nodes, rootNodeId);
+            
+            // Check if even the section rejects this type (fallback to root if true)
+            const finalNode = nodes[parentId];
+            if (finalNode) {
+              const cfg = getContainerConfig(finalNode);
+              if (cfg?.disallowedChildTypes?.includes(componentType)) {
+                parentId = rootNodeId;
+              }
+            }
           }
         }
       }
 
-      // ── 3. Compute canvas-space drop position ────────────────────────────
+      // ── 3. Compute local space drop position ────────────────────────────
       let position: Point | undefined;
       if (canvasFrameRef.current) {
-        const frameRect = canvasFrameRef.current.getBoundingClientRect();
-        position = {
-          x: Math.round((e.clientX - frameRect.left) / zoom),
-          y: Math.round((e.clientY - frameRect.top) / zoom),
-        };
+        if (parentId !== rootNodeId && nodes && nodes[parentId]) {
+          // Local position to parent
+          const parentEl = canvasFrameRef.current.querySelector(`[data-node-id="${parentId}"]`) as HTMLElement | null;
+          if (parentEl) {
+            const parentRect = parentEl.getBoundingClientRect();
+            position = {
+              x: Math.round((e.clientX - parentRect.left) / zoom),
+              y: Math.round((e.clientY - parentRect.top) / zoom),
+            };
+          }
+        }
+        // Fallback to canvas position if root
+        if (!position) {
+          const frameRect = canvasFrameRef.current.getBoundingClientRect();
+          position = {
+            x: Math.round((e.clientX - frameRect.left) / zoom),
+            y: Math.round((e.clientY - frameRect.top) / zoom),
+          };
+        }
       }
 
       // ── 4. Skip absolute position for flow/grid parents ──────────────────

@@ -157,7 +157,7 @@ Return ONLY one JSON object — no markdown, no preamble:
 {
   "message": "Brief description of what was built",
   "commands": [
-    { "type": "ADD_NODE", "payload": { "componentType": "Grid", "parentId": "root", "nodeId": "temp-grid", "props": {}, "style": {}, "responsiveStyle": {} } },
+    { "type": "ADD_NODE", "payload": { "componentType": "Grid", "parentId": "${outline.sectionId}", "nodeId": "temp-grid", "props": {}, "style": {}, "responsiveStyle": {} } },
     { "type": "ADD_NODE", "payload": { "componentType": "Text", "parentId": "temp-grid", "props": { "text": "...", "tag": "h1" }, "style": {} } }
   ]
 }`;
@@ -203,7 +203,7 @@ RULES:
 - Stats must look real (NOT "100%" — YES "12,847 customers" or "94.3% satisfaction rate")
 - CTAs must be action-specific (NOT "Click Here" — YES "Start Free Trial", "Book Consultation")
 
-Build this section now. The parent Section node has parentId "root".`;
+Build this section now. The parent Section node has parentId "${outline.sectionId}".`;
 }
 
 // ── Extract style summary from generated commands ─────────────────────────

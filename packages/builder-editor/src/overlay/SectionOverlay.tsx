@@ -28,7 +28,7 @@ export interface SectionOverlayProps {
   /** Called when user wants to add a new section after the given order */
   onAddSection: (afterOrder: number) => void;
   /** Called when user starts resizing a section */
-  onResizeStart: (nodeId: string, clientY: number, currentHeight: number, gestureGroupId: string) => void;
+  onResizeStart: (nodeId: string, clientY: number, currentHeight: number, gestureGroupId: string, minAllowedHeight: number) => void;
   /** Called to select a section */
   onSelect?: (nodeId: string) => void;
   /** Whether a section resize is in progress (suppresses UI jitter) */
@@ -495,8 +495,23 @@ export const SectionOverlay = memo(function SectionOverlay({
                 if (e.button !== 0) return;
                 e.preventDefault();
                     const id = b.nodeId + "-resize-" + Date.now();
+                    const sectionEl = canvasFrameRef.current?.querySelector(`[data-node-id="${b.nodeId}"]`) as HTMLElement | null;
+                    let computedMinHeight = 100;
+                    if (sectionEl) {
+                      const sectionRect = sectionEl.getBoundingClientRect();
+                      const children = Array.from(sectionEl.querySelectorAll("[data-node-id]")) as HTMLElement[];
+                      let maxChildBottom = 100;
+                      for (const child of children) {
+                        const childRect = child.getBoundingClientRect();
+                        const localBottom = (childRect.bottom - sectionRect.top) / zoom;
+                        if (localBottom > maxChildBottom) {
+                           maxChildBottom = localBottom;
+                        }
+                      }
+                      computedMinHeight = Math.max(100, maxChildBottom);
+                    }
                     // Pass canvas-space height (NOT multiplied by zoom)
-                    onResizeStart(b.nodeId, e.clientY, b.height, id);
+                    onResizeStart(b.nodeId, e.clientY, b.height, id, computedMinHeight);
                   }}
                 >
                   <UnfoldVertical size={10 / zoom} />

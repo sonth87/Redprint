@@ -7,6 +7,7 @@ import { resolveContainerDropPosition } from "./useDropSlotResolver";
 import {
   resolveContainerLayoutType,
   shouldUseFlowDrag,
+  getDropTargetSection,
   type ContainerConfigResolver,
   type NodeMovingSnapshot,
 } from "./dragUtils";
@@ -439,7 +440,7 @@ export function useMoveGesture({
       });
     };
 
-    const handleGlobalMouseUp = () => {
+    const handleGlobalMouseUp = (e: MouseEvent) => {
       const upFrameEl = activeFrameRef?.current ?? canvasFrameRef.current;
       if (flowDragPreviewRef.current) {
         flowDragPreviewRef.current.remove();
@@ -475,11 +476,47 @@ export function useMoveGesture({
         }
         dispatch({ type: "REORDER_NODE", payload: { nodeId: moving.nodeId, insertIndex }, description: "Reorder in flow container" });
       }
-      else if (dragStartedRef.current && lastReorderIndexRef.current !== null && !isMultiSelect) {
-        const n = nodes[moving.nodeId];
-        const p = n?.parentId ? nodes[n.parentId] : null;
-        if (resolveContainerLayoutType(p, getContainerConfig) !== "absolute") {
-          dispatch({ type: "REORDER_NODE", payload: { nodeId: moving.nodeId, insertIndex: lastReorderIndexRef.current }, description: "Reorder" });
+      else if (dragStartedRef.current && upFrameEl && rootNodeId && !isMultiSelect) {
+        // Geometric check for Section dropping
+        const primaryNode = nodes[moving.nodeId];
+        // If not dragged into a specific flow container, see which section it dropped on
+        const dropSectionId = getDropTargetSection(e.clientY, upFrameEl, nodes, rootNodeId);
+        
+        if (dropSectionId && dropSectionId !== primaryNode?.parentId && dropSectionId !== rootNodeId) {
+          const nodeEl = upFrameEl.querySelector(`[data-node-id="${moving.nodeId}"]`) as HTMLElement | null;
+          const sectionEl = upFrameEl.querySelector(`[data-node-id="${dropSectionId}"]`) as HTMLElement | null;
+          
+          if (nodeEl && sectionEl) {
+            const fr = upFrameEl.getBoundingClientRect();
+            // Get final absolute positions on canvas
+            const nodeRect = nodeEl.getBoundingClientRect();
+            const sectionRect = sectionEl.getBoundingClientRect();
+            
+            const nodeCanvasX = (nodeRect.left - fr.left) / zoom;
+            const nodeCanvasY = (nodeRect.top - fr.top) / zoom;
+            
+            const sectionCanvasX = (sectionRect.left - fr.left) / zoom;
+            const sectionCanvasY = (sectionRect.top - fr.top) / zoom;
+            
+            const newLeft = nodeCanvasX - sectionCanvasX;
+            const newTop = nodeCanvasY - sectionCanvasY;
+            
+            dispatch({
+              type: "UPDATE_STYLE",
+              payload: { nodeId: moving.nodeId, style: { left: `${Math.round(newLeft)}px`, top: `${Math.round(newTop)}px` }, breakpoint },
+            });
+            
+            dispatch({ type: "MOVE_NODE", payload: { nodeId: moving.nodeId, targetParentId: dropSectionId, position: "inside" }, description: "Change Section" });
+            
+            const siblings = Object.values(nodes).filter(n => n.parentId === dropSectionId);
+            dispatch({ type: "REORDER_NODE", payload: { nodeId: moving.nodeId, insertIndex: siblings.length }, description: "Bring to front" });
+          }
+        } else if (lastReorderIndexRef.current !== null) {
+          // Normal reorder inside current container (flow/grid) inside same section
+          const p = primaryNode?.parentId ? nodes[primaryNode.parentId] : null;
+          if (resolveContainerLayoutType(p, getContainerConfig) !== "absolute") {
+            dispatch({ type: "REORDER_NODE", payload: { nodeId: moving.nodeId, insertIndex: lastReorderIndexRef.current }, description: "Reorder" });
+          }
         }
       }
 

@@ -11,7 +11,9 @@ export const COMMAND_REFERENCE = `## Command Reference
 { "type": "ADD_NODE", "payload": { "componentType": "ComponentType", "parentId": "root", "nodeId": "temp-unique-id", "props": {}, "style": {}, "responsiveStyle": { "mobile": { "flexDirection": "column" } }, "responsiveProps": { "mobile": { "label": "Short" } }, "responsiveHidden": { "tablet": true } } }
 IMPORTANT:
 - The payload field MUST be "componentType" (NOT "type").
-- Use "root" as parentId for top-level sections/containers.
+- For full-page generation, top-level components MUST be "Section" with "root" as parentId.
+- For nested generation or adding elements into a section, all top-level components you generate MUST have their parentId set to the specific provided Section ID (e.g., if you are building inside "sec-123", use "sec-123" as parentId, NOT "root").
+- NEVER place leaf components or layout components directly in "root" unless you are generating a full page.
 - To build NESTED layouts, assign a temporary "nodeId" (e.g. "temp-hero", "temp-grid-1") in each ADD_NODE, then use that same ID as "parentId" in child ADD_NODE commands. The system resolves all IDs to real UUIDs automatically.
 - For RESPONSIVE DESIGN: Use "responsiveStyle", "responsiveProps", or "responsiveHidden" mapped by breakpoint ("desktop" | "tablet" | "mobile").
 

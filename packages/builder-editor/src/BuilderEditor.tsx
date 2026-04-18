@@ -363,8 +363,8 @@ function EditorInner({
     zoom,
     panOffset,
     onAddSection: handleAddSection,
-    onResizeStart: (nodeId: string, clientY: number, currentHeightPx: number, gid: string) =>
-      startSectionResize(nodeId, clientY, currentHeightPx, gid),
+    onResizeStart: (nodeId: string, clientY: number, currentHeightPx: number, gid: string, minAllowedHeight: number) =>
+      startSectionResize(nodeId, clientY, currentHeightPx, gid, minAllowedHeight),
     isResizing: sectionResizing !== null,
     onSelect: (nodeId: string) => select([nodeId]),
     selectedNodeIds,
