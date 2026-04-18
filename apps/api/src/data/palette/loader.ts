@@ -60,7 +60,6 @@ async function loadGroup(groupId: string): Promise<PaletteGroup> {
  */
 export async function loadPalette(): Promise<Palette> {
   const groupIds = [
-    "designed_section",
     "text",
     "image",
     "button",
@@ -70,6 +69,7 @@ export async function loadPalette(): Promise<Palette> {
     "collection",
     "container",
     "card",
+    "designed_section",
   ];
 
   const groups = await Promise.all(
@@ -94,7 +94,6 @@ export async function loadPalette(): Promise<Palette> {
  */
 export function loadPaletteSync(): Palette {
   const groupIds = [
-    "designed_section",
     "text",
     "image",
     "button",
@@ -104,6 +103,7 @@ export function loadPaletteSync(): Palette {
     "collection",
     "container",
     "card",
+    "designed_section",
   ];
 
   const groups: PaletteGroup[] = groupIds.map((groupId) => {

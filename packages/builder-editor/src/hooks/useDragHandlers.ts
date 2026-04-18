@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import type { Point } from "@ui-builder/shared";
 import type { BuilderNode, PaletteDragData, Breakpoint, PaletteItem } from "@ui-builder/builder-core";
 import { v4 as uuidv4 } from "uuid";
@@ -30,6 +30,8 @@ export interface UseDragHandlersReturn {
   handleDrop: (e: React.DragEvent) => void;
   handleDragOver: (e: React.DragEvent) => void;
   handleDragEnter: (e: React.DragEvent) => void;
+  /** True while a Designed Section item is being dragged from the palette. */
+  isDSDragging: boolean;
 }
 
 export function useDragHandlers({
@@ -41,6 +43,8 @@ export function useDragHandlers({
   getContainerConfig,
   onAfterDrop,
 }: UseDragHandlersOptions): UseDragHandlersReturn {
+  const [isDSDragging, setIsDSDragging] = useState(false);
+
   const buildPresetProps = useCallback((item: PaletteItem) => {
     if (!item.icon || item.props?.icon) {
       return item.props ?? {};
@@ -61,6 +65,7 @@ export function useDragHandlers({
 
   const handlePaletteDragStart = useCallback(
     (item: PaletteItem, e: React.DragEvent) => {
+      const isDesignedSection = item.componentType === "Section" && item.children && item.children.length > 0;
       const dragData: PaletteDragData = {
         source: "palette-item",
         componentType: item.componentType,
@@ -74,6 +79,13 @@ export function useDragHandlers({
       };
       e.dataTransfer?.setData("text/plain", JSON.stringify(dragData));
       e.dataTransfer?.setData("application/builder-component-type", item.componentType);
+      // Marker so SectionOverlay can detect a DS drag from dragenter/dragover events
+      if (isDesignedSection) {
+        e.dataTransfer?.setData("application/builder-designed-section", "true");
+        setIsDSDragging(true);
+      } else {
+        setIsDSDragging(false);
+      }
     },
     [buildPresetProps],
   );
@@ -195,10 +207,26 @@ export function useDragHandlers({
 
         if (isEmptySection) {
           // Drop into an existing empty section
+          // Apply the DS preset's section style/props onto the existing empty section.
+          // Always reset height to "auto" so the section grows to fit the DS content.
+          dispatch({
+            type: "UPDATE_STYLE",
+            payload: { nodeId: parentId, style: { height: "auto", ...presetData?.style } },
+            description: `Apply DS style to section`,
+            groupId,
+          });
+          if (presetData?.props && Object.keys(presetData.props).length > 0) {
+            dispatch({
+              type: "UPDATE_PROPS",
+              payload: { nodeId: parentId, props: { ...presetData.props } },
+              description: `Apply DS props to section`,
+              groupId,
+            });
+          }
           generateRecursiveAddActions(presetData!.children!, parentId, groupId!, dispatch);
         } else {
-          // Drop as a NEW section (always parent = rootNodeId for Section drops between sections)
-          const actualParentId = parentId === rootNodeId ? rootNodeId : (targetNode?.parentId ?? rootNodeId);
+          // Drop as a NEW section — always attach to rootNodeId regardless of where the drag landed
+          const actualParentId = rootNodeId;
           
           dispatch({
             type: "ADD_NODE",
@@ -263,6 +291,8 @@ export function useDragHandlers({
         }
       }
 
+      setIsDSDragging(false);
+
       if (onAfterDrop) {
         onAfterDrop();
       }
@@ -281,5 +311,5 @@ export function useDragHandlers({
     e.stopPropagation();
   }, []);
 
-  return { handleDragStart, handlePaletteDragStart, handleDrop, handleDragOver, handleDragEnter };
+  return { handleDragStart, handlePaletteDragStart, handleDrop, handleDragOver, handleDragEnter, isDSDragging };
 }

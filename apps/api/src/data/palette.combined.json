@@ -22,98 +22,136 @@
           },
           "items": [
             {
-              "id": "text-themed-classic",
+              "id": "text-h1",
               "componentType": "Text",
-              "name": "Classic",
-              "description": "Clean serif heading for elegant sites",
-              "thumbnail": null,
+              "name": "Heading 1",
               "i18n": {
                 "en": {
-                  "name": "Classic"
-                },
-                "vi": {
-                  "name": "Cổ điển"
+                  "name": "Heading 1"
                 }
               },
               "props": {
-                "text": "<p>Classic Heading</p>",
-                "tag": "h2"
+                "text": "<h1>Add a Title</h1>",
+                "tag": "h1"
               },
               "style": {
-                "fontFamily": "Georgia, serif",
-                "fontSize": "32px",
-                "fontWeight": "400",
-                "color": "#1a1a1a",
-                "lineHeight": "1.3"
-              },
-              "tags": [
-                "classic",
-                "serif",
-                "elegant"
-              ]
-            },
-            {
-              "id": "text-themed-modern",
-              "componentType": "Text",
-              "name": "Modern",
-              "description": "Bold sans-serif for contemporary design",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Modern"
-                },
-                "vi": {
-                  "name": "Hiện đại"
-                }
-              },
-              "props": {
-                "text": "<p>Modern Heading</p>",
-                "tag": "h2"
-              },
-              "style": {
-                "fontFamily": "system-ui, sans-serif",
-                "fontSize": "36px",
-                "fontWeight": "800",
+                "fontSize": "52px",
+                "fontWeight": "700",
                 "color": "#111827",
-                "letterSpacing": "-0.02em",
                 "lineHeight": "1.1"
-              },
-              "tags": [
-                "modern",
-                "bold",
-                "sans-serif"
-              ]
+              }
             },
             {
-              "id": "text-themed-decorative",
+              "id": "text-h2",
               "componentType": "Text",
-              "name": "Decorative",
-              "description": "Expressive script-style heading",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Decorative"
-                },
-                "vi": {
-                  "name": "Trang trí"
-                }
-              },
+              "name": "Heading 2",
               "props": {
-                "text": "<p>Decorative Title</p>",
+                "text": "<h2>Add a Heading</h2>",
                 "tag": "h2"
               },
               "style": {
-                "fontFamily": "cursive",
                 "fontSize": "40px",
-                "fontWeight": "400",
-                "color": "#7c3aed",
-                "lineHeight": "1.2"
+                "fontWeight": "700",
+                "color": "#111827"
+              }
+            },
+            {
+              "id": "text-h3",
+              "componentType": "Text",
+              "name": "Heading 3",
+              "props": {
+                "text": "<h3>Add a Heading</h3>",
+                "tag": "h3"
               },
-              "tags": [
-                "decorative",
-                "cursive",
-                "stylish"
-              ]
+              "style": {
+                "fontSize": "28px",
+                "fontWeight": "600",
+                "color": "#111827"
+              }
+            },
+            {
+              "id": "text-h4",
+              "componentType": "Text",
+              "name": "Heading 4",
+              "props": {
+                "text": "<h4>Add a Heading</h4>",
+                "tag": "h4"
+              },
+              "style": {
+                "fontSize": "22px",
+                "fontWeight": "600",
+                "color": "#111827"
+              }
+            },
+            {
+              "id": "text-h5",
+              "componentType": "Text",
+              "name": "Heading 5",
+              "props": {
+                "text": "<h5>Add a Heading</h5>",
+                "tag": "h5"
+              },
+              "style": {
+                "fontSize": "18px",
+                "fontWeight": "600",
+                "color": "#374151"
+              }
+            },
+            {
+              "id": "text-h6",
+              "componentType": "Text",
+              "name": "Heading 6",
+              "props": {
+                "text": "<h6>Add a Heading</h6>",
+                "tag": "h6"
+              },
+              "style": {
+                "fontSize": "14px",
+                "fontWeight": "700",
+                "color": "#374151"
+              }
+            },
+            {
+              "id": "text-body-lg",
+              "componentType": "Text",
+              "name": "Body Large",
+              "props": {
+                "text": "<p>I'm a paragraph. Click here to add your own text.</p>",
+                "tag": "p"
+              },
+              "style": {
+                "fontSize": "18px",
+                "color": "#374151",
+                "lineHeight": "1.7"
+              }
+            },
+            {
+              "id": "text-body-md",
+              "componentType": "Text",
+              "name": "Body Medium",
+              "props": {
+                "text": "<p>I'm a paragraph. Click here to add your own text.</p>",
+                "tag": "p"
+              },
+              "style": {
+                "fontSize": "16px",
+                "color": "#374151",
+                "lineHeight": "1.6"
+              }
+            },
+            {
+              "id": "text-body-sm",
+              "componentType": "Text",
+              "name": "Body Small",
+              "props": {
+                "text": "<p>I'm a small paragraph.</p>",
+                "tag": "p"
+              },
+              "style": {
+                "fontSize": "14px",
+                "color": "#6b7280",
+                "lineHeight": "1.5"
+              }
             }
           ]
         },
@@ -128,207 +166,231 @@
           },
           "items": [
             {
-              "id": "text-h1",
+              "id": "title-big",
               "componentType": "Text",
-              "name": "Heading 1",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Heading 1"
-                },
-                "vi": {
-                  "name": "Tiêu đề 1"
-                }
-              },
+              "name": "Big Title",
               "props": {
-                "text": "<h1>Add a Title</h1>",
+                "text": "<p>Big Title</p>",
+                "tag": "h1"
+              },
+              "style": {
+                "fontSize": "72px",
+                "fontWeight": "900",
+                "color": "#111827"
+              }
+            },
+            {
+              "id": "title-caps",
+              "componentType": "Text",
+              "name": "CAPS TITLE",
+              "props": {
+                "text": "<p>CAPS TITLE</p>",
+                "tag": "h2"
+              },
+              "style": {
+                "fontSize": "32px",
+                "fontWeight": "800",
+                "color": "#ff6b35",
+                "textTransform": "uppercase",
+                "letterSpacing": "0.15em"
+              }
+            },
+            {
+              "id": "title-small",
+              "componentType": "Text",
+              "name": "Small Title",
+              "props": {
+                "text": "<p>Small Title</p>",
+                "tag": "h3"
+              },
+              "style": {
+                "fontSize": "20px",
+                "fontWeight": "700",
+                "color": "#c97c4f"
+              }
+            },
+            {
+              "id": "title-business",
+              "componentType": "Text",
+              "name": "Business Title",
+              "props": {
+                "text": "<p>Business Title</p>",
+                "tag": "h3"
+              },
+              "style": {
+                "fontSize": "28px",
+                "fontWeight": "400",
+                "color": "#3b5bdb"
+              }
+            },
+            {
+              "id": "title-huge",
+              "componentType": "Text",
+              "name": "Huge Title",
+              "props": {
+                "text": "<p>Huge Title</p>",
+                "tag": "h1"
+              },
+              "style": {
+                "fontSize": "96px",
+                "fontWeight": "900",
+                "color": "#111827"
+              }
+            },
+            {
+              "id": "title-bold",
+              "componentType": "Text",
+              "name": "Bold Title",
+              "props": {
+                "text": "<p>Bold Title</p>",
+                "tag": "h2"
+              },
+              "style": {
+                "fontSize": "40px",
+                "fontWeight": "800",
+                "color": "#111827"
+              }
+            },
+            {
+              "id": "title-elegant",
+              "componentType": "Text",
+              "name": "Elegant Title",
+              "props": {
+                "text": "<p>Elegant Title</p>",
+                "tag": "h2"
+              },
+              "style": {
+                "fontSize": "40px",
+                "fontWeight": "400",
+                "fontStyle": "italic",
+                "color": "#8b5fbf",
+                "fontFamily": "Playfair Display, serif"
+              }
+            },
+            {
+              "id": "title-classic",
+              "componentType": "Text",
+              "name": "Classic Title",
+              "props": {
+                "text": "<p>Classic Title</p>",
+                "tag": "h2"
+              },
+              "style": {
+                "fontSize": "36px",
+                "fontWeight": "400",
+                "color": "#6b7280",
+                "fontFamily": "Playfair Display, serif"
+              }
+            },
+            {
+              "id": "title-magazine",
+              "componentType": "Text",
+              "name": "MAGAZINE TITLE",
+              "props": {
+                "text": "<p>MAGAZINE TITLE</p>",
                 "tag": "h1"
               },
               "style": {
                 "fontSize": "52px",
-                "fontWeight": "700",
-                "color": "#111827",
-                "lineHeight": "1.1",
-                "letterSpacing": "-0.02em"
-              },
-              "responsiveStyle": {
-                "tablet": {
-                  "fontSize": "40px"
-                },
-                "mobile": {
-                  "fontSize": "28px"
-                }
-              },
-              "tags": [
-                "h1",
-                "heading",
-                "title",
-                "hero"
-              ]
+                "fontWeight": "400",
+                "color": "#10b981",
+                "fontFamily": "Bebas Neue, sans-serif",
+                "letterSpacing": "0.1em",
+                "textTransform": "uppercase"
+              }
             },
             {
-              "id": "text-h2",
+              "id": "title-tall",
               "componentType": "Text",
-              "name": "Heading 2",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Heading 2"
-                },
-                "vi": {
-                  "name": "Tiêu đề 2"
-                }
-              },
+              "name": "TALL TITLE",
               "props": {
-                "text": "<h2>Section Title</h2>",
+                "text": "<p>TALL TITLE</p>",
+                "tag": "h1"
+              },
+              "style": {
+                "fontSize": "48px",
+                "fontWeight": "700",
+                "color": "#111827",
+                "fontFamily": "Oswald, sans-serif",
+                "textTransform": "uppercase"
+              }
+            },
+            {
+              "id": "title-running",
+              "componentType": "Text",
+              "name": "Small Running Title",
+              "props": {
+                "text": "<p>Small Running Title</p>",
+                "tag": "h4"
+              },
+              "style": {
+                "fontSize": "14px",
+                "fontWeight": "400",
+                "color": "#6b7280",
+                "letterSpacing": "0.2em"
+              }
+            },
+            {
+              "id": "title-fashion",
+              "componentType": "Text",
+              "name": "FASHION TITLE",
+              "props": {
+                "text": "<p>FASHION TITLE</p>",
+                "tag": "h1"
+              },
+              "style": {
+                "fontSize": "36px",
+                "fontWeight": "700",
+                "color": "#ef4444",
+                "fontFamily": "Anton, sans-serif",
+                "textTransform": "uppercase"
+              }
+            },
+            {
+              "id": "title-thin",
+              "componentType": "Text",
+              "name": "Thin Title",
+              "props": {
+                "text": "<p>Thin Title</p>",
+                "tag": "h1"
+              },
+              "style": {
+                "fontSize": "60px",
+                "fontWeight": "100",
+                "color": "#6b7280",
+                "fontFamily": "Raleway, sans-serif",
+                "letterSpacing": "0.1em"
+              }
+            },
+            {
+              "id": "title-lobster",
+              "componentType": "Text",
+              "name": "Lobster Title",
+              "props": {
+                "text": "<p>Lobster Title</p>",
+                "tag": "h2"
+              },
+              "style": {
+                "fontSize": "48px",
+                "fontWeight": "400",
+                "color": "#111827",
+                "fontFamily": "Lobster, cursive"
+              }
+            },
+            {
+              "id": "title-writing",
+              "componentType": "Text",
+              "name": "Writing Title",
+              "props": {
+                "text": "<p>Writing Title</p>",
                 "tag": "h2"
               },
               "style": {
                 "fontSize": "40px",
                 "fontWeight": "700",
-                "color": "#111827",
-                "lineHeight": "1.2"
-              },
-              "responsiveStyle": {
-                "tablet": {
-                  "fontSize": "32px"
-                },
-                "mobile": {
-                  "fontSize": "24px"
-                }
-              },
-              "tags": [
-                "h2",
-                "heading",
-                "section"
-              ]
-            },
-            {
-              "id": "text-h3",
-              "componentType": "Text",
-              "name": "Heading 3",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Heading 3"
-                },
-                "vi": {
-                  "name": "Tiêu đề 3"
-                }
-              },
-              "props": {
-                "text": "<h3>Subsection Title</h3>",
-                "tag": "h3"
-              },
-              "style": {
-                "fontSize": "28px",
-                "fontWeight": "600",
-                "color": "#111827",
-                "lineHeight": "1.3"
-              },
-              "responsiveStyle": {
-                "mobile": {
-                  "fontSize": "20px"
-                }
-              },
-              "tags": [
-                "h3",
-                "heading",
-                "subsection"
-              ]
-            },
-            {
-              "id": "text-h4",
-              "componentType": "Text",
-              "name": "Heading 4",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Heading 4"
-                },
-                "vi": {
-                  "name": "Tiêu đề 4"
-                }
-              },
-              "props": {
-                "text": "<h4>Card Title</h4>",
-                "tag": "h4"
-              },
-              "style": {
-                "fontSize": "22px",
-                "fontWeight": "600",
-                "color": "#111827",
-                "lineHeight": "1.4"
-              },
-              "responsiveStyle": {
-                "mobile": {
-                  "fontSize": "18px"
-                }
-              },
-              "tags": [
-                "h4",
-                "heading",
-                "card"
-              ]
-            },
-            {
-              "id": "text-h5",
-              "componentType": "Text",
-              "name": "Heading 5",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Heading 5"
-                },
-                "vi": {
-                  "name": "Tiêu đề 5"
-                }
-              },
-              "props": {
-                "text": "<h5>Label Title</h5>",
-                "tag": "h5"
-              },
-              "style": {
-                "fontSize": "18px",
-                "fontWeight": "600",
-                "color": "#374151",
-                "lineHeight": "1.5"
-              },
-              "tags": [
-                "h5",
-                "heading",
-                "label"
-              ]
-            },
-            {
-              "id": "text-h6",
-              "componentType": "Text",
-              "name": "Heading 6",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Heading 6"
-                },
-                "vi": {
-                  "name": "Tiêu đề 6"
-                }
-              },
-              "props": {
-                "text": "<h6>Small Title</h6>",
-                "tag": "h6"
-              },
-              "style": {
-                "fontSize": "14px",
-                "fontWeight": "700",
-                "color": "#374151",
-                "textTransform": "uppercase",
-                "letterSpacing": "0.08em"
-              },
-              "tags": [
-                "h6",
-                "heading",
-                "overline"
-              ]
+                "color": "#6366f1",
+                "fontFamily": "Dancing Script, cursive"
+              }
             }
           ]
         },
@@ -1026,61 +1088,37 @@
           "label": "Text & Icon Buttons",
           "order": 0,
           "layout": "preview",
+          "columns": 2,
           "i18n": {
             "en": "Text & Icon Buttons",
             "vi": "Nút văn bản & biểu tượng"
           },
           "items": [
             {
-              "id": "btn-view-more",
+              "id": "btn-primary",
               "componentType": "Button",
               "name": "View More",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "View More"
-                },
-                "vi": {
-                  "name": "Xem thêm"
-                }
-              },
               "props": {
                 "label": "<p>View More</p>",
                 "variant": "primary",
                 "size": "md",
                 "hoverStyle": {
-                  "backgroundColor": "#1f2937",
-                  "boxShadow": "0 4px 12px rgba(17, 24, 39, 0.3)"
+                  "backgroundColor": "#1f2937"
                 }
               },
               "style": {
                 "backgroundColor": "#111827",
                 "color": "#ffffff",
                 "borderRadius": "4px",
-                "width": "160px",
-                "height": "40px",
+                "padding": "8px 16px",
                 "fontSize": "14px",
                 "fontWeight": "500"
-              },
-              "tags": [
-                "button",
-                "view-more",
-                "cta"
-              ]
+              }
             },
             {
-              "id": "btn-read-more",
+              "id": "btn-outline",
               "componentType": "Button",
               "name": "Read More",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Read More"
-                },
-                "vi": {
-                  "name": "Đọc thêm"
-                }
-              },
               "props": {
                 "label": "<p>Read More</p>",
                 "variant": "outline",
@@ -1094,111 +1132,107 @@
                 "color": "#111827",
                 "border": "1px solid #111827",
                 "borderRadius": "4px",
-                "width": "160px",
-                "height": "40px",
+                "padding": "8px 16px",
                 "fontSize": "14px"
-              },
-              "tags": [
-                "button",
-                "read-more",
-                "outline"
-              ]
+              }
             },
             {
               "id": "btn-shop",
               "componentType": "Button",
-              "name": "Shop",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Shop →"
-                },
-                "vi": {
-                  "name": "Mua ngay →"
-                }
-              },
+              "name": "SHOP →",
               "props": {
                 "label": "<p>SHOP →</p>",
                 "variant": "primary",
                 "size": "md",
                 "hoverStyle": {
-                  "backgroundColor": "#374151"
+                  "backgroundColor": "#3d6456"
                 }
               },
               "style": {
                 "backgroundColor": "#4d7c6e",
                 "color": "#ffffff",
                 "borderRadius": "24px",
-                "width": "160px",
-                "height": "40px",
+                "padding": "8px 16px",
                 "fontSize": "13px",
                 "letterSpacing": "0.08em",
                 "fontWeight": "600"
-              },
-              "tags": [
-                "button",
-                "shop",
-                "ecommerce",
-                "pill"
-              ]
+              }
             },
             {
               "id": "btn-send",
               "componentType": "Button",
-              "name": "Send",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Send"
-                },
-                "vi": {
-                  "name": "Gửi"
-                }
-              },
+              "name": "SEND",
               "props": {
                 "label": "<p>SEND</p>",
                 "variant": "primary",
                 "size": "md",
                 "hoverStyle": {
-                  "backgroundColor": "#374151"
+                  "backgroundColor": "#1f2937"
                 }
               },
               "style": {
                 "backgroundColor": "#111827",
                 "color": "#ffffff",
                 "borderRadius": "2px",
-                "width": "160px",
-                "height": "40px",
+                "padding": "8px 16px",
                 "fontSize": "13px",
                 "letterSpacing": "0.1em",
                 "fontWeight": "700"
-              },
-              "tags": [
-                "button",
-                "send",
-                "form",
-                "submit"
-              ]
+              }
             },
             {
-              "id": "btn-join-us",
+              "id": "btn-explore",
               "componentType": "Button",
-              "name": "Join Us",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Join Us"
-                },
-                "vi": {
-                  "name": "Tham gia"
+              "name": "Explore",
+              "props": {
+                "label": "<p>Explore</p>",
+                "variant": "primary",
+                "size": "md",
+                "hoverStyle": {
+                  "backgroundColor": "#1f2937",
+                  "boxShadow": "0 4px 12px rgba(17, 24, 39, 0.3)"
                 }
               },
+              "style": {
+                "backgroundColor": "#111827",
+                "color": "#ffffff",
+                "borderRadius": "4px",
+                "padding": "8px 16px",
+                "fontSize": "14px",
+                "fontWeight": "600"
+              }
+            },
+            {
+              "id": "btn-say-hello",
+              "componentType": "Button",
+              "name": "Say Hello",
+              "props": {
+                "label": "<p>Say Hello</p>",
+                "variant": "primary",
+                "size": "md",
+                "hoverStyle": {
+                  "transform": "scale(1.02)"
+                }
+              },
+              "style": {
+                "background": "linear-gradient(135deg, #7c3aed 0%, #d946ef 100%)",
+                "color": "#ffffff",
+                "borderRadius": "24px",
+                "padding": "8px 16px",
+                "fontSize": "14px",
+                "fontWeight": "600"
+              }
+            },
+            {
+              "id": "btn-join",
+              "componentType": "Button",
+              "name": "JOIN US",
               "props": {
                 "label": "<p>JOIN US</p>",
                 "variant": "secondary",
                 "size": "md",
                 "hoverStyle": {
-                  "backgroundColor": "#374151"
+                  "backgroundColor": "#e0e7ff"
                 }
               },
               "style": {
@@ -1206,32 +1240,15 @@
                 "color": "#4f46e5",
                 "border": "2px solid #4f46e5",
                 "borderRadius": "24px",
-                "width": "160px",
-                "height": "40px",
+                "padding": "6px 16px",
                 "fontSize": "14px",
-                "fontWeight": "600",
-                "letterSpacing": "0.05em"
-              },
-              "tags": [
-                "button",
-                "join",
-                "community",
-                "outline"
-              ]
+                "fontWeight": "600"
+              }
             },
             {
               "id": "btn-download",
               "componentType": "Button",
-              "name": "Download",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Download"
-                },
-                "vi": {
-                  "name": "Tải xuống"
-                }
-              },
+              "name": "DOWNLOAD",
               "props": {
                 "label": "<p>DOWNLOAD</p>",
                 "variant": "primary",
@@ -1249,108 +1266,18 @@
                 "fontSize": "14px",
                 "fontWeight": "700",
                 "letterSpacing": "0.08em"
-              },
-              "tags": [
-                "button",
-                "download",
-                "cta"
-              ]
-            },
-            {
-              "id": "btn-let-s-go",
-              "componentType": "Button",
-              "name": "Let's Go",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Let's Go"
-                },
-                "vi": {
-                  "name": "Bắt đầu"
-                }
-              },
-              "props": {
-                "label": "<p>Let's Go</p>",
-                "variant": "outline",
-                "size": "md",
-                "hoverStyle": {
-                  "backgroundColor": "#374151"
-                }
-              },
-              "style": {
-                "backgroundColor": "transparent",
-                "color": "#4f46e5",
-                "border": "2px solid #4f46e5",
-                "borderRadius": "4px",
-                "width": "160px",
-                "height": "40px",
-                "fontSize": "15px",
-                "fontWeight": "600"
-              },
-              "tags": [
-                "button",
-                "lets-go",
-                "outline",
-                "indigo"
-              ]
-            },
-            {
-              "id": "btn-apply-now",
-              "componentType": "Button",
-              "name": "Apply Now",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Apply Now"
-                },
-                "vi": {
-                  "name": "Ứng tuyển ngay"
-                }
-              },
-              "props": {
-                "label": "<p>Apply Now</p>",
-                "variant": "primary",
-                "size": "md",
-                "hoverStyle": {
-                  "backgroundColor": "#374151"
-                }
-              },
-              "style": {
-                "backgroundColor": "#374151",
-                "color": "#ffffff",
-                "borderRadius": "4px",
-                "width": "160px",
-                "height": "40px",
-                "fontSize": "15px",
-                "fontStyle": "italic",
-                "fontWeight": "600"
-              },
-              "tags": [
-                "button",
-                "apply",
-                "jobs",
-                "italic"
-              ]
+              }
             },
             {
               "id": "btn-get-started",
               "componentType": "Button",
               "name": "Get Started",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Get Started"
-                },
-                "vi": {
-                  "name": "Bắt đầu ngay"
-                }
-              },
               "props": {
                 "label": "<p>Get Started</p>",
                 "variant": "primary",
                 "size": "lg",
                 "hoverStyle": {
-                  "transform": "scale(1.02)"
+                  "backgroundColor": "#d45f2a"
                 }
               },
               "style": {
@@ -1358,33 +1285,83 @@
                 "color": "#e57330",
                 "border": "2px solid #e57330",
                 "borderRadius": "24px",
-                "width": "160px",
-                "height": "40px",
+                "padding": "8px 16px",
                 "fontSize": "15px",
                 "fontWeight": "600"
-              },
-              "tags": [
-                "button",
-                "get-started",
-                "orange",
-                "pill"
-              ]
+              }
             },
             {
-              "id": "btn-chat-now",
+              "id": "btn-apply",
               "componentType": "Button",
-              "name": "Chat Now",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Chat Now"
-                },
-                "vi": {
-                  "name": "Nhắn tin ngay"
+              "name": "Apply Now",
+              "props": {
+                "label": "<p>Apply Now</p>",
+                "variant": "primary",
+                "size": "md",
+                "hoverStyle": {
+                  "backgroundColor": "#4b5563"
                 }
               },
+              "style": {
+                "backgroundColor": "#374151",
+                "color": "#ffffff",
+                "borderRadius": "4px",
+                "padding": "8px 16px",
+                "fontSize": "15px",
+                "fontStyle": "italic",
+                "fontWeight": "600"
+              }
+            },
+            {
+              "id": "btn-chat",
+              "componentType": "Button",
+              "name": "Chat Now",
               "props": {
-                "label": "<p>Chat Now 💬</p>",
+                "label": "<p>Chat Now</p>",
+                "variant": "primary",
+                "size": "md",
+                "hoverStyle": {
+                  "backgroundColor": "#f5f3ed"
+                }
+              },
+              "style": {
+                "backgroundColor": "#f6f4ef",
+                "color": "#111827",
+                "borderRadius": "24px",
+                "padding": "8px 16px",
+                "fontSize": "14px",
+                "fontWeight": "600"
+              }
+            },
+            {
+              "id": "btn-featured",
+              "componentType": "Button",
+              "name": "Featured",
+              "props": {
+                "label": "<p>Featured</p>",
+                "variant": "outline",
+                "size": "md",
+                "hoverStyle": {
+                  "backgroundColor": "#f0f0f0",
+                  "borderColor": "#1f2937"
+                }
+              },
+              "style": {
+                "backgroundColor": "#ffffff",
+                "color": "#111827",
+                "border": "1px solid #d1d5db",
+                "borderRadius": "4px",
+                "padding": "8px 16px",
+                "fontSize": "14px",
+                "fontWeight": "500"
+              }
+            },
+            {
+              "id": "btn-back-to-top",
+              "componentType": "Button",
+              "name": "BACK TO TOP",
+              "props": {
+                "label": "<p>BACK TO TOP</p>",
                 "variant": "primary",
                 "size": "md",
                 "hoverStyle": {
@@ -1392,20 +1369,518 @@
                 }
               },
               "style": {
-                "backgroundColor": "#f6f4ef",
+                "backgroundColor": "#111827",
+                "color": "#ffffff",
+                "borderRadius": "4px",
+                "padding": "6px 12px",
+                "fontSize": "12px",
+                "fontWeight": "700",
+                "textTransform": "uppercase",
+                "letterSpacing": "0.05em"
+              }
+            },
+            {
+              "id": "btn-yellow-send",
+              "componentType": "Button",
+              "name": "Send",
+              "props": {
+                "label": "<p>Send</p>",
+                "variant": "primary",
+                "size": "md",
+                "hoverStyle": {
+                  "backgroundColor": "#e5cc00"
+                }
+              },
+              "style": {
+                "backgroundColor": "#fcd34d",
                 "color": "#111827",
-                "borderRadius": "24px",
-                "width": "160px",
-                "height": "40px",
+                "borderRadius": "4px",
+                "padding": "8px 16px",
                 "fontSize": "14px",
                 "fontWeight": "600"
+              }
+            },
+            {
+              "id": "btn-location",
+              "componentType": "Button",
+              "name": "Location",
+              "icon": "map-pin",
+              "props": {
+                "label": "<p></p>",
+                "iconPosition": "end",
+                "variant": "primary",
+                "size": "md",
+                "hoverStyle": {
+                  "backgroundColor": "#b91c1c"
+                }
               },
-              "tags": [
-                "button",
-                "chat",
-                "messenger",
-                "pill"
-              ]
+              "style": {
+                "backgroundColor": "#dc2626",
+                "color": "#ffffff",
+                "borderRadius": "50%",
+                "width": "40px",
+                "height": "40px",
+                "padding": "0",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center"
+              }
+            },
+            {
+              "id": "btn-icon-download",
+              "componentType": "Button",
+              "name": "Download",
+              "icon": "download",
+              "props": {
+                "label": "<p></p>",
+                "variant": "primary",
+                "size": "md",
+                "hoverStyle": {
+                  "backgroundColor": "#1e40af"
+                }
+              },
+              "style": {
+                "backgroundColor": "#3b82f6",
+                "color": "#ffffff",
+                "borderRadius": "50%",
+                "width": "40px",
+                "height": "40px",
+                "padding": "0",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center"
+              }
+            },
+            {
+              "id": "btn-view-all",
+              "componentType": "Button",
+              "name": "VIEW ALL",
+              "props": {
+                "label": "<p>VIEW ALL</p>",
+                "variant": "outline",
+                "size": "md",
+                "hoverStyle": {
+                  "color": "#1e40af",
+                  "borderBottomColor": "#1e40af"
+                }
+              },
+              "style": {
+                "backgroundColor": "transparent",
+                "color": "#3b82f6",
+                "border": "none",
+                "borderBottom": "2px solid #3b82f6",
+                "borderRadius": "0",
+                "padding": "4px 0",
+                "fontSize": "13px",
+                "fontWeight": "700",
+                "textTransform": "uppercase",
+                "letterSpacing": "0.05em"
+              }
+            },
+            {
+              "id": "btn-lets-go",
+              "componentType": "Button",
+              "name": "Let's Go",
+              "props": {
+                "label": "<p>Let's Go</p>",
+                "variant": "outline",
+                "size": "lg",
+                "hoverStyle": {
+                  "backgroundColor": "#dbeafe",
+                  "borderColor": "#1e40af"
+                }
+              },
+              "style": {
+                "backgroundColor": "#ffffff",
+                "color": "#3b82f6",
+                "border": "2px solid #3b82f6",
+                "borderRadius": "6px",
+                "padding": "12px 32px",
+                "fontSize": "16px",
+                "fontWeight": "600"
+              }
+            },
+            {
+              "id": "btn-join-teal",
+              "componentType": "Button",
+              "name": "JOIN US",
+              "props": {
+                "label": "<p>JOIN US</p>",
+                "variant": "primary",
+                "size": "lg",
+                "hoverStyle": {
+                  "backgroundColor": "#0d9488"
+                }
+              },
+              "style": {
+                "backgroundColor": "#14b8a6",
+                "color": "#ffffff",
+                "borderRadius": "24px",
+                "padding": "10px 24px",
+                "fontSize": "15px",
+                "fontWeight": "600"
+              }
+            },
+            {
+              "id": "btn-icon-home",
+              "componentType": "Button",
+              "name": "Home",
+              "icon": "home",
+              "props": {
+                "label": "<p></p>",
+                "variant": "primary",
+                "size": "md",
+                "hoverStyle": {
+                  "backgroundColor": "#4f7ff0"
+                }
+              },
+              "style": {
+                "backgroundColor": "#6b9bff",
+                "color": "#ffffff",
+                "borderRadius": "50%",
+                "width": "40px",
+                "height": "40px",
+                "padding": "0",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center"
+              }
+            },
+            {
+              "id": "btn-icon-up",
+              "componentType": "Button",
+              "name": "Up",
+              "icon": "arrow-up",
+              "props": {
+                "label": "<p></p>",
+                "variant": "primary",
+                "size": "md",
+                "hoverStyle": {
+                  "backgroundColor": "#64748b"
+                }
+              },
+              "style": {
+                "backgroundColor": "#78909c",
+                "color": "#ffffff",
+                "borderRadius": "50%",
+                "width": "40px",
+                "height": "40px",
+                "padding": "0",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center"
+              }
+            },
+            {
+              "id": "btn-icon-teal",
+              "componentType": "Button",
+              "name": "Tool",
+              "icon": "wrench",
+              "props": {
+                "label": "<p></p>",
+                "variant": "primary",
+                "size": "md",
+                "hoverStyle": {
+                  "backgroundColor": "#0f766e"
+                }
+              },
+              "style": {
+                "backgroundColor": "#14b8a6",
+                "color": "#ffffff",
+                "borderRadius": "50%",
+                "width": "40px",
+                "height": "40px",
+                "padding": "0",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center"
+              }
+            },
+            {
+              "id": "btn-icon-envelope",
+              "componentType": "Button",
+              "name": "Mail",
+              "icon": "mail",
+              "props": {
+                "label": "<p></p>",
+                "variant": "primary",
+                "size": "md",
+                "hoverStyle": {
+                  "backgroundColor": "#64748b"
+                }
+              },
+              "style": {
+                "backgroundColor": "#94a3b8",
+                "color": "#ffffff",
+                "borderRadius": "50%",
+                "width": "40px",
+                "height": "40px",
+                "padding": "0",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center"
+              }
+            },
+            {
+              "id": "btn-icon-lock",
+              "componentType": "Button",
+              "name": "Lock",
+              "icon": "lock",
+              "props": {
+                "label": "<p></p>",
+                "variant": "primary",
+                "size": "md",
+                "hoverStyle": {
+                  "backgroundColor": "#65a30d"
+                }
+              },
+              "style": {
+                "backgroundColor": "#84cc16",
+                "color": "#ffffff",
+                "borderRadius": "50%",
+                "width": "40px",
+                "height": "40px",
+                "padding": "0",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center"
+              }
+            },
+            {
+              "id": "btn-download-outlined",
+              "componentType": "Button",
+              "name": "Download",
+              "props": {
+                "label": "<p>Download</p>",
+                "variant": "outline",
+                "size": "md",
+                "hoverStyle": {
+                  "backgroundColor": "#f5deb3",
+                  "borderColor": "#8b6914"
+                }
+              },
+              "style": {
+                "backgroundColor": "#ffffff",
+                "color": "#8b6914",
+                "border": "2px solid #8b6914",
+                "borderRadius": "24px",
+                "padding": "8px 16px",
+                "fontSize": "14px",
+                "fontWeight": "500"
+              }
+            },
+            {
+              "id": "btn-call-us",
+              "componentType": "Button",
+              "name": "Call Us",
+              "props": {
+                "label": "<p>Call Us</p>",
+                "variant": "primary",
+                "size": "md",
+                "hoverStyle": {
+                  "backgroundColor": "#92400e"
+                }
+              },
+              "style": {
+                "backgroundColor": "#b45309",
+                "color": "#ffffff",
+                "borderRadius": "24px",
+                "padding": "8px 16px",
+                "fontSize": "14px",
+                "fontWeight": "600"
+              }
+            },
+            {
+              "id": "btn-close",
+              "componentType": "Button",
+              "name": "Close",
+              "icon": "x",
+              "props": {
+                "label": "<p></p>",
+                "variant": "primary",
+                "size": "md",
+                "hoverStyle": {
+                  "backgroundColor": "#374151"
+                }
+              },
+              "style": {
+                "backgroundColor": "#111827",
+                "color": "#ffffff",
+                "borderRadius": "50%",
+                "width": "40px",
+                "height": "40px",
+                "padding": "0",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center"
+              }
+            },
+            {
+              "id": "btn-new",
+              "componentType": "Button",
+              "name": "NEW",
+              "props": {
+                "label": "<p>NEW</p>",
+                "variant": "primary",
+                "size": "lg",
+                "hoverStyle": {
+                  "transform": "scale(1.05)"
+                }
+              },
+              "style": {
+                "background": "linear-gradient(135deg, #db7093 0%, #da70d6 100%)",
+                "color": "#111827",
+                "borderRadius": "50%",
+                "width": "60px",
+                "height": "60px",
+                "padding": "0",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "fontSize": "13px",
+                "fontWeight": "700"
+              }
+            },
+            {
+              "id": "btn-send-light",
+              "componentType": "Button",
+              "name": "SEND",
+              "props": {
+                "label": "<p>SEND</p>",
+                "variant": "primary",
+                "size": "md",
+                "hoverStyle": {
+                  "backgroundColor": "#ddd6fe"
+                }
+              },
+              "style": {
+                "backgroundColor": "#ede9fe",
+                "color": "#6d28d9",
+                "border": "1px solid #c4b5fd",
+                "borderRadius": "24px",
+                "padding": "8px 16px",
+                "fontSize": "13px",
+                "fontWeight": "600",
+                "letterSpacing": "0.08em"
+              }
+            },
+            {
+              "id": "btn-sale",
+              "componentType": "Button",
+              "name": "SALE",
+              "props": {
+                "label": "<p>SALE</p>",
+                "variant": "outline",
+                "size": "lg",
+                "hoverStyle": {
+                  "backgroundColor": "#fee2e2"
+                }
+              },
+              "style": {
+                "backgroundColor": "#ffffff",
+                "color": "#dc2626",
+                "border": "2px solid #dc2626",
+                "borderRadius": "4px",
+                "padding": "8px 12px",
+                "fontSize": "16px",
+                "fontWeight": "700",
+                "transform": "rotate(-15deg)",
+                "letterSpacing": "0.1em"
+              }
+            },
+            {
+              "id": "btn-go",
+              "componentType": "Button",
+              "name": "GO",
+              "props": {
+                "label": "<p>GO</p>",
+                "variant": "primary",
+                "size": "lg",
+                "hoverStyle": {
+                  "backgroundColor": "#1d4ed8"
+                }
+              },
+              "style": {
+                "backgroundColor": "#3b82f6",
+                "color": "#ffffff",
+                "borderRadius": "24px",
+                "padding": "10px 20px",
+                "fontSize": "15px",
+                "fontWeight": "700"
+              }
+            },
+            {
+              "id": "btn-arrow-right",
+              "componentType": "Button",
+              "name": "Arrow",
+              "icon": "chevron-right",
+              "props": {
+                "label": "<p></p>",
+                "variant": "primary",
+                "size": "md",
+                "hoverStyle": {
+                  "backgroundColor": "#eab308"
+                }
+              },
+              "style": {
+                "backgroundColor": "#fcd34d",
+                "color": "#111827",
+                "borderRadius": "4px",
+                "padding": "6px 10px",
+                "fontSize": "18px",
+                "fontWeight": "700",
+                "width": "40px",
+                "height": "40px",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center"
+              }
+            },
+            {
+              "id": "btn-search",
+              "componentType": "Button",
+              "name": "Search",
+              "icon": "search",
+              "props": {
+                "label": "<p>Search</p>",
+                "iconPosition": "start",
+                "variant": "primary",
+                "size": "md",
+                "hoverStyle": {
+                  "backgroundColor": "#1f2937"
+                }
+              },
+              "style": {
+                "backgroundColor": "#111827",
+                "color": "#ffffff",
+                "borderRadius": "4px",
+                "padding": "8px 16px",
+                "fontSize": "14px",
+                "fontWeight": "600"
+              }
+            },
+            {
+              "id": "btn-share",
+              "componentType": "Button",
+              "name": "Share",
+              "icon": "share-2",
+              "props": {
+                "label": "<p>Share</p>",
+                "iconPosition": "end",
+                "variant": "primary",
+                "size": "md",
+                "hoverStyle": {
+                  "backgroundColor": "#0f766e"
+                }
+              },
+              "style": {
+                "backgroundColor": "#14b8a6",
+                "color": "#ffffff",
+                "borderRadius": "4px",
+                "padding": "8px 16px",
+                "fontSize": "14px",
+                "fontWeight": "600"
+              }
             }
           ]
         }
@@ -1586,9 +2061,66 @@
           ]
         },
         {
+          "id": "pro-galleries",
+          "label": "Pro Galleries",
+          "order": 1,
+          "layout": "preview",
+          "i18n": {
+            "en": "Pro Galleries",
+            "vi": "Thư viện chuyên nghiệp"
+          },
+          "items": [
+            {
+              "id": "pro-mosaic",
+              "componentType": "GalleryPro",
+              "name": "Mosaic Large",
+              "props": {
+                "layout": "mosaic",
+                "gap": 8
+              }
+            },
+            {
+              "id": "pro-magazine",
+              "componentType": "GalleryPro",
+              "name": "Magazine Grid",
+              "props": {
+                "layout": "magazine",
+                "gap": 12
+              }
+            },
+            {
+              "id": "pro-strip",
+              "componentType": "GalleryPro",
+              "name": "Strip Layout",
+              "props": {
+                "layout": "strip",
+                "gap": 8
+              }
+            },
+            {
+              "id": "pro-editorial",
+              "componentType": "GalleryPro",
+              "name": "Editorial",
+              "props": {
+                "layout": "editorial",
+                "gap": 12
+              }
+            },
+            {
+              "id": "pro-showcase",
+              "componentType": "GalleryPro",
+              "name": "Showcase",
+              "props": {
+                "layout": "showcase",
+                "gap": 8
+              }
+            }
+          ]
+        },
+        {
           "id": "slider-galleries",
           "label": "Slider Galleries",
-          "order": 1,
+          "order": 2,
           "layout": "preview",
           "i18n": {
             "en": "Slider Galleries",
@@ -1596,76 +2128,59 @@
           },
           "items": [
             {
-              "id": "gallery-slider-basic",
+              "id": "slider-basic",
               "componentType": "GallerySlider",
               "name": "Basic Slider",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Basic Slider"
-                },
-                "vi": {
-                  "name": "Trình chiếu đơn giản"
-                }
-              },
               "props": {
                 "showArrows": true,
                 "showDots": true,
-                "aspectRatio": "16/9"
-              },
-              "tags": [
-                "gallery",
-                "slider",
-                "basic"
-              ]
+                "aspectRatio": "16/9",
+                "shape": "rectangle"
+              }
             },
             {
-              "id": "gallery-slider-square",
+              "id": "slider-square",
               "componentType": "GallerySlider",
               "name": "Square Slider",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Square Slider"
-                },
-                "vi": {
-                  "name": "Trình chiếu vuông"
-                }
-              },
               "props": {
                 "showArrows": true,
                 "showDots": true,
-                "aspectRatio": "1/1"
-              },
-              "tags": [
-                "gallery",
-                "slider",
-                "square"
-              ]
+                "aspectRatio": "1/1",
+                "shape": "rectangle"
+              }
             },
             {
-              "id": "gallery-slider-portrait",
+              "id": "slider-circle",
+              "componentType": "GallerySlider",
+              "name": "Circle Slider",
+              "props": {
+                "showArrows": true,
+                "showDots": true,
+                "aspectRatio": "1/1",
+                "shape": "circle"
+              }
+            },
+            {
+              "id": "slider-oval",
+              "componentType": "GallerySlider",
+              "name": "Oval Slider",
+              "props": {
+                "showArrows": true,
+                "showDots": true,
+                "aspectRatio": "4/3",
+                "shape": "oval"
+              }
+            },
+            {
+              "id": "slider-portrait",
               "componentType": "GallerySlider",
               "name": "Portrait Slider",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Portrait Slider"
-                },
-                "vi": {
-                  "name": "Trình chiếu dọc"
-                }
-              },
               "props": {
                 "showArrows": true,
                 "showDots": false,
-                "aspectRatio": "4/3"
-              },
-              "tags": [
-                "gallery",
-                "slider",
-                "portrait"
-              ]
+                "aspectRatio": "4/3",
+                "shape": "rectangle"
+              }
             }
           ]
         }
@@ -3274,6 +3789,407 @@
                 "hero",
                 "dark",
                 "heading"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "designed_section",
+      "label": "Designed Section",
+      "icon": "layout-template",
+      "order": 100,
+      "i18n": {
+        "en": "Designed Section",
+        "vi": "Section Mẫu"
+      },
+      "types": [
+        {
+          "id": "welcome",
+          "label": "Welcome",
+          "order": 0,
+          "layout": "grid",
+          "i18n": {
+            "en": "Welcome",
+            "vi": "Chào mừng"
+          },
+          "items": [
+            {
+              "id": "welcome-1",
+              "componentType": "Section",
+              "name": "Hero Welcome",
+              "props": {
+                "minHeight": 600
+              },
+              "style": {
+                "backgroundColor": "#ffffff",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "padding": "80px 0"
+              },
+              "children": [
+                {
+                  "type": "Container",
+                  "style": {
+                    "display": "flex",
+                    "flexDirection": "column",
+                    "alignItems": "center",
+                    "textAlign": "center",
+                    "maxWidth": "800px"
+                  },
+                  "children": [
+                    {
+                      "type": "Text",
+                      "props": {
+                        "text": "<h1>WELCOME</h1>",
+                        "tag": "h1"
+                      },
+                      "style": {
+                        "fontSize": "56px",
+                        "fontWeight": "800",
+                        "letterSpacing": "-0.02em",
+                        "marginBottom": "24px"
+                      }
+                    },
+                    {
+                      "type": "Text",
+                      "props": {
+                        "text": "<p>Welcome visitors to your site with a short, engaging introduction. Double click to edit and add your own text.</p>",
+                        "tag": "p"
+                      },
+                      "style": {
+                        "fontSize": "18px",
+                        "color": "#6B7280",
+                        "lineHeight": "1.6",
+                        "marginBottom": "40px"
+                      }
+                    },
+                    {
+                      "type": "Button",
+                      "props": {
+                        "text": "Start Now",
+                        "variant": "primary"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "about",
+          "label": "About",
+          "order": 1,
+          "layout": "grid",
+          "i18n": {
+            "en": "About",
+            "vi": "Giới thiệu"
+          },
+          "items": [
+            {
+              "id": "about-1",
+              "componentType": "Section",
+              "name": "Split About",
+              "props": {
+                "minHeight": 500
+              },
+              "style": {
+                "backgroundColor": "#F9FAFB",
+                "display": "flex",
+                "alignItems": "center",
+                "padding": "80px 0"
+              },
+              "children": [
+                {
+                  "type": "Grid",
+                  "props": {
+                    "columns": 2,
+                    "gap": 48
+                  },
+                  "style": {
+                    "width": "100%",
+                    "maxWidth": "1200px",
+                    "margin": "0 auto"
+                  },
+                  "children": [
+                    {
+                      "type": "Container",
+                      "children": [
+                        {
+                          "type": "Text",
+                          "props": {
+                            "text": "<h2>Our Mission</h2>",
+                            "tag": "h2"
+                          },
+                          "style": {
+                            "fontSize": "40px",
+                            "fontWeight": "700",
+                            "marginBottom": "20px"
+                          }
+                        },
+                        {
+                          "type": "Text",
+                          "props": {
+                            "text": "<p>We are dedicated to providing the best experience for our users. Our team works tirelessly to innovate and solve complex problems.</p>",
+                            "tag": "p"
+                          },
+                          "style": {
+                            "fontSize": "16px",
+                            "color": "#4B5563",
+                            "lineHeight": "1.7"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "Image",
+                      "props": {
+                        "src": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80"
+                      },
+                      "style": {
+                        "borderRadius": "12px",
+                        "width": "100%",
+                        "height": "auto"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "services",
+          "label": "Services",
+          "order": 2,
+          "layout": "grid",
+          "i18n": {
+            "en": "Services",
+            "vi": "Dịch vụ"
+          },
+          "items": [
+            {
+              "id": "services-1",
+              "componentType": "Section",
+              "name": "Service Grid",
+              "props": {
+                "minHeight": 600
+              },
+              "style": {
+                "backgroundColor": "#ffffff",
+                "padding": "80px 0"
+              },
+              "children": [
+                {
+                  "type": "Text",
+                  "props": {
+                    "text": "<h2>Our Services</h2>",
+                    "tag": "h2"
+                  },
+                  "style": {
+                    "fontSize": "36px",
+                    "fontWeight": "700",
+                    "textAlign": "center",
+                    "marginBottom": "60px"
+                  }
+                },
+                {
+                  "type": "Grid",
+                  "props": {
+                    "columns": 3,
+                    "gap": 32
+                  },
+                  "style": {
+                    "width": "100%",
+                    "maxWidth": "1200px",
+                    "margin": "0 auto"
+                  },
+                  "children": [
+                    {
+                      "type": "Container",
+                      "style": {
+                        "padding": "32px",
+                        "backgroundColor": "#F3F4F6",
+                        "borderRadius": "16px",
+                        "textAlign": "center"
+                      },
+                      "children": [
+                        {
+                          "type": "Text",
+                          "props": {
+                            "text": "<h3>Design</h3>",
+                            "tag": "h3"
+                          },
+                          "style": {
+                            "fontSize": "20px",
+                            "fontWeight": "600",
+                            "marginBottom": "12px"
+                          }
+                        },
+                        {
+                          "type": "Text",
+                          "props": {
+                            "text": "<p>Creating beautiful and functional interfaces.</p>",
+                            "tag": "p"
+                          },
+                          "style": {
+                            "fontSize": "15px",
+                            "color": "#6B7280"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "Container",
+                      "style": {
+                        "padding": "32px",
+                        "backgroundColor": "#F3F4F6",
+                        "borderRadius": "16px",
+                        "textAlign": "center"
+                      },
+                      "children": [
+                        {
+                          "type": "Text",
+                          "props": {
+                            "text": "<h3>Development</h3>",
+                            "tag": "h3"
+                          },
+                          "style": {
+                            "fontSize": "20px",
+                            "fontWeight": "600",
+                            "marginBottom": "12px"
+                          }
+                        },
+                        {
+                          "type": "Text",
+                          "props": {
+                            "text": "<p>Building robust and scalable applications.</p>",
+                            "tag": "p"
+                          },
+                          "style": {
+                            "fontSize": "15px",
+                            "color": "#6B7280"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "Container",
+                      "style": {
+                        "padding": "32px",
+                        "backgroundColor": "#F3F4F6",
+                        "borderRadius": "16px",
+                        "textAlign": "center"
+                      },
+                      "children": [
+                        {
+                          "type": "Text",
+                          "props": {
+                            "text": "<h3>Strategy</h3>",
+                            "tag": "h3"
+                          },
+                          "style": {
+                            "fontSize": "20px",
+                            "fontWeight": "600",
+                            "marginBottom": "12px"
+                          }
+                        },
+                        {
+                          "type": "Text",
+                          "props": {
+                            "text": "<p>Planning for long-term success and growth.</p>",
+                            "tag": "p"
+                          },
+                          "style": {
+                            "fontSize": "15px",
+                            "color": "#6B7280"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "team",
+          "label": "Team",
+          "order": 3,
+          "layout": "grid",
+          "i18n": {
+            "en": "Team",
+            "vi": "Đội ngũ"
+          },
+          "items": [
+            {
+              "id": "team-1",
+              "componentType": "Section",
+              "name": "Team Section",
+              "props": {
+                "minHeight": 500
+              },
+              "style": {
+                "backgroundColor": "#F9FAFB",
+                "padding": "80px 0"
+              },
+              "children": [
+                {
+                  "type": "Text",
+                  "props": {
+                    "text": "<h2>Meet Our Team</h2>",
+                    "tag": "h2"
+                  },
+                  "style": {
+                    "fontSize": "36px",
+                    "fontWeight": "700",
+                    "textAlign": "center",
+                    "marginBottom": "60px"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "contact",
+          "label": "Contact",
+          "order": 4,
+          "layout": "grid",
+          "i18n": {
+            "en": "Contact",
+            "vi": "Liên hệ"
+          },
+          "items": [
+            {
+              "id": "contact-1",
+              "componentType": "Section",
+              "name": "Contact Form Section",
+              "props": {
+                "minHeight": 600
+              },
+              "style": {
+                "backgroundColor": "#ffffff",
+                "padding": "80px 0"
+              },
+              "children": [
+                {
+                  "type": "Text",
+                  "props": {
+                    "text": "<h2>Get in Touch</h2>",
+                    "tag": "h2"
+                  },
+                  "style": {
+                    "fontSize": "36px",
+                    "fontWeight": "700",
+                    "textAlign": "center",
+                    "marginBottom": "60px"
+                  }
+                }
               ]
             }
           ]

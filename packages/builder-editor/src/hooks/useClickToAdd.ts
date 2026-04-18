@@ -12,6 +12,11 @@ interface UseClickToAddOptions {
   canvasContainerRef: React.RefObject<HTMLDivElement | null>;
   dispatch: (action: { type: string; payload: unknown; description?: string; groupId?: string }) => void;
   onAfterAdd?: () => void;
+  /**
+   * Section ID explicitly targeted via the DS button on an empty section.
+   * When set, takes priority over selectedNodeIds for Designed Section placement.
+   */
+  pendingTargetSectionId?: string | null;
 }
 
 /**
@@ -27,6 +32,7 @@ export function useClickToAdd({
   canvasContainerRef,
   dispatch,
   onAfterAdd,
+  pendingTargetSectionId,
 }: UseClickToAddOptions) {
   const buildPresetProps = useCallback((item: PaletteItem) => {
     if (!item.icon || item.props?.icon) {
@@ -46,16 +52,33 @@ export function useClickToAdd({
 
       if (isDesignedSection) {
         // --- Special Logic for Designed Sections ---
-        
-        // 1. Check if an empty section is selected
-        const selectedId = selectedNodeIds[0];
-        const selectedNode = selectedId ? nodes[selectedId] : null;
-        const isEmptySection = selectedNode?.type === "Section" && 
-          !Object.values(nodes).some(n => n.parentId === selectedId);
 
-        if (isEmptySection && selectedId) {
-          // Case: Insert children INTO selected empty section
-          generateRecursiveAddActions(item.children!, selectedId, groupId, dispatch);
+        // Priority 1: section explicitly targeted via the DS button (pendingTargetSectionId)
+        // Priority 2: currently selected node if it is an empty section
+        const targetId = pendingTargetSectionId ?? selectedNodeIds[0];
+        const selectedNode = targetId ? nodes[targetId] : null;
+        const isEmptySection = selectedNode?.type === "Section" &&
+          !Object.values(nodes).some(n => n.parentId === targetId);
+
+        if (isEmptySection && targetId) {
+          // Case: Insert children INTO the target empty section
+          // Apply the DS preset's section style onto the existing empty section.
+          // Always reset height to "auto" so the section grows to fit the DS content.
+          dispatch({
+            type: "UPDATE_STYLE",
+            payload: { nodeId: targetId, style: { height: "auto", ...item.style } },
+            groupId,
+            description: `Apply DS style to section`,
+          });
+          if (item.props && Object.keys(item.props).length > 0) {
+            dispatch({
+              type: "UPDATE_PROPS",
+              payload: { nodeId: targetId, props: { ...item.props } },
+              groupId,
+              description: `Apply DS props to section`,
+            });
+          }
+          generateRecursiveAddActions(item.children!, targetId, groupId, dispatch);
         } else {
           // Case: Add as a NEW section at the end of the root
           const newNodeId = uuidv4();
@@ -151,7 +174,7 @@ export function useClickToAdd({
         onAfterAdd();
       }
     },
-    [rootNodeId, nodes, selectedNodeIds, zoom, panOffset, canvasContainerRef, dispatch, onAfterAdd, buildPresetProps],
+    [rootNodeId, nodes, selectedNodeIds, pendingTargetSectionId, zoom, panOffset, canvasContainerRef, dispatch, onAfterAdd, buildPresetProps],
   );
 
   return { addItem };

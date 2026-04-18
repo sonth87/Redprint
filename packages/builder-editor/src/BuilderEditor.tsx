@@ -130,8 +130,10 @@ function EditorInner({
   const editingPropKey = state.editor.editingPropKey ?? null;
 
   // ── Panel state ──────────────────────────────────────────────────────────
-  const { paletteMode, activePaletteGroupId, setActivePaletteGroupId, handleGroupSelect, handlePaletteClose } =
-    usePaletteState();
+  const {
+    paletteMode, activePaletteGroupId, setActivePaletteGroupId, handleGroupSelect, handlePaletteClose,
+    pendingTargetSectionId, handleDSButtonClick,
+  } = usePaletteState();
   const { layersOpen, layersPanelPos, handleLayersToggle } = useLayersPanel();
   const { aiOpen, setAiOpen, aiConfig, handleAIConfigChange } = useAIConfig();
   const [figmaOpen, setFigmaOpen] = React.useState(false);
@@ -300,10 +302,10 @@ function EditorInner({
   useDimensionCapture({ nodes: document.nodes, breakpoint, canvasFrameRef, dispatch });
 
   // ── Interaction hooks ────────────────────────────────────────────────────
-  const { handleDragStart, handlePaletteDragStart, handleDrop, handleDragOver, handleDragEnter } =
+  const { handleDragStart, handlePaletteDragStart, handleDrop, handleDragOver, handleDragEnter, isDSDragging } =
     useDragHandlers({ rootNodeId: document.rootNodeId, zoom, canvasFrameRef, dispatch, nodes: document.nodes, getContainerConfig, onAfterDrop: handlePaletteClose });
 
-  const { addItem: handlePaletteItemClick } = useClickToAdd({ rootNodeId: document.rootNodeId, nodes: document.nodes, selectedNodeIds, zoom, panOffset, canvasContainerRef, dispatch, onAfterAdd: handlePaletteClose });
+  const { addItem: handlePaletteItemClick } = useClickToAdd({ rootNodeId: document.rootNodeId, nodes: document.nodes, selectedNodeIds, pendingTargetSectionId, zoom, panOffset, canvasContainerRef, dispatch, onAfterAdd: handlePaletteClose });
 
   const { handlePointerDown } = usePointerDown({
     activeTool, zoom, rootNodeId: document.rootNodeId, nodes: document.nodes, canvasFrameRef, activeFrameRef,
@@ -367,6 +369,8 @@ function EditorInner({
     onSelect: (nodeId: string) => select([nodeId]),
     selectedNodeIds,
     onOpenPaletteGroup: handleGroupSelect,
+    onDSButtonClick: handleDSButtonClick,
+    isDSDragging,
     aiConfig,
     dispatch,
     undo,

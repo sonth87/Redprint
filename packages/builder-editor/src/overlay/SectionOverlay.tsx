@@ -35,6 +35,14 @@ export interface SectionOverlayProps {
   isResizing: boolean;
   selectedNodeIds?: string[];
   onOpenPaletteGroup?: (groupId: string) => void;
+  /**
+   * Called when user clicks the "Designed Section" button on an empty section.
+   * Provides the section node ID so the palette can track the intended target,
+   * independent of selection state.
+   */
+  onDSButtonClick?: (sectionId: string) => void;
+  /** True while a Designed Section item is being dragged from the palette. Enables drop-zone highlighting. */
+  isDSDragging?: boolean;
   aiConfig?: any; // Adjust type if imported
   dispatch?: (action: any) => void;
   undo?: () => void;
@@ -58,6 +66,8 @@ export const SectionOverlay = memo(function SectionOverlay({
   isResizing,
   selectedNodeIds,
   onOpenPaletteGroup,
+  onDSButtonClick,
+  isDSDragging,
   aiConfig,
   dispatch,
   undo,
@@ -65,6 +75,9 @@ export const SectionOverlay = memo(function SectionOverlay({
 }: SectionOverlayProps) {
   const [boundaries, setBoundaries] = useState<SectionBoundary[]>([]);
   const [hovered, setHovered] = useState<string | null>(null);
+  // Tracks which empty section is being hovered while dragging a Designed Section
+  const [dsDragTarget, setDsDragTarget] = useState<string | null>(null);
+  const dsDragCounterRef = useRef<Record<string, number>>({});
   const rafRef = useRef<number | null>(null);
 
   // Derive section nodes: direct children of root with type "Section", sorted by order
@@ -128,8 +141,59 @@ export const SectionOverlay = memo(function SectionOverlay({
         const sectionChildren = Object.values(nodes).filter((n) => n.parentId === b.nodeId);
         const isEmpty = sectionChildren.length === 0;
 
+        const isDSDropTarget = dsDragTarget === b.nodeId;
+
         return (
           <div key={b.nodeId} style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+            {/* ── DS Drag Drop Zone (highlight only — drop bubbles to canvas handler) ── */}
+            {isEmpty && (
+              <div
+                // data-node-id lets canvas's handleDrop identify this as the section node
+                data-node-id={b.nodeId}
+                style={{
+                  position: "absolute",
+                  top: b.top,
+                  left: 0,
+                  width: "100%",
+                  height: b.height,
+                  pointerEvents: isDSDragging ? "auto" : "none",
+                  zIndex: 52,
+                  background: isDSDropTarget ? "rgba(99,102,241,0.08)" : "transparent",
+                  border: isDSDropTarget ? `2px dashed rgba(99,102,241,0.6)` : "2px dashed transparent",
+                  borderRadius: 4,
+                  transition: "background 0.15s, border-color 0.15s",
+                  boxSizing: "border-box",
+                }}
+                onDragEnter={(e) => {
+                  if (!e.dataTransfer.types.includes("application/builder-designed-section")) return;
+                  e.preventDefault();
+                  dsDragCounterRef.current[b.nodeId] = (dsDragCounterRef.current[b.nodeId] ?? 0) + 1;
+                  setDsDragTarget(b.nodeId);
+                }}
+                onDragOver={(e) => {
+                  if (!e.dataTransfer.types.includes("application/builder-designed-section")) return;
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = "copy";
+                }}
+                onDragLeave={(e) => {
+                  if (!e.dataTransfer.types.includes("application/builder-designed-section")) return;
+                  dsDragCounterRef.current[b.nodeId] = (dsDragCounterRef.current[b.nodeId] ?? 1) - 1;
+                  if ((dsDragCounterRef.current[b.nodeId] ?? 0) <= 0) {
+                    dsDragCounterRef.current[b.nodeId] = 0;
+                    setDsDragTarget(null);
+                  }
+                }}
+                onDrop={() => {
+                  // Clear highlight only — do NOT preventDefault/stopPropagation.
+                  // The drop bubbles to the canvas container's onDrop handler,
+                  // which uses e.target.closest("[data-node-id]") to find the section
+                  // (this div carries data-node-id={b.nodeId} for that purpose).
+                  dsDragCounterRef.current[b.nodeId] = 0;
+                  setDsDragTarget(null);
+                }}
+              />
+            )}
+
             {/* ── Empty State UI ── */}
             {isEmpty && (isHov || isSel) && (
               <>
@@ -174,7 +238,7 @@ export const SectionOverlay = memo(function SectionOverlay({
                     <p style={{ fontSize: 13, fontWeight: 500, color: "#6b7280", margin: 0, opacity: 0.8 }}>Choose your starting point</p>
                     <div style={{ display: "flex", gap: 16 }}>
                       <button
-                        onClick={() => onOpenPaletteGroup?.("designed-section")}
+                        onClick={() => onDSButtonClick?.(b.nodeId)}
                         style={{
                           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
                           gap: 8, width: 92, height: 92,

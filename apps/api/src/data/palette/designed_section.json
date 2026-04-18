@@ -2,7 +2,7 @@
   "id": "designed_section",
   "label": "Designed Section",
   "icon": "layout-template",
-  "order": 0,
+  "order": 100,
   "i18n": {
     "en": "Designed Section",
     "vi": "Section Mẫu"
