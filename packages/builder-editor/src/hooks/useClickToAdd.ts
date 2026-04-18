@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import type { PaletteItem, Breakpoint, BuilderNode } from "@ui-builder/builder-core";
 import { generateRecursiveAddActions } from "./presetUtils";
+import { getDropTargetSection } from "./dragUtils";
 
 interface UseClickToAddOptions {
   rootNodeId: string;
@@ -10,6 +11,7 @@ interface UseClickToAddOptions {
   zoom: number;
   panOffset: { x: number; y: number };
   canvasContainerRef: React.RefObject<HTMLDivElement | null>;
+  canvasFrameRef?: React.RefObject<HTMLDivElement | null>;
   dispatch: (action: { type: string; payload: unknown; description?: string; groupId?: string }) => void;
   onAfterAdd?: () => void;
   /**
@@ -30,6 +32,7 @@ export function useClickToAdd({
   zoom,
   panOffset,
   canvasContainerRef,
+  canvasFrameRef,
   dispatch,
   onAfterAdd,
   pendingTargetSectionId,
@@ -110,11 +113,44 @@ export function useClickToAdd({
         // Compute canvas-space centre of the visible viewport
         let x = 100;
         let y = 100;
+        let parentId = rootNodeId;
+        
         if (canvasContainerRef.current) {
           const containerWidth = canvasContainerRef.current.offsetWidth;
           const containerHeight = canvasContainerRef.current.offsetHeight;
-          x = Math.round((-panOffset.x + containerWidth / 2) / zoom);
-          y = Math.round((-panOffset.y + containerHeight / 2) / zoom);
+          
+          // Account for the fixed palette sidebar (380px) to find the true visual center
+          const isPaletteOpen = !!globalThis.document.querySelector('[class*="AddElementsPanel"]');
+          const sidebarWidth = isPaletteOpen ? 380 : 0;
+          
+          const centerX = (containerWidth - sidebarWidth) / 2 + sidebarWidth;
+          const centerY = containerHeight / 2;
+          
+          x = Math.round((-panOffset.x + centerX) / zoom);
+          y = Math.round((-panOffset.y + centerY) / zoom);
+
+          // Center the component itself (assuming default widths)
+          const estWidth = (item.componentType === "Container" || item.componentType === "Grid") ? 400 : 200;
+          x -= (estWidth / 2);
+          y -= 25; // rough half-height for most elements
+          
+          if (canvasFrameRef?.current) {
+            const rect = canvasContainerRef.current.getBoundingClientRect();
+            const hitClientY = rect.top + centerY;
+            parentId = getDropTargetSection(hitClientY, canvasFrameRef.current, nodes, rootNodeId);
+            
+            if (parentId !== rootNodeId) {
+              const sectionEl = canvasFrameRef.current.querySelector(`[data-node-id="${parentId}"]`) as HTMLElement | null;
+              if (sectionEl) {
+                const sr = sectionEl.getBoundingClientRect();
+                const fr = canvasFrameRef.current.getBoundingClientRect();
+                const sectionYOffset = (sr.top - fr.top) / zoom;
+                const sectionXOffset = (sr.left - fr.left) / zoom;
+                y -= sectionYOffset;
+                x -= sectionXOffset;
+              }
+            }
+          }
         }
 
         const nodeId = uuidv4();
@@ -124,7 +160,7 @@ export function useClickToAdd({
           type: "ADD_NODE",
           payload: {
             nodeId,
-            parentId: rootNodeId,
+            parentId,
             componentType: item.componentType,
             props: buildPresetProps(item),
             style: {
@@ -174,7 +210,7 @@ export function useClickToAdd({
         onAfterAdd();
       }
     },
-    [rootNodeId, nodes, selectedNodeIds, pendingTargetSectionId, zoom, panOffset, canvasContainerRef, dispatch, onAfterAdd, buildPresetProps],
+    [rootNodeId, nodes, selectedNodeIds, pendingTargetSectionId, zoom, panOffset, canvasContainerRef, canvasFrameRef, dispatch, onAfterAdd, buildPresetProps],
   );
 
   return { addItem };

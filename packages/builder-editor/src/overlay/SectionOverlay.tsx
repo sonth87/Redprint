@@ -234,22 +234,59 @@ export const SectionOverlay = memo(function SectionOverlay({
                   onMouseEnter={() => setHovered(b.nodeId)}
                   onMouseLeave={() => setHovered(null)}
                 >
-                  <div style={{ pointerEvents: "auto", display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-                    <p style={{ fontSize: 13, fontWeight: 500, color: "#6b7280", margin: 0, opacity: 0.8 }}>Choose your starting point</p>
-                    <div style={{ display: "flex", gap: 16 }}>
+                  <div style={{ 
+                    pointerEvents: "auto", 
+                    display: "flex", 
+                    flexDirection: "column", 
+                    alignItems: "center", 
+                    gap: 20,
+                    // The container naturally scales with zoom because it is inside the CanvasRoot transform layer.
+                    // We ensure no "1 / zoom" adjustments are applied to the middle buttons.
+                  }}>
+                    <p style={{ 
+                      fontSize: 14, 
+                      fontWeight: 600, 
+                      color: "#94a3b8", 
+                      margin: 0, 
+                      letterSpacing: "-0.01em",
+                      textTransform: "uppercase" as const
+                    }}>
+                      Choose your starting point
+                    </p>
+                    <div style={{ display: "flex", gap: 20 }}>
                       <button
                         onClick={() => onDSButtonClick?.(b.nodeId)}
                         style={{
                           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                          gap: 8, width: 92, height: 92,
-                          background: "#fff", border: `1px solid #e5e7eb`, borderRadius: 8,
-                          cursor: "pointer", transition: "all 0.2s", boxShadow: `0 1px 3px rgba(0,0,0,0.05)`,
+                          gap: 10, width: 110, height: 110,
+                          background: "#ffffff", 
+                          border: `1px solid #e2e8f0`, 
+                          borderRadius: 12,
+                          cursor: "pointer", 
+                          transition: "transform 0.2s, border-color 0.2s, box-shadow 0.2s",
+                          boxShadow: `0 4px 12px rgba(0,0,0,0.03)`,
                         }}
-                        onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#c7d2fe")}
-                        onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#e5e7eb")}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = "#6366f1";
+                          e.currentTarget.style.transform = "translateY(-4px)";
+                          e.currentTarget.style.boxShadow = "0 10px 25px -5px rgba(99, 102, 241, 0.1), 0 8px 10px -6px rgba(99, 102, 241, 0.1)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = "#e2e8f0";
+                          e.currentTarget.style.transform = "translateY(0)";
+                          e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.03)";
+                        }}
                       >
-                        <LayoutTemplate size={24} color="#4b5563" strokeWidth={1.5} />
-                        <span style={{ fontSize: 11, color: "#4b5563", fontWeight: 500, lineHeight: 1.2 }}>Designed<br/>Section</span>
+                        <div style={{ 
+                          width: 44, height: 44, borderRadius: 10, background: "#f8faff", 
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          color: "#6366f1"
+                        }}>
+                          <LayoutTemplate size={24} strokeWidth={1.5} />
+                        </div>
+                        <span style={{ fontSize: 12, color: "#475569", fontWeight: 600, textAlign: "center", lineHeight: 1.2 }}>
+                          Designed<br/>Section
+                        </span>
                       </button>
                       
                       {aiConfig && dispatch && undo ? (
@@ -264,15 +301,35 @@ export const SectionOverlay = memo(function SectionOverlay({
                             <button
                               style={{
                                 display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                                gap: 8, width: 92, height: 92,
-                                background: "#fff", border: `1px solid #e5e7eb`, borderRadius: 8,
-                                cursor: "pointer", transition: "all 0.2s", boxShadow: `0 1px 3px rgba(0,0,0,0.05)`,
+                                gap: 10, width: 110, height: 110,
+                                background: "#ffffff", 
+                                border: `1px solid #e2e8f0`, 
+                                borderRadius: 12,
+                                cursor: "pointer", 
+                                transition: "transform 0.2s, border-color 0.2s, box-shadow 0.2s",
+                                boxShadow: `0 4px 12px rgba(0,0,0,0.03)`,
                               }}
-                              onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#c7d2fe")}
-                              onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#e5e7eb")}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.borderColor = "#8b5cf6";
+                                e.currentTarget.style.transform = "translateY(-4px)";
+                                e.currentTarget.style.boxShadow = "0 10px 25px -5px rgba(139, 92, 246, 0.1), 0 8px 10px -6px rgba(139, 92, 246, 0.1)";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.borderColor = "#e2e8f0";
+                                e.currentTarget.style.transform = "translateY(0)";
+                                e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.03)";
+                              }}
                             >
-                              <Sparkles size={24} color="#4b5563" strokeWidth={1.5} />
-                              <span style={{ fontSize: 11, color: "#4b5563", fontWeight: 500, lineHeight: 1.2 }}>AI Section<br/>Generator</span>
+                              <div style={{ 
+                                width: 44, height: 44, borderRadius: 10, background: "#fdfaff", 
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                color: "#8b5cf6"
+                              }}>
+                                <Sparkles size={24} strokeWidth={1.5} />
+                              </div>
+                              <span style={{ fontSize: 12, color: "#475569", fontWeight: 600, textAlign: "center", lineHeight: 1.2 }}>
+                                AI Section<br/>Generator
+                              </span>
                             </button>
                           }
                         />
@@ -282,15 +339,35 @@ export const SectionOverlay = memo(function SectionOverlay({
                         onClick={() => onOpenPaletteGroup?.("text")}
                         style={{
                           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                          gap: 8, width: 92, height: 92,
-                          background: "#fff", border: `1px solid #e5e7eb`, borderRadius: 8,
-                          cursor: "pointer", transition: "all 0.2s", boxShadow: `0 1px 3px rgba(0,0,0,0.05)`,
+                          gap: 10, width: 110, height: 110,
+                          background: "#ffffff", 
+                          border: `1px solid #e2e8f0`, 
+                          borderRadius: 12,
+                          cursor: "pointer", 
+                          transition: "transform 0.2s, border-color 0.2s, box-shadow 0.2s",
+                          boxShadow: `0 4px 12px rgba(0,0,0,0.03)`,
                         }}
-                        onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#c7d2fe")}
-                        onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#e5e7eb")}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = "#64748b";
+                          e.currentTarget.style.transform = "translateY(-4px)";
+                          e.currentTarget.style.boxShadow = "0 10px 25px -5px rgba(100, 116, 139, 0.1), 0 8px 10px -6px rgba(100, 116, 139, 0.1)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = "#e2e8f0";
+                          e.currentTarget.style.transform = "translateY(0)";
+                          e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.03)";
+                        }}
                       >
-                        <PlusSquare size={24} color="#4b5563" strokeWidth={1.5} />
-                        <span style={{ fontSize: 11, color: "#4b5563", fontWeight: 500, lineHeight: 1.2 }}>Add<br/>Elements</span>
+                        <div style={{ 
+                          width: 44, height: 44, borderRadius: 10, background: "#f8fafc", 
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          color: "#64748b"
+                        }}>
+                          <PlusSquare size={24} strokeWidth={1.5} />
+                        </div>
+                        <span style={{ fontSize: 12, color: "#475569", fontWeight: 600, textAlign: "center", lineHeight: 1.2 }}>
+                          Add<br/>Elements
+                        </span>
                       </button>
                     </div>
                   </div>
