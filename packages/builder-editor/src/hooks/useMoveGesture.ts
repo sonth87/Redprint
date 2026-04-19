@@ -49,6 +49,8 @@ export interface UseMoveGestureReturn {
   setSnapGuides: (guides: SnapGuide[]) => void;
   distanceGuides: DistanceGuide[];
   liveDimensions: LiveDimensions | null;
+  /** Node IDs whose edges/centers are currently aligned with an active guide line */
+  highlightedNodeIds: string[];
   /**
    * During a flow/grid-mode drag, the canvas-space (tx, ty) offset applied to
    * the dragged element via imperative CSS transform. Used by BuilderEditor to
@@ -194,6 +196,7 @@ export function useMoveGesture({
   const [liveDimensions, setLiveDimensions] = useState<LiveDimensions | null>(null);
   const [flowDragOffset, setFlowDragOffset] = useState<{ x: number; y: number } | null>(null);
   const [flowDropTarget, setFlowDropTarget] = useState<{ containerId: string; insertIndex: number; gridCell?: { col: number; row: number } } | null>(null);
+  const [highlightedNodeIds, setHighlightedNodeIds] = useState<string[]>([]);
   const dragStartedRef = useRef(false);
   const canvasOffsetRef = useRef({ x: 0, y: 0 });
   /** Last dispatched reorder index — avoids flooding REORDER_NODE on every pixel */
@@ -436,15 +439,38 @@ export function useMoveGesture({
             }
           }
           const allOtherRects: Rect[] = [];
+          const allOtherIds: string[] = [];
           const allNodeEls = Array.from(sectionSearchRoot.querySelectorAll("[data-node-id]")) as HTMLElement[];
           for (const el of allNodeEls) {
             const elId = el.getAttribute("data-node-id");
             if (!elId || elId === moving.nodeId || ancestorIds.has(elId)) continue;
             const er = el.getBoundingClientRect();
             allOtherRects.push({ x: (er.left - originRect.left) / zoom, y: (er.top - originRect.top) / zoom, width: er.width / zoom, height: er.height / zoom });
+            allOtherIds.push(elId);
           }
           const crossGuides = snapEngine.alignmentGuides(snappedMovingRectInCanvas, allOtherRects);
           guides = [...guides, ...crossGuides];
+
+          // Find which elements contributed to the active alignment guides so they can be highlighted.
+          const EPS = 1;
+          const newHighlightedIds: string[] = [];
+          for (let i = 0; i < allOtherRects.length; i++) {
+            const other = allOtherRects[i]!;
+            const oRight = other.x + other.width;
+            const oCX = other.x + other.width / 2;
+            const oBottom = other.y + other.height;
+            const oCY = other.y + other.height / 2;
+            for (const guide of crossGuides) {
+              if (guide.source === "canvas-edge" || guide.source === "canvas-center") continue;
+              const pos = guide.position;
+              const matched =
+                guide.type === "vertical"
+                  ? Math.abs(other.x - pos) < EPS || Math.abs(oRight - pos) < EPS || Math.abs(oCX - pos) < EPS
+                  : Math.abs(other.y - pos) < EPS || Math.abs(oBottom - pos) < EPS || Math.abs(oCY - pos) < EPS;
+              if (matched) { newHighlightedIds.push(allOtherIds[i]!); break; }
+            }
+          }
+          setHighlightedNodeIds(newHighlightedIds);
           setDistanceGuides(snapEngine.distanceGuides(snappedMovingRectInCanvas, siblings));
           setLiveDimensions({ width: w, height: h });
         }
@@ -568,6 +594,7 @@ export function useMoveGesture({
       setLiveDimensions(null);
       setFlowDragOffset(null);
       setFlowDropTarget(null);
+      setHighlightedNodeIds([]);
       lastReorderIndexRef.current = null;
       lastEnteredFlowContainerRef.current = null;
     };
@@ -580,5 +607,5 @@ export function useMoveGesture({
     };
   }, [moving, zoom, breakpoint, dispatch, snapEnabled, snapEngine, nodes, canvasFrameRef, activeFrameRef, rootNodeId, getContainerConfig, flowDropTarget]);
 
-  return { moving, setMoving, dragStartedRef, snapGuides, setSnapGuides, distanceGuides, liveDimensions, flowDragOffset, flowDropTarget };
+  return { moving, setMoving, dragStartedRef, snapGuides, setSnapGuides, distanceGuides, liveDimensions, flowDragOffset, flowDropTarget, highlightedNodeIds };
 }

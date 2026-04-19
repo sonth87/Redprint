@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from "react";
+import React, { useMemo, useRef, useEffect } from "react";
 import {
   BuilderProvider,
   useBuilder,
@@ -286,8 +286,24 @@ function EditorInner({
 
   const { rubberBanding, setRubberBanding, rubberBandRect } = useRubberBand({ zoom, canvasFrameRef, onSelectionEnd: handleRubberBandSelect });
 
-  const { moving, setMoving, dragStartedRef, snapGuides: moveSnapGuides, distanceGuides: moveDistanceGuides, liveDimensions: moveLiveDimensions, flowDragOffset, flowDropTarget } =
+  const { moving, setMoving, dragStartedRef, snapGuides: moveSnapGuides, distanceGuides: moveDistanceGuides, liveDimensions: moveLiveDimensions, flowDragOffset, flowDropTarget, highlightedNodeIds } =
     useMoveGesture({ zoom, breakpoint, snapEnabled: showGrid, snapEngine, nodes: document.nodes, canvasFrameRef, activeFrameRef, dispatch, rootNodeId: document.rootNodeId, getContainerConfig });
+
+  useEffect(() => {
+    const frameEl = activeFrameRef?.current ?? canvasFrameRef.current;
+    if (!frameEl || highlightedNodeIds.length === 0) return;
+    const els = highlightedNodeIds
+      .map(id => frameEl.querySelector(`[data-node-id="${id}"]`) as HTMLElement | null)
+      .filter((el): el is HTMLElement => el !== null);
+    els.forEach(el => {
+      el.style.boxShadow = "0 0 0 1px hsl(var(--snap-guide-color, 221.2 83.2% 53.3%))";
+    });
+    return () => {
+      els.forEach(el => {
+        el.style.boxShadow = "";
+      });
+    };
+  }, [highlightedNodeIds, activeFrameRef, canvasFrameRef]);
 
   const { rotating, startRotate } = useRotateGesture({ breakpoint, dispatch });
   const { sectionResizing, startSectionResize } = useSectionResize({ zoom, showGrid, gridSize: document.canvasConfig.gridSize, breakpoint, dispatch });
@@ -785,7 +801,7 @@ export function BuilderEditor({
   className,
   groupRegistry,
   paletteCatalog,
-  useRemotePalette,
+  useRemotePalette: _useRemotePalette,
   remotePaletteProvider,
   locale,
   i18nResources,
