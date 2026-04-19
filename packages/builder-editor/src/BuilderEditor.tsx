@@ -249,7 +249,9 @@ function EditorInner({
     handleAddSection,
     toggleCanvasMode,
   } = useCanvasActions({
-    document, allComponents, registry, canvasMode, canvasWidth, canvasMinHeight, showGrid, dispatch,
+    document, allComponents, registry, canvasMode, canvasWidth, canvasMinHeight,
+    canvasActualHeight: actualDesktopHeight,
+    showGrid, dispatch,
   });
 
   const { handleRubberBandSelect } = useRubberBandSelect({
@@ -622,7 +624,8 @@ function EditorInner({
 
             <SnapGuides
               guides={document.canvasConfig.showHelperLines ? snapGuides : []}
-              canvasWidth={canvasWidth} canvasHeight={canvasMinHeight}
+              canvasWidth={canvasMode === "dual" ? boundingWidth : canvasWidth}
+              canvasHeight={canvasMode === "dual" ? boundingHeight : actualDesktopHeight}
               helperLineColor={document.canvasConfig.helperLineColor}
             />
             <DistanceGuides guides={distanceGuides} zoom={zoom} />

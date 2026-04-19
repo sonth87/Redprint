@@ -8,8 +8,14 @@ export interface SnapEngineConfig {
   snapEnabled: boolean;
   snapToGrid: boolean;
   snapToComponents: boolean;
-  /** Snap threshold in pixels */
+  /** Position snap threshold in canvas px — how close the element must be to snap */
   threshold: number;
+  /**
+   * Alignment guide display threshold in canvas px — how close edges/centers must be
+   * to show a visual alignment line. Larger than `threshold` so guides appear earlier
+   * than the snap kicks in. Defaults to threshold * 3 if not specified.
+   */
+  alignmentGuideThreshold?: number;
   /** Canvas frame width in px — enables canvas-center and canvas-edge snapping */
   canvasWidth?: number;
   /** Canvas frame height in px — enables canvas horizontal-center snapping */
@@ -56,6 +62,11 @@ export class SnapEngine {
 
     let { x, y } = draggingRect;
     const guides: SnapGuide[] = [];
+    const seen = new Set<string>();
+    const addGuide = (guide: SnapGuide) => {
+      const key = `${guide.type}:${guide.position}`;
+      if (!seen.has(key)) { seen.add(key); guides.push(guide); }
+    };
 
     // 1. Grid snap
     if (this.config.snapToGrid) {
@@ -81,32 +92,32 @@ export class SnapEngine {
         // Left edge snap
         if (Math.abs(x - other.x) < this.config.threshold) {
           x = other.x;
-          guides.push({ type: "vertical", position: other.x, source: "component-edge" });
+          addGuide({ type: "vertical", position: other.x, source: "component-edge" });
         }
         // Right edge snap
         if (Math.abs(dragRight - oRight) < this.config.threshold) {
           x = oRight - draggingRect.width;
-          guides.push({ type: "vertical", position: oRight, source: "component-edge" });
+          addGuide({ type: "vertical", position: oRight, source: "component-edge" });
         }
         // Center-X snap
         if (Math.abs(dragCX - oCX) < this.config.threshold) {
           x = oCX - draggingRect.width / 2;
-          guides.push({ type: "vertical", position: oCX, source: "component-center" });
+          addGuide({ type: "vertical", position: oCX, source: "component-center" });
         }
         // Top edge snap
         if (Math.abs(y - other.y) < this.config.threshold) {
           y = other.y;
-          guides.push({ type: "horizontal", position: other.y, source: "component-edge" });
+          addGuide({ type: "horizontal", position: other.y, source: "component-edge" });
         }
         // Bottom edge snap
         if (Math.abs(dragBottom - oBottom) < this.config.threshold) {
           y = oBottom - draggingRect.height;
-          guides.push({ type: "horizontal", position: oBottom, source: "component-edge" });
+          addGuide({ type: "horizontal", position: oBottom, source: "component-edge" });
         }
         // Center-Y snap
         if (Math.abs(dragCY - oCY) < this.config.threshold) {
           y = oCY - draggingRect.height / 2;
-          guides.push({ type: "horizontal", position: oCY, source: "component-center" });
+          addGuide({ type: "horizontal", position: oCY, source: "component-center" });
         }
       }
     }
@@ -119,20 +130,16 @@ export class SnapEngine {
       const canvasCX = cw / 2;
       const dragCX = x + draggingRect.width / 2;
       const dragRight = x + draggingRect.width;
-      let addedCanvasCenterX = false;
 
       const pushCenterX = (snappedX: number) => {
         x = snappedX;
-        if (!addedCanvasCenterX) {
-          guides.push({ type: "vertical", position: canvasCX, source: "canvas-center" });
-          addedCanvasCenterX = true;
-        }
+        addGuide({ type: "vertical", position: canvasCX, source: "canvas-center" });
       };
 
       // Left edge → canvas left border (x = 0)
       if (Math.abs(x) <= this.config.threshold) {
         x = 0;
-        guides.push({ type: "vertical", position: 0, source: "canvas-edge" });
+        addGuide({ type: "vertical", position: 0, source: "canvas-edge" });
       }
       // Left edge → canvas center
       if (Math.abs(x - canvasCX) <= this.config.threshold) pushCenterX(canvasCX);
@@ -143,7 +150,33 @@ export class SnapEngine {
       // Right edge → canvas right border
       if (Math.abs(dragRight - cw) <= this.config.threshold) {
         x = cw - draggingRect.width;
-        guides.push({ type: "vertical", position: cw, source: "canvas-edge" });
+        addGuide({ type: "vertical", position: cw, source: "canvas-edge" });
+      }
+    }
+
+    // 4. Canvas Y-axis snap — top edge, vertical center, bottom edge.
+    if (this.config.snapToComponents && this.config.canvasHeight != null) {
+      const ch = this.config.canvasHeight;
+      const canvasCY = ch / 2;
+      const dragCY = y + draggingRect.height / 2;
+      const dragBottom = y + draggingRect.height;
+
+      const pushCenterY = (snappedY: number) => {
+        y = snappedY;
+        addGuide({ type: "horizontal", position: canvasCY, source: "canvas-center" });
+      };
+
+      // Top edge → canvas top border (y = 0)
+      if (Math.abs(y) <= this.config.threshold) {
+        y = 0;
+        addGuide({ type: "horizontal", position: 0, source: "canvas-edge" });
+      }
+      // Element center → canvas center Y
+      if (Math.abs(dragCY - canvasCY) <= this.config.threshold) pushCenterY(canvasCY - draggingRect.height / 2);
+      // Bottom edge → canvas bottom border
+      if (Math.abs(dragBottom - ch) <= this.config.threshold) {
+        y = ch - draggingRect.height;
+        addGuide({ type: "horizontal", position: ch, source: "canvas-edge" });
       }
     }
 
@@ -264,6 +297,10 @@ export class SnapEngine {
   alignmentGuides(draggingRect: Rect, otherRects: Rect[]): SnapGuide[] {
     if (!this.config.snapToComponents || otherRects.length === 0) return [];
 
+    // Alignment guides use a looser threshold than position snapping so that
+    // visual lines appear slightly before (and after) the snap kicks in.
+    const t = this.config.alignmentGuideThreshold ?? this.config.threshold * 3;
+
     const guides: SnapGuide[] = [];
     const seen = new Set<string>();
     const add = (guide: SnapGuide) => {
@@ -287,18 +324,18 @@ export class SnapEngine {
       const oBottom = other.y + other.height;
 
       // ── Horizontal alignment guides (shared Y positions) ──────────────
-      if (Math.abs(y - other.y)        < this.config.threshold) add({ type: "horizontal", position: other.y,   source: "component-edge" });
-      if (Math.abs(y - oBottom)        < this.config.threshold) add({ type: "horizontal", position: oBottom,   source: "component-edge" });
-      if (Math.abs(dragBottom - other.y)  < this.config.threshold) add({ type: "horizontal", position: other.y,   source: "component-edge" });
-      if (Math.abs(dragBottom - oBottom)  < this.config.threshold) add({ type: "horizontal", position: oBottom,   source: "component-edge" });
-      if (Math.abs(dragCY - oCY)       < this.config.threshold) add({ type: "horizontal", position: oCY,      source: "component-center" });
+      if (Math.abs(y - other.y)           < t) add({ type: "horizontal", position: other.y,  source: "component-edge" });
+      if (Math.abs(y - oBottom)           < t) add({ type: "horizontal", position: oBottom,  source: "component-edge" });
+      if (Math.abs(dragBottom - other.y)  < t) add({ type: "horizontal", position: other.y,  source: "component-edge" });
+      if (Math.abs(dragBottom - oBottom)  < t) add({ type: "horizontal", position: oBottom,  source: "component-edge" });
+      if (Math.abs(dragCY - oCY)          < t) add({ type: "horizontal", position: oCY,      source: "component-center" });
 
       // ── Vertical alignment guides (shared X positions) ────────────────
-      if (Math.abs(x - other.x)        < this.config.threshold) add({ type: "vertical",   position: other.x,   source: "component-edge" });
-      if (Math.abs(x - oRight)         < this.config.threshold) add({ type: "vertical",   position: oRight,    source: "component-edge" });
-      if (Math.abs(dragRight - other.x)   < this.config.threshold) add({ type: "vertical",   position: other.x,   source: "component-edge" });
-      if (Math.abs(dragRight - oRight)    < this.config.threshold) add({ type: "vertical",   position: oRight,    source: "component-edge" });
-      if (Math.abs(dragCX - oCX)       < this.config.threshold) add({ type: "vertical",   position: oCX,       source: "component-center" });
+      if (Math.abs(x - other.x)          < t) add({ type: "vertical", position: other.x,  source: "component-edge" });
+      if (Math.abs(x - oRight)           < t) add({ type: "vertical", position: oRight,   source: "component-edge" });
+      if (Math.abs(dragRight - other.x)  < t) add({ type: "vertical", position: other.x,  source: "component-edge" });
+      if (Math.abs(dragRight - oRight)   < t) add({ type: "vertical", position: oRight,   source: "component-edge" });
+      if (Math.abs(dragCX - oCX)         < t) add({ type: "vertical", position: oCX,      source: "component-center" });
     }
 
     // ── Canvas axis alignment guides ───────────────────────────────────
@@ -306,13 +343,22 @@ export class SnapEngine {
       const cw = this.config.canvasWidth;
       const canvasCX = cw / 2;
 
-      // Vertical center of canvas
-      if (Math.abs(x - canvasCX)              < this.config.threshold) add({ type: "vertical", position: canvasCX, source: "canvas-center" });
-      if (Math.abs(dragCX - canvasCX)         < this.config.threshold) add({ type: "vertical", position: canvasCX, source: "canvas-center" });
-      if (Math.abs(dragRight - canvasCX)      < this.config.threshold) add({ type: "vertical", position: canvasCX, source: "canvas-center" });
-      // Canvas edges
-      if (Math.abs(x)                         < this.config.threshold) add({ type: "vertical", position: 0,  source: "canvas-edge" });
-      if (Math.abs(dragRight - cw)            < this.config.threshold) add({ type: "vertical", position: cw, source: "canvas-edge" });
+      if (Math.abs(x - canvasCX)         < t) add({ type: "vertical", position: canvasCX, source: "canvas-center" });
+      if (Math.abs(dragCX - canvasCX)    < t) add({ type: "vertical", position: canvasCX, source: "canvas-center" });
+      if (Math.abs(dragRight - canvasCX) < t) add({ type: "vertical", position: canvasCX, source: "canvas-center" });
+      if (Math.abs(x)                    < t) add({ type: "vertical", position: 0,        source: "canvas-edge" });
+      if (Math.abs(dragRight - cw)       < t) add({ type: "vertical", position: cw,       source: "canvas-edge" });
+    }
+
+    if (this.config.canvasHeight != null) {
+      const ch = this.config.canvasHeight;
+      const canvasCY = ch / 2;
+
+      if (Math.abs(y - canvasCY)          < t) add({ type: "horizontal", position: canvasCY, source: "canvas-center" });
+      if (Math.abs(dragCY - canvasCY)     < t) add({ type: "horizontal", position: canvasCY, source: "canvas-center" });
+      if (Math.abs(dragBottom - canvasCY) < t) add({ type: "horizontal", position: canvasCY, source: "canvas-center" });
+      if (Math.abs(y)                     < t) add({ type: "horizontal", position: 0,        source: "canvas-edge" });
+      if (Math.abs(dragBottom - ch)       < t) add({ type: "horizontal", position: ch,       source: "canvas-edge" });
     }
 
     return guides;

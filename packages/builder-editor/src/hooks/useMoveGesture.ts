@@ -409,10 +409,37 @@ export function useMoveGesture({
           finalLeft = Math.round(result.snappedPoint.x - canvasOffsetRef.current.x - frameOffsetX);
           finalTop = Math.round(result.snappedPoint.y - canvasOffsetRef.current.y - frameOffsetY);
           const snappedMovingRectInCanvas: Rect = { x: result.snappedPoint.x, y: result.snappedPoint.y, width: w, height: h };
+          // Exclude ancestors of the dragged node from alignment-guide candidates.
+          // Ancestors are typically full-width (Section, Container, root) whose edges
+          // coincide with canvas-edge guides, creating duplicate/noisy lines.
+          const ancestorIds = new Set<string>();
+          let ancestorCursor: string | null | undefined = node?.parentId;
+          while (ancestorCursor) {
+            ancestorIds.add(ancestorCursor);
+            ancestorCursor = nodes[ancestorCursor]?.parentId;
+          }
+          // Limit alignment guides to elements within the same top-level section.
+          // Cross-section alignment is already covered by canvas-edge/center guides
+          // in alignmentGuides(). Searching ALL sections generates too many noisy
+          // vertical lines from unrelated elements in other sections.
+          let sectionSearchRoot: HTMLElement = frameEl;
+          if (rootNodeId) {
+            let cursor: string | null | undefined = moving.nodeId;
+            while (cursor && cursor !== rootNodeId) {
+              const cursorNode: BuilderNode | undefined = nodes[cursor];
+              if (cursorNode?.parentId === rootNodeId) {
+                const sectionEl = frameEl.querySelector(`[data-node-id="${cursor}"]`) as HTMLElement | null;
+                if (sectionEl) sectionSearchRoot = sectionEl;
+                break;
+              }
+              cursor = cursorNode?.parentId;
+            }
+          }
           const allOtherRects: Rect[] = [];
-          const allNodeEls = Array.from(frameEl.querySelectorAll("[data-node-id]")) as HTMLElement[];
+          const allNodeEls = Array.from(sectionSearchRoot.querySelectorAll("[data-node-id]")) as HTMLElement[];
           for (const el of allNodeEls) {
-            if (el.getAttribute("data-node-id") === moving.nodeId) continue;
+            const elId = el.getAttribute("data-node-id");
+            if (!elId || elId === moving.nodeId || ancestorIds.has(elId)) continue;
             const er = el.getBoundingClientRect();
             allOtherRects.push({ x: (er.left - originRect.left) / zoom, y: (er.top - originRect.top) / zoom, width: er.width / zoom, height: er.height / zoom });
           }

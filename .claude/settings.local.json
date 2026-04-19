@@ -14,7 +14,8 @@
       "Bash(pnpm lint *)",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(grep -E \"\\\\.\\(ts|tsx|js|jsx\\)$\")"
+      "Bash(grep -E \"\\\\.\\(ts|tsx|js|jsx\\)$\")",
+      "Bash(npx tsc *)"
     ]
   }
 }

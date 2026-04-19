@@ -92,7 +92,12 @@ export function useResizeGesture({
       const node = nodes[resizing.nodeId];
       const frameEl = activeFrameRef?.current ?? canvasFrameRef.current;
       if (node?.parentId && frameEl) {
+        // Use the desktop frame (canvasFrameRef) as origin so that guide positions are
+        // in CanvasRoot coordinate space — matching newX/newY which come from selectionRect
+        // (also computed relative to canvasFrameRef). In dual mode this prevents guides
+        // from being offset by the mobile frame's canvas position.
         const fr = frameEl.getBoundingClientRect();
+        const originRect = canvasFrameRef.current?.getBoundingClientRect() ?? fr;
         const siblings: Rect[] = [];
         for (const n of Object.values(nodes) as BuilderNode[]) {
           if (n.parentId === node.parentId && n.id !== resizing.nodeId) {
@@ -100,8 +105,8 @@ export function useResizeGesture({
             if (el) {
               const er = el.getBoundingClientRect();
               siblings.push({
-                x: (er.left - fr.left) / zoom,
-                y: (er.top - fr.top) / zoom,
+                x: (er.left - originRect.left) / zoom,
+                y: (er.top - originRect.top) / zoom,
                 width: er.width / zoom,
                 height: er.height / zoom,
               });
@@ -120,8 +125,8 @@ export function useResizeGesture({
           if (el.getAttribute("data-node-id") === resizing.nodeId) continue;
           const er = el.getBoundingClientRect();
           allOtherRects.push({
-            x: (er.left - fr.left) / zoom,
-            y: (er.top - fr.top) / zoom,
+            x: (er.left - originRect.left) / zoom,
+            y: (er.top - originRect.top) / zoom,
             width: er.width / zoom,
             height: er.height / zoom,
           });
