@@ -15,7 +15,11 @@
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
       "Bash(grep -E \"\\\\.\\(ts|tsx|js|jsx\\)$\")",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(find /Users/skyline/PROJECT/Redprint/packages/builder-* -name \"package.json\")",
+      "Bash(xargs -I {} sh -c 'echo \"=== {} ===\" && head -20 {}')",
+      "Bash(grep -E \"^/Users/skyline/PROJECT/Redprint/\\(apps|packages\\)/[^/]+/package.json$\")",
+      "Bash(xargs -I {} sh -c 'echo \"=== {} ===\" && jq -r \".name\" {}')"
     ]
   }
 }
