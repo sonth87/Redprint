@@ -1,6 +1,6 @@
 import type { BuilderDocument, BuilderNode, StyleConfig } from "@ui-builder/builder-core";
 import { CURRENT_SCHEMA_VERSION, DEFAULT_BREAKPOINTS } from "@ui-builder/builder-core";
-import type { PaletteItemChild } from "@/types/palette.types";
+import type { PaletteItemChild } from "../types/palette.types";
 
 export function buildPreviewDocument(
   type: string,

@@ -93,6 +93,9 @@ importers:
       '@ui-builder/builder-editor':
         specifier: workspace:*
         version: link:../../packages/builder-editor
+      '@ui-builder/builder-presets':
+        specifier: workspace:*
+        version: link:../../packages/builder-presets
       '@ui-builder/builder-react':
         specifier: workspace:*
         version: link:../../packages/builder-react
@@ -408,6 +411,49 @@ importers:
       vitest:
         specifier: ^3.0.0
         version: 3.2.4(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3)
+
+  packages/builder-presets:
+    dependencies:
+      '@ui-builder/builder-components':
+        specifier: workspace:*
+        version: link:../builder-components
+      '@ui-builder/builder-core':
+        specifier: workspace:*
+        version: link:../builder-core
+      '@ui-builder/builder-react':
+        specifier: workspace:*
+        version: link:../builder-react
+      '@ui-builder/builder-renderer':
+        specifier: workspace:*
+        version: link:../builder-renderer
+      '@ui-builder/ui':
+        specifier: workspace:*
+        version: link:../ui
+      lucide-react:
+        specifier: ^1.7.0
+        version: 1.7.0(react@18.3.1)
+      react:
+        specifier: '>=18.0.0'
+        version: 18.3.1
+      react-dom:
+        specifier: '>=18.0.0'
+        version: 18.3.1(react@18.3.1)
+    devDependencies:
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.3(@types/react@19.2.14)
+      '@ui-builder/config':
+        specifier: workspace:*
+        version: link:../config
+      tsup:
+        specifier: ^8.3.0
+        version: 8.5.1(jiti@2.6.1)(postcss@8.5.8)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
 
   packages/builder-react:
     dependencies:
@@ -8679,6 +8725,10 @@ snapshots:
   lucide-react@0.474.0(react@19.2.4):
     dependencies:
       react: 19.2.4
+
+  lucide-react@1.7.0(react@18.3.1):
+    dependencies:
+      react: 18.3.1
 
   lucide-react@1.7.0(react@19.2.4):
     dependencies:

@@ -1,0 +1,43 @@
+{
+  "name": "@ui-builder/builder-presets",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Preset component management UI — catalog, editor, prop controls",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@ui-builder/builder-components": "workspace:*",
+    "@ui-builder/builder-core": "workspace:*",
+    "@ui-builder/builder-react": "workspace:*",
+    "@ui-builder/builder-renderer": "workspace:*",
+    "@ui-builder/ui": "workspace:*",
+    "lucide-react": "^1.7.0"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@ui-builder/config": "workspace:*",
+    "tsup": "^8.3.0",
+    "typescript": "^5.7.0"
+  }
+}

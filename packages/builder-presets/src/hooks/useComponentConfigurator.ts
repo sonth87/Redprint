@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import type { ComponentDefinition, StyleConfig, BuilderDocument } from "@ui-builder/builder-core";
-import { buildPreviewDocument } from "@/lib/buildPreviewDocument";
+import { buildPreviewDocument } from "../lib/buildPreviewDocument";
 
 export interface UseComponentConfiguratorReturn {
   props: Record<string, unknown>;

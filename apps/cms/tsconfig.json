@@ -5,8 +5,10 @@
     "paths": {
       "@/*": ["./src/*"],
       "@palette/*": ["../api/src/data/palette/*"],
+      "@ui-builder/builder-presets": ["../../packages/builder-presets/src/index.ts"],
       "@ui-builder/builder-react": ["../../packages/builder-react/src/index.ts"],
-      "@ui-builder/builder-editor": ["../../packages/builder-editor/src/index.ts"]
+      "@ui-builder/builder-editor": ["../../packages/builder-editor/src/index.ts"],
+      "@ui-builder/ui": ["../../packages/ui/src/index.ts"]
     },
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "noEmit": true,

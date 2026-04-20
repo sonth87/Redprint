@@ -1,29 +1,30 @@
 import React, { useState, useMemo } from "react";
-import type { PaletteGroup, PaletteItem } from "@/types/palette.types";
-import type { StyleConfig } from "@ui-builder/builder-core";
-import { PALETTE_GROUPS } from "@/lib/paletteCatalog";
-import { registry } from "@/lib/registry";
-import { buildPreviewDocument } from "@/lib/buildPreviewDocument";
+import type { ComponentRegistry, StyleConfig } from "@ui-builder/builder-core";
+import type { PaletteGroup, PaletteItem } from "../types/palette.types";
+import { buildPreviewDocument } from "../lib/buildPreviewDocument";
 import { RuntimeRenderer } from "@ui-builder/builder-renderer";
 import { Input, ScrollArea, Badge } from "@ui-builder/ui";
-import { Search, ChevronDown, ChevronRight } from "lucide-react";
+import {
+  Search, ChevronDown, ChevronRight,
+  Type, Image, Square, Mouse, Pointer,
+  Menu, Layout, List, Box, Grid,
+  Zap, Settings, Layers, Navigation
+} from "lucide-react";
 
-interface PaletteCatalogProps {
-  selectedItemId: string | null;
-  onSelect: (item: PaletteItem) => void;
-}
-
-const GROUP_ICONS: Record<string, string> = {
-  text: "T",
-  image: "I",
-  button: "B",
-  gallery: "G",
-  decorative: "D",
-  menu: "M",
-  collection: "C",
-  container: "L",
-  card: "K",
-  designed_section: "S",
+const ICON_MAP: Record<string, React.ElementType> = {
+  type: Type,
+  image: Image,
+  square: Square,
+  "mouse-pointer": Pointer,
+  menu: Menu,
+  layout: Layout,
+  list: List,
+  box: Box,
+  grid: Grid,
+  zap: Zap,
+  settings: Settings,
+  layers: Layers,
+  navigation: Navigation,
 };
 
 const MINI_THUMB_W = 120;
@@ -32,7 +33,12 @@ const MINI_THUMB_H = 72;
 const MINI_WIDTH = 200;
 const MINI_SCALE = MINI_THUMB_W / MINI_WIDTH;
 
-function MiniRender({ item }: { item: PaletteItem }) {
+interface MiniRenderProps {
+  item: PaletteItem;
+  registry: ComponentRegistry;
+}
+
+function MiniRender({ item, registry }: MiniRenderProps) {
   const definition = registry.getComponent(item.componentType);
   if (!definition) {
     return (
@@ -76,10 +82,12 @@ function PaletteItemRow({
   item,
   selected,
   onSelect,
+  registry,
 }: {
   item: PaletteItem;
   selected: boolean;
   onSelect: (item: PaletteItem) => void;
+  registry: ComponentRegistry;
 }) {
   return (
     <button
@@ -104,7 +112,7 @@ function PaletteItemRow({
             className="w-full h-full object-cover"
           />
         ) : (
-          <MiniRender item={item} />
+          <MiniRender item={item} registry={registry} />
         )}
       </div>
       <div className="flex flex-col items-start min-w-0">
@@ -122,18 +130,24 @@ function PaletteItemRow({
   );
 }
 
+interface PresetCatalogProps {
+  groups: PaletteGroup[];
+  selectedItemId: string | null;
+  onSelect: (item: PaletteItem) => void;
+  registry: ComponentRegistry;
+}
 
-export function PaletteCatalog({ selectedItemId, onSelect }: PaletteCatalogProps) {
+export function PresetCatalog({ groups, selectedItemId, onSelect, registry }: PresetCatalogProps) {
   const [search, setSearch] = useState("");
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
-    () => new Set(PALETTE_GROUPS.map((g) => g.id)),
+    () => new Set(groups.map((g) => g.id)),
   );
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
-    if (!q) return PALETTE_GROUPS;
+    if (!q) return groups;
 
-    return PALETTE_GROUPS.map((group) => ({
+    return groups.map((group) => ({
       ...group,
       types: group.types
         .map((type) => ({
@@ -147,15 +161,15 @@ export function PaletteCatalog({ selectedItemId, onSelect }: PaletteCatalogProps
         }))
         .filter((type) => type.items.length > 0),
     })).filter((group) => group.types.length > 0);
-  }, [search]);
+  }, [search, groups]);
 
   const totalItems = useMemo(
     () =>
-      PALETTE_GROUPS.reduce(
+      groups.reduce(
         (sum, g) => sum + g.types.reduce((s, t) => s + t.items.length, 0),
         0,
       ),
-    [],
+    [groups],
   );
 
   const toggleGroup = (groupId: string) => {
@@ -204,11 +218,15 @@ export function PaletteCatalog({ selectedItemId, onSelect }: PaletteCatalogProps
                 className="flex items-center justify-between w-full px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:bg-muted/50 transition-colors"
                 onClick={() => toggleGroup(group.id)}
               >
-                <div className="flex items-center gap-1.5">
-                  <span className="w-4 h-4 rounded text-[9px] font-bold bg-muted flex items-center justify-center text-muted-foreground">
-                    {GROUP_ICONS[group.id] ?? group.label[0]}
-                  </span>
-                  <span>{group.label}</span>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <div className="w-4 h-4 rounded text-[9px] font-bold bg-muted flex items-center justify-center text-muted-foreground shrink-0">
+                    {group.icon && ICON_MAP[group.icon] ? (
+                      React.createElement(ICON_MAP[group.icon], { className: "h-3 w-3" })
+                    ) : (
+                      group.label[0]
+                    )}
+                  </div>
+                  <span className="truncate">{group.label}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Badge variant="outline" className="text-[9px] px-1 h-4 font-normal">
@@ -228,6 +246,7 @@ export function PaletteCatalog({ selectedItemId, onSelect }: PaletteCatalogProps
                   item={item}
                   selected={selectedItemId === item.id}
                   onSelect={onSelect}
+                  registry={registry}
                 />
               ))}
             </div>

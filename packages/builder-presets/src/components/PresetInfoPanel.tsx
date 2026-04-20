@@ -1,20 +1,18 @@
 import React, { useState } from "react";
-import type { ComponentDefinition, StyleConfig } from "@ui-builder/builder-core";
-import type { ComponentRegistry } from "@ui-builder/builder-core";
-import type { PaletteItem } from "@/types/palette.types";
+import type { ComponentDefinition, ComponentRegistry, StyleConfig } from "@ui-builder/builder-core";
+import type { PaletteItem } from "../types/palette.types";
 import { ScrollArea, Badge } from "@ui-builder/ui";
 import { Check, Copy } from "lucide-react";
 import { RuntimeRenderer } from "@ui-builder/builder-renderer";
-import { buildPreviewDocument } from "@/lib/buildPreviewDocument";
-import { registry } from "@/lib/registry";
+import { buildPreviewDocument } from "../lib/buildPreviewDocument";
 
-interface ComponentInfoPanelProps {
+interface PresetInfoPanelProps {
   item: PaletteItem;
   definition: ComponentDefinition | null;
   registryInstance: ComponentRegistry;
 }
 
-export function ComponentInfoPanel({ item, definition }: ComponentInfoPanelProps) {
+export function PresetInfoPanel({ item, definition, registryInstance }: PresetInfoPanelProps) {
   const [copied, setCopied] = useState(false);
 
   const copyId = () => {
@@ -109,7 +107,7 @@ export function ComponentInfoPanel({ item, definition }: ComponentInfoPanelProps
               <div className="overflow-hidden">
                 <RuntimeRenderer
                   document={doc}
-                  registry={registry}
+                  registry={registryInstance}
                   config={{ breakpoint: "desktop", variables: {}, attachNodeIds: false }}
                 />
               </div>

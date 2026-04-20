@@ -98,9 +98,9 @@ These principles govern all architectural decisions in the project:
 ┌─────────────────────────────────────────────────────────┐
 │                   Consumer Application                   │
 ├─────────────────────────────────────────────────────────┤
-│ builder-editor          │  builder-renderer              │
-│ (Visual editor UI)      │  (Production runtime renderer) │
-├─────────────────────────┴────────────────────────────────┤
+│ builder-editor  │ builder-presets  │ builder-renderer    │
+│ (Visual editor) │ (Preset mgmt UI) │ (Runtime renderer)  │
+├────────────────┴──────────────────┴─────────────────────┤
 │                    builder-react                          │
 │         (React adapter — hooks, context, provider)        │
 ├──────────────────────────────────────────────────────────┤
@@ -118,11 +118,12 @@ These principles govern all architectural decisions in the project:
 ### Package Dependency Rules
 
 ```
-builder-core          ← no dependencies (framework-agnostic)
-builder-components    ← depends on builder-core only (NO React/DOM in runtime)
-builder-react         ← depends on builder-core
-builder-editor        ← depends on builder-core, builder-react, builder-components, packages/ui
-builder-renderer      ← depends on builder-core, builder-react
+builder-core           ← no dependencies (framework-agnostic)
+builder-components     ← depends on builder-core only (NO React/DOM in runtime)
+builder-react          ← depends on builder-core
+builder-presets        ← depends on builder-core, builder-react, builder-components, builder-renderer, packages/ui
+builder-editor         ← depends on builder-core, builder-react, builder-components, packages/ui
+builder-renderer       ← depends on builder-core, builder-react
 ```
 
 | Package                | Role                                                        | Output           | Peer deps   |
@@ -130,6 +131,7 @@ builder-renderer      ← depends on builder-core, builder-react
 | `builder-core`         | Central engine — framework-agnostic                         | ESM + CJS        | none        |
 | `builder-components`   | 17 built-in ComponentDefinitions + `extendComponent()`      | ESM + CJS        | React ≥18   |
 | `builder-react`        | React adapter layer                                         | ESM only         | React ≥18   |
+| `builder-presets`      | Preset catalog UI — catalog browser, preset editor, prop controls | ESM + CJS | React ≥18   |
 | `builder-editor`       | Visual editor — canvas, panels, drag-drop, toolbar          | ESM + CSS bundle | React ≥18   |
 | `builder-renderer`     | Runtime renderer — production, no editor code               | ESM              | React ≥18   |
 | `packages/ui`          | shadcn-based design system for editor UI components         | ESM              | React ≥18   |

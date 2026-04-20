@@ -2,10 +2,8 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import type { Breakpoint } from "@ui-builder/builder-core";
 import { DEFAULT_BREAKPOINTS, DEVICE_VIEWPORT_PRESETS } from "@ui-builder/builder-core";
 import { useBuilder, useSelection, NodeRenderer } from "@ui-builder/builder-react";
-import { InlineTextEditor, TextEditToolbar } from "@ui-builder/builder-editor";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@ui-builder/ui";
 import { Monitor, Tablet, Smartphone, Copy, Trash2, ArrowUp, ArrowDown } from "lucide-react";
-import type { Editor } from "@tiptap/react";
 
 const BREAKPOINT_ICONS: Record<Breakpoint, React.ElementType> = {
   desktop: Monitor,
@@ -57,9 +55,6 @@ export function InteractiveCanvas() {
   const editingPropKey = state.editor.editingPropKey;
   const selectedNodeId = selectedNodeIds[0] ?? null;
 
-  // Tiptap editor instance (for TextEditToolbar)
-  const [tiptapEditor, setTiptapEditor] = useState<Editor | null>(null);
-
   // Rect of a node relative to the outer container (used for toolbar positioning)
   const getNodeRect = useCallback((nodeId: string) => {
     const outer = outerRef.current;
@@ -102,31 +97,25 @@ export function InteractiveCanvas() {
     }
   }, [state.document.nodes, builder.registry, dispatch]);
 
-  const handleInlineCommit = useCallback((html: string) => {
+  const handlePlainTextCommit = useCallback((text: string) => {
     if (!editingNodeId || !editingPropKey) return;
+    // Wrap plain text back into a <p> tag to match the richtext prop format
+    const content = `<p>${text}</p>`;
     dispatch({
       type: "EXIT_TEXT_EDIT",
-      payload: { nodeId: editingNodeId, propKey: editingPropKey, content: html },
+      payload: { nodeId: editingNodeId, propKey: editingPropKey, content },
     });
-    setTiptapEditor(null);
   }, [editingNodeId, editingPropKey, dispatch]);
 
   const handleInlineExit = useCallback(() => {
     dispatch({ type: "EXIT_TEXT_EDIT", payload: {} });
-    setTiptapEditor(null);
   }, [dispatch]);
 
   const editingNode = editingNodeId ? state.document.nodes[editingNodeId] : null;
-  const initialContent = editingNode && editingPropKey
-    ? String(editingNode.props[editingPropKey] ?? "")
+  // Strip HTML tags to get plain text for editing
+  const initialPlainText = editingNode && editingPropKey
+    ? String(editingNode.props[editingPropKey] ?? "").replace(/<[^>]*>/g, "")
     : "";
-
-  // Editing node rect for TextEditToolbar (relative to outerRef, zoom=1)
-  const [editingRect, setEditingRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
-  useEffect(() => {
-    if (!editingNodeId) { setEditingRect(null); return; }
-    setEditingRect(getNodeRect(editingNodeId));
-  }, [editingNodeId, getNodeRect]);
 
   return (
     <div className="flex flex-col h-full">
@@ -215,27 +204,13 @@ export function InteractiveCanvas() {
           />
         )}
 
-        {editingNodeId && editingPropKey && canvasFrameRef.current && (
-          <InlineTextEditor
+        {editingNodeId && editingPropKey && (
+          <PlainTextOverlay
             nodeId={editingNodeId}
-            initialContent={initialContent}
-            canvasFrameRef={canvasFrameRef}
-            canvasContainerRef={canvasContainerRef}
+            initialText={initialPlainText}
+            outerRef={outerRef}
             zoom={scale}
-            panOffset={{ x: 0, y: 0 }}
-            onCommit={handleInlineCommit}
-            onExit={handleInlineExit}
-            onEditorReady={setTiptapEditor}
-            onBoundsChange={(r) => setEditingRect({ x: r.x, y: r.y, width: r.width, height: r.height })}
-          />
-        )}
-
-        {editingNodeId && tiptapEditor && editingRect && (
-          <TextEditToolbar
-            editor={tiptapEditor}
-            rect={editingRect}
-            zoom={1}
-            panOffset={{ x: 0, y: 0 }}
+            onCommit={handlePlainTextCommit}
             onExit={handleInlineExit}
           />
         )}
@@ -352,6 +327,120 @@ function CmsContextualToolbar({
         />
       )}
     </div>
+  );
+}
+
+// ─── Plain text overlay editor ───────────────────────────────────────────────
+
+function PlainTextOverlay({
+  nodeId,
+  initialText,
+  outerRef,
+  zoom,
+  onCommit,
+  onExit,
+}: {
+  nodeId: string;
+  initialText: string;
+  outerRef: React.RefObject<HTMLDivElement | null>;
+  zoom: number;
+  onCommit: (text: string) => void;
+  onExit: () => void;
+}) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const committedRef = useRef(false);
+  const [rect, setRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+  const [computedStyle, setComputedStyle] = useState<React.CSSProperties>({});
+
+  // Locate the DOM element and copy its position + styles
+  useEffect(() => {
+    const outer = outerRef.current;
+    if (!outer) return;
+    const el = outer.querySelector(`[data-node-id="${nodeId}"]`) as HTMLElement | null;
+    if (!el) return;
+
+    const outerRect = outer.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+    setRect({
+      x: elRect.left - outerRect.left,
+      y: elRect.top - outerRect.top,
+      width: elRect.width,
+      height: elRect.height,
+    });
+
+    const cs = window.getComputedStyle(el);
+    setComputedStyle({
+      fontFamily: cs.fontFamily,
+      fontSize: cs.fontSize,
+      fontWeight: cs.fontWeight,
+      fontStyle: cs.fontStyle,
+      lineHeight: cs.lineHeight,
+      letterSpacing: cs.letterSpacing,
+      textAlign: cs.textAlign as React.CSSProperties["textAlign"],
+      color: cs.color,
+      backgroundColor: cs.backgroundColor,
+      padding: cs.padding,
+    });
+
+    // Hide original element while editing
+    el.style.visibility = "hidden";
+    return () => { el.style.visibility = ""; };
+  }, [nodeId, outerRef, zoom]);
+
+  // Auto-focus and select all on mount
+  useEffect(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    ta.focus();
+    ta.select();
+  }, []);
+
+  const commit = useCallback(() => {
+    if (committedRef.current) return;
+    committedRef.current = true;
+    onCommit(textareaRef.current?.value ?? initialText);
+    onExit();
+  }, [initialText, onCommit, onExit]);
+
+  // Escape = commit & exit
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Escape") { e.preventDefault(); commit(); }
+    // Enter without shift = commit
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); commit(); }
+  }, [commit]);
+
+  // Click outside = commit
+  useEffect(() => {
+    const handler = (e: PointerEvent) => {
+      if (!textareaRef.current?.contains(e.target as Node)) commit();
+    };
+    window.addEventListener("pointerdown", handler, true);
+    return () => window.removeEventListener("pointerdown", handler, true);
+  }, [commit]);
+
+  if (!rect) return null;
+
+  return (
+    <textarea
+      ref={textareaRef}
+      defaultValue={initialText}
+      onKeyDown={handleKeyDown}
+      onPointerDown={(e) => e.stopPropagation()}
+      style={{
+        position: "absolute",
+        left: rect.x,
+        top: rect.y,
+        width: rect.width,
+        minHeight: rect.height,
+        zIndex: 60,
+        boxSizing: "border-box",
+        resize: "none",
+        border: "2px solid #3b82f6",
+        outline: "none",
+        overflow: "hidden",
+        ...computedStyle,
+      }}
+    />
   );
 }
 

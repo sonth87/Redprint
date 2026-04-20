@@ -1,21 +1,14 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { Separator } from "@ui-builder/ui";
 import { LayoutTemplate } from "lucide-react";
-import { registry } from "@/lib/registry";
-import type { PaletteItem } from "@/types/palette.types";
-import { PaletteCatalog } from "@/components/PaletteCatalog";
-import { ComponentEditorPane } from "@/components/ComponentEditorPane";
+import { PALETTE_GROUPS } from "@/lib/paletteCatalog";
+import { createRegistry, PresetCatalog, PresetEditor } from "@ui-builder/builder-presets";
+import type { PaletteItem } from "@ui-builder/builder-presets";
+
+const registry = createRegistry();
 
 export function App() {
   const [selectedItem, setSelectedItem] = useState<PaletteItem | null>(null);
-
-  const definition = useMemo(
-    () =>
-      selectedItem
-        ? (registry.getComponent(selectedItem.componentType) ?? null)
-        : null,
-    [selectedItem],
-  );
 
   return (
     <div className="flex flex-col h-full w-full overflow-hidden bg-background">
@@ -30,24 +23,29 @@ export function App() {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Left: palette catalog */}
+        {/* Left: preset catalog */}
         <div className="w-80 shrink-0 overflow-hidden flex flex-col border-r">
-          <PaletteCatalog
+          <PresetCatalog
+            groups={PALETTE_GROUPS}
             selectedItemId={selectedItem?.id ?? null}
             onSelect={setSelectedItem}
+            registry={registry}
           />
         </div>
 
         <Separator orientation="vertical" />
 
-        {/* Center + Right: keyed so hook remounts with correct initial values per item */}
-        {selectedItem && definition ? (
-          <ComponentEditorPane
+        {/* Center + Right: keyed so editor remounts with correct initial values per item */}
+        {selectedItem ? (
+          <PresetEditor
             key={selectedItem.id}
             item={selectedItem}
-            definition={definition}
             registry={registry}
             onReset={() => {}}
+            onChange={(updatedItem) => {
+              // Future: persist updatedItem to API/database
+              console.log("Preset updated:", updatedItem);
+            }}
           />
         ) : (
           <EmptyState />

@@ -1,8 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
-import type { BuilderDocument, BuilderNode, ComponentDefinition, StyleConfig } from "@ui-builder/builder-core";
-import type { PaletteItem } from "@/types/palette.types";
-import { buildPreviewDocument } from "@/lib/buildPreviewDocument";
-import { registry } from "@/lib/registry";
+import type { BuilderDocument, BuilderNode, ComponentDefinition, ComponentRegistry, StyleConfig } from "@ui-builder/builder-core";
+import type { PaletteItem } from "../types/palette.types";
+import { buildPreviewDocument } from "../lib/buildPreviewDocument";
 
 export interface UseDocumentEditorReturn {
   document: BuilderDocument;
@@ -41,7 +40,7 @@ function getAllDescendants(nodes: Record<string, BuilderNode>, nodeId: string): 
   return result;
 }
 
-export function useDocumentEditor(item: PaletteItem): UseDocumentEditorReturn {
+export function useDocumentEditor(item: PaletteItem, registry: ComponentRegistry): UseDocumentEditorReturn {
   const initialDoc = useMemo(() => buildInitialDoc(item), []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [doc, setDoc] = useState<BuilderDocument>(initialDoc);
@@ -97,7 +96,7 @@ export function useDocumentEditor(item: PaletteItem): UseDocumentEditorReturn {
       nodes: { ...prev.nodes, [id]: newNode },
     }));
     return id;
-  }, [doc.nodes]);
+  }, [doc.nodes, registry]);
 
   const removeNode = useCallback((nodeId: string) => {
     setDoc((prev) => {

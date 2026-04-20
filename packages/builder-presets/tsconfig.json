@@ -1,0 +1,16 @@
+{
+  "extends": "../../packages/config/tsconfig.react.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "paths": {
+      "@ui-builder/builder-core": ["../builder-core/dist/index.d.ts"],
+      "@ui-builder/builder-components": ["../builder-components/dist/index.d.ts"],
+      "@ui-builder/builder-react": ["../builder-react/dist/index.d.ts"],
+      "@ui-builder/builder-renderer": ["../builder-renderer/dist/index.d.ts"],
+      "@ui-builder/ui": ["../ui/dist/index.d.ts"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}

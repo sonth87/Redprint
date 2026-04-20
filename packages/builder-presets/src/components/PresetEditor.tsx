@@ -1,15 +1,13 @@
-import React, { useState, useMemo } from "react";
-import type { ComponentDefinition, StyleConfig } from "@ui-builder/builder-core";
-import type { ComponentRegistry } from "@ui-builder/builder-core";
+import React, { useState, useMemo, useEffect, useRef } from "react";
+import type { ComponentDefinition, ComponentRegistry, StyleConfig, BuilderDocument, BuilderNode } from "@ui-builder/builder-core";
 import { createBuilder } from "@ui-builder/builder-core";
-import { BASE_COMPONENTS } from "@ui-builder/builder-components";
 import { BuilderProvider, useBuilder, useSelection } from "@ui-builder/builder-react";
-import type { PaletteItem } from "@/types/palette.types";
+import type { PaletteItem } from "../types/palette.types";
 import { Separator, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@ui-builder/ui";
-import { buildPreviewDocument } from "@/lib/buildPreviewDocument";
+import { buildPreviewDocument } from "../lib/buildPreviewDocument";
 import { InteractiveCanvas } from "./InteractiveCanvas";
 import { PropSchemaEditor } from "./PropSchemaEditor";
-import { ComponentInfoPanel } from "./ComponentInfoPanel";
+import { PresetInfoPanel } from "./PresetInfoPanel";
 import { NodeTreePanel } from "./NodeTreePanel";
 import { Info, SlidersHorizontal } from "lucide-react";
 
@@ -20,24 +18,53 @@ const TABS: Array<{ id: PanelTab; label: string; Icon: React.ElementType }> = [
   { id: "properties", label: "Properties & Style", Icon: SlidersHorizontal },
 ];
 
-interface ComponentEditorPaneProps {
+export interface PresetEditorProps {
   item: PaletteItem;
-  definition: ComponentDefinition | null;
   registry: ComponentRegistry;
   onReset: () => void;
+  onChange?: (updatedItem: PaletteItem) => void;
+}
+
+function buildChildrenFromDocument(
+  nodes: Record<string, BuilderNode>,
+  parentId: string,
+): PaletteItem["children"] {
+  const children = Object.values(nodes)
+    .filter((n) => n.parentId === parentId)
+    .sort((a, b) => a.order - b.order);
+
+  if (children.length === 0) return undefined;
+
+  return children.map((child) => ({
+    componentType: child.type,
+    name: child.name,
+    props: child.props,
+    style: child.style as Record<string, unknown>,
+    children: buildChildrenFromDocument(nodes, child.id),
+  }));
+}
+
+function documentToItem(original: PaletteItem, doc: BuilderDocument): PaletteItem {
+  const root = doc.nodes[doc.rootNodeId];
+  if (!root) return original;
+  return {
+    ...original,
+    props: root.props,
+    style: root.style as Record<string, unknown>,
+    children: buildChildrenFromDocument(doc.nodes, doc.rootNodeId),
+  };
 }
 
 /**
  * Keyed wrapper — remounts entirely when item.id changes.
  * Creates a fresh BuilderAPI from the palette item's document on each mount.
  */
-export function ComponentEditorPane({
+export function PresetEditor({
   item,
-  definition,
   registry,
   onReset,
-}: ComponentEditorPaneProps) {
-  // Create builder once per mount (item.id keying in App.tsx ensures remount on item change)
+  onChange,
+}: PresetEditorProps) {
   const builder = useMemo(() => {
     const doc = buildPreviewDocument(
       item.componentType,
@@ -64,7 +91,8 @@ export function ComponentEditorPane({
         },
       },
     });
-    for (const component of BASE_COMPONENTS) {
+    const components = registry.listComponents();
+    for (const component of components) {
       b.registry.registerComponent(component);
     }
     return b;
@@ -72,22 +100,22 @@ export function ComponentEditorPane({
 
   return (
     <BuilderProvider builder={builder}>
-      <ComponentEditorPaneInner
+      <PresetEditorInner
         item={item}
-        definition={definition}
         registry={registry}
         onReset={onReset}
+        onChange={onChange}
       />
     </BuilderProvider>
   );
 }
 
-function ComponentEditorPaneInner({
+function PresetEditorInner({
   item,
-  definition,
   registry,
   onReset,
-}: ComponentEditorPaneProps) {
+  onChange,
+}: PresetEditorProps) {
   const { state, dispatch } = useBuilder();
   const { selectedNodeIds } = useSelection();
   const [activeTab, setActiveTab] = useState<PanelTab>("properties");
@@ -98,10 +126,20 @@ function ComponentEditorPaneInner({
     ? (registry.getComponent(selectedNode.type) ?? null)
     : null;
 
-  const rootDefinition = definition;
+  const definition = registry.getComponent(item.componentType) ?? null;
   const hasMultipleNodes = Object.keys(state.document.nodes).length > 1;
-  const rootCanContainChildren = rootDefinition?.capabilities.canContainChildren ?? false;
+  const rootCanContainChildren = definition?.capabilities.canContainChildren ?? false;
   const showTree = hasMultipleNodes || rootCanContainChildren;
+
+  // Track previous doc to avoid firing onChange on first render
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    onChange?.(documentToItem(item, state.document));
+  }, [state.document]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleAddChild = (parentId: string, componentType: string) => {
     const def = registry.getComponent(componentType);
@@ -124,10 +162,6 @@ function ComponentEditorPaneInner({
     dispatch({ type: "REMOVE_NODE", payload: { nodeId } });
   };
 
-  const handleReset = () => {
-    onReset();
-  };
-
   return (
     <div className="flex flex-1 overflow-hidden">
       <div className="flex-1 overflow-hidden">
@@ -139,7 +173,7 @@ function ComponentEditorPaneInner({
       <div className="w-80 shrink-0 border-l overflow-hidden flex">
         <div className="flex-1 overflow-hidden flex flex-col">
           {activeTab === "info" ? (
-            <ComponentInfoPanel
+            <PresetInfoPanel
               item={item}
               definition={definition}
               registryInstance={registry}

@@ -95,11 +95,14 @@ These principles govern all architectural decisions in the project:
 ┌─────────────────────────────────────────────────────────┐
 │                   Consumer Application                   │
 ├─────────────────────────────────────────────────────────┤
-│ builder-editor          │  builder-renderer              │
-│ (Visual editor UI)      │  (Production runtime renderer) │
-├─────────────────────────┴────────────────────────────────┤
+│ builder-editor  │ builder-presets      │ builder-renderer    │
+│ (Visual editor) │ (Preset management) │ (Runtime renderer)  │
+├────────────────┴──────────────────┴─────────────────────┤
 │                    builder-react                          │
 │         (React adapter — hooks, context, provider)        │
+├──────────────────────────────────────────────────────────┤
+│                  builder-components                       │
+│  (17 built-in ComponentDefinitions + extendComponent())   │
 ├──────────────────────────────────────────────────────────┤
 │                    builder-core                           │
 │   (Framework-agnostic engine — state, commands, events)   │

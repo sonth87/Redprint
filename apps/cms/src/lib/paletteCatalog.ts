@@ -1,4 +1,4 @@
-import type { PaletteGroup } from "@/types/palette.types";
+import type { PaletteGroup } from "@ui-builder/builder-presets";
 
 // Static imports — no runtime API dependency.
 // Vite resolves these via the @palette alias → apps/api/src/data/palette/
