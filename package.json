@@ -4,10 +4,11 @@
   "version": "0.0.2",
   "description": "A modular, extensible UI Builder Library — drag-and-drop web interface building platform",
   "scripts": {
-    "dev": "turbo dev --filter=@ui-builder/playground --filter=website --filter=@ui-builder/api",
+    "dev": "turbo dev --filter=@ui-builder/playground --filter=website --filter=@ui-builder/api --filter=@ui-builder/cms",
     "play": "turbo dev --filter=@ui-builder/playground",
     "api": "turbo dev --filter=@ui-builder/api",
     "web": "turbo dev --filter=website",
+    "cms": "turbo dev --filter=@ui-builder/cms",
     "build": "turbo build",
     "test": "turbo test",
     "lint": "turbo lint",
