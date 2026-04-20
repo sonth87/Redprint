@@ -171,7 +171,7 @@ function RuntimeRenderer({ node, style }: RendererProps) {
   const autoPlaySpeed = Number(node.props.autoPlaySpeed ?? 3000);
   const loop = Boolean(node.props.loop ?? true);
 
-  const slides = DEFAULT_SLIDES.slice(0, slideCount).map((s, i) => ({
+  const slides = DEFAULT_SLIDES.slice(0, slideCount).map((_s, i) => ({
     ...DEFAULT_SLIDES[i % DEFAULT_SLIDES.length],
     label: String(i + 1),
   }));
@@ -387,7 +387,7 @@ export const GallerySliderComponent: ComponentDefinition = {
     shape: "rectangle",
     aspectRatio: "16/9",
   },
-  defaultStyle: { width: "100%", position: "relative" },
+  defaultStyle: { width: "100%" },
   editorRenderer: (props) => <EditorRenderer {...props} />,
   runtimeRenderer: (props) => <RuntimeRenderer {...props} />,
 };
