@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import type { ComponentDefinition, ComponentRegistry, StyleConfig, BuilderDocument, BuilderNode } from "@ui-builder/builder-core";
 import { createBuilder } from "@ui-builder/builder-core";
-import { BuilderProvider, useBuilder, useSelection } from "@ui-builder/builder-react";
+import { BuilderProvider, useBuilder, useSelection, useBreakpoint } from "@ui-builder/builder-react";
 import type { PaletteItem } from "../types/palette.types";
 import { Separator, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@ui-builder/ui";
 import { buildPreviewDocument } from "../lib/buildPreviewDocument";
@@ -118,6 +118,7 @@ function PresetEditorInner({
 }: PresetEditorProps) {
   const { state, dispatch } = useBuilder();
   const { selectedNodeIds } = useSelection();
+  const { breakpoint } = useBreakpoint();
   const [activeTab, setActiveTab] = useState<PanelTab>("properties");
 
   const selectedNodeId = selectedNodeIds[0] ?? state.document.rootNodeId;
@@ -197,6 +198,7 @@ function PresetEditorInner({
                 <PropSchemaEditor
                   definition={selectedDefinition}
                   node={selectedNode}
+                  breakpoint={breakpoint}
                   onPropChange={(key, val) =>
                     dispatch({
                       type: "UPDATE_PROPS",

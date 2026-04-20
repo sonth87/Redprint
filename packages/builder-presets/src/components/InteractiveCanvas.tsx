@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useRef, useEffect, useCallback, useState } from "react";
 import type { Breakpoint } from "@ui-builder/builder-core";
 import { DEFAULT_BREAKPOINTS, DEVICE_VIEWPORT_PRESETS } from "@ui-builder/builder-core";
-import { useBuilder, useSelection, NodeRenderer } from "@ui-builder/builder-react";
+import { useBuilder, useSelection, useBreakpoint, NodeRenderer } from "@ui-builder/builder-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@ui-builder/ui";
 import { Monitor, Tablet, Smartphone, Copy, Trash2, ArrowUp, ArrowDown } from "lucide-react";
 
@@ -30,7 +30,7 @@ export function InteractiveCanvas() {
   const { state, dispatch, builder } = useBuilder();
   const { selectedNodeIds, select, clearSelection } = useSelection();
 
-  const [breakpoint, setBreakpoint] = useState<Breakpoint>("desktop");
+  const { breakpoint, setBreakpoint } = useBreakpoint();
   const viewport = DEVICE_VIEWPORT_PRESETS[breakpoint];
 
   // Scale-to-fit

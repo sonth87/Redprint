@@ -30,10 +30,10 @@ export interface RichtextToolbarConfig {
 }
 
 export type PropSchema =
-  | { key: string; type: "string"; label: string; default?: string; multiline?: boolean; placeholder?: string; required?: boolean }
-  | { key: string; type: "number"; label: string; default?: number; min?: number; max?: number; step?: number; unit?: string; required?: boolean }
-  | { key: string; type: "boolean"; label: string; default?: boolean; required?: boolean }
-  | { key: string; type: "select"; label: string; options: SelectOption[]; default?: string; multiple?: boolean }
+  | { key: string; type: "string"; label: string; default?: string; multiline?: boolean; placeholder?: string; required?: boolean; description?: string }
+  | { key: string; type: "number"; label: string; default?: number; min?: number; max?: number; step?: number; unit?: string; required?: boolean; description?: string }
+  | { key: string; type: "boolean"; label: string; default?: boolean; required?: boolean; description?: string }
+  | { key: string; type: "select"; label: string; options: SelectOption[]; default?: string; multiple?: boolean; description?: string }
   | { key: string; type: "color"; label: string; default?: string; allowGradient?: boolean; allowTransparent?: boolean }
   | { key: string; type: "image"; label: string; accept?: string | string[]; required?: boolean }
   | { key: string; type: "video"; label: string; accept?: string | string[]; required?: boolean }

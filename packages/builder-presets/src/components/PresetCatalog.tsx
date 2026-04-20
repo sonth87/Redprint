@@ -221,7 +221,7 @@ export function PresetCatalog({ groups, selectedItemId, onSelect, registry }: Pr
                 <div className="flex items-center gap-1.5 min-w-0">
                   <div className="w-4 h-4 rounded text-[9px] font-bold bg-muted flex items-center justify-center text-muted-foreground shrink-0">
                     {group.icon && ICON_MAP[group.icon] ? (
-                      React.createElement(ICON_MAP[group.icon], { className: "h-3 w-3" })
+                      React.createElement(ICON_MAP[group.icon]!, { className: "h-3 w-3" })
                     ) : (
                       group.label[0]
                     )}

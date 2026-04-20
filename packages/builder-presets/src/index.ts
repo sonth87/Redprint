@@ -23,5 +23,8 @@ export { PresetInfoPanel } from "./components/PresetInfoPanel";
 export { InteractiveCanvas } from "./components/InteractiveCanvas";
 export { NodeTreePanel } from "./components/NodeTreePanel";
 export { PropSchemaEditor } from "./components/PropSchemaEditor";
+export type { PropSchemaEditorProps } from "./components/PropSchemaEditor";
 export { StyleEditor } from "./components/StyleEditor";
+export { StyleSections } from "./components/style-controls/StyleSections";
+export { NumericInput } from "./components/style-controls/NumericInput";
 export { PropControl } from "./components/prop-controls/PropControl";
