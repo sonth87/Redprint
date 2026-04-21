@@ -9,6 +9,7 @@ interface NodeTreePanelProps {
   onSelect: (nodeId: string) => void;
   onAddChild: (parentId: string, componentType: string) => void;
   onRemove: (nodeId: string) => void;
+  onReorder?: (nodeId: string, targetParentId: string | undefined, insertIndex: number) => void;
 }
 
 export function NodeTreePanel({
@@ -18,6 +19,7 @@ export function NodeTreePanel({
   onSelect,
   onAddChild,
   onRemove,
+  onReorder,
 }: NodeTreePanelProps) {
   const rootNode = document.nodes[document.rootNodeId];
   if (!rootNode) return null;
@@ -40,6 +42,7 @@ export function NodeTreePanel({
           onSelect={onSelect}
           onAddChild={onAddChild}
           onRemove={onRemove}
+          onReorder={onReorder}
         />
       </div>
     </div>
@@ -56,6 +59,7 @@ interface NodeRowProps {
   onSelect: (nodeId: string) => void;
   onAddChild: (parentId: string, componentType: string) => void;
   onRemove: (nodeId: string) => void;
+  onReorder?: (nodeId: string, targetParentId: string, insertIndex: number) => void;
 }
 
 function NodeRow({
@@ -68,10 +72,12 @@ function NodeRow({
   onSelect,
   onAddChild,
   onRemove,
+  onReorder,
 }: NodeRowProps) {
   const [expanded, setExpanded] = useState(true);
   const [adding, setAdding] = useState(false);
   const [hovered, setHovered] = useState(false);
+  const [dragOver, setDragOver] = useState<"above" | "below" | null>(null);
 
   const definition = registry.getComponent(node.type);
   const canHaveChildren = definition?.capabilities.canContainChildren ?? false;
@@ -97,17 +103,67 @@ function NodeRow({
     onRemove(node.id);
   };
 
+  const handleDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("nodeId", node.id);
+  };
+
+  const handleDragOver = (e: React.DragEvent, position: "above" | "below") => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOver(position);
+  };
+
+  const handleDrop = (e: React.DragEvent, position: "above" | "below") => {
+    e.preventDefault();
+    e.stopPropagation();
+    const draggedNodeId = e.dataTransfer.getData("nodeId");
+    if (!draggedNodeId || draggedNodeId === node.id) {
+      setDragOver(null);
+      return;
+    }
+
+    // Get parent and siblings
+    const parentIdValue = node.parentId;
+    const parentId = parentIdValue ? parentIdValue : undefined;
+    const siblings = parentIdValue
+      ? Object.values(document.nodes)
+          .filter((n) => n.parentId === parentIdValue)
+          .sort((a, b) => a.order - b.order)
+      : [node];
+
+    const targetIdx = siblings.findIndex((n) => n.id === node.id);
+    const insertIndex = position === "above" ? targetIdx : targetIdx + 1;
+
+    // parentId is either string (from parentIdValue) or undefined, cast to match expected type
+    onReorder?.(draggedNodeId, parentId!, insertIndex);
+    setDragOver(null);
+  };
+
   return (
     <div>
+      {dragOver === "above" && (
+        <div className="h-0.5 bg-primary mx-2 mb-1" />
+      )}
       <div
         className={
-          "flex items-center gap-1 pr-1 cursor-pointer select-none group " +
-          (isSelected ? "bg-primary/10 text-primary" : "hover:bg-muted/60 text-foreground")
+          "flex items-center gap-1 pr-1 cursor-move select-none group transition-colors " +
+          (dragOver
+            ? "bg-primary/20"
+            : isSelected ? "bg-primary/10 text-primary" : "hover:bg-muted/60 text-foreground")
         }
         style={{ paddingLeft: depth * 12 + 4 }}
         onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
+        onMouseLeave={() => {
+          setHovered(false);
+          setDragOver(null);
+        }}
         onClick={() => onSelect(node.id)}
+        draggable
+        onDragStart={handleDragStart}
+        onDragOver={(e) => handleDragOver(e, "below")}
+        onDragLeave={() => setDragOver(null)}
+        onDrop={(e) => handleDrop(e, dragOver === "above" ? "above" : "below")}
       >
         {/* Expand toggle */}
         <button
@@ -183,8 +239,12 @@ function NodeRow({
           onSelect={onSelect}
           onAddChild={onAddChild}
           onRemove={onRemove}
+          onReorder={onReorder}
         />
       ))}
+      {dragOver === "below" && (
+        <div className="h-0.5 bg-primary mx-2 mt-1" />
+      )}
     </div>
   );
 }

@@ -163,6 +163,13 @@ function PresetEditorInner({
     dispatch({ type: "REMOVE_NODE", payload: { nodeId } });
   };
 
+  const handleReorderNode = (nodeId: string, targetParentId: string | undefined, insertIndex: number) => {
+    dispatch({
+      type: "MOVE_NODE",
+      payload: { nodeId, targetParentId, insertIndex },
+    });
+  };
+
   return (
     <div className="flex flex-1 overflow-hidden">
       <div className="flex-1 overflow-hidden">
@@ -191,6 +198,7 @@ function PresetEditorInner({
                   }
                   onAddChild={handleAddChild}
                   onRemove={handleRemoveNode}
+                  onReorder={handleReorderNode}
                 />
               )}
 

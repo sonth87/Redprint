@@ -9,6 +9,7 @@ import {
   TabsContent,
   Label,
   Input,
+  Textarea,
   Select,
   SelectContent,
   SelectItem,
@@ -384,11 +385,11 @@ export function PropSchemaEditor({
                   <Label className="text-muted-foreground text-[10px]">
                     Custom Attributes (JSON)
                   </Label>
-                  <textarea
-                    className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex min-h-[60px] w-full resize-none rounded-md border px-3 py-2 font-mono text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                  <Textarea
+                    className="font-mono text-xs min-h-[120px] resize-none"
                     value={String(node.props._customAttributes ?? "{}")}
                     placeholder='{"data-testid": "my-component"}'
-                    onChange={(e) => onPropChange("_customAttributes", e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onPropChange("_customAttributes", e.target.value)}
                   />
                 </div>
               </div>
