@@ -95,7 +95,7 @@ export function PropSchemaEditor({
         <p className="text-muted-foreground font-mono text-[9px]">{definition.type}</p>
       </div>
 
-      <Tabs defaultValue="design" className="flex min-h-0 flex-1 flex-col">
+      <Tabs defaultValue="design" className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <TabsList
           className="mx-2 mt-1.5 grid h-10 shrink-0 grid-cols-4"
           style={{ height: "48px", gridTemplateColumns: "repeat(4,1fr)" }}
@@ -128,8 +128,8 @@ export function PropSchemaEditor({
         </TabsList>
 
         {/* ── Design tab ─────────────────────────────────────────────── */}
-        <TabsContent value="design" className="mt-0 flex-1 overflow-hidden">
-          <ScrollArea className="h-full">
+        <TabsContent value="design" className="mt-0 min-h-0 flex-1 data-[state=active]:flex data-[state=active]:flex-col">
+          <ScrollArea className="flex-1 min-h-0">
             {definition.propSchema.length > 0 && (
               <CollapsibleSection title="Properties">
                 <div className="space-y-3">
@@ -149,8 +149,8 @@ export function PropSchemaEditor({
         </TabsContent>
 
         {/* ── Effects tab ────────────────────────────────────────────── */}
-        <TabsContent value="effects" className="mt-0 flex-1 overflow-hidden">
-          <ScrollArea className="h-full">
+        <TabsContent value="effects" className="mt-0 min-h-0 flex-1 data-[state=active]:flex data-[state=active]:flex-col">
+          <ScrollArea className="flex-1 min-h-0 w-full">
             <CollapsibleSection title="Animation">
               <div className="grid gap-1.5">
                 <Label className="text-muted-foreground text-[10px]">Preset</Label>
@@ -260,8 +260,8 @@ export function PropSchemaEditor({
         </TabsContent>
 
         {/* ── Data tab ───────────────────────────────────────────────── */}
-        <TabsContent value="data" className="mt-0 flex-1 overflow-hidden">
-          <ScrollArea className="h-full">
+        <TabsContent value="data" className="mt-0 min-h-0 flex-1 data-[state=active]:flex data-[state=active]:flex-col">
+          <ScrollArea className="flex-1 min-h-0">
             <CollapsibleSection title="Repeater">
               <div className="grid gap-2">
                 <div className="flex items-center justify-between">
@@ -350,8 +350,8 @@ export function PropSchemaEditor({
         </TabsContent>
 
         {/* ── Advanced tab ───────────────────────────────────────────── */}
-        <TabsContent value="advanced" className="mt-0 flex-1 overflow-hidden">
-          <ScrollArea className="h-full">
+        <TabsContent value="advanced" className="mt-0 min-h-0 flex-1 data-[state=active]:flex data-[state=active]:flex-col">
+          <ScrollArea className="flex-1 min-h-0">
             <CollapsibleSection title="Identity">
               <div className="grid gap-2">
                 <div className="grid gap-1">

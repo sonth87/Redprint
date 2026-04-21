@@ -1,8 +1,7 @@
 import React, { useState, useMemo } from "react";
-import type { ComponentRegistry, StyleConfig } from "@ui-builder/builder-core";
+import type { ComponentRegistry } from "@ui-builder/builder-core";
 import type { PaletteGroup, PaletteItem } from "../types/palette.types";
-import { buildPreviewDocument } from "../lib/buildPreviewDocument";
-import { RuntimeRenderer } from "@ui-builder/builder-renderer";
+import { MiniRender } from "./ui/MiniRender";
 import { Input, ScrollArea, Badge } from "@ui-builder/ui";
 import {
   Search, ChevronDown, ChevronRight,
@@ -27,56 +26,6 @@ const ICON_MAP: Record<string, React.ElementType> = {
   navigation: Navigation,
 };
 
-const MINI_THUMB_W = 120;
-const MINI_THUMB_H = 72;
-// Render at 200px then scale to fit thumbnail width — gives readable text at ~0.6×
-const MINI_WIDTH = 200;
-const MINI_SCALE = MINI_THUMB_W / MINI_WIDTH;
-
-interface MiniRenderProps {
-  item: PaletteItem;
-  registry: ComponentRegistry;
-}
-
-function MiniRender({ item, registry }: MiniRenderProps) {
-  const definition = registry.getComponent(item.componentType);
-  if (!definition) {
-    return (
-      <span className="text-[9px] text-muted-foreground uppercase tracking-wider">
-        {item.componentType.slice(0, 3)}
-      </span>
-    );
-  }
-
-  const doc = buildPreviewDocument(
-    item.componentType,
-    item.props,
-    (item.style ?? {}) as Partial<StyleConfig>,
-  );
-
-  const alignStart = definition.category === "content";
-
-  return (
-    <div style={{ minWidth: MINI_THUMB_W, width: MINI_THUMB_W, height: MINI_THUMB_H, overflow: "hidden", position: "relative", display: "flex", alignItems: "center", justifyContent: alignStart ? "flex-start" : "center" }}>
-      <div
-        style={{
-          width: MINI_WIDTH,
-          transformOrigin: alignStart ? "center left" : "center center",
-          transform: `scale(${MINI_SCALE})`,
-          pointerEvents: "none",
-          userSelect: "none",
-          flexShrink: 0,
-        }}
-      >
-        <RuntimeRenderer
-          document={doc}
-          registry={registry}
-          config={{ breakpoint: "desktop", variables: {}, attachNodeIds: false }}
-        />
-      </div>
-    </div>
-  );
-}
 
 function PaletteItemRow({
   item,
@@ -90,18 +39,23 @@ function PaletteItemRow({
   registry: ComponentRegistry;
 }) {
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       className={
-        "w-full text-left px-3 py-1.5 text-xs transition-colors flex items-center gap-2 " +
+        "w-full text-left px-3 py-1.5 text-xs transition-colors flex items-center gap-2 cursor-pointer " +
         (selected
           ? "bg-primary/5"
           : "hover:bg-muted text-foreground")
       }
       onClick={() => onSelect(item)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(item); }
+      }}
     >
       <div
         className={
-          "shrink-0 w-32 h-18 rounded border overflow-hidden flex items-center justify-center " +
+          "shrink-0 w-32 h-18 rounded border overflow-hidden flex items-center justify-center pointer-events-none " +
           (selected ? "border-primary-foreground/30" : "border-border bg-white")
         }
       >
@@ -126,7 +80,7 @@ function PaletteItemRow({
           {item.componentType}
         </span>
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -182,7 +136,7 @@ export function PresetCatalog({ groups, selectedItemId, onSelect, registry }: Pr
   };
 
   return (
-    <>
+    <div className="flex flex-col h-full">
       <div className="p-2 border-b shrink-0">
         <div className="relative">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
@@ -253,6 +207,6 @@ export function PresetCatalog({ groups, selectedItemId, onSelect, registry }: Pr
           );
         })}
       </ScrollArea>
-    </>
+    </div>
   );
 }

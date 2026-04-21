@@ -7,7 +7,7 @@ interface NodeTreePanelProps {
   registry: ComponentRegistry;
   selectedNodeId: string;
   onSelect: (nodeId: string) => void;
-  onAddChild: (parentId: string, componentType: string) => void;
+  onRequestAddChild: (parentId: string) => void;
   onRemove: (nodeId: string) => void;
   onReorder?: (nodeId: string, targetParentId: string | undefined, insertIndex: number) => void;
 }
@@ -17,7 +17,7 @@ export function NodeTreePanel({
   registry,
   selectedNodeId,
   onSelect,
-  onAddChild,
+  onRequestAddChild,
   onRemove,
   onReorder,
 }: NodeTreePanelProps) {
@@ -40,7 +40,7 @@ export function NodeTreePanel({
           depth={0}
           isRoot
           onSelect={onSelect}
-          onAddChild={onAddChild}
+          onRequestAddChild={onRequestAddChild}
           onRemove={onRemove}
           onReorder={onReorder}
         />
@@ -57,9 +57,9 @@ interface NodeRowProps {
   depth: number;
   isRoot: boolean;
   onSelect: (nodeId: string) => void;
-  onAddChild: (parentId: string, componentType: string) => void;
+  onRequestAddChild: (parentId: string) => void;
   onRemove: (nodeId: string) => void;
-  onReorder?: (nodeId: string, targetParentId: string, insertIndex: number) => void;
+  onReorder?: (nodeId: string, targetParentId: string | undefined, insertIndex: number) => void;
 }
 
 function NodeRow({
@@ -70,12 +70,11 @@ function NodeRow({
   depth,
   isRoot,
   onSelect,
-  onAddChild,
+  onRequestAddChild,
   onRemove,
   onReorder,
 }: NodeRowProps) {
   const [expanded, setExpanded] = useState(true);
-  const [adding, setAdding] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [dragOver, setDragOver] = useState<"above" | "below" | null>(null);
 
@@ -94,8 +93,8 @@ function NodeRow({
 
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setAdding(true);
     setExpanded(true);
+    onRequestAddChild(node.id);
   };
 
   const handleRemove = (e: React.MouseEvent) => {
@@ -123,9 +122,8 @@ function NodeRow({
       return;
     }
 
-    // Get parent and siblings
     const parentIdValue = node.parentId;
-    const parentId = parentIdValue ? parentIdValue : undefined;
+    const parentId = parentIdValue ?? undefined;
     const siblings = parentIdValue
       ? Object.values(document.nodes)
           .filter((n) => n.parentId === parentIdValue)
@@ -135,8 +133,7 @@ function NodeRow({
     const targetIdx = siblings.findIndex((n) => n.id === node.id);
     const insertIndex = position === "above" ? targetIdx : targetIdx + 1;
 
-    // parentId is either string (from parentIdValue) or undefined, cast to match expected type
-    onReorder?.(draggedNodeId, parentId!, insertIndex);
+    onReorder?.(draggedNodeId, parentId, insertIndex);
     setDragOver(null);
   };
 
@@ -213,19 +210,6 @@ function NodeRow({
         )}
       </div>
 
-      {/* Inline add-child selector */}
-      {adding && (
-        <AddChildRow
-          depth={depth + 1}
-          registry={registry}
-          onConfirm={(type) => {
-            onAddChild(node.id, type);
-            setAdding(false);
-          }}
-          onCancel={() => setAdding(false)}
-        />
-      )}
-
       {/* Children */}
       {expanded && children.map((child) => (
         <NodeRow
@@ -237,7 +221,7 @@ function NodeRow({
           depth={depth + 1}
           isRoot={false}
           onSelect={onSelect}
-          onAddChild={onAddChild}
+          onRequestAddChild={onRequestAddChild}
           onRemove={onRemove}
           onReorder={onReorder}
         />
@@ -245,51 +229,6 @@ function NodeRow({
       {dragOver === "below" && (
         <div className="h-0.5 bg-primary mx-2 mt-1" />
       )}
-    </div>
-  );
-}
-
-function AddChildRow({
-  depth,
-  registry,
-  onConfirm,
-  onCancel,
-}: {
-  depth: number;
-  registry: ComponentRegistry;
-  onConfirm: (type: string) => void;
-  onCancel: () => void;
-}) {
-  const allTypes = registry.listComponents().map((d) => d.type).sort();
-  const [selected, setSelected] = useState(allTypes[0] ?? "");
-
-  return (
-    <div
-      className="flex items-center gap-1 pr-1 py-1 bg-muted/40"
-      style={{ paddingLeft: depth * 12 + 4 }}
-    >
-      <select
-        className="flex-1 text-[11px] h-6 rounded border border-border bg-background px-1 focus:outline-none"
-        value={selected}
-        onChange={(e) => setSelected(e.target.value)}
-        autoFocus
-      >
-        {allTypes.map((t) => (
-          <option key={t} value={t}>{t}</option>
-        ))}
-      </select>
-      <button
-        className="text-[10px] px-1.5 h-6 rounded bg-primary text-primary-foreground hover:bg-primary/90"
-        onClick={() => onConfirm(selected)}
-      >
-        Add
-      </button>
-      <button
-        className="text-[10px] px-1.5 h-6 rounded bg-muted hover:bg-muted/70 text-foreground"
-        onClick={onCancel}
-      >
-        ✕
-      </button>
     </div>
   );
 }

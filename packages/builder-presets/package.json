@@ -22,7 +22,6 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@tiptap/core": "^3.22.2",
     "@tiptap/extension-color": "^3.22.2",
     "@tiptap/extension-highlight": "^3.22.2",
     "@tiptap/extension-link": "^3.22.2",
@@ -33,6 +32,7 @@
     "@tiptap/starter-kit": "^3.22.2",
     "@ui-builder/builder-components": "workspace:*",
     "@ui-builder/builder-core": "workspace:*",
+    "@ui-builder/builder-editor": "workspace:*",
     "@ui-builder/builder-react": "workspace:*",
     "@ui-builder/builder-renderer": "workspace:*",
     "@ui-builder/ui": "workspace:*",

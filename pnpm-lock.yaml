@@ -417,9 +417,6 @@ importers:
 
   packages/builder-presets:
     dependencies:
-      '@tiptap/core':
-        specifier: ^3.22.2
-        version: 3.22.2(@tiptap/pm@3.22.2)
       '@tiptap/extension-color':
         specifier: ^3.22.2
         version: 3.22.2(@tiptap/extension-text-style@3.22.2(@tiptap/core@3.22.2(@tiptap/pm@3.22.2)))
@@ -450,6 +447,9 @@ importers:
       '@ui-builder/builder-core':
         specifier: workspace:*
         version: link:../builder-core
+      '@ui-builder/builder-editor':
+        specifier: workspace:*
+        version: link:../builder-editor
       '@ui-builder/builder-react':
         specifier: workspace:*
         version: link:../builder-react

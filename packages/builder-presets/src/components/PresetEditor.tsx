@@ -9,6 +9,7 @@ import { InteractiveCanvas } from "./InteractiveCanvas";
 import { PropSchemaEditor } from "./PropSchemaEditor";
 import { PresetInfoPanel } from "./PresetInfoPanel";
 import { NodeTreePanel } from "./NodeTreePanel";
+import { AddChildDialog } from "./AddChildDialog";
 import { Info, SlidersHorizontal } from "lucide-react";
 
 type PanelTab = "info" | "properties";
@@ -23,6 +24,8 @@ export interface PresetEditorProps {
   registry: ComponentRegistry;
   onReset: () => void;
   onChange?: (updatedItem: PaletteItem) => void;
+  /** All available presets — used by AddChildDialog to offer clone options */
+  allPresets?: PaletteItem[];
 }
 
 function buildChildrenFromDocument(
@@ -64,6 +67,7 @@ export function PresetEditor({
   registry,
   onReset,
   onChange,
+  allPresets = [],
 }: PresetEditorProps) {
   const builder = useMemo(() => {
     const doc = buildPreviewDocument(
@@ -105,6 +109,7 @@ export function PresetEditor({
         registry={registry}
         onReset={onReset}
         onChange={onChange}
+        allPresets={allPresets}
       />
     </BuilderProvider>
   );
@@ -115,11 +120,13 @@ function PresetEditorInner({
   registry,
   onReset,
   onChange,
+  allPresets = [],
 }: PresetEditorProps) {
   const { state, dispatch } = useBuilder();
   const { selectedNodeIds } = useSelection();
   const { breakpoint } = useBreakpoint();
   const [activeTab, setActiveTab] = useState<PanelTab>("properties");
+  const [addChildParentId, setAddChildParentId] = useState<string | null>(null);
 
   const selectedNodeId = selectedNodeIds[0] ?? state.document.rootNodeId;
   const selectedNode = state.document.nodes[selectedNodeId] ?? null;
@@ -142,8 +149,13 @@ function PresetEditorInner({
     onChange?.(documentToItem(item, state.document));
   }, [state.document]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleAddChild = (parentId: string, componentType: string) => {
-    const def = registry.getComponent(componentType);
+  const handleAddChildConfirm = (
+    componentType: string,
+    props: Record<string, unknown>,
+    style: Record<string, unknown>,
+  ) => {
+    if (!addChildParentId) return;
+    const parentId = addChildParentId;
     const childCount = Object.values(state.document.nodes).filter(
       (n) => (n as { parentId: string | null }).parentId === parentId,
     ).length;
@@ -152,11 +164,12 @@ function PresetEditorInner({
       payload: {
         parentId,
         componentType,
-        props: def?.defaultProps ?? {},
-        style: def?.defaultStyle ?? {},
+        props,
+        style,
         insertIndex: childCount,
       },
     });
+    setAddChildParentId(null);
   };
 
   const handleRemoveNode = (nodeId: string) => {
@@ -178,8 +191,8 @@ function PresetEditorInner({
 
       <Separator orientation="vertical" />
 
-      <div className="w-80 shrink-0 border-l overflow-hidden flex">
-        <div className="flex-1 overflow-hidden flex flex-col">
+      <div className="w-80 shrink-0 border-l overflow-hidden flex h-full">
+        <div className="flex-1 overflow-hidden flex flex-col h-full">
           {activeTab === "info" ? (
             <PresetInfoPanel
               item={item}
@@ -196,7 +209,7 @@ function PresetEditorInner({
                   onSelect={(id) =>
                     dispatch({ type: "SELECT_NODE", payload: { nodeId: id } })
                   }
-                  onAddChild={handleAddChild}
+                  onRequestAddChild={(parentId) => setAddChildParentId(parentId)}
                   onRemove={handleRemoveNode}
                   onReorder={handleReorderNode}
                 />
@@ -255,6 +268,15 @@ function PresetEditorInner({
           </TooltipProvider>
         </div>
       </div>
+
+      {/* Add child dialog */}
+      <AddChildDialog
+        open={!!addChildParentId}
+        registry={registry}
+        existingPresets={allPresets}
+        onConfirm={handleAddChildConfirm}
+        onClose={() => setAddChildParentId(null)}
+      />
     </div>
   );
 }

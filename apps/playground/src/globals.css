@@ -12,6 +12,7 @@ button p, button h1, button h2, button h3, button h4, button h5, button h6 {
 @source "../../../packages/builder-editor/src";
 @source "../../../packages/builder-react/src";
 @source "../../../packages/builder-renderer/src";
+@source "../../../packages/builder-presets/src";
 
 @theme inline {
   --color-background: hsl(var(--background));
