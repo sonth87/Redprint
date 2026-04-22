@@ -1,9 +1,9 @@
 import React, { useRef, useEffect, useCallback, useMemo, useState } from "react";
 import type { Breakpoint } from "@ui-builder/builder-core";
 import { DEFAULT_BREAKPOINTS, DEVICE_VIEWPORT_PRESETS } from "@ui-builder/builder-core";
-import { useBuilder, useSelection, useBreakpoint, NodeRenderer } from "@ui-builder/builder-react";
+import { useBuilder, useSelection, useBreakpoint, NodeRenderer, useHistory } from "@ui-builder/builder-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@ui-builder/ui";
-import { Monitor, Tablet, Smartphone, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
+import { Monitor, Tablet, Smartphone, ZoomIn, ZoomOut, Maximize2, Undo2, Redo2 } from "lucide-react";
 import {
   SelectionOverlay,
   SnapEngine,
@@ -35,6 +35,7 @@ export function InteractiveCanvas() {
   const { state, dispatch, builder } = useBuilder();
   const { selectedNodeIds, select, clearSelection } = useSelection();
   const { breakpoint, setBreakpoint } = useBreakpoint();
+  const { canUndo, canRedo, undo, redo } = useHistory();
   const viewport = DEVICE_VIEWPORT_PRESETS[breakpoint];
 
   // Scale-to-fit (auto)
@@ -51,17 +52,21 @@ export function InteractiveCanvas() {
     (rawX: number, rawY: number) => {
       const el = outerRef.current;
       if (!el) return { x: rawX, y: rawY };
-      const margin = 80;
       const vw = el.clientWidth;
       const vh = el.clientHeight;
       const cw = viewport.width * scale;
-      const ch = (viewport.height ?? 900) * scale;
+      const ch = (canvasFrameRef.current?.clientHeight ?? 800) * scale;
+      
+      // Keep at least some margin or the edges within view
+      const marginX = Math.max(80, vw * 0.1);
+      const marginY = Math.max(80, vh * 0.1);
+
       return {
-        x: Math.max(margin - cw, Math.min(vw - margin, rawX)),
-        y: Math.max(margin - ch, Math.min(vh - margin, rawY)),
+        x: Math.max(marginX - cw, Math.min(vw - marginX, rawX)),
+        y: Math.max(marginY - ch, Math.min(vh - marginY, rawY)),
       };
     },
-    [viewport.width, viewport.height, scale],
+    [viewport.width, scale],
   );
 
   useEffect(() => {
@@ -76,15 +81,36 @@ export function InteractiveCanvas() {
     return () => observer.disconnect();
   }, [viewport.width]);
 
+  // ── Keyboard shortcuts: Cmd/Ctrl+Z = undo, Cmd/Ctrl+Shift+Z = redo ──
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMac = navigator.platform.toUpperCase().includes("MAC");
+      const mod = isMac ? e.metaKey : e.ctrlKey;
+      if (!mod) return;
+      if (e.key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      } else if (e.key === "z" && e.shiftKey) {
+        e.preventDefault();
+        redo();
+      } else if (e.key === "y" && !isMac) {
+        // Ctrl+Y as redo on Windows
+        e.preventDefault();
+        redo();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [undo, redo]);
+
   // ── Center canvas when scale or viewport changes ──
   const centerCanvas = useCallback(() => {
     const outer = outerRef.current;
     if (!outer) return;
-    const { width, height } = outer.getBoundingClientRect();
-    const canvasHeight = 120; // min-height of canvasFrameRef
+    const { width } = outer.getBoundingClientRect();
     setPanOffset({
       x: (width - viewport.width * scale) / 2,
-      y: Math.max(32, (height - canvasHeight * scale) / 2),
+      y: 48, // Start at the top with some padding, instead of vertical centering
     });
   }, [scale, viewport.width]);
 
@@ -143,21 +169,15 @@ export function InteractiveCanvas() {
           });
         }
       } else {
-        // Pan without Ctrl — clamp to keep canvas visible
-        const margin = 80;
-        const vw = el.clientWidth;
-        const vh = el.clientHeight;
-        const cw = viewport.width * scale;
-        const ch = (viewport.height ?? 900) * scale;
-        setPanOffset((prev) => ({
-          x: Math.max(margin - cw, Math.min(vw - margin, prev.x - e.deltaX)),
-          y: Math.max(margin - ch, Math.min(vh - margin, prev.y - e.deltaY)),
-        }));
+        // Pan without Ctrl
+        setPanOffset((prev) => 
+          clampPan(prev.x - e.deltaX, prev.y - e.deltaY)
+        );
       }
     };
     el.addEventListener("wheel", handler, { passive: false });
     return () => el.removeEventListener("wheel", handler);
-  }, [scale, panOffset, viewport.width, viewport.height]);
+  }, [scale, clampPan]);
 
   const canvasFrameRef = useRef<HTMLDivElement>(null);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
@@ -212,10 +232,11 @@ export function InteractiveCanvas() {
   }, []);
 
   // ── Middle-mouse drag to pan ──
+  // ── Panning logic (Middle-mouse or Space+Drag) ──
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
+      // Middle button (1) or Left button (0) with Space/Alt if we implemented it
       if (e.button === 1) {
-        // Middle mouse button
         e.preventDefault();
         setIsPanning(true);
         panStartRef.current = {
@@ -227,15 +248,13 @@ export function InteractiveCanvas() {
     [panOffset],
   );
 
-  // Attach to window so pan is not broken when pointer leaves the container
   useEffect(() => {
     if (!isPanning) return;
     const onMove = (e: MouseEvent) => {
       if (!panStartRef.current) return;
       const rawX = panStartRef.current.offset.x + (e.clientX - panStartRef.current.pointer.x);
       const rawY = panStartRef.current.offset.y + (e.clientY - panStartRef.current.pointer.y);
-      const clamped = clampPan(rawX, rawY);
-      setPanOffset(clamped);
+      setPanOffset(clampPan(rawX, rawY));
     };
     const onUp = () => {
       setIsPanning(false);
@@ -353,9 +372,38 @@ export function InteractiveCanvas() {
     <div className="flex flex-col h-full">
       {/* Breakpoint toolbar */}
       <div className="flex items-center justify-between px-3 h-10 border-b bg-background shrink-0 pointer-events-auto">
-        <span className="text-xs text-muted-foreground truncate max-w-40">
-          {state.document.name}
-        </span>
+        <div className="flex items-center gap-1">
+          <span className="text-xs text-muted-foreground truncate max-w-36">
+            {state.document.name}
+          </span>
+          <div className="w-px h-4 bg-border mx-0.5" />
+          <TooltipProvider delayDuration={300}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={undo}
+                  disabled={!canUndo}
+                  className="w-6 h-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <Undo2 className="h-3.5 w-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">Undo (⌘Z)</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={redo}
+                  disabled={!canRedo}
+                  className="w-6 h-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <Redo2 className="h-3.5 w-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">Redo (⌘⇧Z)</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
         <TooltipProvider>
           <div className="flex items-center gap-0.5 bg-muted rounded-md p-0.5">
             {DEFAULT_BREAKPOINTS.map(({ breakpoint: bp, label }) => {
@@ -468,6 +516,17 @@ export function InteractiveCanvas() {
               onDoubleClick={handleDoubleClick}
             />
           )}
+          {/* Inline richtext editor — moved inside scaled container for perfect alignment */}
+          {editingNodeId && editingPropKey && (
+            <PresetInlineEditor
+              nodeId={editingNodeId}
+              initialContent={initialHTML}
+              canvasFrameRef={canvasFrameRef}
+              zoom={scale}
+              onCommit={handleHTMLCommit}
+              onExit={handleInlineExit}
+            />
+          )}
         </div>
 
         {/* Contextual toolbar */}
@@ -477,19 +536,6 @@ export function InteractiveCanvas() {
             document={state.document}
             dispatch={dispatch}
             getRect={getNodeRect}
-          />
-        )}
-
-        {/* Inline richtext editor */}
-        {editingNodeId && editingPropKey && (
-          <PresetInlineEditor
-            nodeId={editingNodeId}
-            initialContent={initialHTML}
-            canvasFrameRef={canvasFrameRef}
-            outerRef={outerRef}
-            zoom={scale}
-            onCommit={handleHTMLCommit}
-            onExit={handleInlineExit}
           />
         )}
       </div>

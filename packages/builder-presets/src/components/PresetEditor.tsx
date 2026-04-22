@@ -220,21 +220,27 @@ function PresetEditorInner({
                   definition={selectedDefinition}
                   node={selectedNode}
                   breakpoint={breakpoint}
-                  onPropChange={(key, val) =>
-                    dispatch({
-                      type: "UPDATE_PROPS",
-                      payload: { nodeId: selectedNodeId, props: { [key]: val } },
-                    })
-                  }
+                  onPropChange={(key, val) => {
+                    if (breakpoint && breakpoint !== "desktop") {
+                      dispatch({
+                        type: "UPDATE_RESPONSIVE_PROPS",
+                        payload: { nodeId: selectedNodeId, breakpoint, props: { [key]: val } },
+                      });
+                    } else {
+                      dispatch({
+                        type: "UPDATE_PROPS",
+                        payload: { nodeId: selectedNodeId, props: { [key]: val } },
+                      });
+                    }
+                  }}
                   onStyleChange={(key, val) => {
-                    const node = state.document.nodes[selectedNodeId];
-                    if (!node) return;
-                    const next = { ...(node.style as Record<string, unknown>) };
-                    if (val === undefined || val === "") delete next[key];
-                    else next[key] = val;
                     dispatch({
                       type: "UPDATE_STYLE",
-                      payload: { nodeId: selectedNodeId, style: next },
+                      payload: {
+                        nodeId: selectedNodeId,
+                        style: { [key]: val },
+                        breakpoint,
+                      },
                     });
                   }}
                 />
