@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import type { Point } from "@ui-builder/shared";
 import type { BuilderNode, PaletteDragData, Breakpoint, PaletteItem } from "@ui-builder/builder-core";
 import { v4 as uuidv4 } from "uuid";
-import { resolveContainerDropPosition } from "./useDropSlotResolver";
+import { resolveContainerDropPosition } from "../dragdrop/DropTargetResolver";
 import { resolveContainerLayoutType, type ContainerConfigResolver, getDropTargetSection } from "./dragUtils";
 import { generateRecursiveAddActions } from "./presetUtils";
 

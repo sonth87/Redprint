@@ -1,57 +1,47 @@
 // Phase 1 tests — DropTargetResolver pure-function coverage
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import {
   parseGridTracks,
   getGridCellClientRect,
   resolveContainerDropPosition,
   resolveDropTarget,
-  findHoveredFlowContainer,
 } from "../DropTargetResolver";
 import type { BuilderNode } from "@ui-builder/builder-core";
 import type { ContainerConfigResolver } from "../../hooks/dragUtils";
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
-function makeNode(overrides: Partial<BuilderNode> & { id: string }): BuilderNode {
+function makeNode(overrides: { id: string } & Partial<BuilderNode>): BuilderNode {
   return {
     id: overrides.id,
     type: overrides.type ?? "Box",
     parentId: overrides.parentId ?? null,
     order: overrides.order ?? 0,
     props: overrides.props ?? {},
-    styles: overrides.styles ?? {},
-  } as BuilderNode;
+    style: overrides.style ?? {},
+    responsiveStyle: overrides.responsiveStyle ?? {},
+    interactions: overrides.interactions ?? [],
+  } as unknown as BuilderNode;
+}
+
+function makeRect(left: number, top: number, width: number, height: number): DOMRect {
+  return {
+    left, top, width, height,
+    right: left + width, bottom: top + height,
+    x: left, y: top, toJSON: () => ({}),
+  } as DOMRect;
 }
 
 /**
- * Create a minimal HTMLElement mock that satisfies getBoundingClientRect,
- * getComputedStyle, and querySelector calls used by the resolvers.
+ * Patch globalThis.getComputedStyle to return a fixture for a specific element,
+ * and return a restore function.
  */
-function makeContainerEl(
-  rect: { left: number; top: number; width: number; height: number },
-  computedStyles: Partial<CSSStyleDeclaration> = {},
-): HTMLElement {
-  const el = document.createElement("div");
-
-  // Override getBoundingClientRect
-  vi.spyOn(el, "getBoundingClientRect").mockReturnValue({
-    left: rect.left,
-    top: rect.top,
-    width: rect.width,
-    height: rect.height,
-    right: rect.left + rect.width,
-    bottom: rect.top + rect.height,
-    x: rect.left,
-    y: rect.top,
-    toJSON: () => ({}),
-  });
-
-  // Patch offsetWidth/offsetHeight for scale calc (no CSS transforms in tests)
-  Object.defineProperty(el, "offsetWidth", { value: rect.width, configurable: true });
-  Object.defineProperty(el, "offsetHeight", { value: rect.height, configurable: true });
-
-  // Patch getComputedStyle to return our fixture
-  const base: Partial<CSSStyleDeclaration> = {
+function patchGetComputedStyle(
+  el: HTMLElement,
+  styles: Partial<CSSStyleDeclaration>,
+): () => void {
+  const prev = globalThis.getComputedStyle;
+  const defaultStyles: Partial<CSSStyleDeclaration> = {
     gridTemplateColumns: "none",
     gridTemplateRows: "none",
     paddingLeft: "0px",
@@ -60,11 +50,40 @@ function makeContainerEl(
     columnGap: "0px",
     rowGap: "0px",
     flexDirection: "column",
-    ...computedStyles,
+    ...styles,
   };
-  vi.spyOn(globalThis, "getComputedStyle").mockReturnValue(base as CSSStyleDeclaration);
+  (globalThis as unknown as Record<string, unknown>).getComputedStyle = (target: Element) =>
+    target === el ? defaultStyles : prev(target);
+  return () => { (globalThis as unknown as Record<string, unknown>).getComputedStyle = prev; };
+}
 
-  return el;
+/**
+ * Patch globalThis.document.elementsFromPoint to return a fixed list.
+ */
+function patchElementsFromPoint(elements: Element[]): () => void {
+  const prevDoc = globalThis.document;
+  const fakeDoc = {
+    ...prevDoc,
+    elementsFromPoint: (_x: number, _y: number) => elements,
+    querySelector: prevDoc?.querySelector?.bind(prevDoc) ?? (() => null),
+  };
+  (globalThis as unknown as Record<string, unknown>).document = fakeDoc;
+  return () => {
+    (globalThis as unknown as Record<string, unknown>).document = prevDoc;
+  };
+}
+
+function makeContainerEl(
+  rect: DOMRect,
+  nodeId: string | null = null,
+): HTMLElement {
+  return {
+    getBoundingClientRect: () => rect,
+    offsetWidth: rect.width,
+    offsetHeight: rect.height,
+    getAttribute: (attr: string) => (attr === "data-node-id" ? nodeId : null),
+    querySelector: () => null,
+  } as unknown as HTMLElement;
 }
 
 // ── parseGridTracks ───────────────────────────────────────────────────────
@@ -86,17 +105,15 @@ describe("parseGridTracks", () => {
 // ── getGridCellClientRect ─────────────────────────────────────────────────
 
 describe("getGridCellClientRect", () => {
-  afterEach(() => { vi.restoreAllMocks(); });
+  let restore: (() => void) | undefined;
+  afterEach(() => { restore?.(); restore = undefined; });
 
-  it("returns correct bounding box for a 3-col grid", () => {
-    // 3 equal 100px columns, container at (0,0), 300×100
-    const el = makeContainerEl(
-      { left: 0, top: 0, width: 300, height: 100 },
-      {
-        gridTemplateColumns: "100px 100px 100px",
-        gridTemplateRows: "100px",
-      },
-    );
+  it("returns correct bounding box for a 3-col grid, col=1", () => {
+    const el = makeContainerEl(makeRect(0, 0, 300, 100));
+    restore = patchGetComputedStyle(el, {
+      gridTemplateColumns: "100px 100px 100px",
+      gridTemplateRows: "100px",
+    });
 
     const result = getGridCellClientRect(el, 1, 0);
     expect(result).not.toBeNull();
@@ -107,7 +124,8 @@ describe("getGridCellClientRect", () => {
   });
 
   it("returns null when gridTemplateColumns is 'none'", () => {
-    const el = makeContainerEl({ left: 0, top: 0, width: 300, height: 100 });
+    const el = makeContainerEl(makeRect(0, 0, 300, 100));
+    restore = patchGetComputedStyle(el, {});
     expect(getGridCellClientRect(el, 0, 0)).toBeNull();
   });
 });
@@ -115,49 +133,48 @@ describe("getGridCellClientRect", () => {
 // ── resolveContainerDropPosition (backward-compat) ───────────────────────
 
 describe("resolveContainerDropPosition", () => {
-  afterEach(() => { vi.restoreAllMocks(); });
+  let restore: (() => void) | undefined;
+  afterEach(() => { restore?.(); restore = undefined; });
 
-  it("returns ContainerDropResult shape for flex container", () => {
-    const el = makeContainerEl(
-      { left: 0, top: 0, width: 200, height: 200 },
-      { flexDirection: "column" },
-    );
+  it("returns ContainerDropResult shape (no gridCell) for flex container", () => {
+    const el = makeContainerEl(makeRect(0, 0, 200, 200));
+    restore = patchGetComputedStyle(el, { flexDirection: "column" });
     const containerNode = makeNode({ id: "c1", type: "Column" });
     const siblings: BuilderNode[] = [];
-    const getCfg = (_type: string) => ({ layoutType: "flex" as const });
 
-    const result = resolveContainerDropPosition(50, 50, el, containerNode, siblings, getCfg);
-    expect(result).toHaveProperty("insertIndex");
+    const result = resolveContainerDropPosition(50, 50, el, containerNode, siblings,
+      () => ({ layoutType: "flex" }),
+    );
     expect(typeof result.insertIndex).toBe("number");
     expect(result.gridCell).toBeUndefined();
   });
 
-  it("returns ContainerDropResult shape for grid container", () => {
-    const el = makeContainerEl(
-      { left: 0, top: 0, width: 300, height: 100 },
-      {
-        gridTemplateColumns: "100px 100px 100px",
-        gridTemplateRows: "100px",
-      },
-    );
+  it("returns gridCell for grid container", () => {
+    const el = makeContainerEl(makeRect(0, 0, 300, 100));
+    restore = patchGetComputedStyle(el, {
+      gridTemplateColumns: "100px 100px 100px",
+      gridTemplateRows: "100px",
+    });
     const containerNode = makeNode({ id: "g1", type: "Grid" });
-    const siblings: BuilderNode[] = [];
-    const getCfg = (_type: string) => ({ layoutType: "grid" as const });
 
-    const result = resolveContainerDropPosition(50, 50, el, containerNode, siblings, getCfg);
-    expect(result).toHaveProperty("insertIndex");
-    expect(result).toHaveProperty("gridCell");
+    const result = resolveContainerDropPosition(50, 50, el, containerNode, [],
+      () => ({ layoutType: "grid" }),
+    );
+    expect(typeof result.insertIndex).toBe("number");
+    expect(result.gridCell).toBeDefined();
     expect(result.gridCell).toHaveProperty("col");
     expect(result.gridCell).toHaveProperty("row");
   });
 
-  it("appends for absolute container", () => {
-    const el = makeContainerEl({ left: 0, top: 0, width: 200, height: 200 });
+  it("appends (insertIndex = siblings.length) for absolute container", () => {
+    const el = makeContainerEl(makeRect(0, 0, 200, 200));
+    restore = patchGetComputedStyle(el, {});
     const containerNode = makeNode({ id: "s1", type: "Section" });
     const siblings = [makeNode({ id: "n1", order: 0 }), makeNode({ id: "n2", order: 1 })];
-    const getCfg = (_type: string) => ({ layoutType: "absolute" as const });
 
-    const result = resolveContainerDropPosition(50, 50, el, containerNode, siblings, getCfg);
+    const result = resolveContainerDropPosition(50, 50, el, containerNode, siblings,
+      () => ({ layoutType: "absolute" }),
+    );
     expect(result.insertIndex).toBe(2);
   });
 });
@@ -165,54 +182,30 @@ describe("resolveContainerDropPosition", () => {
 // ── resolveDropTarget ─────────────────────────────────────────────────────
 
 describe("resolveDropTarget", () => {
-  let originalElementsFromPoint: typeof document.elementsFromPoint;
-  let originalQuerySelector: typeof document.querySelector;
-
-  beforeEach(() => {
-    originalElementsFromPoint = document.elementsFromPoint.bind(document);
-    originalQuerySelector = document.querySelector.bind(document);
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
-    document.elementsFromPoint = originalElementsFromPoint;
-    document.querySelector = originalQuerySelector;
-  });
+  let restoreDoc: (() => void) | undefined;
+  let restoreGCS: (() => void) | undefined;
+  afterEach(() => { restoreDoc?.(); restoreDoc = undefined; restoreGCS?.(); restoreGCS = undefined; });
 
   it("returns null when no data-node-id under cursor", () => {
-    // Mock elementsFromPoint to return elements without data-node-id
-    vi.spyOn(globalThis.document, "elementsFromPoint").mockReturnValue([document.createElement("div")]);
+    const emptyEl = makeContainerEl(makeRect(0, 0, 200, 200), null);
+    restoreDoc = patchElementsFromPoint([emptyEl as unknown as Element]);
 
-    const frameEl = document.createElement("div");
-    const nodes: Record<string, BuilderNode> = {};
-    const getCfg: ContainerConfigResolver = () => undefined;
-
-    const result = resolveDropTarget(100, 100, "drag1", "Box", null, frameEl, nodes, getCfg);
+    const frameEl = { querySelector: () => null } as unknown as HTMLElement;
+    const result = resolveDropTarget(100, 100, "drag1", "Box", null, frameEl, {},
+      () => undefined,
+    );
     expect(result).toBeNull();
   });
 
-  it("returns indicator:line for flex container", () => {
-    const containerEl = document.createElement("div");
-    containerEl.setAttribute("data-node-id", "container1");
+  it("returns indicator:line + parentId for flex container", () => {
+    const containerEl = makeContainerEl(makeRect(0, 0, 200, 200), "container1");
+    restoreDoc = patchElementsFromPoint([containerEl as unknown as Element]);
+    restoreGCS = patchGetComputedStyle(containerEl, { flexDirection: "column" });
 
-    vi.spyOn(globalThis.document, "elementsFromPoint").mockReturnValue([containerEl]);
-    vi.spyOn(globalThis, "getComputedStyle").mockReturnValue({
-      flexDirection: "column",
-      gridTemplateColumns: "none",
-      gridTemplateRows: "none",
-      paddingLeft: "0px",
-      paddingTop: "0px",
-      paddingBottom: "0px",
-      columnGap: "0px",
-      rowGap: "0px",
-    } as unknown as CSSStyleDeclaration);
-    vi.spyOn(containerEl, "getBoundingClientRect").mockReturnValue({
-      left: 0, top: 0, width: 200, height: 200, right: 200, bottom: 200,
-      x: 0, y: 0, toJSON: () => ({}),
-    });
-
-    const frameEl = document.createElement("div");
-    vi.spyOn(frameEl, "querySelector").mockReturnValue(containerEl);
+    const frameEl = {
+      querySelector: (sel: string) =>
+        sel === '[data-node-id="container1"]' ? containerEl : null,
+    } as unknown as HTMLElement;
 
     const nodes: Record<string, BuilderNode> = {
       container1: makeNode({ id: "container1", type: "Column", parentId: "root" }),
@@ -226,30 +219,18 @@ describe("resolveDropTarget", () => {
     expect(typeof result!.insertIndex).toBe("number");
   });
 
-  it("returns indicator:cell-highlight for grid container", () => {
-    const containerEl = document.createElement("div");
-    containerEl.setAttribute("data-node-id", "grid1");
-
-    vi.spyOn(globalThis.document, "elementsFromPoint").mockReturnValue([containerEl]);
-    vi.spyOn(globalThis, "getComputedStyle").mockReturnValue({
+  it("returns indicator:cell-highlight + gridCell for grid container", () => {
+    const containerEl = makeContainerEl(makeRect(0, 0, 300, 100), "grid1");
+    restoreDoc = patchElementsFromPoint([containerEl as unknown as Element]);
+    restoreGCS = patchGetComputedStyle(containerEl, {
       gridTemplateColumns: "100px 100px 100px",
       gridTemplateRows: "100px",
-      paddingLeft: "0px",
-      paddingTop: "0px",
-      paddingBottom: "0px",
-      columnGap: "0px",
-      rowGap: "0px",
-      flexDirection: "column",
-    } as unknown as CSSStyleDeclaration);
-    vi.spyOn(containerEl, "getBoundingClientRect").mockReturnValue({
-      left: 0, top: 0, width: 300, height: 100, right: 300, bottom: 100,
-      x: 0, y: 0, toJSON: () => ({}),
     });
-    Object.defineProperty(containerEl, "offsetWidth", { value: 300, configurable: true });
-    Object.defineProperty(containerEl, "offsetHeight", { value: 100, configurable: true });
 
-    const frameEl = document.createElement("div");
-    vi.spyOn(frameEl, "querySelector").mockReturnValue(containerEl);
+    const frameEl = {
+      querySelector: (sel: string) =>
+        sel === '[data-node-id="grid1"]' ? containerEl : null,
+    } as unknown as HTMLElement;
 
     const nodes: Record<string, BuilderNode> = {
       grid1: makeNode({ id: "grid1", type: "Grid", parentId: "root" }),
@@ -263,12 +244,10 @@ describe("resolveDropTarget", () => {
   });
 
   it("returns null when disallowedChildTypes includes dragging type", () => {
-    const containerEl = document.createElement("div");
-    containerEl.setAttribute("data-node-id", "container1");
+    const containerEl = makeContainerEl(makeRect(0, 0, 200, 200), "container1");
+    restoreDoc = patchElementsFromPoint([containerEl as unknown as Element]);
 
-    vi.spyOn(globalThis.document, "elementsFromPoint").mockReturnValue([containerEl]);
-
-    const frameEl = document.createElement("div");
+    const frameEl = { querySelector: () => null } as unknown as HTMLElement;
     const nodes: Record<string, BuilderNode> = {
       container1: makeNode({ id: "container1", type: "Row", parentId: "root" }),
     };
@@ -277,27 +256,22 @@ describe("resolveDropTarget", () => {
       disallowedChildTypes: ["Section"],
     });
 
-    // draggingNodeType is "Section" — disallowed
     const result = resolveDropTarget(50, 50, "drag1", "Section", null, frameEl, nodes, getCfg);
     expect(result).toBeNull();
   });
 
-  it("returns null when hovered container is ancestor of dragging node", () => {
-    const containerEl = document.createElement("div");
-    containerEl.setAttribute("data-node-id", "parent1");
+  it("returns null when hovered container is the current parent (skip guard)", () => {
+    // findHoveredFlowContainer skips when id === currentParentId
+    const containerEl = makeContainerEl(makeRect(0, 0, 200, 200), "parent1");
+    restoreDoc = patchElementsFromPoint([containerEl as unknown as Element]);
 
-    vi.spyOn(globalThis.document, "elementsFromPoint").mockReturnValue([containerEl]);
-
-    const frameEl = document.createElement("div");
-    // parent1 → drag1 (drag1 is child of parent1)
+    const frameEl = { querySelector: () => null } as unknown as HTMLElement;
     const nodes: Record<string, BuilderNode> = {
       parent1: makeNode({ id: "parent1", type: "Column", parentId: "root" }),
       drag1: makeNode({ id: "drag1", type: "Box", parentId: "parent1" }),
     };
     const getCfg: ContainerConfigResolver = () => ({ layoutType: "flex" });
 
-    // Trying to drop drag1 into parent1, where parent1 IS an ancestor — this is
-    // the "already in this parent" guard (id === currentParentId skip)
     const result = resolveDropTarget(50, 50, "drag1", "Box", "parent1", frameEl, nodes, getCfg);
     expect(result).toBeNull();
   });
