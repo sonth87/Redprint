@@ -17,6 +17,9 @@ export interface AddChildDialogProps {
   open: boolean;
   registry: ComponentRegistry;
   existingPresets: PaletteItem[];
+  targetLabel?: string;
+  insertMode?: "inside" | "before" | "after";
+  allowedComponentTypes?: string[];
   onConfirm: (
     componentType: string,
     props: Record<string, unknown>,
@@ -29,14 +32,20 @@ export function AddChildDialog({
   open,
   registry,
   existingPresets,
+  targetLabel,
+  insertMode = "inside",
+  allowedComponentTypes,
   onConfirm,
   onClose,
 }: AddChildDialogProps) {
   const [selectedType, setSelectedType] = useState<string | null>(null);
 
-  const allDefinitions = registry.listComponents().sort((a, b) =>
-    a.type.localeCompare(b.type),
-  );
+  const allDefinitions = registry
+    .listComponents()
+    .filter((def) =>
+      !allowedComponentTypes || allowedComponentTypes.includes(def.type),
+    )
+    .sort((a, b) => a.type.localeCompare(b.type));
 
   const handleSelectType = (type: string) => {
     setSelectedType(type);
@@ -76,9 +85,17 @@ export function AddChildDialog({
             <DialogTitle className="text-sm font-semibold">
               {selectedType
                 ? `Add ${selectedType} — choose starting point`
-                : "Add child component — choose type"}
+                : "Insert component — choose type"}
             </DialogTitle>
           </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            {buildInsertHint(insertMode, targetLabel)}
+          </p>
+          {allowedComponentTypes && (
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Allowed here: {allowedComponentTypes.join(", ")}
+            </p>
+          )}
         </DialogHeader>
 
         <ScrollArea className="flex-1 min-h-0">
@@ -103,6 +120,21 @@ export function AddChildDialog({
   );
 }
 
+function buildInsertHint(
+  insertMode: "inside" | "before" | "after",
+  targetLabel?: string,
+): string {
+  const target = targetLabel ? `"${targetLabel}"` : "selected node";
+
+  if (insertMode === "before") {
+    return `New component will be inserted before ${target}.`;
+  }
+  if (insertMode === "after") {
+    return `New component will be inserted after ${target}.`;
+  }
+  return `New component will be inserted inside ${target}.`;
+}
+
 // ─── Step 1: type grid ────────────────────────────────────────────────────────
 
 function TypeGrid({
@@ -112,6 +144,14 @@ function TypeGrid({
   definitions: ReturnType<ComponentRegistry["listComponents"]>;
   onSelect: (type: string) => void;
 }) {
+  if (definitions.length === 0) {
+    return (
+      <div className="p-6 text-sm text-muted-foreground">
+        No compatible components for this insertion target.
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-3 gap-2 p-4">
       {definitions.map((def) => (

@@ -1,13 +1,23 @@
 import React, { useState } from "react";
 import type { BuilderDocument, BuilderNode, ComponentRegistry } from "@ui-builder/builder-core";
-import { ChevronDown, ChevronRight, Plus, X } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus, X, ArrowUp, ArrowDown, RefreshCw, Copy } from "lucide-react";
+
+export type InsertMode = "inside" | "before" | "after";
+
+export interface InsertTarget {
+  nodeId: string;
+  mode: InsertMode;
+  label: string;
+}
 
 interface NodeTreePanelProps {
   document: BuilderDocument;
   registry: ComponentRegistry;
   selectedNodeId: string;
   onSelect: (nodeId: string) => void;
-  onRequestAddChild: (parentId: string) => void;
+  onRequestInsert: (target: InsertTarget) => void;
+  onRequestReplace?: (target: InsertTarget) => void;
+  onDuplicate?: (nodeId: string) => void;
   onRemove: (nodeId: string) => void;
   onReorder?: (nodeId: string, targetParentId: string | undefined, insertIndex: number) => void;
 }
@@ -17,7 +27,9 @@ export function NodeTreePanel({
   registry,
   selectedNodeId,
   onSelect,
-  onRequestAddChild,
+  onRequestInsert,
+  onRequestReplace,
+  onDuplicate,
   onRemove,
   onReorder,
 }: NodeTreePanelProps) {
@@ -40,7 +52,9 @@ export function NodeTreePanel({
           depth={0}
           isRoot
           onSelect={onSelect}
-          onRequestAddChild={onRequestAddChild}
+          onRequestInsert={onRequestInsert}
+          onRequestReplace={onRequestReplace}
+          onDuplicate={onDuplicate}
           onRemove={onRemove}
           onReorder={onReorder}
         />
@@ -57,7 +71,9 @@ interface NodeRowProps {
   depth: number;
   isRoot: boolean;
   onSelect: (nodeId: string) => void;
-  onRequestAddChild: (parentId: string) => void;
+  onRequestInsert: (target: InsertTarget) => void;
+  onRequestReplace?: (target: InsertTarget) => void;
+  onDuplicate?: (nodeId: string) => void;
   onRemove: (nodeId: string) => void;
   onReorder?: (nodeId: string, targetParentId: string | undefined, insertIndex: number) => void;
 }
@@ -70,7 +86,9 @@ function NodeRow({
   depth,
   isRoot,
   onSelect,
-  onRequestAddChild,
+  onRequestInsert,
+  onRequestReplace,
+  onDuplicate,
   onRemove,
   onReorder,
 }: NodeRowProps) {
@@ -88,13 +106,20 @@ function NodeRow({
   const hasChildren = children.length > 0;
   const isSelected = selectedNodeId === node.id;
 
-  const label = node.name ?? definition?.name ?? node.type;
+  const semanticLabel = node.metadata?.pluginData?.["@ui-builder/preset-node"] as
+    | { role?: string }
+    | undefined;
+  const label = semanticLabel?.role ?? node.slot ?? node.name ?? definition?.name ?? node.type;
   const typeAbbr = node.type.slice(0, 2).toUpperCase();
 
-  const handleAdd = (e: React.MouseEvent) => {
+  const handleInsert = (e: React.MouseEvent, mode: InsertMode) => {
     e.stopPropagation();
     setExpanded(true);
-    onRequestAddChild(node.id);
+    onRequestInsert({
+      nodeId: node.id,
+      mode,
+      label,
+    });
   };
 
   const handleRemove = (e: React.MouseEvent) => {
@@ -191,10 +216,56 @@ function NodeRow({
             {canHaveChildren && (
               <button
                 className="w-5 h-5 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                onClick={handleAdd}
-                title="Add child"
+                onClick={(e) => handleInsert(e, "inside")}
+                title="Add inside"
               >
                 <Plus className="h-3 w-3" />
+              </button>
+            )}
+            {!isRoot && (
+              <button
+                className="w-5 h-5 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                onClick={(e) => handleInsert(e, "before")}
+                title="Insert before"
+              >
+                <ArrowUp className="h-3 w-3" />
+              </button>
+            )}
+            {!isRoot && (
+              <button
+                className="w-5 h-5 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                onClick={(e) => handleInsert(e, "after")}
+                title="Insert after"
+              >
+                <ArrowDown className="h-3 w-3" />
+              </button>
+            )}
+            {!isRoot && (
+              <button
+                className="w-5 h-5 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDuplicate?.(node.id);
+                }}
+                title="Duplicate node"
+              >
+                <Copy className="h-3 w-3" />
+              </button>
+            )}
+            {!isRoot && (
+              <button
+                className="w-5 h-5 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRequestReplace?.({
+                    nodeId: node.id,
+                    mode: "inside",
+                    label,
+                  });
+                }}
+                title="Replace node"
+              >
+                <RefreshCw className="h-3 w-3" />
               </button>
             )}
             {!isRoot && (
@@ -221,7 +292,9 @@ function NodeRow({
           depth={depth + 1}
           isRoot={false}
           onSelect={onSelect}
-          onRequestAddChild={onRequestAddChild}
+          onRequestInsert={onRequestInsert}
+          onRequestReplace={onRequestReplace}
+          onDuplicate={onDuplicate}
           onRemove={onRemove}
           onReorder={onReorder}
         />

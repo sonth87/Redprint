@@ -22,6 +22,8 @@ export { PresetEditor } from "./components/PresetEditor";
 export { PresetInfoPanel } from "./components/PresetInfoPanel";
 export { InteractiveCanvas } from "./components/InteractiveCanvas";
 export { NodeTreePanel } from "./components/NodeTreePanel";
+export { SemanticTreePanel } from "./components/SemanticTreePanel";
+export { ReplaceNodeDialog } from "./components/ReplaceNodeDialog";
 export { PropSchemaEditor } from "./components/PropSchemaEditor";
 export type { PropSchemaEditorProps } from "./components/PropSchemaEditor";
 export { StyleEditor } from "./components/StyleEditor";
