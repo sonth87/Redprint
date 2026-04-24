@@ -72,6 +72,19 @@ export function CanvasRoot({
     }
   }, [zoom]);
 
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  /** Return the actual scaled height of the canvas content div (scrollHeight * zoom). */
+  const getActualCanvasHeight = useCallback(() => {
+    const el = containerRef.current;
+    if (!el) return (canvasConfig.height ?? 900) * zoom;
+    const canvasDiv = el.querySelector("[style*='transform']") as HTMLElement | null;
+    if (canvasDiv) {
+      // scrollHeight gives the unscaled content height; multiply by zoom to get screen px
+      return canvasDiv.scrollHeight * zoom;
+    }
+    return (canvasConfig.height ?? 900) * zoom;
+  }, [canvasConfig.height, zoom]);
+
   // ── Wheel → Zoom or Pan ──────────────────────────────────────────────────
   useEffect(() => {
     const el = containerRef.current;
@@ -108,7 +121,8 @@ export function CanvasRoot({
           const vw2 = el2.clientWidth;
           const vh2 = el2.clientHeight;
           const cw2 = (canvasConfig.width ?? 1440) * zoom;
-          const ch2 = (canvasConfig.height ?? 900) * zoom;
+          // Use actual DOM height so content taller than canvasConfig.height can be scrolled
+          const ch2 = getActualCanvasHeight();
           const clampedX = Math.max(PAN_MARGIN - cw2, Math.min(vw2 - PAN_MARGIN, rawX));
           const clampedY = Math.max(PAN_MARGIN - ch2, Math.min(vh2 - PAN_MARGIN, rawY));
           onPanOffsetChange({ x: clampedX, y: clampedY });
@@ -120,7 +134,7 @@ export function CanvasRoot({
 
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
-  }, [zoom, panOffset, onZoomChange, onPanOffsetChange]);
+  }, [zoom, panOffset, onZoomChange, onPanOffsetChange, getActualCanvasHeight, canvasConfig.width]);
 
   // ── Middle-mouse pan + Pan tool ─────────────────────────────────────────────
   // Clamp pan offset so at least PAN_MARGIN px of canvas remains visible.
@@ -130,14 +144,14 @@ export function CanvasRoot({
       if (!el) return { x: rawX, y: rawY };
       const vw = el.clientWidth;
       const vh = el.clientHeight;
-      // canvasWidth/height in screen pixels at current zoom (approximate — use canvasConfig)
       const cw = (canvasConfig.width ?? 1440) * zoom;
-      const ch = (canvasConfig.height ?? 900) * zoom;
+      // Use actual DOM content height so content taller than canvasConfig.height can be panned
+      const ch = getActualCanvasHeight();
       const clampedX = Math.max(PAN_MARGIN - cw, Math.min(vw - PAN_MARGIN, rawX));
       const clampedY = Math.max(PAN_MARGIN - ch, Math.min(vh - PAN_MARGIN, rawY));
       return { x: clampedX, y: clampedY };
     },
-    [canvasConfig.width, canvasConfig.height, zoom],
+    [canvasConfig.width, zoom, getActualCanvasHeight],
   );
 
   const handleMouseDown = useCallback(
