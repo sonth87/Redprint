@@ -1,7 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash(curl -s http://localhost:3000)"
+      "Bash(curl -s http://localhost:3000)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d, indent=2\\)\\)\")",
+      "Bash(node -e ' *)",
+      "Bash(curl -s http://localhost:3002/api/palette/catalog)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\([g['id'] for g in d.get\\('groups',[]\\)]\\)\")",
+      "Bash(curl -s \"http://localhost:3002/api/palette/groups/layout\")",
+      "Bash(python3 -c ' *)",
+      "Bash(open http://localhost:3000)"
     ]
   }
 }

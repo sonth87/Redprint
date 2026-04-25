@@ -325,7 +325,7 @@ function EditorInner({
   useDimensionCapture({ nodes: document.nodes, breakpoint, canvasFrameRef, dispatch });
 
   // ── Interaction hooks ────────────────────────────────────────────────────
-  const { handleDragStart, handlePaletteDragStart, handleDrop, handleDragOver, handleDragEnter, isDSDragging } =
+  const { handleDragStart, handlePaletteDragStart, handleDrop, handleDragOver, handleDragEnter, handleDragLeave, isDSDragging, paletteFlowDropTarget } =
     useDragHandlers({ rootNodeId: document.rootNodeId, zoom, canvasFrameRef, dispatch, nodes: document.nodes, getContainerConfig, onAfterDrop: handlePaletteClose });
 
   const { addItem: handlePaletteItemClick } = useClickToAdd({ rootNodeId: document.rootNodeId, nodes: document.nodes, selectedNodeIds, pendingTargetSectionId, zoom, panOffset, canvasContainerRef, canvasFrameRef: activeFrameRef, dispatch, onAfterAdd: handlePaletteClose });
@@ -377,6 +377,7 @@ function EditorInner({
     onMouseOut: handleMouseOut,
     onDragEnter: handleDragEnter,
     onDragOver: handleDragOver,
+    onDragLeave: handleDragLeave,
     onDrop: handleDrop,
   } as const;
 
@@ -410,6 +411,7 @@ function EditorInner({
         style={{ outline: "none" }}
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
         <EditorToolbar
@@ -651,6 +653,12 @@ function EditorInner({
 
             <FlowDropPlaceholderLayer
               flowDropTarget={flowDropTarget} moving={moving}
+              activeFrameRef={activeFrameRef} canvasFrameRef={canvasFrameRef}
+              nodes={document.nodes} zoom={zoom}
+            />
+            {/* Palette drag overlay — shows drop position when dragging from AddElements panel */}
+            <FlowDropPlaceholderLayer
+              flowDropTarget={paletteFlowDropTarget} moving={null}
               activeFrameRef={activeFrameRef} canvasFrameRef={canvasFrameRef}
               nodes={document.nodes} zoom={zoom}
             />

@@ -64,39 +64,50 @@ export const GridComponent: ComponentDefinition = {
       : tpl === "sidebar-right" ? "2fr 1fr"
       : `repeat(${columns}, 1fr)`;
 
+    const resolvedStyle = style as React.CSSProperties;
     const gridStyle: React.CSSProperties = {
-      ...(style as React.CSSProperties),
+      ...resolvedStyle,
       display: "grid",
       gridTemplateColumns,
-      gridTemplateRows: rows > 1 ? `repeat(${rows}, auto)` : "auto",
+      gridTemplateRows: `repeat(${rows}, auto)`,
       columnGap: `${columnGap}px`,
       rowGap: `${rowGap}px`,
       padding: `${padding}px`,
-      width: "100%",
-      minHeight: "80px",
+      width: resolvedStyle.width ?? "100%",
+      minHeight: resolvedStyle.minHeight ?? "80px",
       boxSizing: "border-box",
     };
 
+    // Always render placeholder cells behind real children so all rows/cols are visible
+    const placeholders = Array.from({ length: columns * rows }, (_, i) => {
+      const col = (i % columns) + 1;
+      const row = Math.floor(i / columns) + 1;
+      return (
+        <div
+          key={`ph-${i}`}
+          style={{
+            gridColumn: col,
+            gridRow: row,
+            minHeight: "80px",
+            border: "2px dashed #e5e7eb",
+            borderRadius: 6,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#e5e7eb",
+            fontSize: 11,
+            userSelect: "none",
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        />
+      );
+    });
+
     return (
       <div data-node-id={node.id} data-layout-type="grid" style={gridStyle}>
-        {(children as React.ReactNode) ?? (
-          <div
-            style={{
-              gridColumn: "1 / -1",
-              minHeight: "80px",
-              border: "2px dashed #e5e7eb",
-              borderRadius: 8,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#9ca3af",
-              fontSize: 12,
-              userSelect: "none",
-            }}
-          >
-            Drop components into grid cells
-          </div>
-        )}
+        {placeholders}
+        {children as React.ReactNode}
       </div>
     );
   },
@@ -113,17 +124,18 @@ export const GridComponent: ComponentDefinition = {
       : tpl === "sidebar-right" ? "2fr 1fr"
       : `repeat(${columns}, 1fr)`;
 
+    const runtimeStyle = style as React.CSSProperties;
     return (
       <div
         style={{
-          ...(style as React.CSSProperties),
+          ...runtimeStyle,
           display: "grid",
           gridTemplateColumns,
-          gridTemplateRows: rows > 1 ? `repeat(${rows}, auto)` : "auto",
+          gridTemplateRows: `repeat(${rows}, auto)`,
           columnGap: `${columnGap}px`,
           rowGap: `${rowGap}px`,
           padding: `${padding}px`,
-          width: "100%",
+          width: runtimeStyle.width ?? "100%",
         }}
       >
         {children as React.ReactNode}

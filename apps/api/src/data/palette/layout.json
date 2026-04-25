@@ -1,0 +1,479 @@
+{
+  "id": "layout",
+  "label": "Layout",
+  "icon": "layout",
+  "order": 3,
+  "i18n": {
+    "en": "Layout",
+    "vi": "Bố cục"
+  },
+  "types": [
+    {
+      "id": "grid-layouts",
+      "label": "Grid",
+      "order": 0,
+      "i18n": {
+        "en": "Grid",
+        "vi": "Lưới"
+      },
+      "items": [
+        {
+          "id": "grid-2-col",
+          "componentType": "Grid",
+          "name": "2 Columns",
+          "thumbnail": null,
+          "i18n": {
+            "en": { "name": "2 Columns" },
+            "vi": { "name": "2 cột" }
+          },
+          "props": {
+            "columns": 2,
+            "rows": 1,
+            "columnTemplate": "equal",
+            "columnGap": 16,
+            "rowGap": 16,
+            "padding": 16
+          },
+          "style": {
+            "display": "grid",
+            "gridTemplateColumns": "repeat(2, 1fr)",
+            "columnGap": "16px",
+            "rowGap": "16px",
+            "padding": "16px",
+            "width": "100%",
+            "minHeight": "80px"
+          },
+          "tags": ["grid", "2-column", "layout", "equal"]
+        },
+        {
+          "id": "grid-3-col",
+          "componentType": "Grid",
+          "name": "3 Columns",
+          "thumbnail": null,
+          "i18n": {
+            "en": { "name": "3 Columns" },
+            "vi": { "name": "3 cột" }
+          },
+          "props": {
+            "columns": 3,
+            "rows": 1,
+            "columnTemplate": "equal",
+            "columnGap": 16,
+            "rowGap": 16,
+            "padding": 16
+          },
+          "style": {
+            "display": "grid",
+            "gridTemplateColumns": "repeat(3, 1fr)",
+            "columnGap": "16px",
+            "rowGap": "16px",
+            "padding": "16px",
+            "width": "100%",
+            "minHeight": "80px"
+          },
+          "tags": ["grid", "3-column", "layout", "equal"]
+        },
+        {
+          "id": "grid-4-col",
+          "componentType": "Grid",
+          "name": "4 Columns",
+          "thumbnail": null,
+          "i18n": {
+            "en": { "name": "4 Columns" },
+            "vi": { "name": "4 cột" }
+          },
+          "props": {
+            "columns": 4,
+            "rows": 1,
+            "columnTemplate": "equal",
+            "columnGap": 16,
+            "rowGap": 16,
+            "padding": 16
+          },
+          "style": {
+            "display": "grid",
+            "gridTemplateColumns": "repeat(4, 1fr)",
+            "columnGap": "16px",
+            "rowGap": "16px",
+            "padding": "16px",
+            "width": "100%",
+            "minHeight": "80px"
+          },
+          "tags": ["grid", "4-column", "layout", "equal"]
+        },
+        {
+          "id": "grid-sidebar-left",
+          "componentType": "Grid",
+          "name": "Sidebar Left",
+          "thumbnail": null,
+          "i18n": {
+            "en": { "name": "Sidebar Left" },
+            "vi": { "name": "Thanh bên trái" }
+          },
+          "props": {
+            "columns": 2,
+            "rows": 1,
+            "columnTemplate": "sidebar-left",
+            "columnGap": 24,
+            "rowGap": 16,
+            "padding": 16
+          },
+          "style": {
+            "display": "grid",
+            "gridTemplateColumns": "1fr 2fr",
+            "columnGap": "24px",
+            "rowGap": "16px",
+            "padding": "16px",
+            "width": "100%",
+            "minHeight": "80px"
+          },
+          "tags": ["grid", "sidebar", "left", "layout", "1-2"]
+        },
+        {
+          "id": "grid-sidebar-right",
+          "componentType": "Grid",
+          "name": "Sidebar Right",
+          "thumbnail": null,
+          "i18n": {
+            "en": { "name": "Sidebar Right" },
+            "vi": { "name": "Thanh bên phải" }
+          },
+          "props": {
+            "columns": 2,
+            "rows": 1,
+            "columnTemplate": "sidebar-right",
+            "columnGap": 24,
+            "rowGap": 16,
+            "padding": 16
+          },
+          "style": {
+            "display": "grid",
+            "gridTemplateColumns": "2fr 1fr",
+            "columnGap": "24px",
+            "rowGap": "16px",
+            "padding": "16px",
+            "width": "100%",
+            "minHeight": "80px"
+          },
+          "tags": ["grid", "sidebar", "right", "layout", "2-1"]
+        },
+        {
+          "id": "grid-2-col-gap-sm",
+          "componentType": "Grid",
+          "name": "2 Col Tight",
+          "thumbnail": null,
+          "i18n": {
+            "en": { "name": "2 Col Tight" },
+            "vi": { "name": "2 cột khít" }
+          },
+          "props": {
+            "columns": 2,
+            "rows": 1,
+            "columnTemplate": "equal",
+            "columnGap": 8,
+            "rowGap": 8,
+            "padding": 0
+          },
+          "style": {
+            "display": "grid",
+            "gridTemplateColumns": "repeat(2, 1fr)",
+            "columnGap": "8px",
+            "rowGap": "8px",
+            "padding": "0px",
+            "width": "100%",
+            "minHeight": "80px"
+          },
+          "tags": ["grid", "2-column", "tight", "no-padding"]
+        },
+        {
+          "id": "grid-3-col-gap-sm",
+          "componentType": "Grid",
+          "name": "3 Col Tight",
+          "thumbnail": null,
+          "i18n": {
+            "en": { "name": "3 Col Tight" },
+            "vi": { "name": "3 cột khít" }
+          },
+          "props": {
+            "columns": 3,
+            "rows": 1,
+            "columnTemplate": "equal",
+            "columnGap": 8,
+            "rowGap": 8,
+            "padding": 0
+          },
+          "style": {
+            "display": "grid",
+            "gridTemplateColumns": "repeat(3, 1fr)",
+            "columnGap": "8px",
+            "rowGap": "8px",
+            "padding": "0px",
+            "width": "100%",
+            "minHeight": "80px"
+          },
+          "tags": ["grid", "3-column", "tight", "no-padding"]
+        },
+        {
+          "id": "grid-1-3",
+          "componentType": "Grid",
+          "name": "1/3 + 2/3",
+          "thumbnail": null,
+          "i18n": {
+            "en": { "name": "1/3 + 2/3" },
+            "vi": { "name": "1/3 + 2/3" }
+          },
+          "props": {
+            "columns": 2,
+            "rows": 1,
+            "columnTemplate": "custom",
+            "customTemplate": "1fr 2fr",
+            "columnGap": 16,
+            "rowGap": 16,
+            "padding": 16
+          },
+          "style": {
+            "display": "grid",
+            "gridTemplateColumns": "1fr 2fr",
+            "columnGap": "16px",
+            "rowGap": "16px",
+            "padding": "16px",
+            "width": "100%",
+            "minHeight": "80px"
+          },
+          "tags": ["grid", "asymmetric", "1-2", "layout"]
+        },
+        {
+          "id": "grid-2-3",
+          "componentType": "Grid",
+          "name": "2/3 + 1/3",
+          "thumbnail": null,
+          "i18n": {
+            "en": { "name": "2/3 + 1/3" },
+            "vi": { "name": "2/3 + 1/3" }
+          },
+          "props": {
+            "columns": 2,
+            "rows": 1,
+            "columnTemplate": "custom",
+            "customTemplate": "2fr 1fr",
+            "columnGap": 16,
+            "rowGap": 16,
+            "padding": 16
+          },
+          "style": {
+            "display": "grid",
+            "gridTemplateColumns": "2fr 1fr",
+            "columnGap": "16px",
+            "rowGap": "16px",
+            "padding": "16px",
+            "width": "100%",
+            "minHeight": "80px"
+          },
+          "tags": ["grid", "asymmetric", "2-1", "layout"]
+        }
+      ]
+    },
+    {
+      "id": "flex-layouts",
+      "label": "Row & Column",
+      "order": 1,
+      "i18n": {
+        "en": "Row & Column",
+        "vi": "Hàng & Cột"
+      },
+      "items": [
+        {
+          "id": "row-default",
+          "componentType": "Row",
+          "name": "Row",
+          "thumbnail": null,
+          "i18n": {
+            "en": { "name": "Row" },
+            "vi": { "name": "Hàng ngang" }
+          },
+          "props": {
+            "gap": 16,
+            "padding": 16,
+            "alignItems": "center",
+            "justifyContent": "flex-start",
+            "flexWrap": "nowrap"
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "row",
+            "gap": "16px",
+            "padding": "16px",
+            "width": "100%",
+            "minHeight": "48px"
+          },
+          "tags": ["row", "flex", "horizontal", "layout"]
+        },
+        {
+          "id": "row-space-between",
+          "componentType": "Row",
+          "name": "Row Space Between",
+          "thumbnail": null,
+          "i18n": {
+            "en": { "name": "Row Space Between" },
+            "vi": { "name": "Hàng cách đều" }
+          },
+          "props": {
+            "gap": 0,
+            "padding": 16,
+            "alignItems": "center",
+            "justifyContent": "space-between",
+            "flexWrap": "nowrap"
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+            "alignItems": "center",
+            "padding": "16px",
+            "width": "100%",
+            "minHeight": "48px"
+          },
+          "tags": ["row", "flex", "space-between", "navbar", "header"]
+        },
+        {
+          "id": "row-centered",
+          "componentType": "Row",
+          "name": "Row Centered",
+          "thumbnail": null,
+          "i18n": {
+            "en": { "name": "Row Centered" },
+            "vi": { "name": "Hàng căn giữa" }
+          },
+          "props": {
+            "gap": 12,
+            "padding": 16,
+            "alignItems": "center",
+            "justifyContent": "center",
+            "flexWrap": "nowrap"
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "row",
+            "justifyContent": "center",
+            "alignItems": "center",
+            "gap": "12px",
+            "padding": "16px",
+            "width": "100%",
+            "minHeight": "48px"
+          },
+          "tags": ["row", "flex", "center", "layout"]
+        },
+        {
+          "id": "row-wrap",
+          "componentType": "Row",
+          "name": "Row Wrap",
+          "thumbnail": null,
+          "i18n": {
+            "en": { "name": "Row Wrap" },
+            "vi": { "name": "Hàng xuống dòng" }
+          },
+          "props": {
+            "gap": 12,
+            "padding": 16,
+            "alignItems": "flex-start",
+            "justifyContent": "flex-start",
+            "flexWrap": "wrap"
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "row",
+            "flexWrap": "wrap",
+            "gap": "12px",
+            "padding": "16px",
+            "width": "100%",
+            "minHeight": "48px"
+          },
+          "tags": ["row", "flex", "wrap", "layout"]
+        },
+        {
+          "id": "column-default",
+          "componentType": "Column",
+          "name": "Column",
+          "thumbnail": null,
+          "i18n": {
+            "en": { "name": "Column" },
+            "vi": { "name": "Cột dọc" }
+          },
+          "props": {
+            "gap": 12,
+            "padding": 16,
+            "alignItems": "stretch",
+            "justifyContent": "flex-start",
+            "direction": "column"
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "gap": "12px",
+            "padding": "16px",
+            "width": "100%",
+            "minHeight": "80px"
+          },
+          "tags": ["column", "flex", "vertical", "layout"]
+        },
+        {
+          "id": "column-centered",
+          "componentType": "Column",
+          "name": "Column Centered",
+          "thumbnail": null,
+          "i18n": {
+            "en": { "name": "Column Centered" },
+            "vi": { "name": "Cột căn giữa" }
+          },
+          "props": {
+            "gap": 12,
+            "padding": 24,
+            "alignItems": "center",
+            "justifyContent": "center",
+            "direction": "column"
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "alignItems": "center",
+            "justifyContent": "center",
+            "gap": "12px",
+            "padding": "24px",
+            "width": "100%",
+            "minHeight": "80px"
+          },
+          "tags": ["column", "flex", "center", "layout"]
+        },
+        {
+          "id": "column-card",
+          "componentType": "Column",
+          "name": "Card Column",
+          "thumbnail": null,
+          "i18n": {
+            "en": { "name": "Card Column" },
+            "vi": { "name": "Cột thẻ" }
+          },
+          "props": {
+            "gap": 12,
+            "padding": 24,
+            "alignItems": "flex-start",
+            "justifyContent": "flex-start",
+            "direction": "column"
+          },
+          "style": {
+            "display": "flex",
+            "flexDirection": "column",
+            "gap": "12px",
+            "padding": "24px",
+            "width": "100%",
+            "minHeight": "120px",
+            "borderRadius": "12px",
+            "backgroundColor": "#ffffff",
+            "boxShadow": "0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06)"
+          },
+          "tags": ["column", "card", "flex", "shadow"]
+        }
+      ]
+    }
+  ]
+}

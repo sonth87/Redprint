@@ -61,22 +61,32 @@ function buildTrackEdges(
 }
 
 /**
- * Determine which track index the cursor falls in, using midpoints so that the
- * cursor snaps to the nearest cell rather than requiring exact pixel accuracy.
+ * Determine which track (cell) the cursor falls in.
+ * Uses exact track bounds first; falls back to nearest track center so that
+ * the cursor snaps correctly even when it is in a gap between tracks.
  */
 function hitTestTrack(
   cursorRelative: number,
   edges: Array<{ start: number; end: number }>,
 ): number {
-  let best = edges.length - 1;
+  // 1. Exact hit — cursor is inside a track's bounds
   for (let i = 0; i < edges.length; i++) {
-    const mid = (edges[i]!.start + edges[i]!.end) / 2;
-    if (cursorRelative <= mid) {
-      best = i;
-      break;
+    if (cursorRelative >= edges[i]!.start && cursorRelative <= edges[i]!.end) {
+      return i;
     }
   }
-  return Math.max(0, Math.min(best, edges.length - 1));
+  // 2. Cursor is in a gap or outside — pick the nearest track center
+  let best = 0;
+  let bestDist = Infinity;
+  for (let i = 0; i < edges.length; i++) {
+    const center = (edges[i]!.start + edges[i]!.end) / 2;
+    const dist = Math.abs(cursorRelative - center);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = i;
+    }
+  }
+  return best;
 }
 
 // ── Public: grid cell client-rect ────────────────────────────────────────

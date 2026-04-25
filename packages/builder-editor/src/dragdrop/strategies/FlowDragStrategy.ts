@@ -6,7 +6,7 @@
  * Migrated from useMoveGesture.ts flow-mode branch (lines 247–328, 523–539).
  */
 
-import { shouldUseFlowDrag } from "../../hooks/dragUtils";
+import { shouldUseFlowDrag, getDropTargetSection } from "../../hooks/dragUtils";
 import {
   resolveContainerDropPosition,
   findHoveredFlowContainer,
@@ -84,6 +84,26 @@ export class FlowDragStrategy implements DragStrategy {
       ctx.nodes,
       ctx.getContainerConfig,
     );
+
+    // If no flow container found, check if cursor has left the current parent's bounds.
+    // If so, show no flow overlay (will fall back to section reparenting on drop).
+    if (!hoveredFlowId) {
+      const parentEl = ctx.frameEl.querySelector(
+        `[data-node-id="${node.parentId}"]`,
+      ) as HTMLElement | null;
+      const parentRect = parentEl?.getBoundingClientRect();
+      const cursorInsideParent = parentRect &&
+        e.clientX >= parentRect.left && e.clientX <= parentRect.right &&
+        e.clientY >= parentRect.top  && e.clientY <= parentRect.bottom;
+
+      if (!cursorInsideParent) {
+        // Cursor is outside the current flow container — no flow drop target
+        this.lastReorderIndex = null;
+        return { ...EMPTY_VISUAL_STATE, flowDragOffset: { x: tx, y: ty } };
+      }
+    }
+
+    // Either found a new flow container, or cursor is still inside current parent
     const targetContainerId = hoveredFlowId ?? node.parentId;
     const targetContainerNode = ctx.nodes[targetContainerId];
     const targetContainerEl = ctx.frameEl.querySelector(
@@ -122,20 +142,80 @@ export class FlowDragStrategy implements DragStrategy {
     };
   }
 
-  onDrop(ctx: DragContext, _e: MouseEvent, lastVisualState: DragVisualState): void {
+  onDrop(ctx: DragContext, e: MouseEvent, lastVisualState: DragVisualState): void {
     const { flowDropTarget } = lastVisualState;
-    if (!flowDropTarget) return;
 
-    const { containerId, insertIndex } = flowDropTarget;
+    if (!flowDropTarget) {
+      // ── Dropped outside any flow container ──────────────────────────────
+      // Read preview position BEFORE _restoreOriginal() removes the clone.
+      const previewRect = this.previewEl?.getBoundingClientRect() ?? null;
+
+      this._restoreOriginal(ctx.frameEl, ctx.nodeId);
+
+      if (!ctx.rootNodeId) return;
+      const dropSectionId = getDropTargetSection(e.clientY, ctx.frameEl, ctx.nodes, ctx.rootNodeId);
+      if (!dropSectionId || dropSectionId === ctx.rootNodeId) return;
+
+      const sectionEl = ctx.frameEl.querySelector(`[data-node-id="${dropSectionId}"]`) as HTMLElement | null;
+      if (!sectionEl) return;
+
+      const sectionRect = sectionEl.getBoundingClientRect();
+      const refLeft = previewRect ? previewRect.left : e.clientX;
+      const refTop  = previewRect ? previewRect.top  : e.clientY;
+      const newLeft = Math.round((refLeft - sectionRect.left) / ctx.zoom);
+      const newTop  = Math.round((refTop  - sectionRect.top)  / ctx.zoom);
+
+      ctx.dispatch({
+        type: "UPDATE_STYLE",
+        payload: {
+          nodeId: ctx.nodeId,
+          style: {
+            position: "absolute",
+            left: `${newLeft}px`,
+            top: `${newTop}px`,
+            gridColumn: undefined,
+            gridRow: undefined,
+          } as Record<string, unknown>,
+          breakpoint: ctx.breakpoint,
+        },
+        description: "Move out of flow container",
+      });
+      const dropNode = ctx.nodes[ctx.nodeId];
+      if (dropNode?.parentId !== dropSectionId) {
+        ctx.dispatch({
+          type: "MOVE_NODE",
+          payload: { nodeId: ctx.nodeId, targetParentId: dropSectionId, position: "inside" },
+          description: "Reparent to section",
+        });
+      }
+      return;
+    }
+
+    // ── Dropped into a flow/grid container ────────────────────────────────
+    this._restoreOriginal(ctx.frameEl, ctx.nodeId);
+
+    const { containerId, insertIndex, gridCell } = flowDropTarget;
     const dropNode = ctx.nodes[ctx.nodeId];
+    const targetContainerCfg = ctx.getContainerConfig(ctx.nodes[containerId] ?? containerId);
+    const isGridTarget = targetContainerCfg?.layoutType === "grid";
+
+    const styleUpdate: Record<string, unknown> = {
+      position: undefined,
+      left: undefined,
+      top: undefined,
+    };
+    if (isGridTarget && gridCell) {
+      styleUpdate.gridColumn = `${gridCell.col + 1}`;
+      styleUpdate.gridRow = `${gridCell.row + 1}`;
+      styleUpdate.maxWidth = "100%"; // prevent overflow from fixed widths breaking 1fr layout
+    } else {
+      styleUpdate.gridColumn = undefined;
+      styleUpdate.gridRow = undefined;
+    }
 
     ctx.dispatch({
       type: "UPDATE_STYLE",
-      payload: {
-        nodeId: ctx.nodeId,
-        style: { position: undefined, left: undefined, top: undefined } as Record<string, unknown>,
-        breakpoint: ctx.breakpoint,
-      },
+      payload: { nodeId: ctx.nodeId, style: styleUpdate, breakpoint: ctx.breakpoint },
       description: "Clear position on flow drop",
     });
 
@@ -154,22 +234,26 @@ export class FlowDragStrategy implements DragStrategy {
     });
   }
 
-  onCancel(_ctx: DragContext): void {
+  onCancel(ctx: DragContext): void {
+    this._restoreOriginal(ctx.frameEl, ctx.nodeId);
     this.detachPreview();
   }
 
   detachPreview(): void {
     if (!this.previewEl) return;
-    const nodeId = this.previewEl.closest("[data-node-id]")?.getAttribute("data-node-id");
     this.previewEl.remove();
     this.previewEl = null;
-    // Restore visibility on original node (best-effort via parent frameEl)
-    if (nodeId) {
-      const origEl = globalThis.document?.querySelector(
-        `[data-node-id="${nodeId}"]`,
-      ) as HTMLElement | null;
-      origEl?.style.removeProperty("visibility");
-      origEl?.style.removeProperty("pointer-events");
+  }
+
+  /** Restore visibility/pointer-events on the original node element. */
+  private _restoreOriginal(frameEl: HTMLElement, nodeId: string): void {
+    this.detachPreview();
+    const origEl = frameEl.querySelector(
+      `[data-node-id="${nodeId}"]`,
+    ) as HTMLElement | null;
+    if (origEl) {
+      origEl.style.removeProperty("visibility");
+      origEl.style.removeProperty("pointer-events");
     }
   }
 }

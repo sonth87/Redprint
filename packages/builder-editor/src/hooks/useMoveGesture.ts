@@ -179,12 +179,14 @@ export function useMoveGesture({
             `[data-node-id="${mNode.nodeId}"]`,
           ) as HTMLElement | null;
           if (nodeEl) {
+            // Always clear flow-drag visibility overrides (set by FlowDragStrategy.attachPreview)
+            nodeEl.style.removeProperty("visibility");
+            nodeEl.style.removeProperty("pointer-events");
+            // Clear absolute-drag transforms (set by AbsoluteDragStrategy)
             if (nodeEl.dataset.dragOriginalTransform !== undefined) {
               nodeEl.style.transform = nodeEl.dataset.dragOriginalTransform;
               nodeEl.style.removeProperty("opacity");
               nodeEl.style.removeProperty("z-index");
-              nodeEl.style.removeProperty("pointer-events");
-              nodeEl.style.removeProperty("visibility");
               delete nodeEl.dataset.dragOriginalTransform;
             }
           }

@@ -262,14 +262,27 @@ export class AbsoluteDragStrategy implements DragStrategy {
 
     if (lastVisualState.flowDropTarget !== null && !isMultiSelect) {
       // Dropped into a flow container — same as FlowDragStrategy.onDrop
-      const { containerId, insertIndex } = lastVisualState.flowDropTarget;
+      const { containerId, insertIndex, gridCell } = lastVisualState.flowDropTarget;
+      const targetCfg = ctx.getContainerConfig(ctx.nodes[containerId] ?? containerId);
+      const isGridTarget = targetCfg?.layoutType === "grid";
+
+      const styleUpdate: Record<string, unknown> = {
+        position: undefined,
+        left: undefined,
+        top: undefined,
+      };
+      if (isGridTarget && gridCell) {
+        styleUpdate.gridColumn = `${gridCell.col + 1}`;
+        styleUpdate.gridRow = `${gridCell.row + 1}`;
+        styleUpdate.maxWidth = "100%";
+      } else {
+        styleUpdate.gridColumn = undefined;
+        styleUpdate.gridRow = undefined;
+      }
+
       ctx.dispatch({
         type: "UPDATE_STYLE",
-        payload: {
-          nodeId: ctx.nodeId,
-          style: { position: undefined, left: undefined, top: undefined } as Record<string, unknown>,
-          breakpoint: ctx.breakpoint,
-        },
+        payload: { nodeId: ctx.nodeId, style: styleUpdate, breakpoint: ctx.breakpoint },
         description: "Clear position on flow drop",
       });
       if (primaryNode?.parentId !== containerId) {
