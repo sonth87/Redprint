@@ -14,6 +14,7 @@ export interface CanvasRootProps {
   className?: string;
   activeTool?: string;
   onPointerDown?: (e: React.PointerEvent) => void;
+  wheelListenerParent?: React.RefObject<HTMLElement | null>;
 }
 
 /**
@@ -38,6 +39,7 @@ export function CanvasRoot({
   className,
   activeTool = "select",
   onPointerDown,
+  wheelListenerParent,
 }: CanvasRootProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPanning, setIsPanning] = useState(false);
@@ -71,14 +73,19 @@ export function CanvasRoot({
 
   // ── Wheel → Zoom or Pan ──────────────────────────────────────────────────
   useEffect(() => {
-    const el = containerRef.current;
+    // Use wheelListenerParent if provided (to handle toolbar above canvas),
+    // otherwise fall back to containerRef
+    const el = wheelListenerParent?.current ?? containerRef.current;
     if (!el) return;
 
     const onWheel = (e: globalThis.WheelEvent) => {
       e.preventDefault();
       if (e.ctrlKey || e.metaKey) {
         // Pinch-to-zoom or Ctrl+scroll — zoom from cursor position
-        const rect = el.getBoundingClientRect();
+        const canvasContainer = containerRef.current;
+        if (!canvasContainer) return;
+
+        const rect = canvasContainer.getBoundingClientRect();
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;
 
@@ -89,7 +96,7 @@ export function CanvasRoot({
         // Determine zoom scale step
         let zoomMultiplier = 1;
         if (Math.abs(e.deltaY) >= 50) {
-          // Likely a standard mouse wheel (large delta steps). 
+          // Likely a standard mouse wheel (large delta steps).
           // Use fixed 15% zoom increments per wheel tick
           zoomMultiplier = e.deltaY > 0 ? 0.85 : 1.15;
         } else {
@@ -118,7 +125,7 @@ export function CanvasRoot({
 
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
-  }, [zoom, panOffset, onZoomChange, onPanOffsetChange]);
+  }, [zoom, panOffset, onZoomChange, onPanOffsetChange, wheelListenerParent]);
 
   // ── Middle-mouse pan + Pan tool ─────────────────────────────────────────────
   const handleMouseDown = useCallback(

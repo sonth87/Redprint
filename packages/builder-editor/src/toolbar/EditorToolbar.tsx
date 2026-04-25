@@ -113,9 +113,8 @@ export const EditorToolbar = memo(function EditorToolbar({
   return (
     <TooltipProvider delayDuration={TOOLTIP_DELAY_EXTENDED_MS}>
       <div className="bg-background/60 absolute left-1/2 top-4 z-40 flex h-10 -translate-x-1/2 items-center gap-1.5 rounded-full border px-3 shadow-sm backdrop-blur-md" style={{ pointerEvents: "none" }}>
-        <div style={{ pointerEvents: "auto", display: "flex", alignItems: "center", gap: "1.5px", width: "100%" }}>
           {/* Tool selection */}
-          <div className="mr-2 flex items-center gap-0.5 rounded-md p-1">
+          <div className="mr-2 flex items-center gap-0.5 rounded-md p-1" style={{ pointerEvents: "auto" }}>
             <ToolbarButton
               icon={MousePointer2}
               tooltip={`${t("toolbar.select")} (V)`}
@@ -135,20 +134,24 @@ export const EditorToolbar = memo(function EditorToolbar({
           </div>
 
           {/* Undo / Redo */}
-          <ToolbarButton
-            icon={Undo2}
-            tooltip={`${t("toolbar.undo")} (⌘Z)`}
-            disabled={!canUndo}
-            onClick={onUndo}
-            aria-label={`${t("toolbar.undo")} (⌘Z)`}
-          />
-          <ToolbarButton
-            icon={Redo2}
-            tooltip={`${t("toolbar.redo")} (⌘⇧Z)`}
-            disabled={!canRedo}
-            onClick={onRedo}
-            aria-label={`${t("toolbar.redo")} (⌘Y)`}
-          />
+          <div style={{ pointerEvents: "auto" }}>
+            <ToolbarButton
+              icon={Undo2}
+              tooltip={`${t("toolbar.undo")} (⌘Z)`}
+              disabled={!canUndo}
+              onClick={onUndo}
+              aria-label={`${t("toolbar.undo")} (⌘Z)`}
+            />
+          </div>
+          <div style={{ pointerEvents: "auto" }}>
+            <ToolbarButton
+              icon={Redo2}
+              tooltip={`${t("toolbar.redo")} (⌘⇧Z)`}
+              disabled={!canRedo}
+              onClick={onRedo}
+              aria-label={`${t("toolbar.redo")} (⌘Y)`}
+            />
+          </div>
 
           {/* Separator */}
           <div className="bg-border mx-1 h-6 w-px" />
@@ -156,7 +159,7 @@ export const EditorToolbar = memo(function EditorToolbar({
           {/* Breakpoints — Desktop and Mobile only */}
           {canvasMode !== "dual" && (
             <>
-              <div className="flex items-center gap-0.5">
+              <div className="flex items-center gap-0.5" style={{ pointerEvents: "auto" }}>
                 {breakpointOptions.map(({ bp, label, icon: Icon, shortcut }) => {
                   const isMobile = bp === "mobile";
                   return (
@@ -199,7 +202,7 @@ export const EditorToolbar = memo(function EditorToolbar({
           )}
 
           {/* Zoom */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1" style={{ pointerEvents: "auto" }}>
             <ToolbarButton
               icon={ZoomOut}
               tooltip={t("toolbar.zoomOut")}
@@ -219,44 +222,50 @@ export const EditorToolbar = memo(function EditorToolbar({
 
           {/* Fit to Screen */}
           {onFitToScreen && (
-            <ToolbarButton
-              icon={Maximize2}
-              tooltip={`${t("toolbar.fitToScreen")} (⇧1)`}
-              onClick={onFitToScreen}
-              aria-label={t("toolbar.fitToScreen")}
-              compact
-            />
+            <div style={{ pointerEvents: "auto" }}>
+              <ToolbarButton
+                icon={Maximize2}
+                tooltip={`${t("toolbar.fitToScreen")} (⇧1)`}
+                onClick={onFitToScreen}
+                aria-label={t("toolbar.fitToScreen")}
+                compact
+              />
+            </div>
           )}
 
           {/* Separator */}
           <div className="bg-border mx-1 h-6 w-px" />
 
           {/* Grid toggle */}
-          <ToolbarButton
-            icon={Grid}
-            tooltip="Toggle Grid"
-            isActive={showGrid}
-            onClick={onGridToggle}
-            aria-label="Toggle grid"
-            compact
-          />
+          <div style={{ pointerEvents: "auto" }}>
+            <ToolbarButton
+              icon={Grid}
+              tooltip="Toggle Grid"
+              isActive={showGrid}
+              onClick={onGridToggle}
+              aria-label="Toggle grid"
+              compact
+            />
+          </div>
 
           {/* Dual canvas toggle */}
-          <ToolbarButton
-            icon={Columns2}
-            tooltip={
-              canvasMode === "dual"
-                ? "Single canvas (current: side-by-side)"
-                : "Dual canvas — Desktop + Mobile side-by-side"
-            }
-            isActive={canvasMode === "dual"}
-            onClick={onCanvasModeToggle}
-            aria-label="Toggle dual canvas mode"
-            compact
-          />
+          <div style={{ pointerEvents: "auto" }}>
+            <ToolbarButton
+              icon={Columns2}
+              tooltip={
+                canvasMode === "dual"
+                  ? "Single canvas (current: side-by-side)"
+                  : "Dual canvas — Desktop + Mobile side-by-side"
+              }
+              isActive={canvasMode === "dual"}
+              onClick={onCanvasModeToggle}
+              aria-label="Toggle dual canvas mode"
+              compact
+            />
+          </div>
 
           {(onAIOpen || onFigmaOpen) && (
-            <>
+            <div style={{ pointerEvents: "auto", display: "flex", alignItems: "center", gap: "0.375rem" }}>
               {/* Separator */}
               <div className="bg-border mx-1 h-6 w-px" />
 
@@ -280,9 +289,8 @@ export const EditorToolbar = memo(function EditorToolbar({
                   compact
                 />
               )}
-            </>
+            </div>
           )}
-        </div>
       </div>
     </TooltipProvider>
   );

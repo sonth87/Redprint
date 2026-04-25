@@ -278,6 +278,7 @@ function EditorInner({
   const { zoom, setZoom, panOffset, setPanOffset, activeTool, setActiveTool, showGrid, toggleGrid } = useViewport();
 
   const canvasContainerRef = useRef<HTMLDivElement>(null);
+  const canvasAreaRef      = useRef<HTMLDivElement>(null);
   const canvasFrameRef     = useRef<HTMLDivElement>(null);
   const mobileFrameRef     = useRef<HTMLDivElement>(null);
   const activeFrameRef = useRef<HTMLDivElement | null>(null);
@@ -561,9 +562,10 @@ function EditorInner({
         <FigmaImportDialog open={figmaOpen} onOpenChange={setFigmaOpen} />
 
         {/* Canvas area */}
-        <div className="bg-muted/20 absolute inset-0 z-0 overflow-hidden">
+        <div ref={canvasAreaRef} className="bg-muted/20 absolute inset-0 z-0 overflow-hidden">
           <CanvasRoot canvasConfig={canvasConfigParams} zoom={zoom} panOffset={panOffset}
             onZoomChange={setZoom} onPanOffsetChange={setPanOffset} activeTool={activeTool} className="h-full w-full"
+            wheelListenerParent={canvasAreaRef}
             onPointerDown={(e) => {
               const target = e.target as HTMLElement;
               // Ignore clicks on floating panels, resize handles, or other interactive overlays
