@@ -1,14 +1,38 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Copy, Trash2, ArrowUp, ArrowDown, GripVertical, CornerLeftUp, ImageIcon, Link2, Paintbrush, Frame } from "lucide-react";
 import { useDocument, useBuilder } from "@ui-builder/builder-react";
-import { Button, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider, Popover, PopoverContent, PopoverTrigger, ScrollArea } from "@ui-builder/ui";
+import { Button, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider, ScrollArea } from "@ui-builder/ui";
 import { TOOLTIP_DELAY_MS } from "@ui-builder/shared";
 import { AIToolsPopover } from "../ai/ai-tools/AIToolsPopover";
 import { AISectionPopover } from "../ai/ai-section/AISectionPopover";
 import { useAIConfig } from "../ai/AIConfigContext";
 import { ImageFilterPicker } from "../panels/ImageFilterPicker";
 import { ImageFramePanel } from "../panels/ImageFramePanel";
+import { FloatingPanel } from "../panels/FloatingPanel";
+
+function getClampedPanelPos(
+  rect: DOMRect,
+  panelWidth: number,
+  panelHeight: number,
+) {
+  const margin = 8;
+  let x = rect.left;
+  let y = rect.bottom + 6;
+
+  if (x + panelWidth + margin > window.innerWidth) {
+    x = window.innerWidth - panelWidth - margin;
+  }
+  if (x < margin) x = margin;
+
+  if (y + panelHeight + margin > window.innerHeight) {
+    y = rect.top - panelHeight - 6;
+  }
+  if (y < margin) y = margin;
+
+  return { x, y };
+}
 
 export interface ContextualToolbarProps {
   nodeId: string;
@@ -27,10 +51,14 @@ export interface ContextualToolbarProps {
 export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, rect, zoom, panOffset, onDelete, onDuplicate, onMoveUp, onMoveDown, onDragHandlePointerDown, onOpenMediaManager }) => {
   const [filterOpen, setFilterOpen] = React.useState(false);
   const [frameOpen, setFrameOpen] = React.useState(false);
-  const { document } = useDocument();
+  const [filterPos, setFilterPos] = React.useState({ x: 0, y: 0 });
+  const [framePos, setFramePos] = React.useState({ x: 0, y: 0 });
+  const filterBtnRef = useRef<HTMLButtonElement>(null);
+  const frameBtnRef = useRef<HTMLButtonElement>(null);
+  const { document: builderDoc } = useDocument();
   const { builder, dispatch } = useBuilder();
   const { t } = useTranslation();
-  const node = document.nodes[nodeId];
+  const node = builderDoc.nodes[nodeId];
   const aiConfig = useAIConfig();
 
   // Resolve component definition to check AI capabilities
@@ -44,7 +72,7 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
   // Section AI Assistant
   const isSection = node?.type === "Section";
   const currentChildIds = isSection
-    ? Object.values(document.nodes)
+    ? Object.values(builderDoc.nodes)
         .filter((n) => n.parentId === nodeId)
         .map((n) => n.id)
     : [];
@@ -210,34 +238,36 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
               </Tooltip>
             )}
 
-            {/* Filter picker popover */}
-            <Popover open={filterOpen} onOpenChange={setFilterOpen}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      className="h-6 w-6"
-                      onClick={(e) => { e.stopPropagation(); }}
-                    >
-                      <Paintbrush className="h-3 w-3" />
-                    </Button>
-                  </PopoverTrigger>
-                </TooltipTrigger>
-                <TooltipContent side="top">Filter</TooltipContent>
-              </Tooltip>
-              <PopoverContent
-                side="bottom"
-                align="center"
-                className="w-64 p-0"
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={(e) => e.stopPropagation()}
+            {/* Filter picker — draggable FloatingPanel */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  ref={filterBtnRef}
+                  variant="ghost"
+                  size="icon-sm"
+                  className="h-6 w-6"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (filterBtnRef.current) {
+                      const r = filterBtnRef.current.getBoundingClientRect();
+                      setFilterPos(getClampedPanelPos(r, 256, 400));
+                    }
+                    setFilterOpen((v) => !v);
+                  }}
+                >
+                  <Paintbrush className="h-3 w-3" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">Filter</TooltipContent>
+            </Tooltip>
+            {filterOpen && createPortal(
+              <FloatingPanel
+                title="Image Filter"
+                defaultPosition={{ x: filterPos.x, y: filterPos.y }}
+                width={256}
+                onClose={() => setFilterOpen(false)}
               >
-                <div className="flex items-center justify-between px-3 py-2 border-b">
-                  <span className="text-xs font-semibold">Choose a Filter</span>
-                </div>
-                <ScrollArea className="h-72">
+                <ScrollArea>
                   <ImageFilterPicker
                     previewSrc={String(node.props.src ?? "")}
                     value={String(node.props.filter ?? "none")}
@@ -250,36 +280,39 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
                     }}
                   />
                 </ScrollArea>
-              </PopoverContent>
-            </Popover>
+              </FloatingPanel>,
+              document.body,
+            )}
 
-            {/* Frame Design popover */}
-            <Popover open={frameOpen} onOpenChange={setFrameOpen}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      className="h-6 w-6"
-                      onClick={(e) => { e.stopPropagation(); }}
-                    >
-                      <Frame className="h-3 w-3" />
-                    </Button>
-                  </PopoverTrigger>
-                </TooltipTrigger>
-                <TooltipContent side="top">Frame Design</TooltipContent>
-              </Tooltip>
-              <PopoverContent
-                side="bottom"
-                align="center"
-                className="w-80 p-0"
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={(e) => e.stopPropagation()}
+            {/* Frame Design — draggable FloatingPanel */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  ref={frameBtnRef}
+                  variant="ghost"
+                  size="icon-sm"
+                  className="h-6 w-6"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (frameBtnRef.current) {
+                      const r = frameBtnRef.current.getBoundingClientRect();
+                      setFramePos(getClampedPanelPos(r, 320, 500));
+                    }
+                    setFrameOpen((v) => !v);
+                  }}
+                >
+                  <Frame className="h-3 w-3" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">Frame Design</TooltipContent>
+            </Tooltip>
+            {frameOpen && createPortal(
+              <FloatingPanel
+                title="Frame Design"
+                defaultPosition={{ x: framePos.x, y: framePos.y }}
+                width={320}
+                onClose={() => setFrameOpen(false)}
               >
-                <div className="flex items-center justify-between px-3 py-2 border-b">
-                  <span className="text-xs font-semibold">Frame Design</span>
-                </div>
                 <ImageFramePanel
                   node={node}
                   onStyleChange={(style) => {
@@ -297,8 +330,9 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
                     });
                   }}
                 />
-              </PopoverContent>
-            </Popover>
+              </FloatingPanel>,
+              document.body,
+            )}
 
             {/* Set Link */}
             <Tooltip>

@@ -24,6 +24,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@fseehawer/react-circular-slider": "^3.3.3",
     "@tiptap/core": "^3.22.2",
     "@tiptap/extension-color": "^3.22.2",
     "@tiptap/extension-highlight": "^3.22.2",
@@ -37,6 +38,7 @@
     "@ui-builder/builder-react": "workspace:*",
     "@ui-builder/shared": "workspace:*",
     "@ui-builder/ui": "workspace:*",
+    "@uiw/react-color": "^2.10.1",
     "dompurify": "^3.2.4",
     "i18next": "^26.0.3",
     "lucide-react": "^1.7.0",

@@ -73,8 +73,10 @@ function FilterSwatch({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex flex-col items-center gap-1 p-1 rounded-lg border-2 transition-all hover:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/40",
-        selected ? "border-primary shadow-sm" : "border-transparent"
+        "flex flex-col items-center gap-1 p-1 rounded-lg transition-all focus:outline-none",
+        selected
+          ? "ring-2 ring-primary ring-offset-1 bg-primary/5"
+          : "ring-1 ring-transparent hover:ring-border"
       )}
     >
       <div className="w-full aspect-[4/3] rounded overflow-hidden bg-muted relative">

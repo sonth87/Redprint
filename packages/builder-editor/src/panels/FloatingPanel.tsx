@@ -2,6 +2,11 @@ import React, { useState, useRef, useCallback } from "react";
 import { Minus, Plus, X } from "lucide-react";
 import { cn } from "@ui-builder/ui";
 
+// Module-level counter — increments each time a panel is focused/dragged so
+// the most-recently-interacted panel always renders on top.
+let zCounter = 50;
+function bumpZ() { return ++zCounter; }
+
 export interface FloatingPanelProps {
   id?: string;
   title: string;
@@ -41,6 +46,7 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
 
   const [isExpanded, setIsExpanded] = useState(onClose ? true : defaultExpanded);
   const [isDragging, setIsDragging] = useState(false);
+  const [zIndex, setZIndex] = useState(() => bumpZ());
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
@@ -83,17 +89,23 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
     [width],
   );
 
+  const handlePanelPointerDown = useCallback(() => {
+    setZIndex(bumpZ());
+  }, []);
+
   return (
     <div
       ref={panelRef}
+      onPointerDown={handlePanelPointerDown}
       className={cn(
-        "fixed z-40 flex flex-col bg-background/50 backdrop-blur-md rounded-lg border shadow-lg overflow-hidden select-none",
-        isDragging && "shadow-xl select-none bg-background/0 backdrop-blur-md",
+        "fixed flex flex-col bg-background/95 backdrop-blur-md rounded-lg border shadow-lg overflow-hidden select-none",
+        isDragging && "shadow-xl bg-background/80",
       )}
       style={{
         width,
         left: position.x,
         top: position.y,
+        zIndex,
       }}
     >
       {/* Header - Drag Handle */}
@@ -132,8 +144,8 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
       {/* Content */}
       <div
         className={cn(
-          "flex flex-col transition-all overflow-hidden",
-          isExpanded ? "h-auto max-h-[70vh] opacity-100" : "h-0 opacity-0"
+          "flex flex-col transition-[max-height,opacity]",
+          isExpanded ? "max-h-[72vh] opacity-100 overflow-y-auto" : "max-h-0 opacity-0 overflow-hidden"
         )}
       >
         {children}

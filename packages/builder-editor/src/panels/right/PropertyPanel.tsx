@@ -3,6 +3,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent, ScrollArea, Label, Input, Sel
 import type { Asset, BuilderNode, Breakpoint, ComponentDefinition, PropSchema, InteractionConfig, InteractionTrigger, InteractionAction } from "@ui-builder/builder-core";
 import { ImageFilterPicker } from "../ImageFilterPicker";
 import { resolveStyle, resolveProps } from "@ui-builder/builder-core";
+import { ShadowControl } from "../../controls/shadow/ShadowControl";
 import {
   ChevronDown,
   ChevronRight,
@@ -1219,15 +1220,10 @@ export const PropertyPanel = memo(function PropertyPanel({
 
             {/* Shadow & Effects */}
             <CollapsibleSection title={t("design.shadow")} defaultOpen={false}>
-              <div className="grid gap-1">
-                <Label className="text-[10px] text-muted-foreground">Box Shadow</Label>
-                <Input
-                  className="h-7 text-xs font-mono"
-                  value={String(style.boxShadow ?? "")}
-                  placeholder="0 0 10px rgba(0,0,0,0.1)"
-                  onChange={(e) => onStyleChange("boxShadow", e.target.value || undefined)}
-                />
-              </div>
+              <ShadowControl
+                value={style.boxShadow as string | undefined}
+                onChange={(css) => onStyleChange("boxShadow", css === "none" ? undefined : css)}
+              />
             </CollapsibleSection>
 
             {/* Layout */}

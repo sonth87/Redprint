@@ -54,6 +54,7 @@ const BuilderDocumentSchema = z.object({
       defaultValue: z.unknown(),
     }).passthrough()
   ),
+  themeColors: z.array(z.string()).optional(),
 });
 
 /**

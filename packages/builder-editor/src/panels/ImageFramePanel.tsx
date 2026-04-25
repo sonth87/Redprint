@@ -41,6 +41,8 @@ import {
   type SpecialPreset,
   type SpecialFrameStyle,
 } from "@ui-builder/shared";
+import { ShadowControl } from "../controls/shadow/ShadowControl";
+import { ColorSwatch } from "../controls/color/ColorSwatch";
 
 // ── Props ──────────────────────────────────────────────────────────────────
 
@@ -65,8 +67,10 @@ function PreviewBox({ style, selected, onClick, label }: {
       title={label}
       onClick={onClick}
       className={cn(
-        "flex flex-col items-center gap-1 p-1 rounded cursor-pointer hover:bg-accent transition-colors focus:outline-none",
-        selected && "ring-2 ring-primary bg-accent",
+        "flex flex-col items-center gap-1 p-1 rounded transition-all focus:outline-none",
+        selected
+          ? "ring-2 ring-primary ring-offset-1 bg-primary/5"
+          : "ring-1 ring-transparent hover:ring-border hover:bg-accent/50",
       )}
     >
       <div
@@ -100,8 +104,10 @@ function ShapeBox({ preset, selected, onClick }: {
       title={preset.label}
       onClick={onClick}
       className={cn(
-        "flex flex-col items-center gap-1 p-1.5 rounded cursor-pointer hover:bg-accent transition-colors focus:outline-none",
-        selected && "ring-2 ring-primary bg-accent",
+        "flex flex-col items-center gap-1 p-1.5 rounded transition-all focus:outline-none",
+        selected
+          ? "ring-2 ring-primary ring-offset-1 bg-primary/5"
+          : "ring-1 ring-transparent hover:ring-border hover:bg-accent/50",
       )}
     >
       <div style={shapeStyle} className="flex-shrink-0" />
@@ -151,7 +157,7 @@ function SpecialCard({ preset, selected, onClick }: {
       onClick={onClick}
       className={cn(
         "flex flex-col gap-1.5 p-2 rounded border cursor-pointer hover:bg-accent transition-colors text-left focus:outline-none",
-        selected ? "ring-2 ring-primary border-primary bg-accent" : "border-border",
+        selected ? "ring-2 ring-primary ring-offset-1 border-primary bg-primary/5" : "border-border hover:border-primary/40",
       )}
     >
       {previewContent}
@@ -206,7 +212,7 @@ export function ImageFramePanel({ node, onStyleChange, onPropChange }: ImageFram
 
       {/* ── Frame Tab ── */}
       <TabsContent value="frame" className="mt-0">
-        <ScrollArea className="h-64">
+        <ScrollArea>
           <div className="grid grid-cols-3 gap-1 p-2">
             {FRAME_PRESETS.map((preset: FramePreset) => (
               <PreviewBox
@@ -229,26 +235,15 @@ export function ImageFramePanel({ node, onStyleChange, onPropChange }: ImageFram
 
       {/* ── Shadow Tab ── */}
       <TabsContent value="shadow" className="mt-0">
-        <ScrollArea className="h-64">
-          <div className="grid grid-cols-3 gap-1 p-2">
-            {SHADOW_PRESETS.map((preset: ShadowPreset) => (
-              <PreviewBox
-                key={preset.value}
-                label={preset.label}
-                selected={currentShadow === preset.value}
-                style={{
-                  boxShadow: preset.boxShadow === "none" ? undefined : preset.boxShadow,
-                }}
-                onClick={() => onStyleChange({ boxShadow: preset.boxShadow })}
-              />
-            ))}
-          </div>
-        </ScrollArea>
+        <ShadowControl
+          value={style.boxShadow as string | undefined}
+          onChange={(css) => onStyleChange({ boxShadow: css })}
+        />
       </TabsContent>
 
       {/* ── Shape Tab ── */}
       <TabsContent value="shape" className="mt-0">
-        <ScrollArea className="h-64">
+        <ScrollArea>
           <div className="grid grid-cols-3 gap-1 p-2">
             {SHAPE_PRESETS.map((preset: ShapePreset) => (
               <ShapeBox
@@ -298,11 +293,10 @@ export function ImageFramePanel({ node, onStyleChange, onPropChange }: ImageFram
           <div className="space-y-1.5">
             <Label className="text-[10px] text-muted-foreground">Border Color</Label>
             <div className="flex items-center gap-2">
-              <input
-                type="color"
+              <ColorSwatch
                 value={borderColorVal}
-                onChange={(e) => onStyleChange({ borderColor: e.target.value })}
-                className="w-8 h-7 rounded cursor-pointer border border-border p-0.5 bg-transparent"
+                onChange={(c) => onStyleChange({ borderColor: c })}
+                label="Border color"
               />
               <span className="text-[10px] font-mono text-muted-foreground">{borderColorVal}</span>
             </div>
@@ -332,7 +326,7 @@ export function ImageFramePanel({ node, onStyleChange, onPropChange }: ImageFram
 
       {/* ── Special Tab ── */}
       <TabsContent value="special" className="mt-0">
-        <ScrollArea className="h-64">
+        <ScrollArea>
           <div className="grid grid-cols-2 gap-2 p-2">
             {SPECIAL_PRESETS.map((preset: SpecialPreset) => (
               <SpecialCard

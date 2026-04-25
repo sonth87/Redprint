@@ -118,6 +118,7 @@ export {
   CMD_SET_CANVAS_MODE,
   CMD_ENTER_TEXT_EDIT,
   CMD_EXIT_TEXT_EDIT,
+  CMD_SET_THEME_COLORS,
 } from "./commands/built-in";
 export type {
   AddNodePayload,
@@ -137,6 +138,7 @@ export type {
   SetCanvasModePayload,
   EnterTextEditPayload,
   ExitTextEditPayload,
+  SetThemeColorsPayload,
 } from "./commands/built-in";
 
 // ── History ────────────────────────────────────────────────────────────────

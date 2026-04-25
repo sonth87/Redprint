@@ -40,6 +40,9 @@ export const CMD_LOAD_COMPONENT = "LOAD_COMPONENT" as const;
 // Editor UI
 export const CMD_SET_CANVAS_MODE = "SET_CANVAS_MODE" as const;
 
+// Document theme
+export const CMD_SET_THEME_COLORS = "SET_THEME_COLORS" as const;
+
 // Inline text editing (no undo/redo — pure UI state)
 export const CMD_ENTER_TEXT_EDIT = "ENTER_TEXT_EDIT" as const;
 export const CMD_EXIT_TEXT_EDIT  = "EXIT_TEXT_EDIT"  as const;
@@ -194,4 +197,8 @@ export interface ExitTextEditPayload {
   /** Prop key that was being edited (required when content is provided). */
   propKey?: string;
   nodeId?: string;
+}
+
+export interface SetThemeColorsPayload {
+  colors: string[];
 }
