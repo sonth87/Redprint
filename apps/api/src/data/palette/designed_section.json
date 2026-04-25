@@ -1,7 +1,7 @@
 {
   "id": "designed_section",
   "label": "Designed Section",
-  "icon": "layout-template",
+  "icon": "LayoutTemplate",
   "order": 100,
   "i18n": {
     "en": "Designed Section",

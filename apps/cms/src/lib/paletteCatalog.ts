@@ -8,8 +8,6 @@ import buttonData from "@palette/button.json";
 import galleryData from "@palette/gallery.json";
 import decorativeData from "@palette/decorative.json";
 import menuData from "@palette/menu.json";
-import collectionData from "@palette/collection.json";
-import containerData from "@palette/container.json";
 import cardData from "@palette/card.json";
 import designedSectionData from "@palette/designed_section.json";
 
@@ -20,8 +18,6 @@ const RAW_GROUPS = [
   galleryData,
   decorativeData,
   menuData,
-  collectionData,
-  containerData,
   cardData,
   designedSectionData,
 ];
