@@ -6,11 +6,10 @@
     "text",
     "image",
     "button",
+    "layout",
     "gallery",
     "decorative",
     "menu",
-    "collection",
-    "container",
     "card"
   ]
 }

@@ -358,6 +358,16 @@ Supported prop types for dynamic property panel generation: `string`, `number`, 
 
 ### ContainerConfig & Layout Types
 
+`containerConfig` on a `ComponentDefinition` controls both drop behavior and drag-mode selection:
+
+```ts
+interface ContainerConfig {
+  layoutType: 'flow' | 'flex' | 'grid' | 'absolute' | 'slot-based';
+  disallowedChildTypes?: string[];   // component types blocked from dropping here
+  emptyStateConfig?: { message: string; allowDrop: boolean };
+}
+```
+
 | Layout       | Description                                                  |
 | ------------ | ------------------------------------------------------------ |
 | `flow`       | Block flow, children stack in document order                 |
@@ -365,6 +375,8 @@ Supported prop types for dynamic property panel generation: `string`, `number`, 
 | `grid`       | CSS grid — column/row templates configurable                 |
 | `absolute`   | Free-form positioning with x/y coordinates                   |
 | `slot-based` | Container defines named slots; children assigned to specific slot |
+
+`layoutType: "flex"` or `"grid"` automatically activates **flow-mode drag** (preview clone + insert-line indicator) for static children. `layoutType: "absolute"` activates **absolute-mode drag** (snap guides + section reparenting). The system selects the mode automatically — no per-component drag code needed.
 
 ---
 
@@ -467,6 +479,47 @@ interface HistoryEntry {
 
 ## Drag-and-Drop System
 
+### Architecture — Strategy Pattern
+
+The drag system uses a **Strategy Pattern** to isolate each interaction mode. All implementation lives in `packages/builder-editor/src/dragdrop/`.
+
+```
+dragdrop/
+  types.ts                  — DragContext, DragVisualState, DragStrategy, DropResolution
+  DragCoordinator.ts        — selects active strategy (first canHandle() wins), delegates move/drop/cancel
+  DropTargetResolver.ts     — pure drop-position math (no React, no side effects)
+  strategies/
+    FlowDragStrategy.ts     — flex/grid reorder + floating preview clone
+    AbsoluteDragStrategy.ts — snap guides + section reparenting (catch-all)
+```
+
+**`useMoveGesture.ts`** is a thin React wrapper (~100 lines) that wires the coordinator into state. It registers `FlowDragStrategy` first, `AbsoluteDragStrategy` as catch-all, and returns the same public API as before. **Never modify `BuilderEditor.tsx`, `usePointerDown.ts`, or `dragUtils.ts`** — they are stable integration points.
+
+**`useDragHandlers.ts`** handles palette drag (panel → canvas) independently. It imports `resolveContainerDropPosition` directly from `dragdrop/DropTargetResolver`.
+
+### Interaction Modes
+
+| Mode | Strategy | Triggered when |
+|------|----------|----------------|
+| Flow drag | `FlowDragStrategy` | Single node, static child of `flex`/`grid` parent |
+| Absolute drag | `AbsoluteDragStrategy` | Everything else (absolute nodes, multi-select) |
+| Palette drag | `useDragHandlers` | Dragging from AddElementsPanel |
+
+### Key Contracts
+
+- **`DragContext`** — immutable snapshot assembled once per gesture, passed to all strategy methods. Contains `frameEl`, `snapEngine`, `movingSnapshots`, `getContainerConfig`, etc.
+- **`DragVisualState`** — pure data describing overlays: `snapGuides`, `distanceGuides`, `flowDropTarget`, `flowDragOffset`, `highlightedNodeIds`, `liveDimensions`.
+- **`DropTargetResolver.resolveDropTarget()`** — walks `elementsFromPoint`, finds first valid flow/grid container, returns `DropResolution { parentId, insertIndex, gridCell?, indicator }`.
+- **Section reparenting** — `AbsoluteDragStrategy.onDrop` calls `getDropTargetSection()` from `dragUtils.ts` to determine target section by geometric hit-test, then dispatches `UPDATE_STYLE` → `MOVE_NODE` → `REORDER_NODE` in sequence.
+- **`useDropSlotResolver.ts`** is now a re-export shim — all logic is in `DropTargetResolver.ts`. Do not add logic back to it.
+
+### Adding a New Drag Mode
+
+1. Create `dragdrop/strategies/MyStrategy.ts` implementing `DragStrategy`
+2. `canHandle(ctx)` returns true for the cases it owns
+3. Register in `useMoveGesture.ts` `buildCoordinator()` **before** `AbsoluteDragStrategy`
+4. Add tests in `dragdrop/__tests__/MyStrategy.test.ts`
+
 ```ts
 type DropPosition = 'before' | 'after' | 'inside' | 'replace' | 'slot';
 
@@ -483,7 +536,7 @@ interface DropTarget {
 ```
 
 **Validation rules:** All drops validated against `ContainerConfig` of target — type restrictions, max children limit, self-nesting prevention, slot availability. Invalid drops must show clear visual feedback (red color, forbidden icon).
-**Spatial Hit-Testing:** Ownership for absolute-positioned components is determined by geometric overlap with `Section` containers (Spatial Reparenting), bypassing traditional DOM event bubbling to ensure robust nesting even when components overlap.
+**Spatial hit-testing:** Ownership for absolute-positioned components is determined by geometric overlap with `Section` containers, bypassing traditional DOM event bubbling to ensure robust nesting even when components overlap.
 
 ---
 

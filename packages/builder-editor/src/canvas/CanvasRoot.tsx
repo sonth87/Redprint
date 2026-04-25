@@ -4,9 +4,6 @@ import type { CanvasConfig } from "@ui-builder/builder-core";
 import type { Point } from "@ui-builder/shared";
 import { CANVAS_MIN_ZOOM, CANVAS_MAX_ZOOM, CANVAS_ZOOM_SENSITIVITY } from "../constants";
 
-/** Minimum canvas area (px) that must remain visible inside the viewport when panning */
-const PAN_MARGIN = 80;
-
 export interface CanvasRootProps {
   canvasConfig: CanvasConfig;
   zoom: number;
@@ -100,21 +97,11 @@ export function CanvasRoot({
         onZoomChange(nextZoom);
         onPanOffsetChange({ x: newPanX, y: newPanY });
       } else {
-        // Pan — clamp to keep canvas in viewport
-        const rawX = panOffset.x - e.deltaX;
-        const rawY = panOffset.y - e.deltaY;
-        const el2 = containerRef.current;
-        if (el2) {
-          const vw2 = el2.clientWidth;
-          const vh2 = el2.clientHeight;
-          const cw2 = (canvasConfig.width ?? 1440) * zoom;
-          const ch2 = (canvasConfig.height ?? 900) * zoom;
-          const clampedX = Math.max(PAN_MARGIN - cw2, Math.min(vw2 - PAN_MARGIN, rawX));
-          const clampedY = Math.max(PAN_MARGIN - ch2, Math.min(vh2 - PAN_MARGIN, rawY));
-          onPanOffsetChange({ x: clampedX, y: clampedY });
-        } else {
-          onPanOffsetChange({ x: rawX, y: rawY });
-        }
+        // Pan
+        onPanOffsetChange({
+          x: panOffset.x - e.deltaX,
+          y: panOffset.y - e.deltaY,
+        });
       }
     };
 
@@ -123,23 +110,6 @@ export function CanvasRoot({
   }, [zoom, panOffset, onZoomChange, onPanOffsetChange]);
 
   // ── Middle-mouse pan + Pan tool ─────────────────────────────────────────────
-  // Clamp pan offset so at least PAN_MARGIN px of canvas remains visible.
-  const clampPan = useCallback(
-    (rawX: number, rawY: number): Point => {
-      const el = containerRef.current;
-      if (!el) return { x: rawX, y: rawY };
-      const vw = el.clientWidth;
-      const vh = el.clientHeight;
-      // canvasWidth/height in screen pixels at current zoom (approximate — use canvasConfig)
-      const cw = (canvasConfig.width ?? 1440) * zoom;
-      const ch = (canvasConfig.height ?? 900) * zoom;
-      const clampedX = Math.max(PAN_MARGIN - cw, Math.min(vw - PAN_MARGIN, rawX));
-      const clampedY = Math.max(PAN_MARGIN - ch, Math.min(vh - PAN_MARGIN, rawY));
-      return { x: clampedX, y: clampedY };
-    },
-    [canvasConfig.width, canvasConfig.height, zoom],
-  );
-
   const handleMouseDown = useCallback(
     (e: RMouseEvent) => {
       // Middle mouse button always pans
@@ -158,31 +128,19 @@ export function CanvasRoot({
     [panOffset, activeTool],
   );
 
-  // Attach move/up to window so the pan gesture is not broken when the pointer
-  // leaves the canvas container boundary during a drag.
-  useEffect(() => {
-    if (!isPanning) return;
-    const onMove = (e: MouseEvent) => {
-      if (!panStart.current) return;
-      const dx = e.clientX - panStart.current.pointer.x;
-      const dy = e.clientY - panStart.current.pointer.y;
-      const raw = {
-        x: panStart.current.offset.x + dx,
-        y: panStart.current.offset.y + dy,
-      };
-      onPanOffsetChange(clampPan(raw.x, raw.y));
-    };
-    const onUp = () => {
-      setIsPanning(false);
-      panStart.current = null;
-    };
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-    return () => {
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    };
-  }, [isPanning, onPanOffsetChange, clampPan]);
+  const handleMouseMove = useCallback(
+    (e: RMouseEvent) => {
+      if (isPanning && panStart.current) {
+        const dx = e.clientX - panStart.current.pointer.x;
+        const dy = e.clientY - panStart.current.pointer.y;
+        onPanOffsetChange({
+          x: panStart.current.offset.x + dx,
+          y: panStart.current.offset.y + dy,
+        });
+      }
+    },
+    [isPanning, onPanOffsetChange],
+  );
 
   const handleMouseUp = useCallback(() => {
     setIsPanning(false);
@@ -245,6 +203,7 @@ export function CanvasRoot({
       style={{ userSelect: "none" }}
       onPointerDown={onPointerDown}
       onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >

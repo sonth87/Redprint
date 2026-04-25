@@ -126,23 +126,33 @@ export const ComponentPalette = memo(function ComponentPalette({
             return (
               <div key={group.id} className="border-b last:border-b-0">
                 {/* Group header */}
-                <button
-                  className="flex items-center justify-between w-full px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-muted/50 transition-colors"
-                  onClick={() => toggleGroup(group.id)}
-                >
-                  <div className="flex items-center gap-1.5">
-                    <ChevronRight
-                      className={cn(
-                        "h-3 w-3 transition-transform text-muted-foreground/60",
-                        !isGroupCollapsed && "rotate-90",
-                      )}
-                    />
-                    <span className="capitalize">{group.label}</span>
-                  </div>
-                  <span className="text-[10px] tabular-nums text-muted-foreground/60">
-                    {isGroupCollapsed ? `+${totalCount}` : totalCount}
-                  </span>
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      className="flex items-center justify-between w-full px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-muted/50 transition-colors"
+                      onClick={() => toggleGroup(group.id)}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <ChevronRight
+                          className={cn(
+                            "h-3 w-3 transition-transform text-muted-foreground/60",
+                            !isGroupCollapsed && "rotate-90",
+                          )}
+                        />
+                        <span className="capitalize">{group.label}</span>
+                      </div>
+                      <span className="text-[10px] tabular-nums text-muted-foreground/60">
+                        {isGroupCollapsed ? `+${totalCount}` : totalCount}
+                      </span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="right"
+                    className="bg-black/30 backdrop-blur-lg border-white/20 text-foreground"
+                  >
+                    {group.label}
+                  </TooltipContent>
+                </Tooltip>
 
                 {!isGroupCollapsed && (
                   <div className="pb-1">
@@ -152,23 +162,33 @@ export const ComponentPalette = memo(function ComponentPalette({
                       return (
                         <div key={subGroup.id}>
                           {/* Sub-group header */}
-                          <button
-                            className="flex items-center justify-between w-full px-4 py-1 text-[10px] font-medium text-muted-foreground/80 hover:bg-muted/40 transition-colors"
-                            onClick={() => toggleSubGroup(subGroup.id)}
-                          >
-                            <div className="flex items-center gap-1">
-                              <ChevronRight
-                                className={cn(
-                                  "h-2.5 w-2.5 transition-transform text-muted-foreground/40",
-                                  !isSubCollapsed && "rotate-90",
-                                )}
-                              />
-                              <span>{subGroup.label}</span>
-                            </div>
-                            <span className="text-[9px] tabular-nums text-muted-foreground/40">
-                              {subComps.length}
-                            </span>
-                          </button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                className="flex items-center justify-between w-full px-4 py-1 text-[10px] font-medium text-muted-foreground/80 hover:bg-muted/40 transition-colors"
+                                onClick={() => toggleSubGroup(subGroup.id)}
+                              >
+                                <div className="flex items-center gap-1">
+                                  <ChevronRight
+                                    className={cn(
+                                      "h-2.5 w-2.5 transition-transform text-muted-foreground/40",
+                                      !isSubCollapsed && "rotate-90",
+                                    )}
+                                  />
+                                  <span>{subGroup.label}</span>
+                                </div>
+                                <span className="text-[9px] tabular-nums text-muted-foreground/40">
+                                  {subComps.length}
+                                </span>
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent
+                              side="right"
+                              className="bg-black/40 backdrop-blur-md border border-white/20 text-white/90"
+                            >
+                              {subGroup.label}
+                            </TooltipContent>
+                          </Tooltip>
 
                           {!isSubCollapsed && (
                             <ComponentGrid
@@ -197,15 +217,25 @@ export const ComponentPalette = memo(function ComponentPalette({
               const isCollapsed = collapsedGroups.has(category);
               return (
                 <div key={category} className="border-b last:border-b-0">
-                  <button
-                    className="flex items-center justify-between w-full px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-muted/50 transition-colors"
-                    onClick={() => toggleGroup(category)}
-                  >
-                    <span className="capitalize">{category}</span>
-                    <span className="text-[10px] tabular-nums text-muted-foreground/60">
-                      {isCollapsed ? `+${cats.length}` : cats.length}
-                    </span>
-                  </button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        className="flex items-center justify-between w-full px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-muted/50 transition-colors"
+                        onClick={() => toggleGroup(category)}
+                      >
+                        <span className="capitalize">{category}</span>
+                        <span className="text-[10px] tabular-nums text-muted-foreground/60">
+                          {isCollapsed ? `+${cats.length}` : cats.length}
+                        </span>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="right"
+                      className="bg-black/40 backdrop-blur-md border border-white/20 text-white/90"
+                    >
+                      {category}
+                    </TooltipContent>
+                  </Tooltip>
                   {!isCollapsed && (
                     <ComponentGrid components={cats} onDragStart={onDragStart} />
                   )}

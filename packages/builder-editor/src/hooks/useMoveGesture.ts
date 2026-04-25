@@ -1,21 +1,17 @@
 import { useState, useEffect, useRef } from "react";
 import type { SnapGuide, DistanceGuide, LiveDimensions } from "../types";
-import type { Point, Rect } from "@ui-builder/shared";
 import type { BuilderNode } from "@ui-builder/builder-core";
 import type { SnapEngine } from "../snap/SnapEngine";
-import { resolveContainerDropPosition } from "./useDropSlotResolver";
-import {
-  resolveContainerLayoutType,
-  shouldUseFlowDrag,
-  getDropTargetSection,
-  type ContainerConfigResolver,
-  type NodeMovingSnapshot,
-} from "./dragUtils";
+import { type NodeMovingSnapshot } from "./dragUtils";
+import { DragCoordinator } from "../dragdrop/DragCoordinator";
+import { FlowDragStrategy } from "../dragdrop/strategies/FlowDragStrategy";
+import { AbsoluteDragStrategy } from "../dragdrop/strategies/AbsoluteDragStrategy";
+import { EMPTY_VISUAL_STATE, type DragContext, type DragVisualState } from "../dragdrop/types";
 
 interface MovingState {
   nodeId: string; // Primary anchor node
   nodes: NodeMovingSnapshot[];
-  startPoint: Point;
+  startPoint: { x: number; y: number };
   gestureGroupId: string;
   fromToolbar?: boolean;
 }
@@ -74,106 +70,41 @@ export interface UseMoveGestureReturn {
 
 const DRAG_THRESHOLD = 5;
 
-// ── Helpers ───────────────────────────────────────────────────────────────
+// ── Build coordinator ─────────────────────────────────────────────────────
 
-/**
- * Compute where to insert the dragged node among its siblings based on
- * the cursor's canvas-space Y coordinate.
- * Returns the insertIndex (0 = before first sibling).
- */
-function computeFlowInsertIndex(
-  cursorCanvasY: number,
-  siblings: BuilderNode[],
-  frameEl: HTMLElement,
-  fr: DOMRect,
-  zoom: number,
-): number {
-  const sorted = [...siblings].sort((a, b) => a.order - b.order);
-  for (let i = 0; i < sorted.length; i++) {
-    const sib = sorted[i]!;
-    const sibEl = frameEl.querySelector(
-      `[data-node-id="${sib.id}"]`,
-    ) as HTMLElement | null;
-    if (!sibEl) continue;
-    const sibRect = sibEl.getBoundingClientRect();
-    const sibCanvasY = (sibRect.top - fr.top) / zoom;
-    const sibMidY = sibCanvasY + sibRect.height / (2 * zoom);
-    if (cursorCanvasY < sibMidY) return i;
-  }
-  return sorted.length;
+function buildCoordinator(): DragCoordinator {
+  const c = new DragCoordinator();
+  c.register(new FlowDragStrategy());     // checked first
+  c.register(new AbsoluteDragStrategy()); // catch-all
+  return c;
 }
 
-/**
- * Walk elements under the cursor and return the first node-id that belongs to
- * a flow/grid container which can legally accept the dragged component type.
- * Returns null when no valid flow container is found.
- */
-function findHoveredFlowContainer(
-  clientX: number,
-  clientY: number,
-  draggingNodeId: string,
-  draggingNodeType: string,
-  currentParentId: string | null | undefined,
-  nodes: Record<string, BuilderNode>,
-  getContainerConfig: ContainerConfigResolver | undefined,
-): string | null {
-  const currentParentEl = currentParentId
-    ? (globalThis.document.querySelector(`[data-node-id="${currentParentId}"]`) as HTMLElement | null)
-    : null;
-  const currentParentRect = currentParentEl?.getBoundingClientRect();
-  const isWithinCurrentParent =
-    !!currentParentRect &&
-    clientX >= currentParentRect.left &&
-    clientX <= currentParentRect.right &&
-    clientY >= currentParentRect.top &&
-    clientY <= currentParentRect.bottom;
+// ── Build context ─────────────────────────────────────────────────────────
 
-  const elements = globalThis.document.elementsFromPoint(clientX, clientY);
-  for (const el of elements) {
-    const id = (el as HTMLElement).getAttribute?.("data-node-id");
-    if (!id) continue;
-    if (id === draggingNodeId) continue;   // can't drop into itself
-    if (id === currentParentId) continue;  // already in this parent
-
-    const targetNode = nodes[id];
-    if (!targetNode) continue;
-
-    const cfg = getContainerConfig?.(targetNode);
-    const layoutType = cfg?.layoutType ?? "absolute";
-    if (layoutType === "absolute") continue; // not a flow/grid container
-
-    // Check the container accepts the dragged component type
-    if (cfg?.disallowedChildTypes?.includes(draggingNodeType)) continue;
-
-    // Guard against dropping a node into one of its own descendants
-    let ancestorId: string | null | undefined = targetNode.parentId;
-    let isDescendant = false;
-    while (ancestorId) {
-      if (ancestorId === draggingNodeId) { isDescendant = true; break; }
-      ancestorId = nodes[ancestorId]?.parentId;
-    }
-    if (isDescendant) continue;
-
-    // When dragging inside a nested flow container, keep the current parent as
-    // the target until the pointer actually leaves its bounds. Otherwise a
-    // grid/flex ancestor (for example a Repeater/Grid item wrapper) hijacks
-    // the drop and the node jumps out of its local stack.
-    if (isWithinCurrentParent && currentParentId) {
-      let parentCursor: string | null | undefined = currentParentId;
-      let isAncestorOfCurrentParent = false;
-      while (parentCursor) {
-        if (parentCursor === id) {
-          isAncestorOfCurrentParent = true;
-          break;
-        }
-        parentCursor = nodes[parentCursor]?.parentId;
-      }
-      if (isAncestorOfCurrentParent) continue;
-    }
-
-    return id;
-  }
-  return null;
+function buildContext(
+  moving: MovingState,
+  frameEl: HTMLElement,
+  options: UseMoveGestureOptions,
+): DragContext {
+  const node = options.nodes[moving.nodeId];
+  return {
+    nodeId: moving.nodeId,
+    nodeType: node?.type ?? "",
+    startPoint: moving.startPoint,
+    gestureGroupId: moving.gestureGroupId,
+    frameEl,
+    zoom: options.zoom,
+    nodes: options.nodes,
+    getContainerConfig: options.getContainerConfig ?? (() => undefined),
+    dispatch: options.dispatch,
+    breakpoint: options.breakpoint,
+    snapEngine: options.snapEngine,
+    rootNodeId: options.rootNodeId ?? "",
+    canvasFrameRef: options.canvasFrameRef,
+    movingNodeIds: moving.nodes.map((n) => n.nodeId),
+    movingSnapshots: moving.nodes,
+    snapEnabled: options.snapEnabled,
+  };
 }
 
 // ── Hook ──────────────────────────────────────────────────────────────────
@@ -191,33 +122,25 @@ export function useMoveGesture({
   getContainerConfig,
 }: UseMoveGestureOptions): UseMoveGestureReturn {
   const [moving, setMoving] = useState<MovingState | null>(null);
-  const [snapGuides, setSnapGuides] = useState<SnapGuide[]>([]);
-  const [distanceGuides, setDistanceGuides] = useState<DistanceGuide[]>([]);
-  const [liveDimensions, setLiveDimensions] = useState<LiveDimensions | null>(null);
-  const [flowDragOffset, setFlowDragOffset] = useState<{ x: number; y: number } | null>(null);
-  const [flowDropTarget, setFlowDropTarget] = useState<{ containerId: string; insertIndex: number; gridCell?: { col: number; row: number } } | null>(null);
-  const [highlightedNodeIds, setHighlightedNodeIds] = useState<string[]>([]);
+  const [visualState, setVisualState] = useState<DragVisualState>(EMPTY_VISUAL_STATE);
   const dragStartedRef = useRef(false);
-  const canvasOffsetRef = useRef({ x: 0, y: 0 });
-  /** Last dispatched reorder index — avoids flooding REORDER_NODE on every pixel */
-  const lastReorderIndexRef = useRef<number | null>(null);
-  const flowDragPreviewRef = useRef<HTMLElement | null>(null);
-  /**
-   * Tracks the last flow-container we transitioned into during an absolute-mode drag.
-   * Prevents re-dispatching MOVE_NODE + UPDATE_STYLE on every mousemove pixel while
-   * the cursor stays over the same container.
-   */
-  const lastEnteredFlowContainerRef = useRef<string | null>(null);
+  const coordinatorRef = useRef<DragCoordinator>(buildCoordinator());
+
+  const options: UseMoveGestureOptions = {
+    zoom, breakpoint, snapEnabled, snapEngine, nodes,
+    canvasFrameRef, activeFrameRef, dispatch, rootNodeId, getContainerConfig,
+  };
+  // Keep a stable ref to options so the effect closure always sees current values
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
 
   useEffect(() => {
     if (!moving) {
-      lastReorderIndexRef.current = null;
+      dragStartedRef.current = false;
       return;
     }
 
-    const isMultiSelect = moving.nodes.length > 1;
-
-    const handleGlobalMouseMove = (e: MouseEvent) => {
+    const handleMove = (e: MouseEvent) => {
       const dx = e.clientX - moving.startPoint.x;
       const dy = e.clientY - moving.startPoint.y;
 
@@ -231,381 +154,71 @@ export function useMoveGesture({
       const isFirstMove = !dragStartedRef.current;
       dragStartedRef.current = true;
 
-      const frameEl = activeFrameRef?.current ?? canvasFrameRef.current;
+      const opts = optionsRef.current;
+      const frameEl = opts.activeFrameRef?.current ?? opts.canvasFrameRef.current;
       if (!frameEl) return;
 
-      const node = nodes[moving.nodeId];
-      
-      // ── Determine if node lives in a flow/grid parent ──────────────────
-      // Multi-select dragging currently bypasses flow-mode logic (complexity)
-      const isFlowParent = !isMultiSelect && shouldUseFlowDrag(node, nodes, getContainerConfig);
-
-      // ══════════════════════════════════════════════════════════════════
-      // FLOW MODE — node lives inside a Grid, Column, or other flow container
-      // (Single selection only)
-      // ══════════════════════════════════════════════════════════════════
-      if (isFlowParent && node?.parentId) {
-        const fr = frameEl.getBoundingClientRect();
-        const tx = (e.clientX - moving.startPoint.x) / zoom;
-        const ty = (e.clientY - moving.startPoint.y) / zoom;
-        const flowNodeEl = frameEl.querySelector(`[data-node-id="${moving.nodeId}"]`) as HTMLElement | null;
-        if (flowNodeEl && isFirstMove) {
-          const dragPreview = flowNodeEl.cloneNode(true) as HTMLElement;
-          dragPreview.removeAttribute("data-node-id");
-          dragPreview.querySelectorAll("[data-node-id]").forEach((el) => el.removeAttribute("data-node-id"));
-          const er = flowNodeEl.getBoundingClientRect();
-          const initialLeft = (er.left - fr.left) / zoom;
-          const initialTop = (er.top - fr.top) / zoom;
-
-          dragPreview.dataset.flowDragPreview = "true";
-          dragPreview.style.position = "absolute";
-          dragPreview.style.left = `${initialLeft}px`;
-          dragPreview.style.top = `${initialTop}px`;
-          dragPreview.style.width = `${er.width / zoom}px`;
-          dragPreview.style.height = `${er.height / zoom}px`;
-          dragPreview.style.margin = "0";
-          dragPreview.style.pointerEvents = "none";
-          dragPreview.style.zIndex = "9999";
-          dragPreview.style.opacity = "0.9";
-          dragPreview.style.visibility = "visible";
-          dragPreview.style.transform = "translate(0px, 0px)";
-          dragPreview.style.transition = "none";
-          frameEl.appendChild(dragPreview);
-          flowDragPreviewRef.current = dragPreview;
-
-          flowNodeEl.style.setProperty("visibility", "hidden");
-          flowNodeEl.style.setProperty("pointer-events", "none");
-        }
-        if (flowDragPreviewRef.current) {
-          flowDragPreviewRef.current.style.transform = `translate(${tx}px, ${ty}px)`;
-        }
-
-        setFlowDragOffset({ x: tx, y: ty });
-
-        const hoveredFlowId = findHoveredFlowContainer(
-          e.clientX,
-          e.clientY,
-          moving.nodeId,
-          node.type,
-          node.parentId,
-          nodes,
-          getContainerConfig,
-        );
-        const targetContainerId = hoveredFlowId ?? node.parentId;
-        const targetContainerNode = nodes[targetContainerId];
-        const targetContainerEl = frameEl.querySelector(
-          `[data-node-id="${targetContainerId}"]`,
-        ) as HTMLElement | null;
-
-        const siblings = Object.values(nodes).filter(
-          (n) => n.parentId === targetContainerId && n.id !== moving.nodeId,
-        );
-
-        if (targetContainerEl && targetContainerNode && getContainerConfig) {
-          const result = resolveContainerDropPosition(
-            e.clientX,
-            e.clientY,
-            targetContainerEl,
-            targetContainerNode,
-            siblings,
-            getContainerConfig,
-          );
-          lastReorderIndexRef.current = result.insertIndex;
-          setFlowDropTarget({
-            containerId: targetContainerId,
-            insertIndex: result.insertIndex,
-            gridCell: result.gridCell,
-          });
-        } else {
-          setFlowDropTarget(null);
-          lastReorderIndexRef.current = null;
-        }
-
-        setSnapGuides([]);
-        setDistanceGuides([]);
-        setLiveDimensions(null);
-        return;
-      }
-
-      // ══════════════════════════════════════════════════════════════════
-      // ABSOLUTE MODE — existing drag logic (position:absolute, snap guides)
-      // ══════════════════════════════════════════════════════════════════
-
-      if (!isMultiSelect && node) {
-        const targetFlowId = findHoveredFlowContainer(e.clientX, e.clientY, moving.nodeId, node.type, node.parentId, nodes, getContainerConfig);
-        if (targetFlowId) {
-          const fr2 = frameEl.getBoundingClientRect();
-          const containerSiblings = Object.values(nodes).filter((n) => n.parentId === targetFlowId && n.id !== moving.nodeId);
-          const targetContainerNode = nodes[targetFlowId];
-          const targetContainerEl = frameEl.querySelector(`[data-node-id="${targetFlowId}"]`) as HTMLElement | null;
-          let tentativeIndex = containerSiblings.length;
-          let gridCell: { col: number; row: number } | undefined;
-          if (targetContainerNode && targetContainerEl && getContainerConfig) {
-            const result = resolveContainerDropPosition(e.clientX, e.clientY, targetContainerEl, targetContainerNode, containerSiblings, getContainerConfig);
-            tentativeIndex = result.insertIndex;
-            gridCell = result.gridCell;
-          } else {
-            tentativeIndex = computeFlowInsertIndex((e.clientY - fr2.top) / zoom, containerSiblings, frameEl, fr2, zoom);
-          }
-          setFlowDropTarget({ containerId: targetFlowId, insertIndex: tentativeIndex, gridCell });
-        } else {
-          setFlowDropTarget(null);
-        }
-      }
-
-      const primarySnapshot = moving.nodes.find(n => n.nodeId === moving.nodeId)!;
+      const ctx = buildContext(moving, frameEl, opts);
 
       if (isFirstMove) {
-        const nodeEl = frameEl.querySelector(`[data-node-id="${moving.nodeId}"]`) as HTMLElement;
-        if (nodeEl) {
-          const fr = frameEl.getBoundingClientRect();
-          const er = nodeEl.getBoundingClientRect();
-          const trueCanvasX = (er.left - fr.left) / zoom;
-          const trueCanvasY = (er.top - fr.top) / zoom;
-          canvasOffsetRef.current = { x: trueCanvasX - primarySnapshot.startLeft, y: trueCanvasY - primarySnapshot.startTop };
-          
-          // Capture original styles for restoration
-          nodeEl.dataset.dragOriginalTransform = nodeEl.style.transform || "";
-        } else {
-          canvasOffsetRef.current = { x: 0, y: 0 };
-        }
+        coordinatorRef.current.startGesture(ctx);
+        coordinatorRef.current.activeStrategy?.attachPreview?.(ctx, e);
       }
 
-      const rawLeft = primarySnapshot.startLeft + dx / zoom;
-      const rawTop = primarySnapshot.startTop + dy / zoom;
-
-      let finalLeft = Math.round(rawLeft);
-      let finalTop = Math.round(rawTop);
-      let guides: SnapGuide[] = [];
-
-      // Snapping logic (applied to primary node)
-      if (snapEnabled && canvasFrameRef.current && !isMultiSelect) {
-        const nodeEl = frameEl.querySelector(`[data-node-id="${moving.nodeId}"]`) as HTMLElement;
-        if (nodeEl) {
-          const w = nodeEl.offsetWidth;
-          const h = nodeEl.offsetHeight;
-          const fr = frameEl.getBoundingClientRect();
-          // Use the desktop frame (canvasFrameRef) as the canvas-space origin so that
-          // snap guide positions are in CanvasRoot coordinates. In dual mode the mobile
-          // frame is offset to the right, so using fr.left directly would place guides
-          // at mobile-frame-local X values that fall on the desktop canvas when rendered.
-          const originRect = canvasFrameRef.current.getBoundingClientRect();
-          const frameOffsetX = (fr.left - originRect.left) / zoom;
-          const frameOffsetY = (fr.top - originRect.top) / zoom;
-          const rawCanvasX = rawLeft + canvasOffsetRef.current.x + frameOffsetX;
-          const rawCanvasY = rawTop + canvasOffsetRef.current.y + frameOffsetY;
-          const movingRectInCanvas: Rect = { x: rawCanvasX, y: rawCanvasY, width: w, height: h };
-          const siblings: Rect[] = [];
-          if (node?.parentId) {
-            for (const n of Object.values(nodes) as BuilderNode[]) {
-              if (n.parentId === node.parentId && n.id !== moving.nodeId) {
-                const el = frameEl.querySelector(`[data-node-id="${n.id}"]`) as HTMLElement;
-                if (el) {
-                  const er = el.getBoundingClientRect();
-                  siblings.push({ x: (er.left - originRect.left) / zoom, y: (er.top - originRect.top) / zoom, width: er.width / zoom, height: er.height / zoom });
-                }
-              }
-            }
-          }
-          const result = snapEngine.snap(movingRectInCanvas, siblings);
-          guides = result.guides;
-          finalLeft = Math.round(result.snappedPoint.x - canvasOffsetRef.current.x - frameOffsetX);
-          finalTop = Math.round(result.snappedPoint.y - canvasOffsetRef.current.y - frameOffsetY);
-          const snappedMovingRectInCanvas: Rect = { x: result.snappedPoint.x, y: result.snappedPoint.y, width: w, height: h };
-          // Exclude ancestors of the dragged node from alignment-guide candidates.
-          // Ancestors are typically full-width (Section, Container, root) whose edges
-          // coincide with canvas-edge guides, creating duplicate/noisy lines.
-          const ancestorIds = new Set<string>();
-          let ancestorCursor: string | null | undefined = node?.parentId;
-          while (ancestorCursor) {
-            ancestorIds.add(ancestorCursor);
-            ancestorCursor = nodes[ancestorCursor]?.parentId;
-          }
-          // Limit alignment guides to elements within the same top-level section.
-          // Cross-section alignment is already covered by canvas-edge/center guides
-          // in alignmentGuides(). Searching ALL sections generates too many noisy
-          // vertical lines from unrelated elements in other sections.
-          let sectionSearchRoot: HTMLElement = frameEl;
-          if (rootNodeId) {
-            let cursor: string | null | undefined = moving.nodeId;
-            while (cursor && cursor !== rootNodeId) {
-              const cursorNode: BuilderNode | undefined = nodes[cursor];
-              if (cursorNode?.parentId === rootNodeId) {
-                const sectionEl = frameEl.querySelector(`[data-node-id="${cursor}"]`) as HTMLElement | null;
-                if (sectionEl) sectionSearchRoot = sectionEl;
-                break;
-              }
-              cursor = cursorNode?.parentId;
-            }
-          }
-          const allOtherRects: Rect[] = [];
-          const allOtherIds: string[] = [];
-          const allNodeEls = Array.from(sectionSearchRoot.querySelectorAll("[data-node-id]")) as HTMLElement[];
-          for (const el of allNodeEls) {
-            const elId = el.getAttribute("data-node-id");
-            if (!elId || elId === moving.nodeId || ancestorIds.has(elId)) continue;
-            const er = el.getBoundingClientRect();
-            allOtherRects.push({ x: (er.left - originRect.left) / zoom, y: (er.top - originRect.top) / zoom, width: er.width / zoom, height: er.height / zoom });
-            allOtherIds.push(elId);
-          }
-          const crossGuides = snapEngine.alignmentGuides(snappedMovingRectInCanvas, allOtherRects);
-          guides = [...guides, ...crossGuides];
-
-          // Find which elements contributed to the active alignment guides so they can be highlighted.
-          const EPS = 1;
-          const newHighlightedIds: string[] = [];
-          for (let i = 0; i < allOtherRects.length; i++) {
-            const other = allOtherRects[i]!;
-            const oRight = other.x + other.width;
-            const oCX = other.x + other.width / 2;
-            const oBottom = other.y + other.height;
-            const oCY = other.y + other.height / 2;
-            for (const guide of crossGuides) {
-              if (guide.source === "canvas-edge" || guide.source === "canvas-center") continue;
-              const pos = guide.position;
-              const matched =
-                guide.type === "vertical"
-                  ? Math.abs(other.x - pos) < EPS || Math.abs(oRight - pos) < EPS || Math.abs(oCX - pos) < EPS
-                  : Math.abs(other.y - pos) < EPS || Math.abs(oBottom - pos) < EPS || Math.abs(oCY - pos) < EPS;
-              if (matched) { newHighlightedIds.push(allOtherIds[i]!); break; }
-            }
-          }
-          setHighlightedNodeIds(newHighlightedIds);
-          setDistanceGuides(snapEngine.distanceGuides(snappedMovingRectInCanvas, siblings));
-          setLiveDimensions({ width: w, height: h });
-        }
-      }
-
-      setSnapGuides(guides);
-
-      const snapDeltaX = finalLeft - rawLeft;
-      const snapDeltaY = finalTop - rawTop;
-
-      moving.nodes.forEach(mNode => {
-        const styleUpdate: Record<string, string | number> = {
-          position: "absolute",
-          left: `${Math.round(mNode.startLeft + dx / zoom + (mNode.nodeId === moving.nodeId ? snapDeltaX : snapDeltaX))}px`,
-          top: `${Math.round(mNode.startTop + dy / zoom + (mNode.nodeId === moving.nodeId ? snapDeltaY : snapDeltaY))}px`,
-        };
-        // If transitioning from non-absolute, set width/height
-        if (isFirstMove && !mNode.wasAbsolute && mNode.startWidth != null && mNode.startHeight != null) {
-          styleUpdate.width = `${mNode.startWidth}px`;
-          styleUpdate.height = `${mNode.startHeight}px`;
-        }
-        dispatch({
-          type: "UPDATE_STYLE",
-          payload: { nodeId: mNode.nodeId, style: styleUpdate, breakpoint },
-          groupId: moving.gestureGroupId,
-          description: isMultiSelect ? "Move multiple" : "Move",
-        });
-      });
+      setVisualState(coordinatorRef.current.onMove(e));
     };
 
-    const handleGlobalMouseUp = (e: MouseEvent) => {
-      const upFrameEl = activeFrameRef?.current ?? canvasFrameRef.current;
-      if (flowDragPreviewRef.current) {
-        flowDragPreviewRef.current.remove();
-        flowDragPreviewRef.current = null;
-      }
-      moving.nodes.forEach(mNode => {
-        const upNodeEl = upFrameEl?.querySelector(`[data-node-id="${mNode.nodeId}"]`) as HTMLElement | null;
-        if (upNodeEl && upNodeEl.dataset.dragOriginalTransform !== undefined) {
-          const origTransform = upNodeEl.dataset.dragOriginalTransform;
-          upNodeEl.style.transform = origTransform;
-          upNodeEl.style.removeProperty("opacity");
-          upNodeEl.style.removeProperty("z-index");
-          upNodeEl.style.removeProperty("pointer-events");
-          upNodeEl.style.removeProperty("visibility");
-          delete upNodeEl.dataset.dragOriginalTransform;
-        }
-      });
-
-      if (dragStartedRef.current && flowDropTarget !== null && !isMultiSelect) {
-        const { containerId, insertIndex } = flowDropTarget;
-        const dropNode = nodes[moving.nodeId];
-        dispatch({
-          type: "UPDATE_STYLE",
-          payload: {
-            nodeId: moving.nodeId,
-            style: { position: undefined, left: undefined, top: undefined } as Record<string, unknown>,
-            breakpoint,
-          },
-          description: "Clear position on flow drop",
-        });
-        if (dropNode?.parentId !== containerId) {
-          dispatch({ type: "MOVE_NODE", payload: { nodeId: moving.nodeId, targetParentId: containerId, position: "inside" }, description: "Drop into flow container" });
-        }
-        dispatch({ type: "REORDER_NODE", payload: { nodeId: moving.nodeId, insertIndex }, description: "Reorder in flow container" });
-      }
-      else if (dragStartedRef.current && upFrameEl && rootNodeId && !isMultiSelect) {
-        // Geometric check for Section dropping
-        const primaryNode = nodes[moving.nodeId];
-        // If not dragged into a specific flow container, see which section it dropped on.
-        // When dragging from the toolbar, use the node's rendered top position instead of
-        // the mouse cursor (which may be outside the component's bounds).
-        let sectionHitY = e.clientY;
-        if (moving.fromToolbar) {
-          const primaryEl = upFrameEl.querySelector(`[data-node-id="${moving.nodeId}"]`) as HTMLElement | null;
-          if (primaryEl) sectionHitY = primaryEl.getBoundingClientRect().top;
-        }
-        const dropSectionId = getDropTargetSection(sectionHitY, upFrameEl, nodes, rootNodeId);
-        
-        if (dropSectionId && dropSectionId !== primaryNode?.parentId && dropSectionId !== rootNodeId) {
-          const nodeEl = upFrameEl.querySelector(`[data-node-id="${moving.nodeId}"]`) as HTMLElement | null;
-          const sectionEl = upFrameEl.querySelector(`[data-node-id="${dropSectionId}"]`) as HTMLElement | null;
-          
-          if (nodeEl && sectionEl) {
-            const fr = upFrameEl.getBoundingClientRect();
-            // Get final absolute positions on canvas
-            const nodeRect = nodeEl.getBoundingClientRect();
-            const sectionRect = sectionEl.getBoundingClientRect();
-            
-            const nodeCanvasX = (nodeRect.left - fr.left) / zoom;
-            const nodeCanvasY = (nodeRect.top - fr.top) / zoom;
-            
-            const sectionCanvasX = (sectionRect.left - fr.left) / zoom;
-            const sectionCanvasY = (sectionRect.top - fr.top) / zoom;
-            
-            const newLeft = nodeCanvasX - sectionCanvasX;
-            const newTop = nodeCanvasY - sectionCanvasY;
-            
-            dispatch({
-              type: "UPDATE_STYLE",
-              payload: { nodeId: moving.nodeId, style: { left: `${Math.round(newLeft)}px`, top: `${Math.round(newTop)}px` }, breakpoint },
-            });
-            
-            dispatch({ type: "MOVE_NODE", payload: { nodeId: moving.nodeId, targetParentId: dropSectionId, position: "inside" }, description: "Change Section" });
-            
-            const siblings = Object.values(nodes).filter(n => n.parentId === dropSectionId);
-            dispatch({ type: "REORDER_NODE", payload: { nodeId: moving.nodeId, insertIndex: siblings.length }, description: "Bring to front" });
-          }
-        } else if (lastReorderIndexRef.current !== null) {
-          // Normal reorder inside current container (flow/grid) inside same section
-          const p = primaryNode?.parentId ? nodes[primaryNode.parentId] : null;
-          if (resolveContainerLayoutType(p, getContainerConfig) !== "absolute") {
-            dispatch({ type: "REORDER_NODE", payload: { nodeId: moving.nodeId, insertIndex: lastReorderIndexRef.current }, description: "Reorder" });
+    const handleUp = (e: MouseEvent) => {
+      const opts = optionsRef.current;
+      const frameEl = opts.activeFrameRef?.current ?? opts.canvasFrameRef.current;
+      if (frameEl) {
+        coordinatorRef.current.onDrop(e);
+        // Restore DOM state on all moving nodes (cancel any leftover transforms)
+        for (const mNode of moving.nodes) {
+          const nodeEl = frameEl.querySelector(
+            `[data-node-id="${mNode.nodeId}"]`,
+          ) as HTMLElement | null;
+          if (nodeEl) {
+            // Always clear flow-drag visibility overrides (set by FlowDragStrategy.attachPreview)
+            nodeEl.style.removeProperty("visibility");
+            nodeEl.style.removeProperty("pointer-events");
+            // Clear absolute-drag transforms (set by AbsoluteDragStrategy)
+            if (nodeEl.dataset.dragOriginalTransform !== undefined) {
+              nodeEl.style.transform = nodeEl.dataset.dragOriginalTransform;
+              nodeEl.style.removeProperty("opacity");
+              nodeEl.style.removeProperty("z-index");
+              delete nodeEl.dataset.dragOriginalTransform;
+            }
           }
         }
+      } else {
+        coordinatorRef.current.onDrop(e);
       }
 
+      coordinatorRef.current = buildCoordinator();
+      dragStartedRef.current = false;
       setMoving(null);
-      setSnapGuides([]);
-      setDistanceGuides([]);
-      setLiveDimensions(null);
-      setFlowDragOffset(null);
-      setFlowDropTarget(null);
-      setHighlightedNodeIds([]);
-      lastReorderIndexRef.current = null;
-      lastEnteredFlowContainerRef.current = null;
+      setVisualState(EMPTY_VISUAL_STATE);
     };
 
-    window.addEventListener("mousemove", handleGlobalMouseMove);
-    window.addEventListener("mouseup", handleGlobalMouseUp);
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseup", handleUp);
     return () => {
-      window.removeEventListener("mousemove", handleGlobalMouseMove);
-      window.removeEventListener("mouseup", handleGlobalMouseUp);
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseup", handleUp);
     };
-  }, [moving, zoom, breakpoint, dispatch, snapEnabled, snapEngine, nodes, canvasFrameRef, activeFrameRef, rootNodeId, getContainerConfig, flowDropTarget]);
+  }, [moving]);
 
-  return { moving, setMoving, dragStartedRef, snapGuides, setSnapGuides, distanceGuides, liveDimensions, flowDragOffset, flowDropTarget, highlightedNodeIds };
+  return {
+    moving,
+    setMoving,
+    dragStartedRef,
+    snapGuides: visualState.snapGuides,
+    setSnapGuides: () => {},           // no-op: callers exist but no longer need it
+    distanceGuides: visualState.distanceGuides,
+    liveDimensions: visualState.liveDimensions,
+    flowDragOffset: visualState.flowDragOffset,
+    flowDropTarget: visualState.flowDropTarget,
+    highlightedNodeIds: visualState.highlightedNodeIds,
+  };
 }

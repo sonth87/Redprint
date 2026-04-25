@@ -7,6 +7,7 @@ export { DividerComponent } from "./components/Divider";
 export { SectionComponent } from "./components/Section";
 export { GridComponent } from "./components/Grid";
 export { ColumnComponent } from "./components/Column";
+export { RowComponent } from "./components/Row";
 export { TextMarqueeComponent } from "./components/TextMarquee";
 export { CollapsibleTextComponent } from "./components/CollapsibleText";
 export { TextMaskComponent } from "./components/TextMask";
@@ -30,6 +31,7 @@ import { SectionComponent } from "./components/Section";
 import { ContainerComponent } from "./components/Container";
 import { GridComponent } from "./components/Grid";
 import { ColumnComponent } from "./components/Column";
+import { RowComponent } from "./components/Row";
 import { TextComponent } from "./components/Text";
 import { ButtonComponent } from "./components/Button";
 import { ImageComponent } from "./components/Image";
@@ -50,6 +52,7 @@ export const BASE_COMPONENTS: ComponentDefinition[] = [
   ContainerComponent,
   GridComponent,
   ColumnComponent,
+  RowComponent,
   TextComponent,
   ButtonComponent,
   ImageComponent,

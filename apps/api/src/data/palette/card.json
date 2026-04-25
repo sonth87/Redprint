@@ -1,7 +1,7 @@
 {
   "id": "card",
   "label": "Cards",
-  "icon": "layout-template",
+  "icon": "IdCard",
   "order": 99,
   "i18n": {
     "en": "Cards",

@@ -2,13 +2,414 @@
   "version": "1.0.0",
   "groups": [
     {
+      "id": "designed_section",
+      "label": "Designed Section",
+      "icon": "layout-template",
+      "order": 100,
+      "i18n": {
+        "en": "Designed Section",
+        "vi": "Section M\u1eabu"
+      },
+      "types": [
+        {
+          "id": "welcome",
+          "label": "Welcome",
+          "order": 0,
+          "layout": "grid",
+          "i18n": {
+            "en": "Welcome",
+            "vi": "Ch\u00e0o m\u1eebng"
+          },
+          "items": [
+            {
+              "id": "welcome-1",
+              "componentType": "Section",
+              "name": "Hero Welcome",
+              "props": {
+                "minHeight": 600
+              },
+              "style": {
+                "backgroundColor": "#ffffff",
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "padding": "80px 0"
+              },
+              "children": [
+                {
+                  "componentType": "Container",
+                  "style": {
+                    "display": "flex",
+                    "flexDirection": "column",
+                    "alignItems": "center",
+                    "textAlign": "center",
+                    "maxWidth": "800px"
+                  },
+                  "children": [
+                    {
+                      "componentType": "Text",
+                      "props": {
+                        "text": "<h1>WELCOME</h1>",
+                        "tag": "h1"
+                      },
+                      "style": {
+                        "fontSize": "56px",
+                        "fontWeight": "800",
+                        "letterSpacing": "-0.02em",
+                        "marginBottom": "24px"
+                      }
+                    },
+                    {
+                      "componentType": "Text",
+                      "props": {
+                        "text": "<p>Welcome visitors to your site with a short, engaging introduction. Double click to edit and add your own text.</p>",
+                        "tag": "p"
+                      },
+                      "style": {
+                        "fontSize": "18px",
+                        "color": "#6B7280",
+                        "lineHeight": "1.6",
+                        "marginBottom": "40px"
+                      }
+                    },
+                    {
+                      "componentType": "Button",
+                      "props": {
+                        "text": "Start Now",
+                        "variant": "primary"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "about",
+          "label": "About",
+          "order": 1,
+          "layout": "grid",
+          "i18n": {
+            "en": "About",
+            "vi": "Gi\u1edbi thi\u1ec7u"
+          },
+          "items": [
+            {
+              "id": "about-1",
+              "componentType": "Section",
+              "name": "Split About",
+              "props": {
+                "minHeight": 500
+              },
+              "style": {
+                "backgroundColor": "#F9FAFB",
+                "display": "flex",
+                "alignItems": "center",
+                "padding": "80px 0"
+              },
+              "children": [
+                {
+                  "componentType": "Grid",
+                  "props": {
+                    "columns": 2,
+                    "gap": 48
+                  },
+                  "style": {
+                    "width": "100%",
+                    "maxWidth": "1200px",
+                    "margin": "0 auto"
+                  },
+                  "children": [
+                    {
+                      "componentType": "Container",
+                      "children": [
+                        {
+                          "componentType": "Text",
+                          "props": {
+                            "text": "<h2>Our Mission</h2>",
+                            "tag": "h2"
+                          },
+                          "style": {
+                            "fontSize": "40px",
+                            "fontWeight": "700",
+                            "marginBottom": "20px"
+                          }
+                        },
+                        {
+                          "componentType": "Text",
+                          "props": {
+                            "text": "<p>We are dedicated to providing the best experience for our users. Our team works tirelessly to innovate and solve complex problems.</p>",
+                            "tag": "p"
+                          },
+                          "style": {
+                            "fontSize": "16px",
+                            "color": "#4B5563",
+                            "lineHeight": "1.7"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "componentType": "Image",
+                      "props": {
+                        "src": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80"
+                      },
+                      "style": {
+                        "borderRadius": "12px",
+                        "width": "100%",
+                        "height": "auto"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "services",
+          "label": "Services",
+          "order": 2,
+          "layout": "grid",
+          "i18n": {
+            "en": "Services",
+            "vi": "D\u1ecbch v\u1ee5"
+          },
+          "items": [
+            {
+              "id": "services-1",
+              "componentType": "Section",
+              "name": "Service Grid",
+              "props": {
+                "minHeight": 600
+              },
+              "style": {
+                "backgroundColor": "#ffffff",
+                "padding": "80px 0"
+              },
+              "children": [
+                {
+                  "componentType": "Text",
+                  "props": {
+                    "text": "<h2>Our Services</h2>",
+                    "tag": "h2"
+                  },
+                  "style": {
+                    "fontSize": "36px",
+                    "fontWeight": "700",
+                    "textAlign": "center",
+                    "marginBottom": "60px"
+                  }
+                },
+                {
+                  "componentType": "Grid",
+                  "props": {
+                    "columns": 3,
+                    "gap": 32
+                  },
+                  "style": {
+                    "width": "100%",
+                    "maxWidth": "1200px",
+                    "margin": "0 auto"
+                  },
+                  "children": [
+                    {
+                      "componentType": "Container",
+                      "style": {
+                        "padding": "32px",
+                        "backgroundColor": "#F3F4F6",
+                        "borderRadius": "16px",
+                        "textAlign": "center"
+                      },
+                      "children": [
+                        {
+                          "componentType": "Text",
+                          "props": {
+                            "text": "<h3>Design</h3>",
+                            "tag": "h3"
+                          },
+                          "style": {
+                            "fontSize": "20px",
+                            "fontWeight": "600",
+                            "marginBottom": "12px"
+                          }
+                        },
+                        {
+                          "componentType": "Text",
+                          "props": {
+                            "text": "<p>Creating beautiful and functional interfaces.</p>",
+                            "tag": "p"
+                          },
+                          "style": {
+                            "fontSize": "15px",
+                            "color": "#6B7280"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "componentType": "Container",
+                      "style": {
+                        "padding": "32px",
+                        "backgroundColor": "#F3F4F6",
+                        "borderRadius": "16px",
+                        "textAlign": "center"
+                      },
+                      "children": [
+                        {
+                          "componentType": "Text",
+                          "props": {
+                            "text": "<h3>Development</h3>",
+                            "tag": "h3"
+                          },
+                          "style": {
+                            "fontSize": "20px",
+                            "fontWeight": "600",
+                            "marginBottom": "12px"
+                          }
+                        },
+                        {
+                          "componentType": "Text",
+                          "props": {
+                            "text": "<p>Building robust and scalable applications.</p>",
+                            "tag": "p"
+                          },
+                          "style": {
+                            "fontSize": "15px",
+                            "color": "#6B7280"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "componentType": "Container",
+                      "style": {
+                        "padding": "32px",
+                        "backgroundColor": "#F3F4F6",
+                        "borderRadius": "16px",
+                        "textAlign": "center"
+                      },
+                      "children": [
+                        {
+                          "componentType": "Text",
+                          "props": {
+                            "text": "<h3>Strategy</h3>",
+                            "tag": "h3"
+                          },
+                          "style": {
+                            "fontSize": "20px",
+                            "fontWeight": "600",
+                            "marginBottom": "12px"
+                          }
+                        },
+                        {
+                          "componentType": "Text",
+                          "props": {
+                            "text": "<p>Planning for long-term success and growth.</p>",
+                            "tag": "p"
+                          },
+                          "style": {
+                            "fontSize": "15px",
+                            "color": "#6B7280"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "team",
+          "label": "Team",
+          "order": 3,
+          "layout": "grid",
+          "i18n": {
+            "en": "Team",
+            "vi": "\u0110\u1ed9i ng\u0169"
+          },
+          "items": [
+            {
+              "id": "team-1",
+              "componentType": "Section",
+              "name": "Team Section",
+              "props": {
+                "minHeight": 500
+              },
+              "style": {
+                "backgroundColor": "#F9FAFB",
+                "padding": "80px 0"
+              },
+              "children": [
+                {
+                  "componentType": "Text",
+                  "props": {
+                    "text": "<h2>Meet Our Team</h2>",
+                    "tag": "h2"
+                  },
+                  "style": {
+                    "fontSize": "36px",
+                    "fontWeight": "700",
+                    "textAlign": "center",
+                    "marginBottom": "60px"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "contact",
+          "label": "Contact",
+          "order": 4,
+          "layout": "grid",
+          "i18n": {
+            "en": "Contact",
+            "vi": "Li\u00ean h\u1ec7"
+          },
+          "items": [
+            {
+              "id": "contact-1",
+              "componentType": "Section",
+              "name": "Contact Form Section",
+              "props": {
+                "minHeight": 600
+              },
+              "style": {
+                "backgroundColor": "#ffffff",
+                "padding": "80px 0"
+              },
+              "children": [
+                {
+                  "componentType": "Text",
+                  "props": {
+                    "text": "<h2>Get in Touch</h2>",
+                    "tag": "h2"
+                  },
+                  "style": {
+                    "fontSize": "36px",
+                    "fontWeight": "700",
+                    "textAlign": "center",
+                    "marginBottom": "60px"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "text",
       "label": "Text",
       "icon": "type",
       "order": 0,
       "i18n": {
         "en": "Text",
-        "vi": "Văn bản"
+        "vi": "V\u0103n b\u1ea3n"
       },
       "types": [
         {
@@ -18,7 +419,7 @@
           "layout": "list",
           "i18n": {
             "en": "Themed Text",
-            "vi": "Văn bản chủ đề"
+            "vi": "V\u0103n b\u1ea3n ch\u1ee7 \u0111\u1ec1"
           },
           "items": [
             {
@@ -162,7 +563,7 @@
           "layout": "list",
           "i18n": {
             "en": "Titles",
-            "vi": "Tiêu đề"
+            "vi": "Ti\u00eau \u0111\u1ec1"
           },
           "items": [
             {
@@ -401,7 +802,7 @@
           "layout": "list",
           "i18n": {
             "en": "Paragraphs",
-            "vi": "Đoạn văn"
+            "vi": "\u0110o\u1ea1n v\u0103n"
           },
           "items": [
             {
@@ -414,7 +815,7 @@
                   "name": "Body Large"
                 },
                 "vi": {
-                  "name": "Văn bản lớn"
+                  "name": "V\u0103n b\u1ea3n l\u1edbn"
                 }
               },
               "props": {
@@ -426,7 +827,11 @@
                 "color": "#374151",
                 "lineHeight": "1.7"
               },
-              "tags": ["paragraph", "body", "large"]
+              "tags": [
+                "paragraph",
+                "body",
+                "large"
+              ]
             },
             {
               "id": "text-body-medium",
@@ -438,7 +843,7 @@
                   "name": "Body Medium"
                 },
                 "vi": {
-                  "name": "Văn bản vừa"
+                  "name": "V\u0103n b\u1ea3n v\u1eeba"
                 }
               },
               "props": {
@@ -450,7 +855,11 @@
                 "color": "#374151",
                 "lineHeight": "1.6"
               },
-              "tags": ["paragraph", "body", "medium"]
+              "tags": [
+                "paragraph",
+                "body",
+                "medium"
+              ]
             },
             {
               "id": "text-body-small",
@@ -462,7 +871,7 @@
                   "name": "Body Small"
                 },
                 "vi": {
-                  "name": "Văn bản nhỏ"
+                  "name": "V\u0103n b\u1ea3n nh\u1ecf"
                 }
               },
               "props": {
@@ -474,7 +883,12 @@
                 "color": "#6b7280",
                 "lineHeight": "1.5"
               },
-              "tags": ["paragraph", "body", "small", "caption"]
+              "tags": [
+                "paragraph",
+                "body",
+                "small",
+                "caption"
+              ]
             },
             {
               "id": "text-lead",
@@ -486,7 +900,7 @@
                   "name": "Lead Paragraph"
                 },
                 "vi": {
-                  "name": "Đoạn dẫn"
+                  "name": "\u0110o\u1ea1n d\u1eabn"
                 }
               },
               "props": {
@@ -504,7 +918,11 @@
                   "fontSize": "16px"
                 }
               },
-              "tags": ["paragraph", "lead", "intro"]
+              "tags": [
+                "paragraph",
+                "lead",
+                "intro"
+              ]
             },
             {
               "id": "text-quote",
@@ -516,7 +934,7 @@
                   "name": "Blockquote"
                 },
                 "vi": {
-                  "name": "Trích dẫn"
+                  "name": "Tr\u00edch d\u1eabn"
                 }
               },
               "props": {
@@ -532,7 +950,11 @@
                 "paddingLeft": "20px",
                 "marginLeft": "0"
               },
-              "tags": ["quote", "blockquote", "citation"]
+              "tags": [
+                "quote",
+                "blockquote",
+                "citation"
+              ]
             }
           ]
         },
@@ -543,7 +965,7 @@
           "layout": "list",
           "i18n": {
             "en": "Collapsible Text",
-            "vi": "Văn bản thu gọn"
+            "vi": "V\u0103n b\u1ea3n thu g\u1ecdn"
           },
           "items": [
             {
@@ -556,7 +978,7 @@
                   "name": "Read More"
                 },
                 "vi": {
-                  "name": "Đọc thêm"
+                  "name": "\u0110\u1ecdc th\u00eam"
                 }
               },
               "props": {
@@ -570,7 +992,11 @@
                 "color": "#374151",
                 "lineHeight": "1.6"
               },
-              "tags": ["collapsible", "read-more", "expandable"]
+              "tags": [
+                "collapsible",
+                "read-more",
+                "expandable"
+              ]
             },
             {
               "id": "collapsible-show-more",
@@ -582,21 +1008,24 @@
                   "name": "Show More"
                 },
                 "vi": {
-                  "name": "Xem thêm"
+                  "name": "Xem th\u00eam"
                 }
               },
               "props": {
                 "text": "<p>This is a longer piece of text that can be expanded. Perfect for product descriptions, bios, and detailed content sections.</p>",
                 "previewLines": 3,
-                "expandLabel": "Show more →",
-                "collapseLabel": "← Show less"
+                "expandLabel": "Show more \u2192",
+                "collapseLabel": "\u2190 Show less"
               },
               "style": {
                 "fontSize": "15px",
                 "color": "#6b7280",
                 "lineHeight": "1.7"
               },
-              "tags": ["collapsible", "show-more"]
+              "tags": [
+                "collapsible",
+                "show-more"
+              ]
             },
             {
               "id": "collapsible-link",
@@ -608,13 +1037,13 @@
                   "name": "Link to Article"
                 },
                 "vi": {
-                  "name": "Liên kết bài viết"
+                  "name": "Li\u00ean k\u1ebft b\u00e0i vi\u1ebft"
                 }
               },
               "props": {
                 "text": "<p>Get the highlights here. For the full story and all the details, follow the link below to read the complete article.</p>",
                 "previewLines": 2,
-                "expandLabel": "Link to full article →",
+                "expandLabel": "Link to full article \u2192",
                 "collapseLabel": "Show less"
               },
               "style": {
@@ -622,7 +1051,11 @@
                 "color": "#374151",
                 "lineHeight": "1.6"
               },
-              "tags": ["collapsible", "link", "article"]
+              "tags": [
+                "collapsible",
+                "link",
+                "article"
+              ]
             }
           ]
         },
@@ -633,7 +1066,7 @@
           "layout": "list",
           "i18n": {
             "en": "Text Marquee",
-            "vi": "Văn bản chạy"
+            "vi": "V\u0103n b\u1ea3n ch\u1ea1y"
           },
           "items": [
             {
@@ -646,14 +1079,14 @@
                   "name": "Casual Ticker"
                 },
                 "vi": {
-                  "name": "Ticker thông thường"
+                  "name": "Ticker th\u00f4ng th\u01b0\u1eddng"
                 }
               },
               "props": {
-                "text": "Let's Talk 👋",
+                "text": "Let's Talk \ud83d\udc4b",
                 "speed": 20,
                 "direction": "left",
-                "separator": "  •  "
+                "separator": "  \u2022  "
               },
               "style": {
                 "fontSize": "18px",
@@ -661,7 +1094,11 @@
                 "color": "#111827",
                 "padding": "12px 0"
               },
-              "tags": ["marquee", "ticker", "scrolling"]
+              "tags": [
+                "marquee",
+                "ticker",
+                "scrolling"
+              ]
             },
             {
               "id": "marquee-promo",
@@ -673,14 +1110,14 @@
                   "name": "Promo Banner"
                 },
                 "vi": {
-                  "name": "Banner khuyến mãi"
+                  "name": "Banner khuy\u1ebfn m\u00e3i"
                 }
               },
               "props": {
-                "text": "FREE SHIPPING WORLDWIDE 🌍",
+                "text": "FREE SHIPPING WORLDWIDE \ud83c\udf0d",
                 "speed": 15,
                 "direction": "left",
-                "separator": "   🎁   "
+                "separator": "   \ud83c\udf81   "
               },
               "style": {
                 "fontSize": "14px",
@@ -691,7 +1128,12 @@
                 "textTransform": "uppercase",
                 "letterSpacing": "0.05em"
               },
-              "tags": ["marquee", "promo", "banner", "shipping"]
+              "tags": [
+                "marquee",
+                "promo",
+                "banner",
+                "shipping"
+              ]
             },
             {
               "id": "marquee-new-arrivals",
@@ -703,14 +1145,14 @@
                   "name": "New Arrivals"
                 },
                 "vi": {
-                  "name": "Hàng mới về"
+                  "name": "H\u00e0ng m\u1edbi v\u1ec1"
                 }
               },
               "props": {
-                "text": "New Arrivals 🛍️",
+                "text": "New Arrivals \ud83d\udecd\ufe0f",
                 "speed": 25,
                 "direction": "left",
-                "separator": "  ★  "
+                "separator": "  \u2605  "
               },
               "style": {
                 "fontSize": "28px",
@@ -718,7 +1160,11 @@
                 "color": "#111827",
                 "padding": "16px 0"
               },
-              "tags": ["marquee", "new-arrivals", "fashion"]
+              "tags": [
+                "marquee",
+                "new-arrivals",
+                "fashion"
+              ]
             },
             {
               "id": "marquee-hello",
@@ -730,14 +1176,14 @@
                   "name": "Hello Beautiful"
                 },
                 "vi": {
-                  "name": "Xin chào"
+                  "name": "Xin ch\u00e0o"
                 }
               },
               "props": {
-                "text": "Hello Beautiful ♥",
+                "text": "Hello Beautiful \u2665",
                 "speed": 30,
                 "direction": "right",
-                "separator": "  ✦  "
+                "separator": "  \u2726  "
               },
               "style": {
                 "fontSize": "24px",
@@ -746,7 +1192,11 @@
                 "color": "#7c3aed",
                 "padding": "14px 0"
               },
-              "tags": ["marquee", "elegant", "italic"]
+              "tags": [
+                "marquee",
+                "elegant",
+                "italic"
+              ]
             }
           ]
         },
@@ -757,7 +1207,7 @@
           "layout": "list",
           "i18n": {
             "en": "Text Mask",
-            "vi": "Hiệu ứng mặt nạ"
+            "vi": "Hi\u1ec7u \u1ee9ng m\u1eb7t n\u1ea1"
           },
           "items": [
             {
@@ -770,7 +1220,7 @@
                   "name": "Purple Gradient"
                 },
                 "vi": {
-                  "name": "Chuyển màu tím"
+                  "name": "Chuy\u1ec3n m\u00e0u t\u00edm"
                 }
               },
               "props": {
@@ -779,7 +1229,11 @@
                 "fontSize": "100px",
                 "fontWeight": "900"
               },
-              "tags": ["text-mask", "gradient", "purple"]
+              "tags": [
+                "text-mask",
+                "gradient",
+                "purple"
+              ]
             },
             {
               "id": "textmask-sunset",
@@ -791,7 +1245,7 @@
                   "name": "Sunset"
                 },
                 "vi": {
-                  "name": "Hoàng hôn"
+                  "name": "Ho\u00e0ng h\u00f4n"
                 }
               },
               "props": {
@@ -800,7 +1254,11 @@
                 "fontSize": "90px",
                 "fontWeight": "900"
               },
-              "tags": ["text-mask", "gradient", "warm"]
+              "tags": [
+                "text-mask",
+                "gradient",
+                "warm"
+              ]
             },
             {
               "id": "textmask-ocean",
@@ -812,7 +1270,7 @@
                   "name": "Ocean"
                 },
                 "vi": {
-                  "name": "Đại dương"
+                  "name": "\u0110\u1ea1i d\u01b0\u01a1ng"
                 }
               },
               "props": {
@@ -821,7 +1279,12 @@
                 "fontSize": "100px",
                 "fontWeight": "900"
               },
-              "tags": ["text-mask", "gradient", "blue", "teal"]
+              "tags": [
+                "text-mask",
+                "gradient",
+                "blue",
+                "teal"
+              ]
             }
           ]
         }
@@ -834,7 +1297,7 @@
       "order": 1,
       "i18n": {
         "en": "Image",
-        "vi": "Hình ảnh"
+        "vi": "H\u00ecnh \u1ea3nh"
       },
       "types": [
         {
@@ -843,7 +1306,7 @@
           "order": 0,
           "i18n": {
             "en": "Single Image",
-            "vi": "Ảnh đơn"
+            "vi": "\u1ea2nh \u0111\u01a1n"
           },
           "items": [
             {
@@ -856,7 +1319,7 @@
                   "name": "Full Width"
                 },
                 "vi": {
-                  "name": "Toàn chiều rộng"
+                  "name": "To\u00e0n chi\u1ec1u r\u1ed9ng"
                 }
               },
               "props": {
@@ -874,7 +1337,11 @@
                   "height": "200px"
                 }
               },
-              "tags": ["image", "full-width", "hero"]
+              "tags": [
+                "image",
+                "full-width",
+                "hero"
+              ]
             },
             {
               "id": "image-card",
@@ -886,7 +1353,7 @@
                   "name": "Card Image"
                 },
                 "vi": {
-                  "name": "Ảnh thẻ"
+                  "name": "\u1ea2nh th\u1ebb"
                 }
               },
               "props": {
@@ -899,7 +1366,11 @@
                 "height": "220px",
                 "borderRadius": "12px"
               },
-              "tags": ["image", "card", "rounded"]
+              "tags": [
+                "image",
+                "card",
+                "rounded"
+              ]
             },
             {
               "id": "image-circle",
@@ -911,7 +1382,7 @@
                   "name": "Circle"
                 },
                 "vi": {
-                  "name": "Tròn"
+                  "name": "Tr\u00f2n"
                 }
               },
               "props": {
@@ -924,7 +1395,12 @@
                 "height": "120px",
                 "borderRadius": "50%"
               },
-              "tags": ["image", "circle", "avatar", "profile"]
+              "tags": [
+                "image",
+                "circle",
+                "avatar",
+                "profile"
+              ]
             },
             {
               "id": "image-polaroid",
@@ -936,7 +1412,7 @@
                   "name": "Polaroid"
                 },
                 "vi": {
-                  "name": "Ảnh polaroid"
+                  "name": "\u1ea2nh polaroid"
                 }
               },
               "props": {
@@ -953,7 +1429,12 @@
                 "backgroundColor": "#ffffff",
                 "boxShadow": "0 4px 16px rgba(0,0,0,0.15)"
               },
-              "tags": ["image", "polaroid", "vintage", "photo"]
+              "tags": [
+                "image",
+                "polaroid",
+                "vintage",
+                "photo"
+              ]
             },
             {
               "id": "image-banner",
@@ -965,7 +1446,7 @@
                   "name": "Banner"
                 },
                 "vi": {
-                  "name": "Biểu ngữ"
+                  "name": "Bi\u1ec3u ng\u1eef"
                 }
               },
               "props": {
@@ -983,7 +1464,11 @@
                   "height": "160px"
                 }
               },
-              "tags": ["image", "banner", "landscape"]
+              "tags": [
+                "image",
+                "banner",
+                "landscape"
+              ]
             }
           ]
         }
@@ -996,7 +1481,7 @@
       "order": 2,
       "i18n": {
         "en": "Button",
-        "vi": "Nút bấm"
+        "vi": "N\u00fat b\u1ea5m"
       },
       "types": [
         {
@@ -1007,7 +1492,7 @@
           "columns": 2,
           "i18n": {
             "en": "Text & Icon Buttons",
-            "vi": "Nút văn bản & biểu tượng"
+            "vi": "N\u00fat v\u0103n b\u1ea3n & bi\u1ec3u t\u01b0\u1ee3ng"
           },
           "items": [
             {
@@ -1026,8 +1511,8 @@
                 "backgroundColor": "#111827",
                 "color": "#ffffff",
                 "borderRadius": "4px",
-                "padding": "8px 16px",
-                "fontSize": "14px",
+                "padding": "16px 24px",
+                "fontSize": "16px",
                 "fontWeight": "500"
               }
             },
@@ -1048,16 +1533,16 @@
                 "color": "#111827",
                 "border": "1px solid #111827",
                 "borderRadius": "4px",
-                "padding": "8px 16px",
+                "padding": "16px 24px",
                 "fontSize": "14px"
               }
             },
             {
               "id": "btn-shop",
               "componentType": "Button",
-              "name": "SHOP →",
+              "name": "SHOP \u2192",
               "props": {
-                "label": "<p>SHOP →</p>",
+                "label": "<p>SHOP \u2192</p>",
                 "variant": "primary",
                 "size": "md",
                 "hoverStyle": {
@@ -1068,7 +1553,7 @@
                 "backgroundColor": "#4d7c6e",
                 "color": "#ffffff",
                 "borderRadius": "24px",
-                "padding": "8px 16px",
+                "padding": "16px 24px",
                 "fontSize": "13px",
                 "letterSpacing": "0.08em",
                 "fontWeight": "600"
@@ -1090,7 +1575,7 @@
                 "backgroundColor": "#111827",
                 "color": "#ffffff",
                 "borderRadius": "2px",
-                "padding": "8px 16px",
+                "padding": "16px 24px",
                 "fontSize": "13px",
                 "letterSpacing": "0.1em",
                 "fontWeight": "700"
@@ -1113,8 +1598,8 @@
                 "backgroundColor": "#111827",
                 "color": "#ffffff",
                 "borderRadius": "4px",
-                "padding": "8px 16px",
-                "fontSize": "14px",
+                "padding": "16px 24px",
+                "fontSize": "16px",
                 "fontWeight": "600"
               }
             },
@@ -1134,8 +1619,8 @@
                 "background": "linear-gradient(135deg, #7c3aed 0%, #d946ef 100%)",
                 "color": "#ffffff",
                 "borderRadius": "24px",
-                "padding": "8px 16px",
-                "fontSize": "14px",
+                "padding": "16px 24px",
+                "fontSize": "16px",
                 "fontWeight": "600"
               }
             },
@@ -1157,7 +1642,7 @@
                 "border": "2px solid #4f46e5",
                 "borderRadius": "24px",
                 "padding": "6px 16px",
-                "fontSize": "14px",
+                "fontSize": "16px",
                 "fontWeight": "600"
               }
             },
@@ -1179,7 +1664,7 @@
                 "color": "#ffffff",
                 "borderRadius": "6px",
                 "padding": "14px 32px",
-                "fontSize": "14px",
+                "fontSize": "16px",
                 "fontWeight": "700",
                 "letterSpacing": "0.08em"
               }
@@ -1201,7 +1686,7 @@
                 "color": "#e57330",
                 "border": "2px solid #e57330",
                 "borderRadius": "24px",
-                "padding": "8px 16px",
+                "padding": "16px 24px",
                 "fontSize": "15px",
                 "fontWeight": "600"
               }
@@ -1222,7 +1707,7 @@
                 "backgroundColor": "#374151",
                 "color": "#ffffff",
                 "borderRadius": "4px",
-                "padding": "8px 16px",
+                "padding": "16px 24px",
                 "fontSize": "15px",
                 "fontStyle": "italic",
                 "fontWeight": "600"
@@ -1244,8 +1729,8 @@
                 "backgroundColor": "#f6f4ef",
                 "color": "#111827",
                 "borderRadius": "24px",
-                "padding": "8px 16px",
-                "fontSize": "14px",
+                "padding": "16px 24px",
+                "fontSize": "16px",
                 "fontWeight": "600"
               }
             },
@@ -1267,8 +1752,8 @@
                 "color": "#111827",
                 "border": "1px solid #d1d5db",
                 "borderRadius": "4px",
-                "padding": "8px 16px",
-                "fontSize": "14px",
+                "padding": "16px 24px",
+                "fontSize": "16px",
                 "fontWeight": "500"
               }
             },
@@ -1311,8 +1796,8 @@
                 "backgroundColor": "#fcd34d",
                 "color": "#111827",
                 "borderRadius": "4px",
-                "padding": "8px 16px",
-                "fontSize": "14px",
+                "padding": "16px 24px",
+                "fontSize": "16px",
                 "fontWeight": "600"
               }
             },
@@ -1322,8 +1807,7 @@
               "name": "Location",
               "icon": "map-pin",
               "props": {
-                "label": "<p></p>",
-                "iconPosition": "end",
+                "label": "",
                 "variant": "primary",
                 "size": "md",
                 "hoverStyle": {
@@ -1348,7 +1832,7 @@
               "name": "Download",
               "icon": "download",
               "props": {
-                "label": "<p></p>",
+                "label": "",
                 "variant": "primary",
                 "size": "md",
                 "hoverStyle": {
@@ -1443,7 +1927,7 @@
               "name": "Home",
               "icon": "home",
               "props": {
-                "label": "<p></p>",
+                "label": "",
                 "variant": "primary",
                 "size": "md",
                 "hoverStyle": {
@@ -1468,7 +1952,7 @@
               "name": "Up",
               "icon": "arrow-up",
               "props": {
-                "label": "<p></p>",
+                "label": "",
                 "variant": "primary",
                 "size": "md",
                 "hoverStyle": {
@@ -1493,7 +1977,7 @@
               "name": "Tool",
               "icon": "wrench",
               "props": {
-                "label": "<p></p>",
+                "label": "",
                 "variant": "primary",
                 "size": "md",
                 "hoverStyle": {
@@ -1518,7 +2002,7 @@
               "name": "Mail",
               "icon": "mail",
               "props": {
-                "label": "<p></p>",
+                "label": "",
                 "variant": "primary",
                 "size": "md",
                 "hoverStyle": {
@@ -1543,7 +2027,7 @@
               "name": "Lock",
               "icon": "lock",
               "props": {
-                "label": "<p></p>",
+                "label": "",
                 "variant": "primary",
                 "size": "md",
                 "hoverStyle": {
@@ -1580,8 +2064,8 @@
                 "color": "#8b6914",
                 "border": "2px solid #8b6914",
                 "borderRadius": "24px",
-                "padding": "8px 16px",
-                "fontSize": "14px",
+                "padding": "16px 24px",
+                "fontSize": "16px",
                 "fontWeight": "500"
               }
             },
@@ -1601,8 +2085,8 @@
                 "backgroundColor": "#b45309",
                 "color": "#ffffff",
                 "borderRadius": "24px",
-                "padding": "8px 16px",
-                "fontSize": "14px",
+                "padding": "16px 24px",
+                "fontSize": "16px",
                 "fontWeight": "600"
               }
             },
@@ -1612,7 +2096,7 @@
               "name": "Close",
               "icon": "x",
               "props": {
-                "label": "<p></p>",
+                "label": "",
                 "variant": "primary",
                 "size": "md",
                 "hoverStyle": {
@@ -1674,7 +2158,7 @@
                 "color": "#6d28d9",
                 "border": "1px solid #c4b5fd",
                 "borderRadius": "24px",
-                "padding": "8px 16px",
+                "padding": "16px 24px",
                 "fontSize": "13px",
                 "fontWeight": "600",
                 "letterSpacing": "0.08em"
@@ -1731,7 +2215,8 @@
               "name": "Arrow",
               "icon": "chevron-right",
               "props": {
-                "label": "<p></p>",
+                "label": "",
+                "iconPosition": "end",
                 "variant": "primary",
                 "size": "md",
                 "hoverStyle": {
@@ -1770,8 +2255,8 @@
                 "backgroundColor": "#111827",
                 "color": "#ffffff",
                 "borderRadius": "4px",
-                "padding": "8px 16px",
-                "fontSize": "14px",
+                "padding": "16px 24px",
+                "fontSize": "16px",
                 "fontWeight": "600"
               }
             },
@@ -1793,10 +2278,1146 @@
                 "backgroundColor": "#14b8a6",
                 "color": "#ffffff",
                 "borderRadius": "4px",
-                "padding": "8px 16px",
-                "fontSize": "14px",
+                "padding": "16px 24px",
+                "fontSize": "16px",
                 "fontWeight": "600"
               }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "layout",
+      "label": "Layout",
+      "icon": "layout",
+      "order": 6,
+      "i18n": {
+        "en": "Layout",
+        "vi": "B\u1ed1 c\u1ee5c"
+      },
+      "types": [
+        {
+          "id": "grid-layouts",
+          "label": "Grid",
+          "order": 0,
+          "i18n": {
+            "en": "Grid",
+            "vi": "L\u01b0\u1edbi"
+          },
+          "items": [
+            {
+              "id": "grid-2-col",
+              "componentType": "Grid",
+              "name": "2 Columns",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "2 Columns"
+                },
+                "vi": {
+                  "name": "2 c\u1ed9t"
+                }
+              },
+              "props": {
+                "columns": 2,
+                "rows": 1,
+                "columnTemplate": "equal",
+                "columnGap": 16,
+                "rowGap": 16,
+                "padding": 16
+              },
+              "style": {
+                "display": "grid",
+                "gridTemplateColumns": "repeat(2, 1fr)",
+                "columnGap": "16px",
+                "rowGap": "16px",
+                "padding": "16px",
+                "width": "100%",
+                "minHeight": "80px"
+              },
+              "tags": [
+                "grid",
+                "2-column",
+                "layout",
+                "equal"
+              ]
+            },
+            {
+              "id": "grid-3-col",
+              "componentType": "Grid",
+              "name": "3 Columns",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "3 Columns"
+                },
+                "vi": {
+                  "name": "3 c\u1ed9t"
+                }
+              },
+              "props": {
+                "columns": 3,
+                "rows": 1,
+                "columnTemplate": "equal",
+                "columnGap": 16,
+                "rowGap": 16,
+                "padding": 16
+              },
+              "style": {
+                "display": "grid",
+                "gridTemplateColumns": "repeat(3, 1fr)",
+                "columnGap": "16px",
+                "rowGap": "16px",
+                "padding": "16px",
+                "width": "100%",
+                "minHeight": "80px"
+              },
+              "tags": [
+                "grid",
+                "3-column",
+                "layout",
+                "equal"
+              ]
+            },
+            {
+              "id": "grid-4-col",
+              "componentType": "Grid",
+              "name": "4 Columns",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "4 Columns"
+                },
+                "vi": {
+                  "name": "4 c\u1ed9t"
+                }
+              },
+              "props": {
+                "columns": 4,
+                "rows": 1,
+                "columnTemplate": "equal",
+                "columnGap": 16,
+                "rowGap": 16,
+                "padding": 16
+              },
+              "style": {
+                "display": "grid",
+                "gridTemplateColumns": "repeat(4, 1fr)",
+                "columnGap": "16px",
+                "rowGap": "16px",
+                "padding": "16px",
+                "width": "100%",
+                "minHeight": "80px"
+              },
+              "tags": [
+                "grid",
+                "4-column",
+                "layout",
+                "equal"
+              ]
+            },
+            {
+              "id": "grid-sidebar-left",
+              "componentType": "Grid",
+              "name": "Sidebar Left",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Sidebar Left"
+                },
+                "vi": {
+                  "name": "Thanh b\u00ean tr\u00e1i"
+                }
+              },
+              "props": {
+                "columns": 2,
+                "rows": 1,
+                "columnTemplate": "sidebar-left",
+                "columnGap": 24,
+                "rowGap": 16,
+                "padding": 16
+              },
+              "style": {
+                "display": "grid",
+                "gridTemplateColumns": "1fr 2fr",
+                "columnGap": "24px",
+                "rowGap": "16px",
+                "padding": "16px",
+                "width": "100%",
+                "minHeight": "80px"
+              },
+              "tags": [
+                "grid",
+                "sidebar",
+                "left",
+                "layout",
+                "1-2"
+              ]
+            },
+            {
+              "id": "grid-sidebar-right",
+              "componentType": "Grid",
+              "name": "Sidebar Right",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Sidebar Right"
+                },
+                "vi": {
+                  "name": "Thanh b\u00ean ph\u1ea3i"
+                }
+              },
+              "props": {
+                "columns": 2,
+                "rows": 1,
+                "columnTemplate": "sidebar-right",
+                "columnGap": 24,
+                "rowGap": 16,
+                "padding": 16
+              },
+              "style": {
+                "display": "grid",
+                "gridTemplateColumns": "2fr 1fr",
+                "columnGap": "24px",
+                "rowGap": "16px",
+                "padding": "16px",
+                "width": "100%",
+                "minHeight": "80px"
+              },
+              "tags": [
+                "grid",
+                "sidebar",
+                "right",
+                "layout",
+                "2-1"
+              ]
+            },
+            {
+              "id": "grid-2-col-gap-sm",
+              "componentType": "Grid",
+              "name": "2 Col Tight",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "2 Col Tight"
+                },
+                "vi": {
+                  "name": "2 c\u1ed9t kh\u00edt"
+                }
+              },
+              "props": {
+                "columns": 2,
+                "rows": 1,
+                "columnTemplate": "equal",
+                "columnGap": 8,
+                "rowGap": 8,
+                "padding": 0
+              },
+              "style": {
+                "display": "grid",
+                "gridTemplateColumns": "repeat(2, 1fr)",
+                "columnGap": "8px",
+                "rowGap": "8px",
+                "padding": "0px",
+                "width": "100%",
+                "minHeight": "80px"
+              },
+              "tags": [
+                "grid",
+                "2-column",
+                "tight",
+                "no-padding"
+              ]
+            },
+            {
+              "id": "grid-3-col-gap-sm",
+              "componentType": "Grid",
+              "name": "3 Col Tight",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "3 Col Tight"
+                },
+                "vi": {
+                  "name": "3 c\u1ed9t kh\u00edt"
+                }
+              },
+              "props": {
+                "columns": 3,
+                "rows": 1,
+                "columnTemplate": "equal",
+                "columnGap": 8,
+                "rowGap": 8,
+                "padding": 0
+              },
+              "style": {
+                "display": "grid",
+                "gridTemplateColumns": "repeat(3, 1fr)",
+                "columnGap": "8px",
+                "rowGap": "8px",
+                "padding": "0px",
+                "width": "100%",
+                "minHeight": "80px"
+              },
+              "tags": [
+                "grid",
+                "3-column",
+                "tight",
+                "no-padding"
+              ]
+            },
+            {
+              "id": "grid-1-3",
+              "componentType": "Grid",
+              "name": "1/3 + 2/3",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "1/3 + 2/3"
+                },
+                "vi": {
+                  "name": "1/3 + 2/3"
+                }
+              },
+              "props": {
+                "columns": 2,
+                "rows": 1,
+                "columnTemplate": "custom",
+                "customTemplate": "1fr 2fr",
+                "columnGap": 16,
+                "rowGap": 16,
+                "padding": 16
+              },
+              "style": {
+                "display": "grid",
+                "gridTemplateColumns": "1fr 2fr",
+                "columnGap": "16px",
+                "rowGap": "16px",
+                "padding": "16px",
+                "width": "100%",
+                "minHeight": "80px"
+              },
+              "tags": [
+                "grid",
+                "asymmetric",
+                "1-2",
+                "layout"
+              ]
+            },
+            {
+              "id": "grid-2-3",
+              "componentType": "Grid",
+              "name": "2/3 + 1/3",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "2/3 + 1/3"
+                },
+                "vi": {
+                  "name": "2/3 + 1/3"
+                }
+              },
+              "props": {
+                "columns": 2,
+                "rows": 1,
+                "columnTemplate": "custom",
+                "customTemplate": "2fr 1fr",
+                "columnGap": 16,
+                "rowGap": 16,
+                "padding": 16
+              },
+              "style": {
+                "display": "grid",
+                "gridTemplateColumns": "2fr 1fr",
+                "columnGap": "16px",
+                "rowGap": "16px",
+                "padding": "16px",
+                "width": "100%",
+                "minHeight": "80px"
+              },
+              "tags": [
+                "grid",
+                "asymmetric",
+                "2-1",
+                "layout"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "flex-layouts",
+          "label": "Row & Column",
+          "order": 1,
+          "i18n": {
+            "en": "Row & Column",
+            "vi": "H\u00e0ng & C\u1ed9t"
+          },
+          "items": [
+            {
+              "id": "row-default",
+              "componentType": "Row",
+              "name": "Row",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Row"
+                },
+                "vi": {
+                  "name": "H\u00e0ng ngang"
+                }
+              },
+              "props": {
+                "gap": 16,
+                "padding": 16,
+                "alignItems": "center",
+                "justifyContent": "flex-start",
+                "flexWrap": "nowrap"
+              },
+              "style": {
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "16px",
+                "padding": "16px",
+                "width": "100%",
+                "minHeight": "48px"
+              },
+              "tags": [
+                "row",
+                "flex",
+                "horizontal",
+                "layout"
+              ]
+            },
+            {
+              "id": "row-space-between",
+              "componentType": "Row",
+              "name": "Row Space Between",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Row Space Between"
+                },
+                "vi": {
+                  "name": "H\u00e0ng c\u00e1ch \u0111\u1ec1u"
+                }
+              },
+              "props": {
+                "gap": 0,
+                "padding": 16,
+                "alignItems": "center",
+                "justifyContent": "space-between",
+                "flexWrap": "nowrap"
+              },
+              "style": {
+                "display": "flex",
+                "flexDirection": "row",
+                "justifyContent": "space-between",
+                "alignItems": "center",
+                "padding": "16px",
+                "width": "100%",
+                "minHeight": "48px"
+              },
+              "tags": [
+                "row",
+                "flex",
+                "space-between",
+                "navbar",
+                "header"
+              ]
+            },
+            {
+              "id": "row-centered",
+              "componentType": "Row",
+              "name": "Row Centered",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Row Centered"
+                },
+                "vi": {
+                  "name": "H\u00e0ng c\u0103n gi\u1eefa"
+                }
+              },
+              "props": {
+                "gap": 12,
+                "padding": 16,
+                "alignItems": "center",
+                "justifyContent": "center",
+                "flexWrap": "nowrap"
+              },
+              "style": {
+                "display": "flex",
+                "flexDirection": "row",
+                "justifyContent": "center",
+                "alignItems": "center",
+                "gap": "12px",
+                "padding": "16px",
+                "width": "100%",
+                "minHeight": "48px"
+              },
+              "tags": [
+                "row",
+                "flex",
+                "center",
+                "layout"
+              ]
+            },
+            {
+              "id": "row-wrap",
+              "componentType": "Row",
+              "name": "Row Wrap",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Row Wrap"
+                },
+                "vi": {
+                  "name": "H\u00e0ng xu\u1ed1ng d\u00f2ng"
+                }
+              },
+              "props": {
+                "gap": 12,
+                "padding": 16,
+                "alignItems": "flex-start",
+                "justifyContent": "flex-start",
+                "flexWrap": "wrap"
+              },
+              "style": {
+                "display": "flex",
+                "flexDirection": "row",
+                "flexWrap": "wrap",
+                "gap": "12px",
+                "padding": "16px",
+                "width": "100%",
+                "minHeight": "48px"
+              },
+              "tags": [
+                "row",
+                "flex",
+                "wrap",
+                "layout"
+              ]
+            },
+            {
+              "id": "column-default",
+              "componentType": "Column",
+              "name": "Column",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Column"
+                },
+                "vi": {
+                  "name": "C\u1ed9t d\u1ecdc"
+                }
+              },
+              "props": {
+                "gap": 12,
+                "padding": 16,
+                "alignItems": "stretch",
+                "justifyContent": "flex-start",
+                "direction": "column"
+              },
+              "style": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "12px",
+                "padding": "16px",
+                "width": "100%",
+                "minHeight": "80px"
+              },
+              "tags": [
+                "column",
+                "flex",
+                "vertical",
+                "layout"
+              ]
+            },
+            {
+              "id": "column-centered",
+              "componentType": "Column",
+              "name": "Column Centered",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Column Centered"
+                },
+                "vi": {
+                  "name": "C\u1ed9t c\u0103n gi\u1eefa"
+                }
+              },
+              "props": {
+                "gap": 12,
+                "padding": 24,
+                "alignItems": "center",
+                "justifyContent": "center",
+                "direction": "column"
+              },
+              "style": {
+                "display": "flex",
+                "flexDirection": "column",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "gap": "12px",
+                "padding": "24px",
+                "width": "100%",
+                "minHeight": "80px"
+              },
+              "tags": [
+                "column",
+                "flex",
+                "center",
+                "layout"
+              ]
+            },
+            {
+              "id": "column-card",
+              "componentType": "Column",
+              "name": "Card Column",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Card Column"
+                },
+                "vi": {
+                  "name": "C\u1ed9t th\u1ebb"
+                }
+              },
+              "props": {
+                "gap": 12,
+                "padding": 24,
+                "alignItems": "flex-start",
+                "justifyContent": "flex-start",
+                "direction": "column"
+              },
+              "style": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "12px",
+                "padding": "24px",
+                "width": "100%",
+                "minHeight": "120px",
+                "borderRadius": "12px",
+                "backgroundColor": "#ffffff",
+                "boxShadow": "0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06)"
+              },
+              "tags": [
+                "column",
+                "card",
+                "flex",
+                "shadow"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "container-boxes",
+          "label": "Container Boxes",
+          "order": 2,
+          "i18n": {
+            "en": "Container Boxes",
+            "vi": "H\u1ed9p ch\u1ee9a"
+          },
+          "items": [
+            {
+              "id": "box-flex-column",
+              "componentType": "Container",
+              "name": "Flex Column",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Flex Column"
+                },
+                "vi": {
+                  "name": "C\u1ed9t flex"
+                }
+              },
+              "props": {
+                "display": "flex",
+                "direction": "column",
+                "gap": 16,
+                "padding": 24
+              },
+              "style": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "16px",
+                "padding": "24px",
+                "width": "100%",
+                "minHeight": "80px"
+              },
+              "tags": [
+                "container",
+                "flex",
+                "column",
+                "layout"
+              ]
+            },
+            {
+              "id": "box-flex-row",
+              "componentType": "Container",
+              "name": "Flex Row",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Flex Row"
+                },
+                "vi": {
+                  "name": "H\u00e0ng flex"
+                }
+              },
+              "props": {
+                "display": "flex",
+                "direction": "row",
+                "gap": 16,
+                "padding": 24
+              },
+              "style": {
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "16px",
+                "padding": "24px",
+                "width": "100%",
+                "minHeight": "80px"
+              },
+              "responsiveStyle": {
+                "mobile": {
+                  "flexDirection": "column"
+                }
+              },
+              "tags": [
+                "container",
+                "flex",
+                "row",
+                "horizontal"
+              ]
+            },
+            {
+              "id": "box-card",
+              "componentType": "Container",
+              "name": "Card",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Card"
+                },
+                "vi": {
+                  "name": "Th\u1ebb"
+                }
+              },
+              "props": {
+                "display": "flex",
+                "direction": "column",
+                "gap": 12,
+                "padding": 20
+              },
+              "style": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "12px",
+                "padding": "20px",
+                "width": "100%",
+                "borderRadius": "12px",
+                "backgroundColor": "#ffffff",
+                "boxShadow": "0 2px 8px rgba(0,0,0,0.08)",
+                "border": "1px solid #f3f4f6"
+              },
+              "tags": [
+                "container",
+                "card",
+                "shadow",
+                "rounded"
+              ]
+            },
+            {
+              "id": "box-centered",
+              "componentType": "Container",
+              "name": "Centered Box",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Centered Box"
+                },
+                "vi": {
+                  "name": "H\u1ed9p c\u0103n gi\u1eefa"
+                }
+              },
+              "props": {
+                "display": "flex",
+                "direction": "column",
+                "gap": 16,
+                "padding": 48
+              },
+              "style": {
+                "display": "flex",
+                "flexDirection": "column",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "gap": "16px",
+                "padding": "48px",
+                "width": "100%",
+                "textAlign": "center",
+                "minHeight": "200px"
+              },
+              "responsiveStyle": {
+                "mobile": {
+                  "padding": "24px"
+                }
+              },
+              "tags": [
+                "container",
+                "centered",
+                "hero",
+                "column"
+              ]
+            },
+            {
+              "id": "box-sidebar",
+              "componentType": "Container",
+              "name": "Sidebar Layout",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Sidebar Layout"
+                },
+                "vi": {
+                  "name": "B\u1ed1 c\u1ee5c c\u1ea1nh"
+                }
+              },
+              "props": {
+                "display": "flex",
+                "direction": "row",
+                "gap": 32,
+                "padding": 0
+              },
+              "style": {
+                "display": "flex",
+                "flexDirection": "row",
+                "gap": "32px",
+                "width": "100%",
+                "minHeight": "200px"
+              },
+              "responsiveStyle": {
+                "mobile": {
+                  "flexDirection": "column"
+                }
+              },
+              "tags": [
+                "container",
+                "sidebar",
+                "two-column",
+                "row"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "styled-boxes",
+          "label": "Styled Boxes",
+          "order": 2,
+          "i18n": {
+            "en": "Styled Boxes",
+            "vi": "H\u1ed9p c\u00f3 ki\u1ec3u d\u00e1ng"
+          },
+          "items": [
+            {
+              "id": "box-glassmorphism",
+              "componentType": "Container",
+              "name": "Glass",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Glass"
+                },
+                "vi": {
+                  "name": "K\u00ednh"
+                }
+              },
+              "props": {
+                "display": "flex",
+                "direction": "column",
+                "gap": 12,
+                "padding": 24
+              },
+              "style": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "12px",
+                "padding": "24px",
+                "borderRadius": "16px",
+                "backgroundColor": "rgba(255,255,255,0.15)",
+                "backdropFilter": "blur(10px)",
+                "border": "1px solid rgba(255,255,255,0.3)",
+                "boxShadow": "0 8px 32px rgba(0,0,0,0.1)"
+              },
+              "tags": [
+                "container",
+                "glass",
+                "glassmorphism",
+                "blur",
+                "transparent"
+              ]
+            },
+            {
+              "id": "box-gradient",
+              "componentType": "Container",
+              "name": "Gradient",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Gradient"
+                },
+                "vi": {
+                  "name": "Chuy\u1ec3n m\u00e0u"
+                }
+              },
+              "props": {
+                "display": "flex",
+                "direction": "column",
+                "gap": 16,
+                "padding": 32
+              },
+              "style": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "16px",
+                "padding": "32px",
+                "borderRadius": "16px",
+                "background": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                "color": "#ffffff"
+              },
+              "tags": [
+                "container",
+                "gradient",
+                "colorful"
+              ]
+            },
+            {
+              "id": "box-bordered",
+              "componentType": "Container",
+              "name": "Bordered",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Bordered"
+                },
+                "vi": {
+                  "name": "C\u00f3 vi\u1ec1n"
+                }
+              },
+              "props": {
+                "display": "flex",
+                "direction": "column",
+                "gap": 12,
+                "padding": 24
+              },
+              "style": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "12px",
+                "padding": "24px",
+                "borderRadius": "8px",
+                "border": "2px solid #e5e7eb",
+                "backgroundColor": "#ffffff"
+              },
+              "tags": [
+                "container",
+                "bordered",
+                "outline",
+                "white"
+              ]
+            },
+            {
+              "id": "box-dark",
+              "componentType": "Container",
+              "name": "Dark Box",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Dark Box"
+                },
+                "vi": {
+                  "name": "H\u1ed9p t\u1ed1i"
+                }
+              },
+              "props": {
+                "display": "flex",
+                "direction": "column",
+                "gap": 16,
+                "padding": 28
+              },
+              "style": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "16px",
+                "padding": "28px",
+                "borderRadius": "12px",
+                "backgroundColor": "#111827",
+                "color": "#f9fafb"
+              },
+              "tags": [
+                "container",
+                "dark",
+                "black",
+                "contrast"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "repeaters",
+          "label": "Repeaters",
+          "order": 4,
+          "layout": "list",
+          "i18n": {
+            "en": "Repeaters",
+            "vi": "Ph\u1ea7n l\u1eb7p"
+          },
+          "items": [
+            {
+              "id": "repeater-card-grid",
+              "componentType": "Repeater",
+              "name": "Card Grid",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Card Grid"
+                },
+                "vi": {
+                  "name": "L\u01b0\u1edbi th\u1ebb"
+                }
+              },
+              "props": {
+                "count": 3,
+                "columns": 3,
+                "gap": 16
+              },
+              "tags": [
+                "repeater",
+                "card",
+                "grid",
+                "list"
+              ]
+            },
+            {
+              "id": "repeater-2col",
+              "componentType": "Repeater",
+              "name": "2-Column List",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "2-Column List"
+                },
+                "vi": {
+                  "name": "Danh s\u00e1ch 2 c\u1ed9t"
+                }
+              },
+              "props": {
+                "count": 4,
+                "columns": 2,
+                "gap": 20
+              },
+              "responsiveProps": {
+                "mobile": {
+                  "columns": 1
+                }
+              },
+              "tags": [
+                "repeater",
+                "2-column",
+                "list"
+              ]
+            },
+            {
+              "id": "repeater-horizontal-row",
+              "componentType": "Repeater",
+              "name": "Horizontal Row",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Horizontal Row"
+                },
+                "vi": {
+                  "name": "H\u00e0ng ngang"
+                }
+              },
+              "props": {
+                "count": 4,
+                "columns": 4,
+                "gap": 16
+              },
+              "responsiveProps": {
+                "mobile": {
+                  "columns": 2
+                }
+              },
+              "tags": [
+                "repeater",
+                "horizontal",
+                "row"
+              ]
+            },
+            {
+              "id": "repeater-testimonials",
+              "componentType": "Repeater",
+              "name": "Testimonials",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Testimonials"
+                },
+                "vi": {
+                  "name": "\u0110\u00e1nh gi\u00e1"
+                }
+              },
+              "props": {
+                "count": 3,
+                "columns": 3,
+                "gap": 24
+              },
+              "responsiveProps": {
+                "mobile": {
+                  "columns": 1
+                }
+              },
+              "tags": [
+                "repeater",
+                "testimonials",
+                "reviews"
+              ]
+            },
+            {
+              "id": "repeater-team",
+              "componentType": "Repeater",
+              "name": "Team Grid",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Team Grid"
+                },
+                "vi": {
+                  "name": "L\u01b0\u1edbi nh\u00f3m"
+                }
+              },
+              "props": {
+                "count": 4,
+                "columns": 4,
+                "gap": 24
+              },
+              "responsiveProps": {
+                "tablet": {
+                  "columns": 2
+                },
+                "mobile": {
+                  "columns": 2
+                }
+              },
+              "tags": [
+                "repeater",
+                "team",
+                "profiles"
+              ]
             }
           ]
         }
@@ -1809,7 +3430,7 @@
       "order": 3,
       "i18n": {
         "en": "Gallery",
-        "vi": "Thư viện ảnh"
+        "vi": "Th\u01b0 vi\u1ec7n \u1ea3nh"
       },
       "types": [
         {
@@ -1819,7 +3440,7 @@
           "layout": "preview",
           "i18n": {
             "en": "Grid Galleries",
-            "vi": "Bộ sưu tập lưới"
+            "vi": "B\u1ed9 s\u01b0u t\u1eadp l\u01b0\u1edbi"
           },
           "items": [
             {
@@ -1832,7 +3453,7 @@
                   "name": "3-Column Grid"
                 },
                 "vi": {
-                  "name": "Lưới 3 cột"
+                  "name": "L\u01b0\u1edbi 3 c\u1ed9t"
                 }
               },
               "props": {
@@ -1840,7 +3461,11 @@
                 "gap": 8,
                 "aspectRatio": "1/1"
               },
-              "tags": ["gallery", "grid", "3-column"]
+              "tags": [
+                "gallery",
+                "grid",
+                "3-column"
+              ]
             },
             {
               "id": "gallery-grid-2col",
@@ -1852,7 +3477,7 @@
                   "name": "2-Column Grid"
                 },
                 "vi": {
-                  "name": "Lưới 2 cột"
+                  "name": "L\u01b0\u1edbi 2 c\u1ed9t"
                 }
               },
               "props": {
@@ -1860,7 +3485,11 @@
                 "gap": 12,
                 "aspectRatio": "4/3"
               },
-              "tags": ["gallery", "grid", "2-column"]
+              "tags": [
+                "gallery",
+                "grid",
+                "2-column"
+              ]
             },
             {
               "id": "gallery-grid-4col",
@@ -1872,7 +3501,7 @@
                   "name": "4-Column Grid"
                 },
                 "vi": {
-                  "name": "Lưới 4 cột"
+                  "name": "L\u01b0\u1edbi 4 c\u1ed9t"
                 }
               },
               "props": {
@@ -1880,7 +3509,11 @@
                 "gap": 4,
                 "aspectRatio": "1/1"
               },
-              "tags": ["gallery", "grid", "4-column"]
+              "tags": [
+                "gallery",
+                "grid",
+                "4-column"
+              ]
             },
             {
               "id": "gallery-grid-portrait",
@@ -1892,7 +3525,7 @@
                   "name": "Portrait Grid"
                 },
                 "vi": {
-                  "name": "Lưới dọc"
+                  "name": "L\u01b0\u1edbi d\u1ecdc"
                 }
               },
               "props": {
@@ -1900,7 +3533,11 @@
                 "gap": 8,
                 "aspectRatio": "3/4"
               },
-              "tags": ["gallery", "grid", "portrait"]
+              "tags": [
+                "gallery",
+                "grid",
+                "portrait"
+              ]
             },
             {
               "id": "gallery-grid-widescreen",
@@ -1912,7 +3549,7 @@
                   "name": "Widescreen Grid"
                 },
                 "vi": {
-                  "name": "Lưới màn hình rộng"
+                  "name": "L\u01b0\u1edbi m\u00e0n h\u00ecnh r\u1ed9ng"
                 }
               },
               "props": {
@@ -1920,7 +3557,11 @@
                 "gap": 16,
                 "aspectRatio": "16/9"
               },
-              "tags": ["gallery", "grid", "widescreen"]
+              "tags": [
+                "gallery",
+                "grid",
+                "widescreen"
+              ]
             },
             {
               "id": "gallery-masonry-3",
@@ -1932,7 +3573,11 @@
                 "gap": 8,
                 "layout": "masonry"
               },
-              "tags": ["masonry", "gallery", "3-col"]
+              "tags": [
+                "masonry",
+                "gallery",
+                "3-col"
+              ]
             },
             {
               "id": "gallery-masonry-2",
@@ -1944,7 +3589,11 @@
                 "gap": 12,
                 "layout": "masonry"
               },
-              "tags": ["masonry", "gallery", "2-col"]
+              "tags": [
+                "masonry",
+                "gallery",
+                "2-col"
+              ]
             }
           ]
         },
@@ -1955,7 +3604,7 @@
           "layout": "preview",
           "i18n": {
             "en": "Pro Galleries",
-            "vi": "Thư viện chuyên nghiệp"
+            "vi": "Th\u01b0 vi\u1ec7n chuy\u00ean nghi\u1ec7p"
           },
           "items": [
             {
@@ -2012,7 +3661,7 @@
           "layout": "preview",
           "i18n": {
             "en": "Slider Galleries",
-            "vi": "Bộ sưu tập trình chiếu"
+            "vi": "B\u1ed9 s\u01b0u t\u1eadp tr\u00ecnh chi\u1ebfu"
           },
           "items": [
             {
@@ -2020,8 +3669,10 @@
               "componentType": "GallerySlider",
               "name": "Basic Slider",
               "props": {
+                "slideCount": 5,
                 "showArrows": true,
                 "showDots": true,
+                "loop": true,
                 "aspectRatio": "16/9",
                 "shape": "rectangle"
               }
@@ -2031,8 +3682,10 @@
               "componentType": "GallerySlider",
               "name": "Square Slider",
               "props": {
+                "slideCount": 5,
                 "showArrows": true,
                 "showDots": true,
+                "loop": true,
                 "aspectRatio": "1/1",
                 "shape": "rectangle"
               }
@@ -2042,8 +3695,10 @@
               "componentType": "GallerySlider",
               "name": "Circle Slider",
               "props": {
+                "slideCount": 5,
                 "showArrows": true,
                 "showDots": true,
+                "loop": true,
                 "aspectRatio": "1/1",
                 "shape": "circle"
               }
@@ -2053,8 +3708,10 @@
               "componentType": "GallerySlider",
               "name": "Oval Slider",
               "props": {
+                "slideCount": 5,
                 "showArrows": true,
                 "showDots": true,
+                "loop": true,
                 "aspectRatio": "4/3",
                 "shape": "oval"
               }
@@ -2064,9 +3721,11 @@
               "componentType": "GallerySlider",
               "name": "Portrait Slider",
               "props": {
+                "slideCount": 5,
                 "showArrows": true,
                 "showDots": false,
-                "aspectRatio": "4/3",
+                "loop": true,
+                "aspectRatio": "3/4",
                 "shape": "rectangle"
               }
             }
@@ -2081,7 +3740,7 @@
       "order": 4,
       "i18n": {
         "en": "Decorative",
-        "vi": "Trang trí"
+        "vi": "Trang tr\u00ed"
       },
       "types": [
         {
@@ -2090,7 +3749,7 @@
           "order": 0,
           "i18n": {
             "en": "Basic Shapes",
-            "vi": "Hình cơ bản"
+            "vi": "H\u00ecnh c\u01a1 b\u1ea3n"
           },
           "items": [
             {
@@ -2103,7 +3762,7 @@
                   "name": "Rectangle"
                 },
                 "vi": {
-                  "name": "Hình chữ nhật"
+                  "name": "H\u00ecnh ch\u1eef nh\u1eadt"
                 }
               },
               "props": {
@@ -2114,7 +3773,11 @@
                 "width": "120px",
                 "height": "80px"
               },
-              "tags": ["shape", "rectangle", "box"]
+              "tags": [
+                "shape",
+                "rectangle",
+                "box"
+              ]
             },
             {
               "id": "shape-circle",
@@ -2126,7 +3789,7 @@
                   "name": "Circle"
                 },
                 "vi": {
-                  "name": "Hình tròn"
+                  "name": "H\u00ecnh tr\u00f2n"
                 }
               },
               "props": {
@@ -2137,7 +3800,11 @@
                 "width": "100px",
                 "height": "100px"
               },
-              "tags": ["shape", "circle", "round"]
+              "tags": [
+                "shape",
+                "circle",
+                "round"
+              ]
             },
             {
               "id": "shape-triangle",
@@ -2149,7 +3816,7 @@
                   "name": "Triangle"
                 },
                 "vi": {
-                  "name": "Hình tam giác"
+                  "name": "H\u00ecnh tam gi\u00e1c"
                 }
               },
               "props": {
@@ -2160,7 +3827,10 @@
                 "width": "100px",
                 "height": "100px"
               },
-              "tags": ["shape", "triangle"]
+              "tags": [
+                "shape",
+                "triangle"
+              ]
             },
             {
               "id": "shape-star",
@@ -2172,7 +3842,7 @@
                   "name": "Star"
                 },
                 "vi": {
-                  "name": "Ngôi sao"
+                  "name": "Ng\u00f4i sao"
                 }
               },
               "props": {
@@ -2183,7 +3853,11 @@
                 "width": "100px",
                 "height": "100px"
               },
-              "tags": ["shape", "star", "favorite"]
+              "tags": [
+                "shape",
+                "star",
+                "favorite"
+              ]
             },
             {
               "id": "shape-heart",
@@ -2195,7 +3869,7 @@
                   "name": "Heart"
                 },
                 "vi": {
-                  "name": "Trái tim"
+                  "name": "Tr\u00e1i tim"
                 }
               },
               "props": {
@@ -2206,7 +3880,11 @@
                 "width": "100px",
                 "height": "100px"
               },
-              "tags": ["shape", "heart", "love"]
+              "tags": [
+                "shape",
+                "heart",
+                "love"
+              ]
             },
             {
               "id": "shape-hexagon",
@@ -2218,7 +3896,7 @@
                   "name": "Hexagon"
                 },
                 "vi": {
-                  "name": "Lục giác"
+                  "name": "L\u1ee5c gi\u00e1c"
                 }
               },
               "props": {
@@ -2229,7 +3907,10 @@
                 "width": "100px",
                 "height": "100px"
               },
-              "tags": ["shape", "hexagon"]
+              "tags": [
+                "shape",
+                "hexagon"
+              ]
             },
             {
               "id": "shape-diamond",
@@ -2241,7 +3922,7 @@
                   "name": "Diamond"
                 },
                 "vi": {
-                  "name": "Kim cương"
+                  "name": "Kim c\u01b0\u01a1ng"
                 }
               },
               "props": {
@@ -2252,7 +3933,10 @@
                 "width": "80px",
                 "height": "80px"
               },
-              "tags": ["shape", "diamond"]
+              "tags": [
+                "shape",
+                "diamond"
+              ]
             },
             {
               "id": "shape-blob",
@@ -2264,7 +3948,7 @@
                   "name": "Blob"
                 },
                 "vi": {
-                  "name": "Hình loang"
+                  "name": "H\u00ecnh loang"
                 }
               },
               "props": {
@@ -2275,7 +3959,12 @@
                 "width": "150px",
                 "height": "150px"
               },
-              "tags": ["shape", "blob", "organic", "decorative"]
+              "tags": [
+                "shape",
+                "blob",
+                "organic",
+                "decorative"
+              ]
             }
           ]
         },
@@ -2285,7 +3974,7 @@
           "order": 1,
           "i18n": {
             "en": "Arrows",
-            "vi": "Mũi tên"
+            "vi": "M\u0169i t\u00ean"
           },
           "items": [
             {
@@ -2298,7 +3987,7 @@
                   "name": "Arrow Right"
                 },
                 "vi": {
-                  "name": "Mũi tên phải"
+                  "name": "M\u0169i t\u00ean ph\u1ea3i"
                 }
               },
               "props": {
@@ -2309,7 +3998,11 @@
                 "width": "80px",
                 "height": "50px"
               },
-              "tags": ["arrow", "right", "direction"]
+              "tags": [
+                "arrow",
+                "right",
+                "direction"
+              ]
             },
             {
               "id": "shape-arrow-left",
@@ -2321,7 +4014,7 @@
                   "name": "Arrow Left"
                 },
                 "vi": {
-                  "name": "Mũi tên trái"
+                  "name": "M\u0169i t\u00ean tr\u00e1i"
                 }
               },
               "props": {
@@ -2332,7 +4025,11 @@
                 "width": "80px",
                 "height": "50px"
               },
-              "tags": ["arrow", "left", "direction"]
+              "tags": [
+                "arrow",
+                "left",
+                "direction"
+              ]
             },
             {
               "id": "shape-arrow-up",
@@ -2344,7 +4041,7 @@
                   "name": "Arrow Up"
                 },
                 "vi": {
-                  "name": "Mũi tên lên"
+                  "name": "M\u0169i t\u00ean l\u00ean"
                 }
               },
               "props": {
@@ -2355,7 +4052,11 @@
                 "width": "50px",
                 "height": "80px"
               },
-              "tags": ["arrow", "up", "direction"]
+              "tags": [
+                "arrow",
+                "up",
+                "direction"
+              ]
             },
             {
               "id": "shape-arrow-down",
@@ -2367,7 +4068,7 @@
                   "name": "Arrow Down"
                 },
                 "vi": {
-                  "name": "Mũi tên xuống"
+                  "name": "M\u0169i t\u00ean xu\u1ed1ng"
                 }
               },
               "props": {
@@ -2378,7 +4079,11 @@
                 "width": "50px",
                 "height": "80px"
               },
-              "tags": ["arrow", "down", "direction"]
+              "tags": [
+                "arrow",
+                "down",
+                "direction"
+              ]
             }
           ]
         },
@@ -2388,7 +4093,7 @@
           "order": 2,
           "i18n": {
             "en": "Lines",
-            "vi": "Đường kẻ"
+            "vi": "\u0110\u01b0\u1eddng k\u1ebb"
           },
           "items": [
             {
@@ -2401,7 +4106,7 @@
                   "name": "Solid Line"
                 },
                 "vi": {
-                  "name": "Đường liền"
+                  "name": "\u0110\u01b0\u1eddng li\u1ec1n"
                 }
               },
               "props": {
@@ -2412,7 +4117,11 @@
               "style": {
                 "width": "100%"
               },
-              "tags": ["divider", "line", "solid"]
+              "tags": [
+                "divider",
+                "line",
+                "solid"
+              ]
             },
             {
               "id": "divider-thick",
@@ -2424,7 +4133,7 @@
                   "name": "Thick Line"
                 },
                 "vi": {
-                  "name": "Đường dày"
+                  "name": "\u0110\u01b0\u1eddng d\u00e0y"
                 }
               },
               "props": {
@@ -2435,7 +4144,12 @@
               "style": {
                 "width": "80px"
               },
-              "tags": ["divider", "line", "thick", "accent"]
+              "tags": [
+                "divider",
+                "line",
+                "thick",
+                "accent"
+              ]
             },
             {
               "id": "divider-accent",
@@ -2447,7 +4161,7 @@
                   "name": "Accent Line"
                 },
                 "vi": {
-                  "name": "Đường nhấn"
+                  "name": "\u0110\u01b0\u1eddng nh\u1ea5n"
                 }
               },
               "props": {
@@ -2458,7 +4172,12 @@
               "style": {
                 "width": "60px"
               },
-              "tags": ["divider", "line", "accent", "color"]
+              "tags": [
+                "divider",
+                "line",
+                "accent",
+                "color"
+              ]
             },
             {
               "id": "divider-vertical",
@@ -2470,7 +4189,7 @@
                   "name": "Vertical Line"
                 },
                 "vi": {
-                  "name": "Đường dọc"
+                  "name": "\u0110\u01b0\u1eddng d\u1ecdc"
                 }
               },
               "props": {
@@ -2482,7 +4201,11 @@
                 "height": "80px",
                 "width": "1px"
               },
-              "tags": ["divider", "line", "vertical"]
+              "tags": [
+                "divider",
+                "line",
+                "vertical"
+              ]
             }
           ]
         }
@@ -2505,7 +4228,7 @@
           "layout": "preview",
           "i18n": {
             "en": "Themed Menus",
-            "vi": "Menu theo chủ đề"
+            "vi": "Menu theo ch\u1ee7 \u0111\u1ec1"
           },
           "items": [
             {
@@ -2514,15 +4237,31 @@
               "name": "Plain Menu",
               "thumbnail": null,
               "i18n": {
-                "en": { "name": "Plain Menu" },
-                "vi": { "name": "Menu đơn giản" }
+                "en": {
+                  "name": "Plain Menu"
+                },
+                "vi": {
+                  "name": "Menu \u0111\u01a1n gi\u1ea3n"
+                }
               },
               "props": {
                 "items": [
-                  { "label": "Home", "href": "#" },
-                  { "label": "About", "href": "#" },
-                  { "label": "Gallery", "href": "#" },
-                  { "label": "Contact", "href": "#" }
+                  {
+                    "label": "Home",
+                    "href": "#"
+                  },
+                  {
+                    "label": "About",
+                    "href": "#"
+                  },
+                  {
+                    "label": "Gallery",
+                    "href": "#"
+                  },
+                  {
+                    "label": "Contact",
+                    "href": "#"
+                  }
                 ],
                 "layout": "horizontal",
                 "mobileHamburger": true,
@@ -2536,7 +4275,13 @@
                 "activeIndex": 0,
                 "itemStyle": "plain"
               },
-              "tags": ["menu", "horizontal", "plain", "navigation", "themed"]
+              "tags": [
+                "menu",
+                "horizontal",
+                "plain",
+                "navigation",
+                "themed"
+              ]
             },
             {
               "id": "menu-themed-underline-all",
@@ -2544,15 +4289,31 @@
               "name": "Underline Menu",
               "thumbnail": null,
               "i18n": {
-                "en": { "name": "Underline Menu" },
-                "vi": { "name": "Menu gạch chân" }
+                "en": {
+                  "name": "Underline Menu"
+                },
+                "vi": {
+                  "name": "Menu g\u1ea1ch ch\u00e2n"
+                }
               },
               "props": {
                 "items": [
-                  { "label": "Home", "href": "#" },
-                  { "label": "About", "href": "#" },
-                  { "label": "Gallery", "href": "#" },
-                  { "label": "Contact", "href": "#" }
+                  {
+                    "label": "Home",
+                    "href": "#"
+                  },
+                  {
+                    "label": "About",
+                    "href": "#"
+                  },
+                  {
+                    "label": "Gallery",
+                    "href": "#"
+                  },
+                  {
+                    "label": "Contact",
+                    "href": "#"
+                  }
                 ],
                 "layout": "horizontal",
                 "mobileHamburger": true,
@@ -2566,7 +4327,13 @@
                 "activeIndex": 0,
                 "itemStyle": "underline-all"
               },
-              "tags": ["menu", "horizontal", "underline", "navigation", "themed"]
+              "tags": [
+                "menu",
+                "horizontal",
+                "underline",
+                "navigation",
+                "themed"
+              ]
             },
             {
               "id": "menu-themed-boxed-all",
@@ -2574,15 +4341,31 @@
               "name": "Boxed Menu",
               "thumbnail": null,
               "i18n": {
-                "en": { "name": "Boxed Menu" },
-                "vi": { "name": "Menu viền khung" }
+                "en": {
+                  "name": "Boxed Menu"
+                },
+                "vi": {
+                  "name": "Menu vi\u1ec1n khung"
+                }
               },
               "props": {
                 "items": [
-                  { "label": "Home", "href": "#" },
-                  { "label": "About", "href": "#" },
-                  { "label": "Gallery", "href": "#" },
-                  { "label": "Contact", "href": "#" }
+                  {
+                    "label": "Home",
+                    "href": "#"
+                  },
+                  {
+                    "label": "About",
+                    "href": "#"
+                  },
+                  {
+                    "label": "Gallery",
+                    "href": "#"
+                  },
+                  {
+                    "label": "Contact",
+                    "href": "#"
+                  }
                 ],
                 "layout": "horizontal",
                 "mobileHamburger": true,
@@ -2596,7 +4379,13 @@
                 "activeIndex": 0,
                 "itemStyle": "boxed-all"
               },
-              "tags": ["menu", "horizontal", "boxed", "navigation", "themed"]
+              "tags": [
+                "menu",
+                "horizontal",
+                "boxed",
+                "navigation",
+                "themed"
+              ]
             }
           ]
         },
@@ -2616,15 +4405,31 @@
               "name": "Classic Nav",
               "thumbnail": null,
               "i18n": {
-                "en": { "name": "Classic Nav" },
-                "vi": { "name": "Menu cổ điển" }
+                "en": {
+                  "name": "Classic Nav"
+                },
+                "vi": {
+                  "name": "Menu c\u1ed5 \u0111i\u1ec3n"
+                }
               },
               "props": {
                 "items": [
-                  { "label": "Home", "href": "#" },
-                  { "label": "About", "href": "#" },
-                  { "label": "Gallery", "href": "#" },
-                  { "label": "Contact", "href": "#" }
+                  {
+                    "label": "Home",
+                    "href": "#"
+                  },
+                  {
+                    "label": "About",
+                    "href": "#"
+                  },
+                  {
+                    "label": "Gallery",
+                    "href": "#"
+                  },
+                  {
+                    "label": "Contact",
+                    "href": "#"
+                  }
                 ],
                 "layout": "horizontal",
                 "mobileHamburger": true,
@@ -2638,7 +4443,12 @@
                 "activeIndex": 1,
                 "itemStyle": "plain"
               },
-              "tags": ["menu", "horizontal", "classic", "navigation"]
+              "tags": [
+                "menu",
+                "horizontal",
+                "classic",
+                "navigation"
+              ]
             },
             {
               "id": "menu-horizontal-pill-outlined",
@@ -2646,15 +4456,31 @@
               "name": "Pill Nav (Green)",
               "thumbnail": null,
               "i18n": {
-                "en": { "name": "Pill Nav (Green)" },
-                "vi": { "name": "Menu viên thuốc xanh" }
+                "en": {
+                  "name": "Pill Nav (Green)"
+                },
+                "vi": {
+                  "name": "Menu vi\u00ean thu\u1ed1c xanh"
+                }
               },
               "props": {
                 "items": [
-                  { "label": "Home", "href": "#" },
-                  { "label": "About", "href": "#" },
-                  { "label": "Gallery", "href": "#" },
-                  { "label": "Contact", "href": "#" }
+                  {
+                    "label": "Home",
+                    "href": "#"
+                  },
+                  {
+                    "label": "About",
+                    "href": "#"
+                  },
+                  {
+                    "label": "Gallery",
+                    "href": "#"
+                  },
+                  {
+                    "label": "Contact",
+                    "href": "#"
+                  }
                 ],
                 "layout": "horizontal",
                 "mobileHamburger": true,
@@ -2670,7 +4496,13 @@
                 "activeIndex": 1,
                 "itemStyle": "pill-outlined"
               },
-              "tags": ["menu", "horizontal", "pill", "outlined", "green"]
+              "tags": [
+                "menu",
+                "horizontal",
+                "pill",
+                "outlined",
+                "green"
+              ]
             },
             {
               "id": "menu-horizontal-dark-active",
@@ -2678,15 +4510,31 @@
               "name": "Dark Active Nav",
               "thumbnail": null,
               "i18n": {
-                "en": { "name": "Dark Active Nav" },
-                "vi": { "name": "Menu nền tối" }
+                "en": {
+                  "name": "Dark Active Nav"
+                },
+                "vi": {
+                  "name": "Menu n\u1ec1n t\u1ed1i"
+                }
               },
               "props": {
                 "items": [
-                  { "label": "Home", "href": "#" },
-                  { "label": "About", "href": "#" },
-                  { "label": "Gallery", "href": "#" },
-                  { "label": "Contact", "href": "#" }
+                  {
+                    "label": "Home",
+                    "href": "#"
+                  },
+                  {
+                    "label": "About",
+                    "href": "#"
+                  },
+                  {
+                    "label": "Gallery",
+                    "href": "#"
+                  },
+                  {
+                    "label": "Contact",
+                    "href": "#"
+                  }
                 ],
                 "layout": "horizontal",
                 "mobileHamburger": true,
@@ -2702,7 +4550,13 @@
                 "activeIndex": 1,
                 "itemStyle": "filled"
               },
-              "tags": ["menu", "horizontal", "dark", "filled", "bordered"]
+              "tags": [
+                "menu",
+                "horizontal",
+                "dark",
+                "filled",
+                "bordered"
+              ]
             },
             {
               "id": "menu-horizontal-underline-spaced",
@@ -2710,15 +4564,31 @@
               "name": "Underline Spaced Nav",
               "thumbnail": null,
               "i18n": {
-                "en": { "name": "Underline Spaced Nav" },
-                "vi": { "name": "Menu gạch chân cách chữ" }
+                "en": {
+                  "name": "Underline Spaced Nav"
+                },
+                "vi": {
+                  "name": "Menu g\u1ea1ch ch\u00e2n c\u00e1ch ch\u1eef"
+                }
               },
               "props": {
                 "items": [
-                  { "label": "Home", "href": "#" },
-                  { "label": "About", "href": "#" },
-                  { "label": "Gallery", "href": "#" },
-                  { "label": "Contact", "href": "#" }
+                  {
+                    "label": "Home",
+                    "href": "#"
+                  },
+                  {
+                    "label": "About",
+                    "href": "#"
+                  },
+                  {
+                    "label": "Gallery",
+                    "href": "#"
+                  },
+                  {
+                    "label": "Contact",
+                    "href": "#"
+                  }
                 ],
                 "layout": "horizontal",
                 "mobileHamburger": true,
@@ -2733,7 +4603,13 @@
                 "activeIndex": 1,
                 "itemStyle": "underline"
               },
-              "tags": ["menu", "horizontal", "underline", "spaced", "purple"]
+              "tags": [
+                "menu",
+                "horizontal",
+                "underline",
+                "spaced",
+                "purple"
+              ]
             },
             {
               "id": "menu-horizontal-pill-all-coral",
@@ -2741,15 +4617,31 @@
               "name": "Pill All Nav (Coral)",
               "thumbnail": null,
               "i18n": {
-                "en": { "name": "Pill All Nav (Coral)" },
-                "vi": { "name": "Menu viên thuốc san hô" }
+                "en": {
+                  "name": "Pill All Nav (Coral)"
+                },
+                "vi": {
+                  "name": "Menu vi\u00ean thu\u1ed1c san h\u00f4"
+                }
               },
               "props": {
                 "items": [
-                  { "label": "Home", "href": "#" },
-                  { "label": "About", "href": "#" },
-                  { "label": "Gallery", "href": "#" },
-                  { "label": "Contact", "href": "#" }
+                  {
+                    "label": "Home",
+                    "href": "#"
+                  },
+                  {
+                    "label": "About",
+                    "href": "#"
+                  },
+                  {
+                    "label": "Gallery",
+                    "href": "#"
+                  },
+                  {
+                    "label": "Contact",
+                    "href": "#"
+                  }
                 ],
                 "layout": "horizontal",
                 "mobileHamburger": true,
@@ -2763,7 +4655,13 @@
                 "activeIndex": 1,
                 "itemStyle": "pill-all"
               },
-              "tags": ["menu", "horizontal", "pill", "coral", "orange"]
+              "tags": [
+                "menu",
+                "horizontal",
+                "pill",
+                "coral",
+                "orange"
+              ]
             },
             {
               "id": "menu-horizontal-button-all",
@@ -2771,15 +4669,31 @@
               "name": "Button Nav (Blue)",
               "thumbnail": null,
               "i18n": {
-                "en": { "name": "Button Nav (Blue)" },
-                "vi": { "name": "Menu nút xanh" }
+                "en": {
+                  "name": "Button Nav (Blue)"
+                },
+                "vi": {
+                  "name": "Menu n\u00fat xanh"
+                }
               },
               "props": {
                 "items": [
-                  { "label": "Home", "href": "#" },
-                  { "label": "About", "href": "#" },
-                  { "label": "Gallery", "href": "#" },
-                  { "label": "Contact", "href": "#" }
+                  {
+                    "label": "Home",
+                    "href": "#"
+                  },
+                  {
+                    "label": "About",
+                    "href": "#"
+                  },
+                  {
+                    "label": "Gallery",
+                    "href": "#"
+                  },
+                  {
+                    "label": "Contact",
+                    "href": "#"
+                  }
                 ],
                 "layout": "horizontal",
                 "mobileHamburger": true,
@@ -2793,7 +4707,13 @@
                 "activeIndex": 1,
                 "itemStyle": "button-all"
               },
-              "tags": ["menu", "horizontal", "button", "blue", "solid"]
+              "tags": [
+                "menu",
+                "horizontal",
+                "button",
+                "blue",
+                "solid"
+              ]
             }
           ]
         },
@@ -2818,14 +4738,28 @@
                   "name": "Hamburger Menu",
                   "description": "Best for mobile-first layouts"
                 },
-                "vi": { "name": "Menu hamburger" }
+                "vi": {
+                  "name": "Menu hamburger"
+                }
               },
               "props": {
                 "items": [
-                  { "label": "Home", "href": "#" },
-                  { "label": "About", "href": "#" },
-                  { "label": "Portfolio", "href": "#" },
-                  { "label": "Contact", "href": "#" }
+                  {
+                    "label": "Home",
+                    "href": "#"
+                  },
+                  {
+                    "label": "About",
+                    "href": "#"
+                  },
+                  {
+                    "label": "Portfolio",
+                    "href": "#"
+                  },
+                  {
+                    "label": "Contact",
+                    "href": "#"
+                  }
                 ],
                 "layout": "hamburger",
                 "mobileHamburger": true,
@@ -2833,7 +4767,12 @@
                 "activeColor": "#4f46e5",
                 "itemStyle": "plain"
               },
-              "tags": ["menu", "hamburger", "responsive", "mobile"]
+              "tags": [
+                "menu",
+                "hamburger",
+                "responsive",
+                "mobile"
+              ]
             }
           ]
         },
@@ -2844,7 +4783,7 @@
           "layout": "preview",
           "i18n": {
             "en": "Anchors",
-            "vi": "Neo cuộn"
+            "vi": "Neo cu\u1ed9n"
           },
           "items": [
             {
@@ -2854,14 +4793,23 @@
               "description": "Invisible anchor point for scroll-to navigation",
               "thumbnail": null,
               "i18n": {
-                "en": { "name": "Section Anchor" },
-                "vi": { "name": "Neo phần" }
+                "en": {
+                  "name": "Section Anchor"
+                },
+                "vi": {
+                  "name": "Neo ph\u1ea7n"
+                }
               },
               "props": {
                 "anchorId": "section-1",
                 "label": "Section 1"
               },
-              "tags": ["anchor", "scroll", "navigation", "target"]
+              "tags": [
+                "anchor",
+                "scroll",
+                "navigation",
+                "target"
+              ]
             },
             {
               "id": "anchor-top",
@@ -2869,482 +4817,22 @@
               "name": "Top Anchor",
               "thumbnail": null,
               "i18n": {
-                "en": { "name": "Top Anchor" },
-                "vi": { "name": "Neo đầu trang" }
+                "en": {
+                  "name": "Top Anchor"
+                },
+                "vi": {
+                  "name": "Neo \u0111\u1ea7u trang"
+                }
               },
               "props": {
                 "anchorId": "top",
                 "label": "Top of Page"
               },
-              "tags": ["anchor", "scroll", "top"]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "collection",
-      "label": "List",
-      "icon": "layout-list",
-      "order": 6,
-      "i18n": {
-        "en": "List",
-        "vi": "Danh sách"
-      },
-      "types": [
-        {
-          "id": "repeaters",
-          "label": "Repeaters",
-          "order": 0,
-          "layout": "list",
-          "i18n": {
-            "en": "Repeaters",
-            "vi": "Phần lặp"
-          },
-          "items": [
-            {
-              "id": "repeater-card-grid",
-              "componentType": "Repeater",
-              "name": "Card Grid",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Card Grid"
-                },
-                "vi": {
-                  "name": "Lưới thẻ"
-                }
-              },
-              "props": {
-                "count": 3,
-                "columns": 3,
-                "gap": 16
-              },
-              "tags": ["repeater", "card", "grid", "list"]
-            },
-            {
-              "id": "repeater-2col",
-              "componentType": "Repeater",
-              "name": "2-Column List",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "2-Column List"
-                },
-                "vi": {
-                  "name": "Danh sách 2 cột"
-                }
-              },
-              "props": {
-                "count": 4,
-                "columns": 2,
-                "gap": 20
-              },
-              "responsiveProps": {
-                "mobile": {
-                  "columns": 1
-                }
-              },
-              "tags": ["repeater", "2-column", "list"]
-            },
-            {
-              "id": "repeater-horizontal-row",
-              "componentType": "Repeater",
-              "name": "Horizontal Row",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Horizontal Row"
-                },
-                "vi": {
-                  "name": "Hàng ngang"
-                }
-              },
-              "props": {
-                "count": 4,
-                "columns": 4,
-                "gap": 16
-              },
-              "responsiveProps": {
-                "mobile": {
-                  "columns": 2
-                }
-              },
-              "tags": ["repeater", "horizontal", "row"]
-            },
-            {
-              "id": "repeater-testimonials",
-              "componentType": "Repeater",
-              "name": "Testimonials",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Testimonials"
-                },
-                "vi": {
-                  "name": "Đánh giá"
-                }
-              },
-              "props": {
-                "count": 3,
-                "columns": 3,
-                "gap": 24
-              },
-              "responsiveProps": {
-                "mobile": {
-                  "columns": 1
-                }
-              },
-              "tags": ["repeater", "testimonials", "reviews"]
-            },
-            {
-              "id": "repeater-team",
-              "componentType": "Repeater",
-              "name": "Team Grid",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Team Grid"
-                },
-                "vi": {
-                  "name": "Lưới nhóm"
-                }
-              },
-              "props": {
-                "count": 4,
-                "columns": 4,
-                "gap": 24
-              },
-              "responsiveProps": {
-                "tablet": {
-                  "columns": 2
-                },
-                "mobile": {
-                  "columns": 2
-                }
-              },
-              "tags": ["repeater", "team", "profiles"]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "container",
-      "label": "Box",
-      "icon": "box",
-      "order": 7,
-      "i18n": {
-        "en": "Box",
-        "vi": "Hộp"
-      },
-      "types": [
-        {
-          "id": "container-boxes",
-          "label": "Container Boxes",
-          "order": 0,
-          "i18n": {
-            "en": "Container Boxes",
-            "vi": "Hộp chứa"
-          },
-          "items": [
-            {
-              "id": "box-flex-column",
-              "componentType": "Container",
-              "name": "Flex Column",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Flex Column"
-                },
-                "vi": {
-                  "name": "Cột flex"
-                }
-              },
-              "props": {
-                "display": "flex",
-                "direction": "column",
-                "gap": 16,
-                "padding": 24
-              },
-              "style": {
-                "display": "flex",
-                "flexDirection": "column",
-                "gap": "16px",
-                "padding": "24px",
-                "width": "100%",
-                "minHeight": "80px"
-              },
-              "tags": ["container", "flex", "column", "layout"]
-            },
-            {
-              "id": "box-flex-row",
-              "componentType": "Container",
-              "name": "Flex Row",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Flex Row"
-                },
-                "vi": {
-                  "name": "Hàng flex"
-                }
-              },
-              "props": {
-                "display": "flex",
-                "direction": "row",
-                "gap": 16,
-                "padding": 24
-              },
-              "style": {
-                "display": "flex",
-                "flexDirection": "row",
-                "gap": "16px",
-                "padding": "24px",
-                "width": "100%",
-                "minHeight": "80px"
-              },
-              "responsiveStyle": {
-                "mobile": {
-                  "flexDirection": "column"
-                }
-              },
-              "tags": ["container", "flex", "row", "horizontal"]
-            },
-            {
-              "id": "box-card",
-              "componentType": "Container",
-              "name": "Card",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Card"
-                },
-                "vi": {
-                  "name": "Thẻ"
-                }
-              },
-              "props": {
-                "display": "flex",
-                "direction": "column",
-                "gap": 12,
-                "padding": 20
-              },
-              "style": {
-                "display": "flex",
-                "flexDirection": "column",
-                "gap": "12px",
-                "padding": "20px",
-                "width": "100%",
-                "borderRadius": "12px",
-                "backgroundColor": "#ffffff",
-                "boxShadow": "0 2px 8px rgba(0,0,0,0.08)",
-                "border": "1px solid #f3f4f6"
-              },
-              "tags": ["container", "card", "shadow", "rounded"]
-            },
-            {
-              "id": "box-centered",
-              "componentType": "Container",
-              "name": "Centered Box",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Centered Box"
-                },
-                "vi": {
-                  "name": "Hộp căn giữa"
-                }
-              },
-              "props": {
-                "display": "flex",
-                "direction": "column",
-                "gap": 16,
-                "padding": 48
-              },
-              "style": {
-                "display": "flex",
-                "flexDirection": "column",
-                "alignItems": "center",
-                "justifyContent": "center",
-                "gap": "16px",
-                "padding": "48px",
-                "width": "100%",
-                "textAlign": "center",
-                "minHeight": "200px"
-              },
-              "responsiveStyle": {
-                "mobile": {
-                  "padding": "24px"
-                }
-              },
-              "tags": ["container", "centered", "hero", "column"]
-            },
-            {
-              "id": "box-sidebar",
-              "componentType": "Container",
-              "name": "Sidebar Layout",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Sidebar Layout"
-                },
-                "vi": {
-                  "name": "Bố cục cạnh"
-                }
-              },
-              "props": {
-                "display": "flex",
-                "direction": "row",
-                "gap": 32,
-                "padding": 0
-              },
-              "style": {
-                "display": "flex",
-                "flexDirection": "row",
-                "gap": "32px",
-                "width": "100%",
-                "minHeight": "200px"
-              },
-              "responsiveStyle": {
-                "mobile": {
-                  "flexDirection": "column"
-                }
-              },
-              "tags": ["container", "sidebar", "two-column", "row"]
-            }
-          ]
-        },
-        {
-          "id": "styled-boxes",
-          "label": "Styled Boxes",
-          "order": 1,
-          "i18n": {
-            "en": "Styled Boxes",
-            "vi": "Hộp có kiểu dáng"
-          },
-          "items": [
-            {
-              "id": "box-glassmorphism",
-              "componentType": "Container",
-              "name": "Glass",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Glass"
-                },
-                "vi": {
-                  "name": "Kính"
-                }
-              },
-              "props": {
-                "display": "flex",
-                "direction": "column",
-                "gap": 12,
-                "padding": 24
-              },
-              "style": {
-                "display": "flex",
-                "flexDirection": "column",
-                "gap": "12px",
-                "padding": "24px",
-                "borderRadius": "16px",
-                "backgroundColor": "rgba(255,255,255,0.15)",
-                "backdropFilter": "blur(10px)",
-                "border": "1px solid rgba(255,255,255,0.3)",
-                "boxShadow": "0 8px 32px rgba(0,0,0,0.1)"
-              },
-              "tags": ["container", "glass", "glassmorphism", "blur", "transparent"]
-            },
-            {
-              "id": "box-gradient",
-              "componentType": "Container",
-              "name": "Gradient",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Gradient"
-                },
-                "vi": {
-                  "name": "Chuyển màu"
-                }
-              },
-              "props": {
-                "display": "flex",
-                "direction": "column",
-                "gap": 16,
-                "padding": 32
-              },
-              "style": {
-                "display": "flex",
-                "flexDirection": "column",
-                "gap": "16px",
-                "padding": "32px",
-                "borderRadius": "16px",
-                "background": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                "color": "#ffffff"
-              },
-              "tags": ["container", "gradient", "colorful"]
-            },
-            {
-              "id": "box-bordered",
-              "componentType": "Container",
-              "name": "Bordered",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Bordered"
-                },
-                "vi": {
-                  "name": "Có viền"
-                }
-              },
-              "props": {
-                "display": "flex",
-                "direction": "column",
-                "gap": 12,
-                "padding": 24
-              },
-              "style": {
-                "display": "flex",
-                "flexDirection": "column",
-                "gap": "12px",
-                "padding": "24px",
-                "borderRadius": "8px",
-                "border": "2px solid #e5e7eb",
-                "backgroundColor": "#ffffff"
-              },
-              "tags": ["container", "bordered", "outline", "white"]
-            },
-            {
-              "id": "box-dark",
-              "componentType": "Container",
-              "name": "Dark Box",
-              "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Dark Box"
-                },
-                "vi": {
-                  "name": "Hộp tối"
-                }
-              },
-              "props": {
-                "display": "flex",
-                "direction": "column",
-                "gap": 16,
-                "padding": 28
-              },
-              "style": {
-                "display": "flex",
-                "flexDirection": "column",
-                "gap": "16px",
-                "padding": "28px",
-                "borderRadius": "12px",
-                "backgroundColor": "#111827",
-                "color": "#f9fafb"
-              },
-              "tags": ["container", "dark", "black", "contrast"]
+              "tags": [
+                "anchor",
+                "scroll",
+                "top"
+              ]
             }
           ]
         }
@@ -3357,7 +4845,7 @@
       "order": 99,
       "i18n": {
         "en": "Cards",
-        "vi": "Thẻ"
+        "vi": "Th\u1ebb"
       },
       "types": [
         {
@@ -3367,7 +4855,7 @@
           "layout": "grid",
           "i18n": {
             "en": "Testimonial",
-            "vi": "Đánh giá"
+            "vi": "\u0110\u00e1nh gi\u00e1"
           },
           "items": [
             {
@@ -3397,7 +4885,11 @@
                 "padding": "24px",
                 "borderRadius": "12px"
               },
-              "tags": ["testimonial", "quote", "review"]
+              "tags": [
+                "testimonial",
+                "quote",
+                "review"
+              ]
             },
             {
               "id": "testimonial-emerald",
@@ -3410,7 +4902,7 @@
                   "name": "Emerald"
                 },
                 "vi": {
-                  "name": "Xanh lá"
+                  "name": "Xanh l\u00e1"
                 }
               },
               "props": {
@@ -3426,7 +4918,11 @@
                 "padding": "24px",
                 "borderRadius": "12px"
               },
-              "tags": ["testimonial", "quote", "green"]
+              "tags": [
+                "testimonial",
+                "quote",
+                "green"
+              ]
             },
             {
               "id": "testimonial-rose",
@@ -3439,7 +4935,7 @@
                   "name": "Rose"
                 },
                 "vi": {
-                  "name": "Hồng"
+                  "name": "H\u1ed3ng"
                 }
               },
               "props": {
@@ -3455,7 +4951,11 @@
                 "padding": "24px",
                 "borderRadius": "12px"
               },
-              "tags": ["testimonial", "quote", "rose"]
+              "tags": [
+                "testimonial",
+                "quote",
+                "rose"
+              ]
             }
           ]
         },
@@ -3466,7 +4966,7 @@
           "layout": "grid",
           "i18n": {
             "en": "Pricing",
-            "vi": "Giá cả"
+            "vi": "Gi\u00e1 c\u1ea3"
           },
           "items": [
             {
@@ -3480,7 +4980,7 @@
                   "name": "Basic"
                 },
                 "vi": {
-                  "name": "Cơ bản"
+                  "name": "C\u01a1 b\u1ea3n"
                 }
               },
               "props": {
@@ -3498,7 +4998,11 @@
                 "padding": "28px 24px",
                 "borderRadius": "16px"
               },
-              "tags": ["pricing", "plan", "starter"]
+              "tags": [
+                "pricing",
+                "plan",
+                "starter"
+              ]
             },
             {
               "id": "pricing-pro",
@@ -3511,7 +5015,7 @@
                   "name": "Pro (highlighted)"
                 },
                 "vi": {
-                  "name": "Pro (nổi bật)"
+                  "name": "Pro (n\u1ed5i b\u1eadt)"
                 }
               },
               "props": {
@@ -3529,7 +5033,12 @@
                 "padding": "28px 24px",
                 "borderRadius": "16px"
               },
-              "tags": ["pricing", "plan", "pro", "popular"]
+              "tags": [
+                "pricing",
+                "plan",
+                "pro",
+                "popular"
+              ]
             },
             {
               "id": "pricing-enterprise",
@@ -3542,7 +5051,7 @@
                   "name": "Enterprise"
                 },
                 "vi": {
-                  "name": "Doanh nghiệp"
+                  "name": "Doanh nghi\u1ec7p"
                 }
               },
               "props": {
@@ -3560,7 +5069,11 @@
                 "padding": "28px 24px",
                 "borderRadius": "16px"
               },
-              "tags": ["pricing", "plan", "enterprise"]
+              "tags": [
+                "pricing",
+                "plan",
+                "enterprise"
+              ]
             }
           ]
         },
@@ -3577,15 +5090,15 @@
             {
               "id": "hero-indigo-violet",
               "componentType": "HeroBanner",
-              "name": "Indigo → Violet",
+              "name": "Indigo \u2192 Violet",
               "description": "Bold hero heading with indigo-to-violet gradient",
               "thumbnail": null,
               "i18n": {
                 "en": {
-                  "name": "Indigo → Violet"
+                  "name": "Indigo \u2192 Violet"
                 },
                 "vi": {
-                  "name": "Indigo → Tím"
+                  "name": "Indigo \u2192 T\u00edm"
                 }
               },
               "props": {
@@ -3601,20 +5114,25 @@
                 "width": "100%",
                 "padding": "80px 40px"
               },
-              "tags": ["hero", "gradient", "heading", "indigo"]
+              "tags": [
+                "hero",
+                "gradient",
+                "heading",
+                "indigo"
+              ]
             },
             {
               "id": "hero-rose-orange",
               "componentType": "HeroBanner",
-              "name": "Rose → Orange",
+              "name": "Rose \u2192 Orange",
               "description": "Warm hero heading with rose-to-orange gradient",
               "thumbnail": null,
               "i18n": {
                 "en": {
-                  "name": "Rose → Orange"
+                  "name": "Rose \u2192 Orange"
                 },
                 "vi": {
-                  "name": "Hồng → Cam"
+                  "name": "H\u1ed3ng \u2192 Cam"
                 }
               },
               "props": {
@@ -3630,7 +5148,12 @@
                 "width": "100%",
                 "padding": "80px 40px"
               },
-              "tags": ["hero", "gradient", "heading", "warm"]
+              "tags": [
+                "hero",
+                "gradient",
+                "heading",
+                "warm"
+              ]
             },
             {
               "id": "hero-dark",
@@ -3643,7 +5166,7 @@
                   "name": "Dark"
                 },
                 "vi": {
-                  "name": "Tối"
+                  "name": "T\u1ed1i"
                 }
               },
               "props": {
@@ -3659,407 +5182,10 @@
                 "width": "100%",
                 "padding": "80px 40px"
               },
-              "tags": ["hero", "dark", "heading"]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "designed_section",
-      "label": "Designed Section",
-      "icon": "layout-template",
-      "order": 100,
-      "i18n": {
-        "en": "Designed Section",
-        "vi": "Section Mẫu"
-      },
-      "types": [
-        {
-          "id": "welcome",
-          "label": "Welcome",
-          "order": 0,
-          "layout": "grid",
-          "i18n": {
-            "en": "Welcome",
-            "vi": "Chào mừng"
-          },
-          "items": [
-            {
-              "id": "welcome-1",
-              "componentType": "Section",
-              "name": "Hero Welcome",
-              "props": {
-                "minHeight": 600
-              },
-              "style": {
-                "backgroundColor": "#ffffff",
-                "display": "flex",
-                "alignItems": "center",
-                "justifyContent": "center",
-                "padding": "80px 0"
-              },
-              "children": [
-                {
-                  "type": "Container",
-                  "style": {
-                    "display": "flex",
-                    "flexDirection": "column",
-                    "alignItems": "center",
-                    "textAlign": "center",
-                    "maxWidth": "800px"
-                  },
-                  "children": [
-                    {
-                      "type": "Text",
-                      "props": {
-                        "text": "<h1>WELCOME</h1>",
-                        "tag": "h1"
-                      },
-                      "style": {
-                        "fontSize": "56px",
-                        "fontWeight": "800",
-                        "letterSpacing": "-0.02em",
-                        "marginBottom": "24px"
-                      }
-                    },
-                    {
-                      "type": "Text",
-                      "props": {
-                        "text": "<p>Welcome visitors to your site with a short, engaging introduction. Double click to edit and add your own text.</p>",
-                        "tag": "p"
-                      },
-                      "style": {
-                        "fontSize": "18px",
-                        "color": "#6B7280",
-                        "lineHeight": "1.6",
-                        "marginBottom": "40px"
-                      }
-                    },
-                    {
-                      "type": "Button",
-                      "props": {
-                        "text": "Start Now",
-                        "variant": "primary"
-                      }
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "about",
-          "label": "About",
-          "order": 1,
-          "layout": "grid",
-          "i18n": {
-            "en": "About",
-            "vi": "Giới thiệu"
-          },
-          "items": [
-            {
-              "id": "about-1",
-              "componentType": "Section",
-              "name": "Split About",
-              "props": {
-                "minHeight": 500
-              },
-              "style": {
-                "backgroundColor": "#F9FAFB",
-                "display": "flex",
-                "alignItems": "center",
-                "padding": "80px 0"
-              },
-              "children": [
-                {
-                  "type": "Grid",
-                  "props": {
-                    "columns": 2,
-                    "gap": 48
-                  },
-                  "style": {
-                    "width": "100%",
-                    "maxWidth": "1200px",
-                    "margin": "0 auto"
-                  },
-                  "children": [
-                    {
-                      "type": "Container",
-                      "children": [
-                        {
-                          "type": "Text",
-                          "props": {
-                            "text": "<h2>Our Mission</h2>",
-                            "tag": "h2"
-                          },
-                          "style": {
-                            "fontSize": "40px",
-                            "fontWeight": "700",
-                            "marginBottom": "20px"
-                          }
-                        },
-                        {
-                          "type": "Text",
-                          "props": {
-                            "text": "<p>We are dedicated to providing the best experience for our users. Our team works tirelessly to innovate and solve complex problems.</p>",
-                            "tag": "p"
-                          },
-                          "style": {
-                            "fontSize": "16px",
-                            "color": "#4B5563",
-                            "lineHeight": "1.7"
-                          }
-                        }
-                      ]
-                    },
-                    {
-                      "type": "Image",
-                      "props": {
-                        "src": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80"
-                      },
-                      "style": {
-                        "borderRadius": "12px",
-                        "width": "100%",
-                        "height": "auto"
-                      }
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "services",
-          "label": "Services",
-          "order": 2,
-          "layout": "grid",
-          "i18n": {
-            "en": "Services",
-            "vi": "Dịch vụ"
-          },
-          "items": [
-            {
-              "id": "services-1",
-              "componentType": "Section",
-              "name": "Service Grid",
-              "props": {
-                "minHeight": 600
-              },
-              "style": {
-                "backgroundColor": "#ffffff",
-                "padding": "80px 0"
-              },
-              "children": [
-                {
-                  "type": "Text",
-                  "props": {
-                    "text": "<h2>Our Services</h2>",
-                    "tag": "h2"
-                  },
-                  "style": {
-                    "fontSize": "36px",
-                    "fontWeight": "700",
-                    "textAlign": "center",
-                    "marginBottom": "60px"
-                  }
-                },
-                {
-                  "type": "Grid",
-                  "props": {
-                    "columns": 3,
-                    "gap": 32
-                  },
-                  "style": {
-                    "width": "100%",
-                    "maxWidth": "1200px",
-                    "margin": "0 auto"
-                  },
-                  "children": [
-                    {
-                      "type": "Container",
-                      "style": {
-                        "padding": "32px",
-                        "backgroundColor": "#F3F4F6",
-                        "borderRadius": "16px",
-                        "textAlign": "center"
-                      },
-                      "children": [
-                        {
-                          "type": "Text",
-                          "props": {
-                            "text": "<h3>Design</h3>",
-                            "tag": "h3"
-                          },
-                          "style": {
-                            "fontSize": "20px",
-                            "fontWeight": "600",
-                            "marginBottom": "12px"
-                          }
-                        },
-                        {
-                          "type": "Text",
-                          "props": {
-                            "text": "<p>Creating beautiful and functional interfaces.</p>",
-                            "tag": "p"
-                          },
-                          "style": {
-                            "fontSize": "15px",
-                            "color": "#6B7280"
-                          }
-                        }
-                      ]
-                    },
-                    {
-                      "type": "Container",
-                      "style": {
-                        "padding": "32px",
-                        "backgroundColor": "#F3F4F6",
-                        "borderRadius": "16px",
-                        "textAlign": "center"
-                      },
-                      "children": [
-                        {
-                          "type": "Text",
-                          "props": {
-                            "text": "<h3>Development</h3>",
-                            "tag": "h3"
-                          },
-                          "style": {
-                            "fontSize": "20px",
-                            "fontWeight": "600",
-                            "marginBottom": "12px"
-                          }
-                        },
-                        {
-                          "type": "Text",
-                          "props": {
-                            "text": "<p>Building robust and scalable applications.</p>",
-                            "tag": "p"
-                          },
-                          "style": {
-                            "fontSize": "15px",
-                            "color": "#6B7280"
-                          }
-                        }
-                      ]
-                    },
-                    {
-                      "type": "Container",
-                      "style": {
-                        "padding": "32px",
-                        "backgroundColor": "#F3F4F6",
-                        "borderRadius": "16px",
-                        "textAlign": "center"
-                      },
-                      "children": [
-                        {
-                          "type": "Text",
-                          "props": {
-                            "text": "<h3>Strategy</h3>",
-                            "tag": "h3"
-                          },
-                          "style": {
-                            "fontSize": "20px",
-                            "fontWeight": "600",
-                            "marginBottom": "12px"
-                          }
-                        },
-                        {
-                          "type": "Text",
-                          "props": {
-                            "text": "<p>Planning for long-term success and growth.</p>",
-                            "tag": "p"
-                          },
-                          "style": {
-                            "fontSize": "15px",
-                            "color": "#6B7280"
-                          }
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "team",
-          "label": "Team",
-          "order": 3,
-          "layout": "grid",
-          "i18n": {
-            "en": "Team",
-            "vi": "Đội ngũ"
-          },
-          "items": [
-            {
-              "id": "team-1",
-              "componentType": "Section",
-              "name": "Team Section",
-              "props": {
-                "minHeight": 500
-              },
-              "style": {
-                "backgroundColor": "#F9FAFB",
-                "padding": "80px 0"
-              },
-              "children": [
-                {
-                  "type": "Text",
-                  "props": {
-                    "text": "<h2>Meet Our Team</h2>",
-                    "tag": "h2"
-                  },
-                  "style": {
-                    "fontSize": "36px",
-                    "fontWeight": "700",
-                    "textAlign": "center",
-                    "marginBottom": "60px"
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "contact",
-          "label": "Contact",
-          "order": 4,
-          "layout": "grid",
-          "i18n": {
-            "en": "Contact",
-            "vi": "Liên hệ"
-          },
-          "items": [
-            {
-              "id": "contact-1",
-              "componentType": "Section",
-              "name": "Contact Form Section",
-              "props": {
-                "minHeight": 600
-              },
-              "style": {
-                "backgroundColor": "#ffffff",
-                "padding": "80px 0"
-              },
-              "children": [
-                {
-                  "type": "Text",
-                  "props": {
-                    "text": "<h2>Get in Touch</h2>",
-                    "tag": "h2"
-                  },
-                  "style": {
-                    "fontSize": "36px",
-                    "fontWeight": "700",
-                    "textAlign": "center",
-                    "marginBottom": "60px"
-                  }
-                }
+              "tags": [
+                "hero",
+                "dark",
+                "heading"
               ]
             }
           ]

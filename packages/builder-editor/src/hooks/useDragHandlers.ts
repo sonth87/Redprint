@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import type { Point } from "@ui-builder/shared";
 import type { BuilderNode, PaletteDragData, Breakpoint, PaletteItem } from "@ui-builder/builder-core";
 import { v4 as uuidv4 } from "uuid";
-import { resolveContainerDropPosition } from "./useDropSlotResolver";
+import { resolveContainerDropPosition } from "../dragdrop/DropTargetResolver";
 import { resolveContainerLayoutType, type ContainerConfigResolver, getDropTargetSection } from "./dragUtils";
 import { generateRecursiveAddActions } from "./presetUtils";
 
@@ -24,14 +24,23 @@ interface UseDragHandlersOptions {
   onAfterDrop?: () => void;
 }
 
+export interface PaletteFlowDropTarget {
+  containerId: string;
+  insertIndex: number;
+  gridCell?: { col: number; row: number };
+}
+
 export interface UseDragHandlersReturn {
   handleDragStart: (componentType: string, e: React.DragEvent) => void;
   handlePaletteDragStart: (item: PaletteItem, e: React.DragEvent) => void;
   handleDrop: (e: React.DragEvent) => void;
   handleDragOver: (e: React.DragEvent) => void;
   handleDragEnter: (e: React.DragEvent) => void;
+  handleDragLeave: (e: React.DragEvent) => void;
   /** True while a Designed Section item is being dragged from the palette. */
   isDSDragging: boolean;
+  /** Flow/grid drop target while dragging from palette — used to render overlay. */
+  paletteFlowDropTarget: PaletteFlowDropTarget | null;
 }
 
 export function useDragHandlers({
@@ -44,6 +53,7 @@ export function useDragHandlers({
   onAfterDrop,
 }: UseDragHandlersOptions): UseDragHandlersReturn {
   const [isDSDragging, setIsDSDragging] = useState(false);
+  const [paletteFlowDropTarget, setPaletteFlowDropTarget] = useState<PaletteFlowDropTarget | null>(null);
 
   const buildPresetProps = useCallback((item: PaletteItem) => {
     if (!item.icon || item.props?.icon) {
@@ -94,6 +104,7 @@ export function useDragHandlers({
     (e: React.DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
+      setPaletteFlowDropTarget(null);
 
       // ── 1. Extract component type + optional preset data ─────────────────
       let componentType = "";
@@ -195,6 +206,7 @@ export function useDragHandlers({
 
       // ── 5. Compute insert index for flow/grid parents ─────────────────────
       let insertIndex: number | undefined;
+      let dropGridCell: { col: number; row: number } | undefined;
       if (nodes && getContainerConfig && canvasFrameRef.current) {
         const parentNode = nodes[parentId];
         if (parentNode) {
@@ -217,6 +229,7 @@ export function useDragHandlers({
                 getContainerConfig,
               );
               insertIndex = result.insertIndex;
+              dropGridCell = result.gridCell;
             }
           }
         }
@@ -274,6 +287,14 @@ export function useDragHandlers({
         }
       } else {
         // ── Standard ADD_NODE ─────────────────────────────────────────────
+        // Build grid placement style when dropping into a grid cell
+        const gridPlacementStyle = dropGridCell
+          ? {
+              gridColumn: `${dropGridCell.col + 1}`,
+              gridRow: `${dropGridCell.row + 1}`,
+              maxWidth: "100%",
+            }
+          : {};
         dispatch({
           type: "ADD_NODE",
           payload: {
@@ -283,7 +304,11 @@ export function useDragHandlers({
             position,
             insertIndex,
             ...(presetData?.props ? { props: presetData.props } : {}),
-            ...(presetData?.style ? { style: { ...presetData.style, ...(position ? { position: "absolute", left: `${position.x}px`, top: `${position.y}px` } : {}) } } : {}),
+            style: {
+              ...(presetData?.style ?? {}),
+              ...(position ? { position: "absolute", left: `${position.x}px`, top: `${position.y}px` } : {}),
+              ...gridPlacementStyle,
+            },
           },
           description: `Add ${componentType}`,
           groupId,
@@ -332,12 +357,55 @@ export function useDragHandlers({
     e.preventDefault();
     e.stopPropagation();
     e.dataTransfer.dropEffect = "copy";
-  }, []);
+
+    if (!nodes || !getContainerConfig || !canvasFrameRef.current) return;
+
+    // Use elementsFromPoint to find the deepest flow/grid container that the
+    // cursor is actually inside — avoids false positives from DOM ancestry walk.
+    const elements = globalThis.document.elementsFromPoint(e.clientX, e.clientY);
+    for (const el of elements) {
+      const candidateId = (el as HTMLElement).getAttribute?.("data-node-id");
+      if (!candidateId) continue;
+      const candidateNode = nodes[candidateId];
+      if (!candidateNode) continue;
+      const layoutType = resolveContainerLayoutType(candidateNode, getContainerConfig as ContainerConfigResolver | undefined);
+      if (layoutType === "absolute") continue;
+
+      // Cursor must be geometrically inside this container's bounding rect
+      const rect = (el as HTMLElement).getBoundingClientRect();
+      if (
+        e.clientX < rect.left || e.clientX > rect.right ||
+        e.clientY < rect.top  || e.clientY > rect.bottom
+      ) continue;
+
+      const siblings = Object.values(nodes).filter(n => n.parentId === candidateId);
+      const result = resolveContainerDropPosition(
+        e.clientX, e.clientY,
+        el as HTMLElement, candidateNode, siblings,
+        getContainerConfig,
+      );
+      setPaletteFlowDropTarget({
+        containerId: candidateId,
+        insertIndex: result.insertIndex,
+        gridCell: result.gridCell,
+      });
+      return;
+    }
+    setPaletteFlowDropTarget(null);
+  }, [rootNodeId, nodes, getContainerConfig, canvasFrameRef]);
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
   }, []);
 
-  return { handleDragStart, handlePaletteDragStart, handleDrop, handleDragOver, handleDragEnter, isDSDragging };
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    // Clear overlay when cursor leaves the canvas entirely
+    const related = e.relatedTarget as HTMLElement | null;
+    if (!related || !canvasFrameRef.current?.contains(related)) {
+      setPaletteFlowDropTarget(null);
+    }
+  }, [canvasFrameRef]);
+
+  return { handleDragStart, handlePaletteDragStart, handleDrop, handleDragOver, handleDragEnter, handleDragLeave, isDSDragging, paletteFlowDropTarget };
 }
