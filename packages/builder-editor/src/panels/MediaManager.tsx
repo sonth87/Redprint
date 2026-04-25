@@ -364,7 +364,7 @@ export const MediaManager = memo(function MediaManager({
                 />
               </div>
               <div className="flex gap-1">
-                {(["all", "image", "video", "font", "file"] as const).map((t) => (
+                {(["all", "image", "video"] as const).map((t) => (
                   <Button
                     key={t}
                     variant={typeFilter === t ? "default" : "outline"}

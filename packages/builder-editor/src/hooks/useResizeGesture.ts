@@ -73,6 +73,27 @@ export function useResizeGesture({
         newY += dy; // Move top position when dragging top edge
       }
 
+      // Maintain aspect ratio if Shift is pressed and dragging a corner
+      if (e.shiftKey && resizing.handle.length === 2 && resizing.startRect.height > 0) {
+        const ratio = resizing.startRect.width / resizing.startRect.height;
+        const wChange = Math.abs(width - resizing.startRect.width);
+        const hChange = Math.abs(height - resizing.startRect.height);
+        
+        if (wChange > hChange) {
+          height = width / ratio;
+        } else {
+          width = height * ratio;
+        }
+        
+        // Re-adjust newX/newY based on the corrected width/height
+        if (resizing.handle.includes("w")) {
+          newX = x - (width - resizing.startRect.width);
+        }
+        if (resizing.handle.includes("n")) {
+          newY = y - (height - resizing.startRect.height);
+        }
+      }
+
       width = Math.max(10, Math.round(width));
       height = Math.max(10, Math.round(height));
       newX = Math.round(newX);
