@@ -86,9 +86,20 @@ export function CanvasRoot({
         const canvasX = (mouseX - panOffset.x) / zoom;
         const canvasY = (mouseY - panOffset.y) / zoom;
 
-        // Calculate next zoom level
-        const delta = -e.deltaY * CANVAS_ZOOM_SENSITIVITY;
-        const nextZoom = Math.min(CANVAS_MAX_ZOOM, Math.max(CANVAS_MIN_ZOOM, zoom * (1 + delta * 0.5)));
+        // Determine zoom scale step
+        let zoomMultiplier = 1;
+        if (Math.abs(e.deltaY) >= 50) {
+          // Likely a standard mouse wheel (large delta steps). 
+          // Use fixed 15% zoom increments per wheel tick
+          zoomMultiplier = e.deltaY > 0 ? 0.85 : 1.15;
+        } else {
+          // Likely a trackpad (small delta stream, often floats).
+          // Allow continuous, responsive smooth zooming proportional to delta.
+          // 0.01 sensitivity maps 10 pixels of pinch to ~10% zoom.
+          zoomMultiplier = Math.exp(-e.deltaY * 0.01);
+        }
+
+        const nextZoom = Math.min(CANVAS_MAX_ZOOM, Math.max(CANVAS_MIN_ZOOM, zoom * zoomMultiplier));
 
         // Adjust pan so the canvas point stays under the cursor
         const newPanX = mouseX - canvasX * nextZoom;

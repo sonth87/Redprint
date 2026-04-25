@@ -73,8 +73,8 @@ export function useResizeGesture({
         newY += dy; // Move top position when dragging top edge
       }
 
-      // Maintain aspect ratio if Shift is pressed and dragging a corner
-      if (e.shiftKey && resizing.handle.length === 2 && resizing.startRect.height > 0) {
+      // Maintain aspect ratio if Ctrl/Cmd is pressed and dragging a corner
+      if ((e.ctrlKey || e.metaKey) && resizing.handle.length === 2 && resizing.startRect.height > 0) {
         const ratio = resizing.startRect.width / resizing.startRect.height;
         const wChange = Math.abs(width - resizing.startRect.width);
         const hChange = Math.abs(height - resizing.startRect.height);
