@@ -3,10 +3,11 @@
 > **This file is project-specific.** It describes the architecture, features, and technical decisions of this project.
 > It may **override or extend** sections from `RULES.md` — see the override mechanism in [Rules Reference](#rules-reference).
 >
-> **Version:** 1.2 | **Last updated:** 2026-04 | **Updated by:** Tech Lead
+> **Version:** 1.4 | **Last updated:** 2026-04 | **Updated by:** Tech Lead
 > **Changelog:**
+> - v1.4 — Added **Image Frame Design System**: 5-tab panel (Frame, Shadow, Shape, Border, Special) for applying decorative frames, shadows, clip-paths, and special effects (tape corners, polaroid) to images. New `frameStyle` prop, `clipPath` StyleConfig property, and preset arrays in shared package.
 > - v1.3 — Implemented **Spatial Reparenting**: Component ownership is now determined by geometric position (hit-testing) rather than DOM hierarchy. Updated AI prompts to enforce strict `parentId` assignment to sections, preventing "root" clutter.
-- v1.2 — Added `builder-components` package (17 built-in ComponentDefinitions, `extendComponent()`, `BASE_COMPONENTS[]`); updated architecture diagram, dependency rules, and package table; added Built-in Component Library section
+> - v1.2 — Added `builder-components` package (17 built-in ComponentDefinitions, `extendComponent()`, `BASE_COMPONENTS[]`); updated architecture diagram, dependency rules, and package table; added Built-in Component Library section
 > - v1.1 — Expanded with comprehensive type contracts, design principles, command system, panel specs, event catalogue, error boundaries, and keyboard shortcuts from Technical Specification v2.1
 
 ---
@@ -296,6 +297,74 @@ const cssFilter = buildCssFilter(filterDef);  // "url(#if-3d)" or "saturate(...)
   }} />
 )}
 ```
+
+### Image Component — Frame Design System
+
+**Location:** `packages/shared/src/imageFrames.ts` (presets), `packages/builder-editor/src/panels/ImageFramePanel.tsx` (UI), `packages/builder-components/src/components/Image.tsx` (renderers)
+
+The Image component includes a **Frame Design panel** that allows users to apply decorative frames, borders, shadows, and clip-path shapes to image nodes through a tabbed interface.
+
+#### Frame Design Panel (5 tabs)
+
+| Tab | Content | Dispatch | Data Source |
+|-----|---------|----------|-------------|
+| **Frame** | Border preset grid (none, thin/thick black/white, dashed, dotted, double) | `UPDATE_STYLE { border, borderRadius }` | `FRAME_PRESETS` |
+| **Shadow** | Box-shadow preset grid (soft, medium, hard, offset, glows, layered) | `UPDATE_STYLE { boxShadow }` | `SHADOW_PRESETS` |
+| **Shape** | Clip-path shapes (circle, hexagon, diamond, triangle, star, arch) | `UPDATE_STYLE { clipPath, borderRadius }` | `SHAPE_PRESETS` |
+| **Border** | Manual controls: radius slider, width slider, color picker, style select | `UPDATE_STYLE` real-time | `node.style` |
+| **Special** | Decorative effects: tape corners, polaroid, vintage border | `UPDATE_PROPS { frameStyle }` + optional style injection | `SPECIAL_PRESETS` |
+
+#### Preset Architecture
+
+- **Shared definition:** `FRAME_PRESETS`, `SHADOW_PRESETS`, `SHAPE_PRESETS`, `SPECIAL_PRESETS` in `@ui-builder/shared/src/imageFrames.ts`
+  - Zero React/DOM dependencies — reusable by editor and renderers
+  - Helper functions: `getSpecialPreset(value)`
+- **Special effects handling:**
+  - **CSS-only effects** (polaroid, vintage): `UPDATE_STYLE` injects container CSS (padding, background, transform)
+  - **Custom markup effects** (tape): stored as `frameStyle: "tape"` prop → Image renderer adds tape corner `<div>` overlays
+  - Tape corners positioned absolutely outside container bounds → container `overflow: visible` when tape is active
+
+#### Image Component Props & Styles
+
+**New prop:**
+- `frameStyle: SpecialFrameStyle` — one of: `"none" | "tape" | "polaroid" | "vintage"`
+
+**Affected style property:**
+- `clipPath: string` — CSS clip-path value for shape presets. Added to `StyleConfig` in `builder-core/src/document/types.ts`
+
+#### Tape Decoration Implementation
+
+When `frameStyle === "tape"`, the Image renderer (both `editorRenderer` and `runtimeRenderer`) renders a `<TapeDecoration>` component:
+
+```tsx
+function TapeDecoration() {
+  // Four semi-transparent beige tape strips, one per corner
+  // Positioned absolutely with negative top/bottom/left/right offsets
+  // Rotated -20° to 20° for realistic angle
+  // z-index: 2 to layer over image
+}
+```
+
+Container style adjustments when tape is active:
+- `overflow: "visible"` — allows tape to extend outside bounds
+- All other effects (border, shadow, clip-path) coexist normally
+
+#### Panel UI Pattern
+
+- Rendered inside a **Popover** triggered by a "Frame Design" button (Frame icon) on the ContextualToolbar
+- Follows the same Popover pattern as ImageFilterPicker (existing filter picker)
+- Tab switching managed via `<Tabs>` from `@ui-builder/ui`
+- Swatch grids use visual preview boxes; shape/special tabs show icon-style thumbnails
+- Current selection highlighted with `ring-2 ring-primary`
+
+#### Usage Flow
+
+1. User selects Image node on canvas
+2. Contextual toolbar appears with Frame Design button (Frame icon)
+3. Click opens Popover with ImageFramePanel
+4. User clicks a preset or adjusts manual controls
+5. Dispatch fires `UPDATE_STYLE` (CSS presets) or `UPDATE_PROPS` (special effects)
+6. Command handler merges changes into node, image re-renders
 
 ### Media Management System
 

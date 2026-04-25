@@ -1,6 +1,38 @@
 import React from "react";
 import type { ComponentDefinition } from "@ui-builder/builder-core";
-import { IMAGE_FILTERS, getFilterDef, buildCssFilter, collectSvgFilterDefs } from "@ui-builder/shared";
+import { IMAGE_FILTERS, getFilterDef, buildCssFilter, collectSvgFilterDefs, type SpecialFrameStyle } from "@ui-builder/shared";
+
+/**
+ * Tape corner decoration — four semi-transparent tape strips, one per corner.
+ * Rendered when frameStyle === "tape". Container must have overflow: visible.
+ */
+function TapeDecoration() {
+  const tapes: Array<React.CSSProperties & { rotate: string }> = [
+    { top: "-10px", left: "18px",  rotate: "-20deg" },
+    { top: "-10px", right: "18px", rotate: "20deg"  },
+    { bottom: "-10px", left: "18px",  rotate: "15deg"  },
+    { bottom: "-10px", right: "18px", rotate: "-15deg" },
+  ];
+  return (
+    <>
+      {tapes.map(({ rotate, ...pos }, i) => (
+        <div
+          key={i}
+          style={{
+            position: "absolute",
+            width: 36,
+            height: 14,
+            background: "rgba(215,205,165,0.72)",
+            transform: `rotate(${rotate})`,
+            pointerEvents: "none",
+            zIndex: 2,
+            ...pos,
+          }}
+        />
+      ))}
+    </>
+  );
+}
 
 /**
  * Hidden SVG holding all filter defs so `filter: url(#id)` resolves at runtime.
@@ -109,6 +141,9 @@ export const ImageComponent: ComponentDefinition = {
     const filterKey = String(node.props.filter ?? "none");
     const overlayColor = String(node.props.overlayColor ?? "#000000");
     const overlayOpacity = Number(node.props.overlayOpacity ?? 0);
+    const frameStyle = String(node.props.frameStyle ?? "none") as SpecialFrameStyle;
+    const isTape = frameStyle === "tape";
+    const isPolaroid = frameStyle === "polaroid";
 
     const filterDef = getFilterDef(filterKey);
     const cssFilter = buildCssFilter(filterDef);
@@ -118,8 +153,14 @@ export const ImageComponent: ComponentDefinition = {
     const containerStyle: React.CSSProperties = {
       ...(style as React.CSSProperties),
       position: "relative",
-      overflow: "hidden",
+      overflow: isTape ? "visible" : "hidden",
       display: "block",
+      ...(isPolaroid ? {
+        background: "#ffffff",
+        padding: "8px 8px 40px 8px",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+        transform: "rotate(-1.5deg)",
+      } : {}),
     };
 
     return (
@@ -163,6 +204,8 @@ export const ImageComponent: ComponentDefinition = {
             }}
           />
         )}
+        {/* Special frame decorations */}
+        {isTape && <TapeDecoration />}
       </div>
     );
   },
@@ -178,6 +221,9 @@ export const ImageComponent: ComponentDefinition = {
     const overlayOpacity = Number(node.props.overlayOpacity ?? 0);
     const linkUrl = String(node.props.linkUrl ?? "");
     const linkTarget = String(node.props.linkTarget ?? "_blank");
+    const frameStyle = String(node.props.frameStyle ?? "none") as SpecialFrameStyle;
+    const isTape = frameStyle === "tape";
+    const isPolaroid = frameStyle === "polaroid";
 
     const filterDef = getFilterDef(filterKey);
     const cssFilter = buildCssFilter(filterDef);
@@ -187,8 +233,14 @@ export const ImageComponent: ComponentDefinition = {
     const containerStyle: React.CSSProperties = {
       ...(style as React.CSSProperties),
       position: "relative",
-      overflow: "hidden",
+      overflow: isTape ? "visible" : "hidden",
       display: "block",
+      ...(isPolaroid ? {
+        background: "#ffffff",
+        padding: "8px 8px 40px 8px",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+        transform: "rotate(-1.5deg)",
+      } : {}),
     };
 
     const content = (
@@ -229,6 +281,8 @@ export const ImageComponent: ComponentDefinition = {
             }}
           />
         )}
+        {/* Special frame decorations */}
+        {isTape && <TapeDecoration />}
       </div>
     );
 

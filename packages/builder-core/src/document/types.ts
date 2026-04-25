@@ -75,6 +75,7 @@ export interface StyleConfig {
   borderColor?: string;
   borderStyle?: string;
   boxShadow?: string;
+  clipPath?: string;
   opacity?: number;
   overflow?: string;
   overflowX?: string;

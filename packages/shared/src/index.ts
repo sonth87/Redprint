@@ -180,3 +180,6 @@ export * from "./constants";
 
 // ── Image filters ──────────────────────────────────────────────────────────
 export * from "./imageFilters";
+
+// ── Image frames ───────────────────────────────────────────────────────────
+export * from "./imageFrames";

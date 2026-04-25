@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Copy, Trash2, ArrowUp, ArrowDown, GripVertical, CornerLeftUp, ImageIcon, Link2, SlidersHorizontal, SprayCan } from "lucide-react";
+import { Copy, Trash2, ArrowUp, ArrowDown, GripVertical, CornerLeftUp, ImageIcon, Link2, Paintbrush, Frame } from "lucide-react";
 import { useDocument, useBuilder } from "@ui-builder/builder-react";
 import { Button, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider, Popover, PopoverContent, PopoverTrigger, ScrollArea } from "@ui-builder/ui";
 import { TOOLTIP_DELAY_MS } from "@ui-builder/shared";
@@ -8,6 +8,7 @@ import { AIToolsPopover } from "../ai/ai-tools/AIToolsPopover";
 import { AISectionPopover } from "../ai/ai-section/AISectionPopover";
 import { useAIConfig } from "../ai/AIConfigContext";
 import { ImageFilterPicker } from "../panels/ImageFilterPicker";
+import { ImageFramePanel } from "../panels/ImageFramePanel";
 
 export interface ContextualToolbarProps {
   nodeId: string;
@@ -25,6 +26,7 @@ export interface ContextualToolbarProps {
 
 export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, rect, zoom, panOffset, onDelete, onDuplicate, onMoveUp, onMoveDown, onDragHandlePointerDown, onOpenMediaManager }) => {
   const [filterOpen, setFilterOpen] = React.useState(false);
+  const [frameOpen, setFrameOpen] = React.useState(false);
   const { document } = useDocument();
   const { builder, dispatch } = useBuilder();
   const { t } = useTranslation();
@@ -219,7 +221,7 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
                       className="h-6 w-6"
                       onClick={(e) => { e.stopPropagation(); }}
                     >
-                      <SprayCan className="h-3 w-3" />
+                      <Paintbrush className="h-3 w-3" />
                     </Button>
                   </PopoverTrigger>
                 </TooltipTrigger>
@@ -248,6 +250,53 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
                     }}
                   />
                 </ScrollArea>
+              </PopoverContent>
+            </Popover>
+
+            {/* Frame Design popover */}
+            <Popover open={frameOpen} onOpenChange={setFrameOpen}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      className="h-6 w-6"
+                      onClick={(e) => { e.stopPropagation(); }}
+                    >
+                      <Frame className="h-3 w-3" />
+                    </Button>
+                  </PopoverTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="top">Frame Design</TooltipContent>
+              </Tooltip>
+              <PopoverContent
+                side="bottom"
+                align="center"
+                className="w-80 p-0"
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between px-3 py-2 border-b">
+                  <span className="text-xs font-semibold">Frame Design</span>
+                </div>
+                <ImageFramePanel
+                  node={node}
+                  onStyleChange={(style) => {
+                    dispatch({
+                      type: "UPDATE_STYLE",
+                      payload: { nodeId, style },
+                      description: "Set image frame",
+                    });
+                  }}
+                  onPropChange={(props) => {
+                    dispatch({
+                      type: "UPDATE_PROPS",
+                      payload: { nodeId, props },
+                      description: "Set image frame effect",
+                    });
+                  }}
+                />
               </PopoverContent>
             </Popover>
 
