@@ -152,7 +152,7 @@ export const ImageComponent: ComponentDefinition = {
 
     const containerStyle: React.CSSProperties = {
       ...(style as React.CSSProperties),
-      position: "relative",
+      position: (style as React.CSSProperties | undefined)?.position ?? "relative",
       overflow: isTape ? "visible" : "hidden",
       display: "block",
       ...(isPolaroid ? {
@@ -232,7 +232,7 @@ export const ImageComponent: ComponentDefinition = {
 
     const containerStyle: React.CSSProperties = {
       ...(style as React.CSSProperties),
-      position: "relative",
+      position: (style as React.CSSProperties | undefined)?.position ?? "relative",
       overflow: isTape ? "visible" : "hidden",
       display: "block",
       ...(isPolaroid ? {
