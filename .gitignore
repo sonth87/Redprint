@@ -65,3 +65,7 @@ jspm_packages/
 # Local environment overrides
 .env.development.local
 .env.production.local
+
+
+# uploads
+**/uploads/*

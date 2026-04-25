@@ -82,6 +82,8 @@ Complete technical reference organized by domain:
 | **[AI_ASSISTANT.md](./.claude/docs/AI_ASSISTANT.md)** | AI conversational interface — providers, context, command whitelist |
 | **[PROPERTY_SYSTEM.md](./.claude/docs/PROPERTY_SYSTEM.md)** | PropertyDescriptor, shared style/prop editing, PropertyControls |
 | **[PRESETS.md](./.claude/docs/PRESETS.md)** | Component preset types, PresetRegistry API, palette UI |
+| **[IMAGE_FILTERS.md](./.claude/docs/IMAGE_FILTERS.md)** | 39 Instagram-style filter presets — CSS, SVG, and overlay modes |
+| **[MEDIA_MANAGEMENT.md](./.claude/docs/MEDIA_MANAGEMENT.md)** | Asset upload, browsing, selection — MediaManager UI, backends, AssetProvider |
 
 **For AI Agents:** Always read `SPECIFICATION.md` first for project context.
 

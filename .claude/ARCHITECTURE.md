@@ -232,6 +232,142 @@ const HeroBanner = extendComponent(TextComponent, {
 
 > Project-specific / playground-only custom components live in `apps/playground/src/components/sample-components.tsx` and follow the same `ComponentDefinition` protocol.
 
+### Image Component — Filter System
+
+**Location:** `packages/shared/src/imageFilters.ts` (source of truth), `packages/builder-components/src/components/Image.tsx`, `packages/builder-editor/src/panels/ImageFilterPicker.tsx`
+
+The Image component includes a sophisticated **39-filter preset system** supporting Instagram-style effects via three rendering modes:
+
+#### Filter Modes
+
+| Mode | Technique | Examples |
+|------|-----------|----------|
+| **CSS** | Direct CSS `filter` property chain | Kennedy, Darken, Lighten, Orca, Gotham |
+| **SVG** | SVG `<feColorMatrix>` + `feOffset` for complex effects | 3D (anaglyph split channel), Ink (high-contrast grayscale) |
+| **Overlay** | CSS filter on `<img>` + color `<div>` with `mix-blend-mode` | Hulk (green multiply), Marge (yellow), Lucille (red), Barney (purple), Neptune (blue), etc. |
+
+#### Filter List (39 presets)
+
+```
+Row 1:  None, Kennedy, Darken
+Row 2:  Blur, Lighten, Faded
+Row 3:  Kerouac, Orca, Sangria
+Row 4:  Gotham, Nightrain, Whistler
+Row 5:  Feathered, Soledad, Goldie
+Row 6:  3D, Ink, Manhattan
+Row 7:  Gumby, Organic, Elmo
+Row 8:  Neptune, Jellybean, Neon Sky
+Row 9:  Hulk, Bauhaus, Yoda
+Row 10: Midnight, Unicorn, Blue Ray
+Row 11: Malibu, Red Rum, Flamingo
+Row 12: Hydra, Kool-Aid, Barney
+Row 13: Pixie, Marge, Lucille
+```
+
+#### Architecture Notes
+
+- **Shared definition:** `IMAGE_FILTERS: ImageFilter[]` in `@ui-builder/shared` (no React/DOM deps)
+  - Both `builder-components` and `builder-editor` import from shared
+  - Helper functions: `getFilterDef()`, `buildCssFilter()`, `collectSvgFilterDefs()`
+- **SVG filter injection:** Hidden `<svg>` with `<defs>` rendered inline in containers (both editor and runtime)
+  - Anaglyph 3D uses `feOffset` to split red channel left, cyan right
+  - Ink uses `feComponentTransfer` for ultra-high contrast
+- **Overlay rendering:** Filter definition includes `overlayColor`, `overlayOpacity`, `overlayBlend` for duotone effects
+  - Applied as a positioned `<div>` on top of `<img>` with `mix-blend-mode: multiply | soft-light`
+- **Preview:** `ImageFilterPicker` component (editor) renders 3×N grid with live preview swatches showing applied filter
+  - Each swatch shows both CSS/SVG effect AND overlay layer correctly
+
+#### Usage in Image Component
+
+```tsx
+// Get filter definition by stored key
+const filterDef = getFilterDef(node.props.filter);  // e.g. "hulk"
+
+// Build CSS filter string (handles all 3 modes)
+const cssFilter = buildCssFilter(filterDef);  // "url(#if-3d)" or "saturate(...)" or "contrast(...)"
+
+// Render overlay if needed
+{filterDef?.mode === "overlay" && (
+  <div style={{
+    backgroundColor: filterDef.overlayColor,
+    opacity: filterDef.overlayOpacity,
+    mixBlendMode: filterDef.overlayBlend,
+    mixBlendMode: filterDef.overlayBlend,
+  }} />
+)}
+```
+
+### Media Management System
+
+**Location:** `packages/builder-editor/src/panels/MediaManager.tsx`, `packages/builder-core/src/document/assets.ts`, `apps/api/src/routes/media.routes.ts`
+
+The Media Management system provides a **unified UI for browsing, uploading, and selecting media assets** (images, videos, fonts, files) in the builder canvas.
+
+#### Architecture
+
+- **Frontend UI:** `MediaManager` dialog component with 3 tabs
+  - **Library:** Browse existing assets, search/filter, select, delete
+  - **Upload:** Drag-and-drop file upload with per-file progress tracking
+  - **URL:** Paste external URLs (auto-detect type by extension)
+- **Backend API:** Express routes at `/api/media/upload`, `/api/media/:id`, `/api/media`
+  - File storage in `apps/api/uploads/`
+  - Metadata persisted in `apps/api/uploads/metadata.json`
+  - Max 50 MB per file, whitelist of allowed MIME types
+- **Type contracts in `builder-core`:** `Asset`, `AssetType`, `AssetManifest`, `AssetProvider`, `MediaRef`
+  - Zero DOM deps — used in server-side contexts
+  - Extensible via `AssetProvider` interface for custom sources (S3, Cloudinary, etc.)
+
+#### Key Interfaces
+
+```ts
+interface Asset {
+  id: string;
+  type: "image" | "video" | "font" | "file" | "icon";
+  name: string;
+  url: string;                    // Resolved URL
+  thumbnailUrl?: string;
+  size?: number;                  // Bytes
+  dimensions?: { width: number; height: number };
+  mimeType?: string;
+  uploadedAt?: string;
+  tags?: string[];
+  source: "local" | "url" | string;  // Provider ID
+}
+
+interface MediaRef {
+  assetId?: string;               // ID in document's AssetManifest
+  url: string;                    // Always present
+  alt?: string;
+  focalPoint?: { x: number; y: number };  // Smart crop 0–1 fractions
+}
+
+interface AssetProvider {
+  id: string;
+  name: string;
+  supportedTypes: AssetType[];
+  listAssets(query: AssetQuery): Promise<AssetListResult>;
+  upload?(file: Uploadable): Promise<Asset>;
+  delete?(assetId: string): Promise<void>;
+}
+```
+
+#### Integration with Image Component
+
+Image component `src` prop accepts either:
+- Direct URL: `"https://example.com/photo.jpg"`
+- `MediaRef` with focal point: `{ assetId: "uuid", url: "...", focalPoint: {x:0.5, y:0.5} }`
+
+When user clicks **Image → Open media manager**, the `MediaManager` dialog opens for selection.
+
+#### Data Flow (Upload)
+
+```
+Drag file → handleDrop() → queue with preview → sequential upload
+  → POST /api/media/upload → file stored, metadata saved
+  → status: pending → uploading → done/error
+  → after all: switch to Library tab, show new assets
+```
+
 ---
 
 ## Document Model (Core Type Contracts)

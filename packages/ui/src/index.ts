@@ -87,3 +87,6 @@ export { Popover, PopoverTrigger, PopoverContent, PopoverAnchor } from "./compon
 
 export { Badge, badgeVariants } from "./components/badge";
 export type { BadgeProps } from "./components/badge";
+
+// ── Toast (sonner) ────────────────────────────────────────────────────────
+export { Toaster, toast } from "sonner";

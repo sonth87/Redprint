@@ -37,6 +37,8 @@ export type {
   AssetQuery,
   AssetListResult,
   AssetType,
+  MediaRef,
+  Uploadable,
 } from "./document/assets";
 export { CURRENT_SCHEMA_VERSION } from "./document/constants";
 

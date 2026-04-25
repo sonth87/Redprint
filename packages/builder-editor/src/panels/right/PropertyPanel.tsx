@@ -1,6 +1,7 @@
-import React, { memo, useState, useCallback, useMemo } from "react";
-import { Tabs, TabsList, TabsTrigger, TabsContent, ScrollArea, Label, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, Switch, Separator, Badge } from "@ui-builder/ui";
-import type { BuilderNode, Breakpoint, ComponentDefinition, PropSchema, InteractionConfig, InteractionTrigger, InteractionAction } from "@ui-builder/builder-core";
+import React, { memo, useState, useCallback, useMemo, useContext, createContext } from "react";
+import { Tabs, TabsList, TabsTrigger, TabsContent, ScrollArea, Label, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, Switch, Separator, Badge, cn } from "@ui-builder/ui";
+import type { Asset, BuilderNode, Breakpoint, ComponentDefinition, PropSchema, InteractionConfig, InteractionTrigger, InteractionAction } from "@ui-builder/builder-core";
+import { ImageFilterPicker } from "../ImageFilterPicker";
 import { resolveStyle, resolveProps } from "@ui-builder/builder-core";
 import {
   ChevronDown,
@@ -12,13 +13,21 @@ import {
   Sparkles,
   Database,
   Settings2,
-  MousePointer,
-  Eye,
   EyeOff,
   X,
+  ImageIcon,
 } from "lucide-react";
-import { cn } from "@ui-builder/ui";
 import { useTranslation } from "react-i18next";
+
+// ── Media context — lets ImageControl open MediaManager from inside PropControl ──
+interface MediaContextValue {
+  assets: Asset[];
+  onOpenMediaManager: (onSelect: (asset: Asset) => void) => void;
+}
+const MediaContext = createContext<MediaContextValue>({
+  assets: [],
+  onOpenMediaManager: () => {},
+});
 
 export interface PropertyPanelProps {
   selectedNode: BuilderNode | null;
@@ -27,6 +36,10 @@ export interface PropertyPanelProps {
   onPropChange: (key: string, value: unknown) => void;
   onStyleChange: (key: string, value: unknown) => void;
   onInteractionsChange?: (interactions: InteractionConfig[]) => void;
+  /** Asset list from AssetProvider — used by image/video controls */
+  assets?: Asset[];
+  /** Callback to open MediaManager and get selected asset back */
+  onOpenMediaManager?: (onSelect: (asset: Asset) => void) => void;
 }
 
 /**
@@ -503,6 +516,9 @@ function PropControl({
         </div>
       );
 
+    case "image":
+      return <ImagePropControl schema={schema} value={value} onChange={onChange} />;
+
     default:
       return (
         <div className="text-xs text-muted-foreground">
@@ -510,6 +526,63 @@ function PropControl({
         </div>
       );
   }
+}
+
+// ── Image prop control ────────────────────────────────────────────────────
+function ImagePropControl({
+  schema,
+  value,
+  onChange,
+}: {
+  schema: Extract<PropSchema, { type: "image" }>;
+  value: unknown;
+  onChange: (value: unknown) => void;
+}) {
+  const { assets, onOpenMediaManager } = useContext(MediaContext);
+  const src = String(value ?? "");
+
+  const handleOpen = () => {
+    onOpenMediaManager((asset) => onChange(asset.url));
+  };
+
+  return (
+    <div className="grid gap-1.5">
+      <Label className="text-xs">{schema.label}</Label>
+      {/* Thumbnail preview */}
+      <div
+        className="relative w-full h-24 rounded-md border border-border overflow-hidden bg-muted cursor-pointer group"
+        onClick={handleOpen}
+      >
+        {src ? (
+          <img
+            src={src}
+            alt=""
+            className="w-full h-full object-cover"
+            draggable={false}
+          />
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center gap-1 text-muted-foreground">
+            <ImageIcon className="h-6 w-6 opacity-40" />
+            <span className="text-[10px]">No image</span>
+          </div>
+        )}
+        {/* Hover overlay */}
+        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+          <span className="text-white text-xs font-medium">Change Image</span>
+        </div>
+      </div>
+      {/* URL fallback input */}
+      <Input
+        className="h-7 text-xs font-mono"
+        placeholder="https://… or click above"
+        value={src}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      {assets.length > 0 && (
+        <p className="text-[10px] text-muted-foreground">{assets.length} asset{assets.length !== 1 ? "s" : ""} in library</p>
+      )}
+    </div>
+  );
 }
 
 // ── Collapsible section ──────────────────────────────────────────────────
@@ -766,8 +839,15 @@ export const PropertyPanel = memo(function PropertyPanel({
   onPropChange,
   onStyleChange,
   onInteractionsChange,
+  assets = [],
+  onOpenMediaManager = () => {},
 }: PropertyPanelProps) {
   const { t } = useTranslation();
+  const mediaCtx: MediaContextValue = useMemo(
+    () => ({ assets, onOpenMediaManager }),
+    [assets, onOpenMediaManager],
+  );
+
   if (!selectedNode || !definition) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-xs text-muted-foreground gap-2 p-4">
@@ -807,6 +887,7 @@ export const PropertyPanel = memo(function PropertyPanel({
   };
 
   return (
+    <MediaContext.Provider value={mediaCtx}>
     <div className="flex flex-col h-full">
       {/* Node type header */}
       <div className="px-3 py-2 border-b flex items-center justify-between">
@@ -871,6 +952,10 @@ export const PropertyPanel = memo(function PropertyPanel({
                   if (selectedNode.type === "Grid" && (schema.key === "columnTemplate" || schema.key === "customTemplate" || schema.key === "columns")) {
                     return null;
                   }
+                  // Skip filter for Image — rendered as full ImageFilterPicker section below
+                  if (selectedNode.type === "Image" && schema.key === "filter") {
+                    return null;
+                  }
                   if (schema.type === "group") {
                     return (
                       <div key={schema.key} className="space-y-3">
@@ -897,6 +982,17 @@ export const PropertyPanel = memo(function PropertyPanel({
                     />
                   );
                 })}
+              </CollapsibleSection>
+            )}
+
+            {/* Image filter picker — shown only for Image nodes */}
+            {selectedNode.type === "Image" && (
+              <CollapsibleSection title="Filter" defaultOpen={false}>
+                <ImageFilterPicker
+                  previewSrc={String(resolvedPropsMap["src"] ?? "")}
+                  value={String(resolvedPropsMap["filter"] ?? "none")}
+                  onChange={(filter) => onPropChange("filter", filter)}
+                />
               </CollapsibleSection>
             )}
 
@@ -1739,5 +1835,6 @@ export const PropertyPanel = memo(function PropertyPanel({
         </TabsContent>
       </Tabs>
     </div>
+    </MediaContext.Provider>
   );
 });

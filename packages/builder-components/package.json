@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@ui-builder/builder-core": "workspace:*",
+    "@ui-builder/shared": "workspace:*",
     "dompurify": "^3.2.4",
     "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.6.0",

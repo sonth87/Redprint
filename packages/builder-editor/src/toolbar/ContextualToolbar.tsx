@@ -1,12 +1,13 @@
 import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Copy, Trash2, ArrowUp, ArrowDown, GripVertical, CornerLeftUp } from "lucide-react";
+import { Copy, Trash2, ArrowUp, ArrowDown, GripVertical, CornerLeftUp, ImageIcon, Link2, SlidersHorizontal, SprayCan } from "lucide-react";
 import { useDocument, useBuilder } from "@ui-builder/builder-react";
-import { Button, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@ui-builder/ui";
+import { Button, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider, Popover, PopoverContent, PopoverTrigger, ScrollArea } from "@ui-builder/ui";
 import { TOOLTIP_DELAY_MS } from "@ui-builder/shared";
 import { AIToolsPopover } from "../ai/ai-tools/AIToolsPopover";
 import { AISectionPopover } from "../ai/ai-section/AISectionPopover";
 import { useAIConfig } from "../ai/AIConfigContext";
+import { ImageFilterPicker } from "../panels/ImageFilterPicker";
 
 export interface ContextualToolbarProps {
   nodeId: string;
@@ -18,9 +19,12 @@ export interface ContextualToolbarProps {
   onMoveUp: () => void;
   onMoveDown: () => void;
   onDragHandlePointerDown: (e: React.PointerEvent) => void;
+  /** Open media manager and apply selected asset URL to given prop key */
+  onOpenMediaManager?: (propKey: string) => void;
 }
 
-export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, rect, zoom, panOffset, onDelete, onDuplicate, onMoveUp, onMoveDown, onDragHandlePointerDown }) => {
+export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, rect, zoom, panOffset, onDelete, onDuplicate, onMoveUp, onMoveDown, onDragHandlePointerDown, onOpenMediaManager }) => {
+  const [filterOpen, setFilterOpen] = React.useState(false);
   const { document } = useDocument();
   const { builder, dispatch } = useBuilder();
   const { t } = useTranslation();
@@ -179,6 +183,93 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
               dispatch={dispatch}
               undo={handleUndo}
             />
+          </>
+        )}
+
+        {/* Image-specific quick actions */}
+        {node.type === "Image" && (
+          <>
+            <div className="w-px h-4 bg-border mx-0.5" />
+
+            {/* Change Image */}
+            {onOpenMediaManager && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="h-6 w-6"
+                    onClick={wrap(() => onOpenMediaManager("src"))}
+                  >
+                    <ImageIcon className="h-3 w-3" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">Change Image</TooltipContent>
+              </Tooltip>
+            )}
+
+            {/* Filter picker popover */}
+            <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      className="h-6 w-6"
+                      onClick={(e) => { e.stopPropagation(); }}
+                    >
+                      <SprayCan className="h-3 w-3" />
+                    </Button>
+                  </PopoverTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="top">Filter</TooltipContent>
+              </Tooltip>
+              <PopoverContent
+                side="bottom"
+                align="center"
+                className="w-64 p-0"
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between px-3 py-2 border-b">
+                  <span className="text-xs font-semibold">Choose a Filter</span>
+                </div>
+                <ScrollArea className="h-72">
+                  <ImageFilterPicker
+                    previewSrc={String(node.props.src ?? "")}
+                    value={String(node.props.filter ?? "none")}
+                    onChange={(filter) => {
+                      dispatch({
+                        type: "UPDATE_PROPS",
+                        payload: { nodeId, props: { filter } },
+                        description: "Set image filter",
+                      });
+                    }}
+                  />
+                </ScrollArea>
+              </PopoverContent>
+            </Popover>
+
+            {/* Set Link */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className="h-6 w-6"
+                  onClick={wrap(() => {
+                    const url = window.prompt("Link URL:", String(node.props.linkUrl ?? ""));
+                    if (url !== null) {
+                      dispatch({ type: "UPDATE_PROPS", payload: { nodeId, props: { linkUrl: url } }, description: "Set image link" });
+                    }
+                  })}
+                >
+                  <Link2 className="h-3 w-3" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">Set Link</TooltipContent>
+            </Tooltip>
           </>
         )}
 

@@ -22,7 +22,7 @@ type Locale = "en" | "vi" | "ko" | "ko-flat";
  * Tab "JSON" → raw document JSON inspector
  */
 export function App() {
-  const { builder, groupRegistry, useRemotePalette } = useBuilderSetup();
+  const { builder, groupRegistry, useRemotePalette, assetProvider } = useBuilderSetup();
   const [activeTab, setActiveTab] = useState<Tab>("editor");
   const [locale, setLocale] = useState<Locale>("en");
 
@@ -132,6 +132,7 @@ export function App() {
             builder={builder}
             groupRegistry={groupRegistry}
             remotePaletteProvider={useRemotePalette ? remotePaletteProvider : undefined}
+            assetProvider={assetProvider}
             locale={locale}
             i18nResources={i18nResources}
             className="h-full"

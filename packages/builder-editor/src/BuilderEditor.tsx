@@ -12,6 +12,9 @@ import {
 import {
   DEVICE_VIEWPORT_PRESETS,
   resolveProps,
+  type Asset,
+  type AssetProvider,
+  type AssetType,
   type BuilderAPI,
   type BuilderConfig,
   type CanvasMode,
@@ -25,7 +28,7 @@ import {
 } from "@ui-builder/shared";
 import { Monitor, Smartphone, LocateFixed, LayoutTemplate, Sparkles, Layers } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
-import { cn } from "@ui-builder/ui";
+import { cn, Toaster, toast } from "@ui-builder/ui";
 
 import { CanvasRoot } from "./canvas/CanvasRoot";
 import {
@@ -60,6 +63,7 @@ import { FlowDropPlaceholderLayer } from "./canvas/FlowDropPlaceholderLayer";
 import { initI18n, type SupportedLocale } from "./i18n";
 import { useTranslation } from "react-i18next";
 import { type RemotePaletteProvider } from "./types/remote-palette";
+import { MediaManager } from "./panels/MediaManager";
 
 import { useViewport } from "./hooks/useViewport";
 import { useResizeGesture } from "./hooks/useResizeGesture";
@@ -114,12 +118,14 @@ function EditorInner({
   remotePaletteProvider,
   locale,
   warnOnLeave,
+  assetProvider,
 }: {
   groupRegistry?: GroupRegistry;
   paletteCatalog?: PaletteCatalog;
   remotePaletteProvider?: RemotePaletteProvider;
   locale?: string;
   warnOnLeave?: boolean;
+  assetProvider?: AssetProvider;
 }) {
   const { t } = useTranslation();
   const { builder, state, dispatch } = useBuilder();
@@ -129,6 +135,78 @@ function EditorInner({
   const { undo, redo, canUndo, canRedo } = useHistory();
 
   useBeforeUnload((warnOnLeave ?? true) && canUndo);
+
+  // ── Media / Asset state ──────────────────────────────────────────────────
+  const [assets, setAssets] = React.useState<Asset[]>([]);
+  const [mediaManagerOpen, setMediaManagerOpen] = React.useState(false);
+  // Callback to call when user selects an asset in MediaManager
+  const mediaSelectCallbackRef = React.useRef<((asset: Asset) => void) | null>(null);
+
+  // Load assets on mount and whenever provider changes
+  React.useEffect(() => {
+    if (!assetProvider) return;
+    assetProvider.listAssets({}).then((result) => setAssets(result.assets)).catch(() => {});
+  }, [assetProvider]);
+
+  const handleOpenMediaManager = React.useCallback((onSelect: (asset: Asset) => void) => {
+    mediaSelectCallbackRef.current = onSelect;
+    setMediaManagerOpen(true);
+  }, []);
+
+  const handleMediaSelect = React.useCallback((asset: Asset) => {
+    mediaSelectCallbackRef.current?.(asset);
+    mediaSelectCallbackRef.current = null;
+    setMediaManagerOpen(false);
+    // Refresh asset list
+    assetProvider?.listAssets({}).then((r) => setAssets(r.assets)).catch(() => {});
+  }, [assetProvider]);
+
+  const handleMediaUpload = React.useCallback(async (files: File[]): Promise<Asset[]> => {
+    if (!assetProvider?.upload) return [];
+    const results = await Promise.allSettled(files.map((f) => assetProvider.upload!(f)));
+    const uploaded: Asset[] = [];
+    let errorCount = 0;
+    for (const r of results) {
+      if (r.status === "fulfilled") uploaded.push(r.value);
+      else errorCount++;
+    }
+    if (uploaded.length > 0) {
+      setAssets((prev) => {
+        const existingIds = new Set(prev.map((a) => a.id));
+        return [...prev, ...uploaded.filter((a) => !existingIds.has(a.id))];
+      });
+      toast.success(
+        uploaded.length === 1
+          ? `"${uploaded[0]!.name}" uploaded`
+          : `${uploaded.length} files uploaded`,
+        { duration: 3000 }
+      );
+    }
+    if (errorCount > 0) {
+      toast.error(`${errorCount} file${errorCount > 1 ? "s" : ""} failed to upload`);
+    }
+    return uploaded;
+  }, [assetProvider]);
+
+  const handleMediaDelete = React.useCallback(async (assetId: string) => {
+    if (!assetProvider?.delete) return;
+    await assetProvider.delete(assetId);
+    setAssets((prev) => prev.filter((a) => a.id !== assetId));
+  }, [assetProvider]);
+
+  const handleMediaUrlAdd = React.useCallback((_url: string, _type: AssetType) => {
+    // URL-based assets are passed directly to the picker callback without persisting
+    // The ImageControl already handles raw URL input via its text field
+  }, []);
+
+  // For ContextualToolbar: open media manager and apply result to a prop key
+  const handleOpenMediaManagerForProp = React.useCallback((propKey: string) => {
+    const nodeId = selectedNodeIds[0];
+    if (!nodeId) return;
+    handleOpenMediaManager((asset) => {
+      dispatch({ type: "UPDATE_PROPS", payload: { nodeId, props: { [propKey]: asset.url } }, description: "Change Image" });
+    });
+  }, [selectedNodeIds, handleOpenMediaManager, dispatch]);
 
   const canvasMode: CanvasMode = state.editor.canvasMode ?? "single";
   const editingNodeId  = state.editor.editingNodeId  ?? null;
@@ -465,7 +543,9 @@ function EditorInner({
           <div className="flex h-[75vh] max-h-[800px] min-h-[500px] flex-col overflow-hidden">
             {selectedNode ? (
               <PropertyPanel selectedNode={selectedNode} definition={selectedDefinition} breakpoint={breakpoint}
-                onPropChange={handlePropChange} onStyleChange={handleStyleChange} />
+                onPropChange={handlePropChange} onStyleChange={handleStyleChange}
+                assets={assets}
+                onOpenMediaManager={handleOpenMediaManager} />
             ) : (
               <div className="flex flex-col h-full">
                 <PageSettings document={document} onCanvasConfigChange={handleCanvasConfigChange} />
@@ -689,6 +769,7 @@ function EditorInner({
               })}
               onMoveUp={onMoveUp} onMoveDown={onMoveDown}
               onDragHandlePointerDown={handleDragHandlePointerDown}
+              onOpenMediaManager={assetProvider ? handleOpenMediaManagerForProp : undefined}
             />
           )}
 
@@ -772,6 +853,23 @@ function EditorInner({
         onConfirm={executeConfirmedDelete}
         onCancel={() => setDeleteConfirmNodeId(null)}
       />
+
+      {/* Media Manager dialog — shown when any image control triggers open */}
+      <MediaManager
+        open={mediaManagerOpen}
+        onOpenChange={(open) => {
+          if (!open) mediaSelectCallbackRef.current = null;
+          setMediaManagerOpen(open);
+        }}
+        assets={assets}
+        onSelect={handleMediaSelect}
+        onUpload={assetProvider?.upload ? handleMediaUpload : undefined}
+        onDelete={assetProvider?.delete ? handleMediaDelete : undefined}
+        onUrlAdd={handleMediaUrlAdd}
+        acceptTypes={["image"]}
+      />
+
+      <Toaster position="bottom-right" richColors />
     </AIConfigProvider>
   );
 }
@@ -801,6 +899,11 @@ export interface BuilderEditorProps {
   i18nKeySeparator?: string | false;
   /** Show browser leave-confirmation when there are unsaved changes. Default: true */
   warnOnLeave?: boolean;
+  /**
+   * Asset provider for media management (upload, list, delete).
+   * When provided, enables the MediaManager dialog and image controls.
+   */
+  assetProvider?: AssetProvider;
 }
 
 export function BuilderEditor({
@@ -815,6 +918,7 @@ export function BuilderEditor({
   i18nResources,
   i18nKeySeparator,
   warnOnLeave,
+  assetProvider,
 }: BuilderEditorProps) {
   React.useEffect(() => {
     if (locale || i18nResources || i18nKeySeparator !== undefined) {
@@ -832,6 +936,7 @@ export function BuilderEditor({
             remotePaletteProvider={remotePaletteProvider}
             locale={locale}
             warnOnLeave={warnOnLeave}
+            assetProvider={assetProvider}
           />
         </div>
       </RemotePaletteContext.Provider>
