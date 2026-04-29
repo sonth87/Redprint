@@ -53,6 +53,12 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
   const [frameOpen, setFrameOpen] = React.useState(false);
   const [filterPos, setFilterPos] = React.useState({ x: 0, y: 0 });
   const [framePos, setFramePos] = React.useState({ x: 0, y: 0 });
+
+  // Close floating panels when the selected node changes
+  React.useEffect(() => {
+    setFilterOpen(false);
+    setFrameOpen(false);
+  }, [nodeId]);
   const filterBtnRef = useRef<HTMLButtonElement>(null);
   const frameBtnRef = useRef<HTMLButtonElement>(null);
   const { document: builderDoc } = useDocument();
@@ -229,7 +235,11 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
                     variant="ghost"
                     size="icon-sm"
                     className="h-6 w-6"
-                    onClick={wrap(() => onOpenMediaManager("src"))}
+                    onClick={wrap(() => {
+                      setFilterOpen(false);
+                      setFrameOpen(false);
+                      onOpenMediaManager("src");
+                    })}
                   >
                     <ImageIcon className="h-3 w-3" />
                   </Button>

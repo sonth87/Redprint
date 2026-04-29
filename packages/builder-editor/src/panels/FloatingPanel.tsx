@@ -96,7 +96,7 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
   return (
     <div
       ref={panelRef}
-      onPointerDown={handlePanelPointerDown}
+      onPointerDownCapture={handlePanelPointerDown}
       className={cn(
         "fixed flex flex-col bg-background/95 backdrop-blur-md rounded-lg border shadow-lg overflow-hidden select-none",
         isDragging && "shadow-xl bg-background/80",

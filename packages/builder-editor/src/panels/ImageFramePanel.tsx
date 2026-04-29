@@ -169,22 +169,54 @@ function SpecialCard({ preset, selected, onClick }: {
   );
 }
 
+// ── Border shorthand parser ───────────────────────────────────────────────
+
+/**
+ * Parses a CSS border shorthand (e.g. "2px solid #000000") into longhands.
+ * Used to keep Frame presets and the Border tab in sync: Frame presets use
+ * the CSS border shorthand, but the Border tab reads individual properties.
+ */
+function parseBorderShorthand(border?: string): { borderWidth: string; borderStyle: string; borderColor: string } {
+  if (!border || border === "none") {
+    return { borderWidth: "0px", borderStyle: "none", borderColor: "#000000" };
+  }
+  const parts = border.trim().split(/\s+/);
+  return {
+    borderWidth: parts[0] ?? "0px",
+    borderStyle: parts[1] ?? "none",
+    borderColor: parts[2] ?? "#000000",
+  };
+}
+
 // ── Main Component ────────────────────────────────────────────────────────
 
 export function ImageFramePanel({ node, onStyleChange, onPropChange }: ImageFramePanelProps) {
   const style = (node.style ?? {}) as Partial<StyleConfig>;
   const currentFrameStyle = String(node.props.frameStyle ?? "none") as SpecialFrameStyle;
 
+  // Backward-compat: nodes saved before longhand migration may have style.border shorthand.
+  const legacyParsed = parseBorderShorthand(style.border as string | undefined);
+
   // ── Border tab local read helpers ────────────────────────────────────────
   const borderRadiusVal = parseInt(String(style.borderRadius ?? "0"), 10) || 0;
-  const borderWidthVal = parseInt(String(style.borderWidth ?? "0"), 10) || 0;
-  const borderColorVal = String(style.borderColor ?? "#000000");
-  const borderStyleVal = String(style.borderStyle ?? "solid");
+  const borderWidthVal  = parseInt(String(style.borderWidth  ?? legacyParsed.borderWidth),  10) || 0;
+  const borderColorVal  = String(style.borderColor  ?? legacyParsed.borderColor);
+  const borderStyleVal  = String(style.borderStyle  ?? legacyParsed.borderStyle);
 
-  // ── Frame tab: detect current selection ──────────────────────────────────
+  // ── Frame tab: detect current selection (matches against individual properties) ──
   const currentFramePreset = FRAME_PRESETS.find((p) => {
-    if (p.value === "none") return !style.border || style.border === "none";
-    return style.border === p.style.border && style.borderRadius === p.style.borderRadius;
+    if (p.value === "none") {
+      return (!style.borderStyle || style.borderStyle === "none") &&
+             (!style.borderWidth || style.borderWidth === "0px") &&
+             (!style.border      || style.border === "none");
+    }
+    const { borderWidth, borderStyle, borderColor } = parseBorderShorthand(p.style.border);
+    return (
+      style.borderWidth === borderWidth &&
+      style.borderStyle === borderStyle &&
+      style.borderColor === borderColor &&
+      style.borderRadius === p.style.borderRadius
+    );
   })?.value ?? "none";
 
   // ── Shadow tab: detect current selection ────────────────────────────────
@@ -223,10 +255,16 @@ export function ImageFramePanel({ node, onStyleChange, onPropChange }: ImageFram
                   border: preset.style.border,
                   borderRadius: preset.style.borderRadius,
                 }}
-                onClick={() => onStyleChange({
-                  border: preset.style.border,
-                  borderRadius: preset.style.borderRadius,
-                })}
+                onClick={() => {
+                  const { borderWidth, borderStyle, borderColor } = parseBorderShorthand(preset.style.border);
+                  onStyleChange({
+                    border: "",
+                    borderWidth,
+                    borderStyle,
+                    borderColor,
+                    borderRadius: preset.style.borderRadius,
+                  });
+                }}
               />
             ))}
           </div>

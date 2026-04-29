@@ -147,8 +147,12 @@ export const InlineTextEditor: React.FC<InlineTextEditorProps> = ({
     s.width           = `${canvasW}px`;
     s.minHeight       = `${canvasH}px`;
 
-    // Set transform origin to center for proper rotation/scaling
-    s.transformOrigin = "50% 50%";
+    // Use pixel-based transform origin anchored to the canvas element's center (canvasH/2
+    // from top), NOT "50% 50%" of the container's actual rendered height. This matters
+    // because TipTap renders block elements (h1-h6) with browser-default margins, making
+    // the container taller than canvasH. "50% 50%" would drift the origin downward,
+    // causing the editor to appear below the original element.
+    s.transformOrigin = `${canvasW / 2}px ${canvasH / 2}px`;
 
     // Apply scale first (from center), then original transform (which includes rotation)
     // CSS transforms are applied from right to left: scale(zoom) then originalTransform
@@ -265,7 +269,7 @@ export const InlineTextEditor: React.FC<InlineTextEditorProps> = ({
       {/* Tiptap content */}
       <EditorContent
         editor={editor}
-        className="w-full h-full [&_.ProseMirror]:outline-none [&_.ProseMirror]:cursor-text [&_.ProseMirror_p]:my-0"
+        className="w-full h-full [&_.ProseMirror]:outline-none [&_.ProseMirror]:cursor-text [&_.ProseMirror_p]:my-0 [&_.ProseMirror_h1]:my-0 [&_.ProseMirror_h2]:my-0 [&_.ProseMirror_h3]:my-0 [&_.ProseMirror_h4]:my-0 [&_.ProseMirror_h5]:my-0 [&_.ProseMirror_h6]:my-0"
       />
     </div>
   );
