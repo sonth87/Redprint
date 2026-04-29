@@ -10,6 +10,7 @@
 import { useCallback, useRef, useState } from "react";
 import { useBuilder } from "@ui-builder/builder-react";
 import { normalizeAICommands } from "../normalizeAICommands";
+import { applyAICommandsProgressive } from "../applyAICommandsProgressive";
 import type { AIConfig, AIBuilderContext, AICommandSuggestion } from "../types";
 
 // ── Types ────────────────────────────────────────────────────────────────
@@ -67,14 +68,13 @@ export function usePageGenerator(config: AIConfig, context: AIBuilderContext) {
   const applyCommands = useCallback(
     (commands: AICommandSuggestion[], rootNodeId: string) => {
       const normalized = normalizeAICommands(commands, rootNodeId);
-      for (const cmd of normalized) {
-        if (!ALLOWED_COMMANDS.has(cmd.type)) continue;
-        try {
-          dispatch({ type: cmd.type, payload: cmd.payload } as never);
-        } catch (err) {
-          console.warn(`[PageGenerator] Command ${cmd.type} failed:`, err);
-        }
-      }
+      // fire-and-forget: sections arrive seconds apart (one LLM call each),
+      // so phase 2 of section N always completes before section N+1 arrives.
+      void applyAICommandsProgressive(
+        normalized,
+        (cmd) => dispatch({ type: cmd.type, payload: cmd.payload } as never),
+        (cmd) => ALLOWED_COMMANDS.has(cmd.type),
+      );
     },
     [dispatch],
   );

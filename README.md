@@ -123,12 +123,101 @@ Complete technical reference organized by domain:
 - **Plugin system** for extensibility
 - **Comprehensive type exports** for type-safe integrations
 
+### AI-Powered Generation
+- **Natural language page generation** — describe a page, get a full layout
+- **Section-level AI regeneration** — regenerate individual sections via context menu
+- **Chat assistant** — targeted edits ("make the heading blue", "add a CTA button")
+- **Multi-provider support** — OpenAI, Gemini, and Claude via a single backend
+- **Fully undoable** — all AI output dispatched as standard builder commands
+- **Design token enforcement** — AI respects your brand colors and typography
+- **Progressive rendering** — containers appear first, content fills in next frame
+
 ### Production Ready
 - **Optimized runtime renderer** for deployment
 - **Asset management** (images, fonts, CDN integration)
 - **Import/export** (JSON, TypeScript)
 - **Accessibility built-in** (WCAG compliance)
 - **Performance profiling** tools
+
+---
+
+## 🤖 AI-Powered Generation
+
+The builder includes a fully integrated AI generation layer that translates natural language
+descriptions into builder commands. All AI output goes through the same Command Engine as manual
+edits — meaning every AI action is **undoable** and **schema-validated**.
+
+### Three AI Entry Points
+
+| Mode | How to trigger | Best for |
+|------|---------------|----------|
+| **Page Generator** | ✨ button → "Generate full page" | Building a complete page from a prompt |
+| **Section AI** | Right-click Section → AI icon | Regenerating content inside one section |
+| **Chat Assistant** | ✨ button → free-form chat | Targeted edits to existing nodes |
+
+### How It Works
+
+```
+User prompt
+  → Backend (apps/api) calls LLM (OpenAI / Gemini / Claude)
+  → LLM returns ADD_NODE / UPDATE_STYLE / ... commands as JSON
+  → Client: normalizeAICommands() resolves temp IDs to real UUIDs
+  → Client: applyAICommandsProgressive() dispatches in two phases:
+        Phase 1 (sync):  Section, Grid, Column  → layout skeleton
+        Phase 2 (rAF):   Text, Button, Image    → content fills in
+  → Builder CommandEngine applies — fully undoable
+```
+
+**Page generation** uses an SSE pipeline: the backend first generates a structural outline, then
+generates each section in parallel, streaming results to the client as sections complete.
+
+### Backend Setup
+
+Start the AI backend before using any AI features:
+
+```bash
+cd apps/api
+
+# Configure provider (choose one)
+LLM_PROVIDER=openai   LLM_API_KEY=sk-...       pnpm dev
+LLM_PROVIDER=gemini   LLM_API_KEY=AIza...      pnpm dev
+LLM_PROVIDER=claude   LLM_API_KEY=sk-ant-...   pnpm dev
+```
+
+The backend runs on `http://localhost:3002` by default. Set the URL in the editor's AI config panel.
+
+### Provider & Model Defaults
+
+| Provider | Default model | JSON mode |
+|----------|--------------|-----------|
+| OpenAI | `gpt-4o` | `response_format: json_object` |
+| Gemini | `gemini-2.0-flash` | `responseMimeType: application/json` |
+| Claude | `claude-sonnet-4-6` | Prompt-based |
+
+Override via `LLM_MODEL` env var. All providers support the same request/response shape — switching
+providers requires only an env change, no code changes.
+
+### Design Tokens
+
+Pass canvas-level design tokens to keep AI output consistent with your brand:
+
+```tsx
+<BuilderEditor
+  builder={builder}
+  aiConfig={{
+    backendUrl: "http://localhost:3002",
+    designTokens: {
+      primaryColor: "#6366F1",
+      fontFamily: "Inter, sans-serif",
+      borderRadius: "8px",
+    },
+  }}
+/>
+```
+
+The AI is instructed to use **only** these values for colors and typography — no arbitrary CSS values.
+
+> Full reference: **[AI_ASSISTANT.md](./.claude/docs/AI_ASSISTANT.md)**
 
 ---
 

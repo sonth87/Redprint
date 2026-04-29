@@ -161,6 +161,7 @@ export interface DesignTokens {
 export type SSEEventType =
   | { event: "outline_ready"; data: { sections: SectionOutline[] } }
   | { event: "section_ready"; data: { index: number; sectionId: string; commands: AICommandSuggestion[] } }
+  | { event: "section_error"; data: { index: number; sectionId: string; error: string } }
   | { event: "error"; data: { message: string } }
   | { event: "complete"; data: Record<string, never> };
 

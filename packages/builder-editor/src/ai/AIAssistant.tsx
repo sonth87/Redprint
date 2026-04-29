@@ -22,6 +22,7 @@ import { useBuilder } from "@ui-builder/builder-react";
 import type { AIConfig, AIMessage, AIBuilderContext, AIResponse, DesignTokens } from "./types";
 import { sendAIMessage, streamAIMessage, parseAIResponse } from "./AIService";
 import { normalizeAICommands } from "./normalizeAICommands";
+import { applyAICommandsProgressive } from "./applyAICommandsProgressive";
 import { useTranslation } from "react-i18next";
 import { PROMPT_TEMPLATES, COLOR_PALETTES, TONE_STYLES, TEMPLATE_CATEGORIES } from "./ai-prompt-templates";
 
@@ -92,29 +93,18 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
   }, [streamingText]);
 
   const applyAndClose = useCallback(
-    (response: AIResponse) => {
+    async (response: AIResponse) => {
       if (abortRef.current) return;
 
       if (response.suggestions && response.suggestions.length > 0) {
         const commands = normalizeAICommands(response.suggestions, context.document.rootNodeId);
-        const errors: string[] = [];
-
-        // fullPageMode: backend will prepend REMOVE_NODE commands for all children
-        // So we just apply all commands in order
-        for (const s of commands) {
-          if (!ALLOWED_AI_COMMANDS.has(s.type)) continue;
-          try {
-            dispatch({ type: s.type, payload: s.payload } as never);
-          } catch (err) {
-            errors.push(`${s.type}: ${err instanceof Error ? err.message : "unknown error"}`);
-          }
-        }
-        if (errors.length > 0) {
-          console.warn(`[AI] ${errors.length} command(s) failed:`, errors);
-          setError(`${errors.length} command(s) failed to apply. Check console for details.`);
-          // Don't auto-close so the user sees the error
-          return;
-        }
+        // fullPageMode: backend prepends REMOVE_NODE commands for all children before AI commands,
+        // so we just apply in order. Progressive apply: containers first, leaves next frame.
+        await applyAICommandsProgressive(
+          commands,
+          (cmd) => dispatch({ type: cmd.type, payload: cmd.payload } as never),
+          (cmd) => ALLOWED_AI_COMMANDS.has(cmd.type),
+        );
       }
       onOpenChange(false);
     },
