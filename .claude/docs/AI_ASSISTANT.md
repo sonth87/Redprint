@@ -20,13 +20,18 @@ standard builder commands through the Command Engine, meaning they are fully und
 
 ```
 BuilderEditor
-  └── AIAssistant (Dialog)
-        ├── AIConfigPanel          ← Provider/key/model settings (persisted in localStorage)
-        ├── sendAIMessage()        ← Dispatch to provider adapter
-        │     ├── openaiAdapter
-        │     ├── geminiAdapter
-        │     └── claudeAdapter
-        └── buildAIContext()       ← Snapshot of current builder state
+  └── AIAssistant (Dialog)           ← Chat assistant: targeted edits
+  └── PageGeneratorModal             ← Full-page generation via SSE
+  └── AISectionPopover               ← Section-level regeneration
+
+All three share the same command application pipeline:
+
+  LLM response (JSON or SSE)
+    → normalizeAICommands()          ← resolve temp IDs, remap fields
+    → applyAICommandsProgressive()   ← batch-by-depth rendering
+          Phase 1 (sync):  containers → layout skeleton appears
+          Phase 2 (rAF):   leaves    → content fills in
+    → dispatch()                     ← builder CommandEngine
 ```
 
 **Files:**
@@ -34,10 +39,77 @@ BuilderEditor
 | File | Purpose |
 |------|---------|
 | `packages/builder-editor/src/ai/types.ts` | All AI-related TypeScript interfaces |
-| `packages/builder-editor/src/ai/AIService.ts` | Provider adapters + `sendAIMessage()` |
-| `packages/builder-editor/src/ai/buildAIContext.ts` | State snapshot builder |
+| `packages/builder-editor/src/ai/AIService.ts` | Backend communication (`sendAIMessage`, `streamAIMessage`) |
+| `packages/builder-editor/src/ai/buildAIContext.ts` | Builder state snapshot for AI context |
+| `packages/builder-editor/src/ai/normalizeAICommands.ts` | Command normalization + temp ID resolution |
+| `packages/builder-editor/src/ai/applyAICommandsProgressive.ts` | Batch-by-depth command application |
 | `packages/builder-editor/src/ai/AIAssistant.tsx` | Chat dialog UI |
 | `packages/builder-editor/src/ai/AIConfig.tsx` | Settings panel UI |
+| `packages/builder-editor/src/ai/page-generator/usePageGenerator.ts` | Full-page SSE generation hook |
+| `packages/builder-editor/src/ai/ai-section/useAISectionState.ts` | Section regeneration state |
+
+---
+
+## Streaming Architecture
+
+Each AI entry point uses a different transport but the **same client-side application pipeline**.
+
+| Entry point | Backend transport | Client application |
+|-------------|------------------|--------------------|
+| **generate-page** | SSE: `outline_ready` → N × `section_ready` → `complete` | `applyAICommandsProgressive` per section (fire-and-forget) |
+| **ai-section** | Single JSON response (`POST /api/ai/chat`) | `applyAICommandsProgressive` (awaited) |
+| **chat assistant** | Single JSON response (`POST /api/ai/chat`) | `applyAICommandsProgressive` (awaited) |
+
+### generate-page SSE Events
+
+```
+outline_ready   { sections: SectionOutline[] }
+section_ready   { index, sectionId, commands: AICommandSuggestion[] }
+section_error   { index, sectionId, error: string }
+complete        {}
+error           { message: string }
+```
+
+Sections are generated sequentially (default) or in parallel batches (`AI_GENERATION_MODE=parallel`,
+batch size via `AI_BATCH_SIZE` env var). Design context (colors, fonts, button styles) flows from
+each completed section to the next for visual consistency.
+
+---
+
+## Progressive Command Application
+
+**File:** `packages/builder-editor/src/ai/applyAICommandsProgressive.ts`
+
+When a section's commands arrive, they are applied in **two phases** to create a progressive
+"build-up" effect instead of all nodes appearing simultaneously:
+
+**Phase 1 — Containers (synchronous)**
+ADD_NODE commands for layout container types are dispatched immediately:
+- `Section`, `Container`, `Grid`, `Column`, `Repeater`
+
+React renders these containers, establishing the layout skeleton on the canvas.
+
+**Phase 2 — Leaves (next `requestAnimationFrame`)**
+After yielding to React via `requestAnimationFrame`, the remaining commands are dispatched:
+- Leaf components: `Text`, `Button`, `Image`, `Divider`, etc.
+- Non-ADD_NODE commands: `RENAME_NODE`, `UPDATE_STYLE`, `UPDATE_PROPS`, etc.
+
+```ts
+// Shared constant (exported from normalizeAICommands.ts)
+export const CONTAINER_COMPONENT_TYPES = new Set([
+  "Section", "Container", "Grid", "Column", "Repeater",
+]);
+```
+
+**Usage pattern:**
+
+```ts
+// fire-and-forget (generate-page: sections arrive seconds apart)
+void applyAICommandsProgressive(normalized, dispatch, filter);
+
+// awaited (ai-section, chat: need to know when done before updating UI state)
+await applyAICommandsProgressive(normalized, dispatch, filter);
+```
 
 ---
 
@@ -49,7 +121,7 @@ BuilderEditor
 interface AIConfig {
   provider: AIProvider;       // "openai" | "gemini" | "claude"
   apiKey: string;
-  model?: string;             // e.g. "gpt-5", "gemini-3-flash-preview", "claude-4-sonnet"
+  model?: string;             // e.g. "gpt-4o", "gemini-2.0-flash", "claude-sonnet-4-6"
   temperature?: number;       // 0–2, default 0.7
   maxTokens?: number;         // default 2048
   systemPrompt?: string;      // overrides the default system prompt
@@ -181,19 +253,19 @@ interface AIProviderAdapter {
 
 - Endpoint: `https://api.openai.com/v1/chat/completions`
 - Auth: `Authorization: Bearer {apiKey}`
-- Default model: `gpt-5`
+- Default model: `gpt-4o`
 
 ### Gemini
 
 - Endpoint: `https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={apiKey}`
 - Uses `contents` array with `user`/`model` roles
-- Default model: `gemini-3-flash-preview`
+- Default model: `gemini-2.0-flash`
 
 ### Claude (Anthropic)
 
 - Endpoint: `https://api.anthropic.com/v1/messages`
 - Auth: `x-api-key: {apiKey}` + `anthropic-version: 2023-06-01`
-- Default model: `claude-4-sonnet-20260215`
+- Default model: `claude-sonnet-4-6`
 - **Note**: No `anthropic-dangerous-direct-browser-access` header — callers must proxy through a
   backend to use Claude in production.
 
@@ -225,7 +297,8 @@ before applying the AI-generated commands.
 3. Backend identifies all children of the root node
 4. Backend generates a `REMOVE_NODE` command for each child
 5. These removal commands are prepended before AI-generated commands
-6. All commands execute atomically on the client: remove old content, then build new content
+6. All commands execute via `applyAICommandsProgressive`: REMOVE_NODEs first (phase 2, as non-ADD_NODE),
+   then new containers (phase 1 of the subsequent section commands)
 
 **Logging:**
 

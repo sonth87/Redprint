@@ -11,6 +11,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AIConfig, AICommandSuggestion, AIBuilderContext } from "../types";
+import { applyAICommandsProgressive } from "../applyAICommandsProgressive";
 import { generateSectionContent } from "./ai-section-service";
 import { AI_SECTION_REGENERATE_COOLDOWN_SECONDS } from "./ai-section-config";
 import type { Command } from "@ui-builder/builder-core";
@@ -174,18 +175,17 @@ export function useAISectionState(options: UseAISectionStateOptions): UseAISecti
         removeCount++;
       }
 
-      // 2. Dispatch AI-generated commands
-      let addCount = 0;
-      for (const cmd of safeCommands) {
-        dispatch({ type: cmd.type, payload: cmd.payload } as Command);
-        addCount++;
-      }
+      // 2. Dispatch AI-generated commands progressively (containers first, leaves next frame)
+      await applyAICommandsProgressive(
+        safeCommands,
+        (cmd) => dispatch({ type: cmd.type, payload: cmd.payload } as Command),
+      );
 
       setState({
         ...INITIAL_STATE,
         view: "preview",
         aiMessage: result.message,
-        undoCount: addCount,
+        undoCount: safeCommands.length,
         removeCount,
         lastRequest: { actionId, customPrompt, childIdsToRemove },
         cooldownRemaining: AI_SECTION_REGENERATE_COOLDOWN_SECONDS,

@@ -13,6 +13,14 @@
 import type { AICommandSuggestion } from "./types";
 
 /**
+ * Component types that act as layout containers (can have children).
+ * Exported for use in applyAICommandsProgressive (batch-by-depth rendering).
+ */
+export const CONTAINER_COMPONENT_TYPES = new Set([
+  "Section", "Container", "Grid", "Column", "Repeater",
+]);
+
+/**
  * @param suggestions - Raw commands from the AI response
  * @param rootNodeId  - The node to treat as "root" / "ROOT" / "root-node" parentId aliases.
  *                      For the chat assistant this is the document's rootNodeId.
@@ -22,8 +30,6 @@ export function normalizeAICommands(
   suggestions: AICommandSuggestion[],
   rootNodeId: string,
 ): AICommandSuggestion[] {
-  // Container component types that MAY reference children
-  const CONTAINER_TYPES = new Set(["Section", "Container", "Grid", "Column"]);
 
   // Map temp-id → real UUID
   // Pre-seed common root aliases so the AI can reference the root/section easily
@@ -62,7 +68,7 @@ export function normalizeAICommands(
       const tempId = payload.nodeId as string | undefined;
       if (tempId) {
         idMap.set(tempId, realId);
-      } else if (CONTAINER_TYPES.has(String(payload.componentType))) {
+      } else if (CONTAINER_COMPONENT_TYPES.has(String(payload.componentType))) {
         // Safety: If this is a container but has no nodeId, auto-assign one
         // This handles AI edge cases where nodeId is forgotten
       }
