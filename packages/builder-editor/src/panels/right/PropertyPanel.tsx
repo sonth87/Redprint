@@ -1,5 +1,5 @@
 import React, { memo, useState, useCallback, useMemo, useContext, createContext } from "react";
-import { Tabs, TabsList, TabsTrigger, TabsContent, ScrollArea, Label, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, Switch, Separator, Badge, cn } from "@ui-builder/ui";
+import { Tabs, TabsList, TabsTrigger, TabsContent, ScrollArea, Label, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, Switch, Separator, Badge, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider, cn } from "@ui-builder/ui";
 import type { Asset, BuilderNode, Breakpoint, ComponentDefinition, PropSchema, InteractionConfig, InteractionTrigger, InteractionAction } from "@ui-builder/builder-core";
 import { ImageFilterPicker } from "../ImageFilterPicker";
 import { resolveStyle, resolveProps } from "@ui-builder/builder-core";
@@ -49,6 +49,19 @@ export interface PropertyPanelProps {
  * - Click unit label to cycle units (with safe value capping for %).
  * - Click and drag horizontally to scrub (increment/decrement) the value.
  */
+const UNIT_DESCRIPTIONS: Record<string, { label: string; description: string }> = {
+  px:  { label: "Pixels",          description: "Fixed size — doesn't scale with screen or parent. Best for precise, absolute sizing." },
+  "%": { label: "Percent",         description: "Relative to the parent element's size. 50% = half of parent width/height." },
+  vh:  { label: "Viewport Height", description: "1vh = 1% of the browser window height. 100vh = full screen height." },
+  vw:  { label: "Viewport Width",  description: "1vw = 1% of the browser window width. 100vw = full screen width." },
+  rem: { label: "Root em",         description: "Relative to the root font size (usually 16px). 1rem = 16px, 2rem = 32px." },
+  em:  { label: "Em",              description: "Relative to the current element's font size. Scales with typography." },
+  fr:  { label: "Fraction",        description: "CSS Grid only — divides remaining space proportionally. 1fr = equal share." },
+  deg: { label: "Degrees",         description: "Angle unit. 0deg = up, 90deg = right, 180deg = down, 360deg = full rotation." },
+  s:   { label: "Seconds",         description: "Time unit for transitions and animations." },
+  ms:  { label: "Milliseconds",    description: "Time unit. 1000ms = 1 second. Useful for fine-grained animation timing." },
+};
+
 function NumericPropertyInput({
   value,
   onChange,
@@ -141,6 +154,8 @@ function NumericPropertyInput({
     window.addEventListener("mouseup", onMouseUp);
   }, [numPart, currentUnit, isAuto, onChange]);
 
+  const unitInfo = UNIT_DESCRIPTIONS[currentUnit];
+
   return (
     <div className="relative flex items-center group">
       <Input
@@ -155,19 +170,39 @@ function NumericPropertyInput({
         onChange={(e) => handleNumChange(e.target.value)}
       />
       {!isAuto && (
-        <span 
-          className={cn(
-            "absolute right-2.5 text-[10px] font-medium text-muted-foreground/60 select-none cursor-default",
-            safeUnits.length > 1 && "cursor-pointer hover:text-primary hover:bg-muted px-1 rounded transition-colors"
-          )}
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleUnit();
-          }}
-          title={safeUnits.length > 1 ? `Click to switch unit (${safeUnits.join('/')})` : undefined}
-        >
-          {currentUnit}
-        </span>
+        <TooltipProvider delayDuration={600}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span
+                className={cn(
+                  "absolute right-2.5 text-[10px] font-medium text-muted-foreground/60 select-none cursor-default",
+                  safeUnits.length > 1 && "cursor-pointer hover:text-primary hover:bg-muted px-1 rounded transition-colors"
+                )}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleUnit();
+                }}
+              >
+                {currentUnit}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="max-w-[200px]">
+              {unitInfo ? (
+                <div className="space-y-0.5">
+                  <p className="font-semibold text-xs">{unitInfo.label} <span className="font-mono opacity-60">({currentUnit})</span></p>
+                  <p className="text-xs text-muted-foreground leading-snug">{unitInfo.description}</p>
+                  {safeUnits.length > 1 && (
+                    <p className="text-[10px] text-muted-foreground/60 pt-0.5 border-t border-border/50 mt-1">
+                      Click to cycle: {safeUnits.join(" → ")}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-xs">{currentUnit}{safeUnits.length > 1 ? ` — click to cycle: ${safeUnits.join(" → ")}` : ""}</p>
+              )}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       )}
     </div>
   );
@@ -571,6 +606,16 @@ function ImagePropControl({
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
           <span className="text-white text-xs font-medium">Change Image</span>
         </div>
+        {/* Remove button */}
+        {src && (
+          <button
+            className="absolute top-1 right-1 z-10 rounded-full bg-black/60 p-0.5 text-white hover:bg-destructive transition-colors"
+            onClick={(e) => { e.stopPropagation(); onChange(undefined); }}
+            title="Remove image"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        )}
       </div>
       {/* URL fallback input */}
       <Input
@@ -1006,7 +1051,11 @@ export const PropertyPanel = memo(function PropertyPanel({
                     <NumericPropertyInput
                       value={String(style[key] ?? "")}
                       placeholder="auto"
-                      units={["width", "maxWidth", "height", "maxHeight"].includes(key) ? ["px", "%"] : ["px"]}
+                      units={
+                        ["width", "maxWidth"].includes(key) ? ["px", "%"] :
+                        ["height", "minHeight", "maxHeight"].includes(key) ? ["px", "%", "vh"] :
+                        ["px"]
+                      }
                       onChange={(val) => onStyleChange(key, val || undefined)}
                     />
                   </div>

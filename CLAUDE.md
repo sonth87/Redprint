@@ -36,6 +36,7 @@ packages/config             ← Shared configs (ESLint, TS, Tailwind)
 - All state changes go through the **Command pattern** — no direct state mutation
 - Interface contracts in `README.md` are **immutable** unless version-bumped
 - Uses **shadcn** (`packages/ui`) as design system — NOT `@sth87/shadcn-design-system`
+- After any code change, explicitly review whether project docs and AI-facing docs/instructions also need updates. If behavior, APIs, workflows, constraints, or assumptions changed, update the relevant docs in the same task.
 
 ## Skills
 
