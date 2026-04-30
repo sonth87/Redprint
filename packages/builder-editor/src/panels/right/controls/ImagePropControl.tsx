@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { Label, Input } from "@ui-builder/ui";
+import { Label } from "@ui-builder/ui";
 import { ImageIcon, X } from "lucide-react";
 import type { PropSchema } from "@ui-builder/builder-core";
 import { MediaContext } from "../context";
@@ -13,8 +13,9 @@ export function ImagePropControl({
   value: unknown;
   onChange: (value: unknown) => void;
 }) {
-  const { assets, onOpenMediaManager } = useContext(MediaContext);
+  const { onOpenMediaManager } = useContext(MediaContext);
   const src = String(value ?? "");
+  const isImageUrl = src.startsWith("http") || src.startsWith("/") || src.startsWith("data:");
 
   const handleOpen = () => {
     onOpenMediaManager((asset) => onChange(asset.url));
@@ -28,7 +29,7 @@ export function ImagePropControl({
         className="relative w-full h-24 rounded-md border border-border overflow-hidden bg-muted cursor-pointer group"
         onClick={handleOpen}
       >
-        {src ? (
+        {src && isImageUrl ? (
           <img
             src={src}
             alt=""
@@ -56,16 +57,6 @@ export function ImagePropControl({
           </button>
         )}
       </div>
-      {/* URL fallback input */}
-      <Input
-        className="h-7 text-xs font-mono"
-        placeholder="https://… or click above"
-        value={src}
-        onChange={(e) => onChange(e.target.value)}
-      />
-      {assets.length > 0 && (
-        <p className="text-[10px] text-muted-foreground">{assets.length} asset{assets.length !== 1 ? "s" : ""} in library</p>
-      )}
     </div>
   );
 }

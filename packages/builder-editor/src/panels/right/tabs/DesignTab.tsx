@@ -6,6 +6,8 @@ import { ImageFilterPicker } from "../../ImageFilterPicker";
 import { GridTemplateEditor } from "../controls/GridTemplateEditor";
 import { NumericPropertyInput } from "../controls/NumericPropertyInput";
 import { ShadowControl } from "../../../controls/shadow/ShadowControl";
+import { ImagePropControl } from "../controls/ImagePropControl";
+import { ColorSwatch } from "../../../controls/color/ColorSwatch";
 import type { ComponentDefinition, BuilderNode } from "@ui-builder/builder-core";
 import { useTranslation } from "react-i18next";
 
@@ -25,10 +27,104 @@ export function DesignTab({
   onStyleChange: (key: string, value: unknown) => void;
 }) {
   const { t } = useTranslation();
+  const isSectionNode = selectedNode.type === "Section";
+
+  const renderBackgroundImageOptions = () => {
+    if (!String(style.backgroundImage ?? "").startsWith("url(")) return null;
+    return (
+      <div className="grid grid-cols-2 gap-2 mt-2">
+        <div className="grid gap-1">
+          <Label className="text-[10px] text-muted-foreground">Size</Label>
+          <Select
+            value={String(style.backgroundSize ?? "cover")}
+            onValueChange={(v) => onStyleChange("backgroundSize", v)}
+          >
+            <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {[["cover","cover"],["contain","contain"],["fill","100% 100%"],["auto","auto"]].map(([label, value]) => (
+                <SelectItem key={value} value={value} className="text-xs">{label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="grid gap-1">
+          <Label className="text-[10px] text-muted-foreground">Position</Label>
+          <Select
+            value={String(style.backgroundPosition ?? "center")}
+            onValueChange={(v) => onStyleChange("backgroundPosition", v)}
+          >
+            <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {["center", "top", "bottom", "left", "right", "top left", "top right", "bottom left", "bottom right"].map((p) => (
+                <SelectItem key={p} value={p} className="text-xs">{p}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="grid gap-1 col-span-2">
+          <Label className="text-[10px] text-muted-foreground">Repeat</Label>
+          <Select
+            value={String(style.backgroundRepeat ?? "no-repeat")}
+            onValueChange={(v) => onStyleChange("backgroundRepeat", v)}
+          >
+            <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {["no-repeat", "repeat", "repeat-x", "repeat-y"].map((r) => (
+                <SelectItem key={r} value={r} className="text-xs">{r}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    );
+  };
+
+  const renderBackgroundImageControl = () => {
+    const rawBg = String(style.backgroundImage ?? "");
+    const urlMatch = rawBg.match(/^url\(['"]?(.*?)['"]?\)$/);
+    const isGradient = rawBg && !urlMatch;
+    if (isGradient) {
+      return (
+        <div className="grid gap-1">
+          <Label className="text-[10px] text-muted-foreground">Background Image</Label>
+          <Input
+            className="h-7 text-xs font-mono"
+            value={rawBg}
+            onChange={(e) => onStyleChange("backgroundImage", e.target.value || undefined)}
+          />
+        </div>
+      );
+    }
+    return (
+      <ImagePropControl
+        schema={{ key: "backgroundImage", type: "image", label: "Background Image" } as any}
+        value={urlMatch ? urlMatch[1] : ""}
+        onChange={(val) => {
+          if (!val) {
+            onStyleChange("backgroundImage", undefined);
+            onStyleChange("backgroundSize", undefined);
+            onStyleChange("backgroundPosition", undefined);
+            onStyleChange("backgroundRepeat", undefined);
+          } else {
+            const v = String(val).trim();
+            if (v.startsWith("http") || v.startsWith("/") || v.startsWith("data:")) {
+              onStyleChange("backgroundImage", `url(${v})`);
+              onStyleChange("backgroundSize", "cover");
+              onStyleChange("backgroundPosition", "center");
+              onStyleChange("backgroundRepeat", "no-repeat");
+            } else {
+              onStyleChange("backgroundImage", v);
+            }
+          }
+        }}
+      />
+    );
+  };
+
   return (
     <ScrollArea className="h-full">
       {/* Component props */}
-      {definition.propSchema.length > 0 && (
+      {definition.propSchema.length > 0 && !isSectionNode && (
         <CollapsibleSection title={t("propertyPanel.properties")}>
           {/* Grid gets a custom template editor instead of raw columnTemplate/customTemplate controls */}
           {selectedNode.type === "Grid" && (
@@ -119,6 +215,77 @@ export function DesignTab({
           />
         </CollapsibleSection>
       )}
+
+      {/* Section: merged Background + Options at top */}
+      {isSectionNode && (() => {
+        const sectionOptions = (definition.propSchema.find((s: any) => s.key === "sectionOptionsGroup") as any)?.children ?? [];
+        const dividerSchema = (definition.propSchema.find((s: any) => s.key === "dividerGroup") as any);
+        return (
+          <>
+            <CollapsibleSection title={t("design.background")}>
+              <div className="grid gap-1.5">
+                <Label className="text-[10px] text-muted-foreground">Background Color</Label>
+                <div className="flex items-center gap-2">
+                  <ColorSwatch
+                    value={String(style.backgroundColor ?? "")}
+                    onChange={(v) => onStyleChange("backgroundColor", v)}
+                  />
+                  <Input
+                    className="h-7 text-xs flex-1 font-mono uppercase"
+                    value={String(style.backgroundColor ?? "")}
+                    onChange={(e) => onStyleChange("backgroundColor", e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="grid gap-1 mt-2">
+                {renderBackgroundImageControl()}
+                {renderBackgroundImageOptions()}
+              </div>
+              <Separator className="my-3" />
+              <div className="space-y-3">
+                {sectionOptions.map((child: any) => (
+                  <PropControl
+                    key={child.key}
+                    schema={child}
+                    value={resolvedPropsMap[child.key]}
+                    onChange={(val) => onPropChange(child.key, val)}
+                  />
+                ))}
+              </div>
+            </CollapsibleSection>
+            {dividerSchema && (
+              <CollapsibleSection title={dividerSchema.label} defaultOpen={false}>
+                <div className="space-y-3">
+                  {dividerSchema.children.map((child: any) => {
+                    if (child.type === "row") {
+                      return (
+                        <div key={child.key} className="grid grid-cols-2 gap-2">
+                          {child.children.map((subchild: any) => (
+                            <PropControl
+                              key={subchild.key}
+                              schema={subchild}
+                              value={resolvedPropsMap[subchild.key]}
+                              onChange={(val) => onPropChange(subchild.key, val)}
+                            />
+                          ))}
+                        </div>
+                      );
+                    }
+                    return (
+                      <PropControl
+                        key={child.key}
+                        schema={child}
+                        value={resolvedPropsMap[child.key]}
+                        onChange={(val) => onPropChange(child.key, val)}
+                      />
+                    );
+                  })}
+                </div>
+              </CollapsibleSection>
+            )}
+          </>
+        );
+      })()}
 
       {/* Size */}
       <CollapsibleSection title={t("design.size")}>
@@ -262,34 +429,27 @@ export function DesignTab({
         </div>
       </CollapsibleSection>
 
-      {/* Background */}
-      <CollapsibleSection title={t("design.background")} defaultOpen={false}>
+      {/* Background — hidden for Section (handled in merged block above) */}
+      {!isSectionNode && <CollapsibleSection title={t("design.background")} defaultOpen={false}>
         <div className="grid gap-1.5">
           <Label className="text-[10px] text-muted-foreground">Background Color</Label>
           <div className="flex items-center gap-2">
-            <input
-              type="color"
-              className="h-7 w-10 rounded border border-input bg-background cursor-pointer"
-              value={String(style.backgroundColor ?? "#ffffff")}
-              onChange={(e) => onStyleChange("backgroundColor", e.target.value)}
+            <ColorSwatch
+              value={String(style.backgroundColor ?? "")}
+              onChange={(v) => onStyleChange("backgroundColor", v)}
             />
             <Input
-              className="h-7 text-xs flex-1 font-mono"
+              className="h-7 text-xs flex-1 font-mono uppercase"
               value={String(style.backgroundColor ?? "")}
               onChange={(e) => onStyleChange("backgroundColor", e.target.value)}
             />
           </div>
         </div>
-        <div className="grid gap-1">
-          <Label className="text-[10px] text-muted-foreground">Background Image</Label>
-          <Input
-            className="h-7 text-xs"
-            value={String(style.backgroundImage ?? "")}
-            placeholder="url(...) or gradient"
-            onChange={(e) => onStyleChange("backgroundImage", e.target.value || undefined)}
-          />
+        <div className="grid gap-1 mt-2">
+          {renderBackgroundImageControl()}
+          {renderBackgroundImageOptions()}
         </div>
-      </CollapsibleSection>
+      </CollapsibleSection>}
 
       {/* Border */}
       <CollapsibleSection title={t("design.border")} defaultOpen={false}>
