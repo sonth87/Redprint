@@ -47,6 +47,7 @@ export type PropSchema =
   | { key: string; type: "icon"; label: string }
   | { key: string; type: "font"; label: string }
   | { key: string; type: "slider"; label: string; min: number; max: number; step?: number; default?: number }
+  | { key: string; type: "row"; children: PropSchema[] }
   | { key: string; type: "group"; label: string; children: PropSchema[]; collapsible?: boolean };
 
 // ── Container & Layout ────────────────────────────────────────────────────

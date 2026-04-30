@@ -183,3 +183,6 @@ export * from "./imageFilters";
 
 // ── Image frames ───────────────────────────────────────────────────────────
 export * from "./imageFrames";
+
+// ── Animation presets & keyframes ──────────────────────────────────────────
+export * from "./animations";

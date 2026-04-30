@@ -1,4 +1,5 @@
 import type React from "react";
+import { buildDecorativeMaskSvgUri, isDecorativeDividerType } from "./decorative-dividers";
 
 export const DIVIDER_OPTIONS = [
   { value: "none", label: "None" },
@@ -11,6 +12,9 @@ export const DIVIDER_OPTIONS = [
   { value: "slant", label: "Slant" },
   { value: "curve", label: "Curve" },
   { value: "zigzag", label: "Zigzag" },
+  { value: "halftone", label: "Halftone" },
+  { value: "radial-dots", label: "Dot Grid" },
+  { value: "brush", label: "Brush" },
   { value: "fade", label: "Fade" },
 ];
 
@@ -112,7 +116,7 @@ function getBoundaryY(type: string, flip: boolean, t: number): number {
 }
 
 function buildShapePathData(type: string, flip: boolean): string | null {
-  if (type === "none" || type === "fade") return null;
+  if (type === "none" || type === "fade" || isDecorativeDividerType(type)) return null;
 
   const sampleCount = 48;
   const points = ["M0,0", "L1200,0"];
@@ -127,6 +131,9 @@ function buildShapePathData(type: string, flip: boolean): string | null {
 }
 
 function makeMaskSvgUri(type: string, position: "top" | "bottom", flip: boolean): string | null {
+  const decorative = buildDecorativeMaskSvgUri(type, position);
+  if (decorative) return decorative;
+
   const pathData = buildShapePathData(type, flip);
   if (!pathData) return null;
 
@@ -264,12 +271,24 @@ export function buildDividerRenderState(args: DividerArgs): DividerRenderState {
   const { clipId, topType, topHeight, bottomType, bottomHeight } = args;
   const hasTop = topType !== "none";
   const hasBottom = bottomType !== "none";
-  const shapeOnly = (hasTop || hasBottom) && topType !== "fade" && bottomType !== "fade";
+  const usesDecorativeTop = isDecorativeDividerType(topType);
+  const usesDecorativeBottom = isDecorativeDividerType(bottomType);
+  const shapeOnly =
+    (hasTop || hasBottom) &&
+    topType !== "fade" &&
+    bottomType !== "fade" &&
+    !usesDecorativeTop &&
+    !usesDecorativeBottom;
   const clipPathData = shapeOnly ? buildClipPathData(args) : null;
+  const usesMaskPipeline =
+    topType === "fade" ||
+    bottomType === "fade" ||
+    usesDecorativeTop ||
+    usesDecorativeBottom;
 
   const surfaceStyle: React.CSSProperties = clipPathData
     ? { clipPath: `url(#${clipId})`, WebkitClipPath: `url(#${clipId})` }
-    : (topType === "fade" || bottomType === "fade")
+    : usesMaskPipeline
       ? buildFadeMaskStyle(args)
       : {};
 
