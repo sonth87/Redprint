@@ -94,6 +94,7 @@ export function NodeRenderer({ nodeId, mode = "editor" }: NodeRendererProps) {
       children: children.length > 0 ? children : undefined,
       style: resolvedStyle,
       interactions: node.interactions,
+      breakpoint,
     });
     // Inject data-node-id so canvas event handlers can identify nodes via
     // closest("[data-node-id]") / querySelector("[data-node-id]")

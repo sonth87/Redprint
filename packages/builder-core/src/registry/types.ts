@@ -4,6 +4,7 @@
 
 import type { BuilderDocument, BuilderNode, StyleConfig } from "../document/types";
 import type { InteractionConfig } from "../document/interactions";
+import type { Breakpoint } from "../responsive/types";
 
 // ── Prop Schema ───────────────────────────────────────────────────────────
 
@@ -212,6 +213,7 @@ export type ComponentRenderer = (props: {
   children?: unknown;
   style: StyleConfig;
   interactions: InteractionConfig[];
+  breakpoint: Breakpoint;
 }) => unknown;
 
 // ── ComponentDefinition ───────────────────────────────────────────────────

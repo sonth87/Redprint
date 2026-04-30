@@ -90,6 +90,7 @@ const RuntimeNode = memo(function RuntimeNode({ nodeId }: { nodeId: string }) {
       children: children.length > 0 ? children : undefined,
       style: resolvedStyle,
       interactions: node.interactions,
+      breakpoint: ctx.breakpoint,
     });
 
     // Inject extra props into the top-level element if it's a React element
