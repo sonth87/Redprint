@@ -1,5 +1,5 @@
 import React from "react";
-import { Input, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider, cn } from "@ui-builder/ui";
+import { Input, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider, Popover, PopoverContent, PopoverTrigger, cn } from "@ui-builder/ui";
 
 const UNIT_DESCRIPTIONS: Record<string, { label: string; description: string }> = {
   px:  { label: "Pixels",          description: "Fixed size — doesn't scale with screen or parent. Best for precise, absolute sizing." },
@@ -26,10 +26,11 @@ export function NumericPropertyInput({
   units?: string[];
 }) {
   const [isScrubbing, setIsScrubbing] = React.useState(false);
-  
+  const [isUnitPopoverOpen, setIsUnitPopoverOpen] = React.useState(false);
+
   // Ensure units is non-empty with fallback
   const safeUnits = (units && units.length > 0) ? units : ["px"];
-  
+
   // Parsing: detect current unit and numeric value
   const isAuto = value === "auto";
   const currentUnit = safeUnits.find(u => String(value).endsWith(u)) || safeUnits[0]!;
@@ -44,29 +45,23 @@ export function NumericPropertyInput({
     onChange(newVal + currentUnit);
   };
 
-  const toggleUnit = () => {
-    if (safeUnits.length <= 1 || isAuto) return;
-    const currentIndex = safeUnits.indexOf(currentUnit);
-    const nextUnit = safeUnits[(currentIndex + 1) % safeUnits.length]!;
-    
+  const selectUnit = (nextUnit: string) => {
+    if (isAuto) return;
     let nextNum = parseFloat(numPart) || 0;
-    
-    // Method 1: Safe Defaults
-    // If switching to %, ensure the value isn't absurdly large (max 100%)
-    if (nextUnit === "%" && nextNum > 100) {
+
+    // Clamp to 100 when switching to % or vh (both are relative units capped at 100)
+    if ((nextUnit === "%" || nextUnit === "vh") && nextNum > 100) {
       nextNum = 100;
-    } else if (nextUnit === "px" && currentUnit === "%" && nextNum === 100) {
-      // If switching from 100% to px, maybe default to a common size or let it be
-      // For now, just keep the number as per user's "Method 1" request
     }
 
     onChange(nextNum + nextUnit);
+    setIsUnitPopoverOpen(false);
   };
 
   // Scrubbing Logic
   const onMouseDown = React.useCallback((e: React.MouseEvent) => {
     if (isAuto || e.button !== 0) return; // Only left click
-    
+
     const startX = e.clientX;
     const startVal = parseFloat(numPart) || 0;
     let hasMoved = false;
@@ -76,16 +71,16 @@ export function NumericPropertyInput({
       if (Math.abs(deltaX) > 3) {
         hasMoved = true;
         setIsScrubbing(true);
-        
+
         // Adjust step based on modifiers
         let step = 1;
         if (moveEvent.shiftKey) step = 10;
         if (moveEvent.altKey) step = 0.1;
-        
+
         const newVal = startVal + (deltaX * step);
         // Round to 1 decimal place if using alt, else integer
         const formattedVal = step < 1 ? Math.round(newVal * 10) / 10 : Math.round(newVal);
-        
+
         onChange(formattedVal + currentUnit);
       }
     };
@@ -94,7 +89,7 @@ export function NumericPropertyInput({
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
       setTimeout(() => setIsScrubbing(false), 0);
-      
+
       if (hasMoved) {
         // Prevent click events if we actually dragged
         e.preventDefault();
@@ -122,39 +117,59 @@ export function NumericPropertyInput({
         onChange={(e) => handleNumChange(e.target.value)}
       />
       {!isAuto && (
-        <TooltipProvider delayDuration={600}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span
-                className={cn(
-                  "absolute right-2.5 text-[10px] font-medium text-muted-foreground/60 select-none cursor-default",
-                  safeUnits.length > 1 && "cursor-pointer hover:text-primary hover:bg-muted px-1 rounded transition-colors"
+        <Popover
+          open={safeUnits.length > 1 && !isAuto ? isUnitPopoverOpen : false}
+          onOpenChange={safeUnits.length > 1 ? setIsUnitPopoverOpen : undefined}
+        >
+          <TooltipProvider delayDuration={600}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <PopoverTrigger asChild>
+                  <span
+                    className={cn(
+                      "absolute right-2.5 text-[10px] font-medium text-muted-foreground/60 select-none cursor-default",
+                      safeUnits.length > 1 && "cursor-pointer hover:text-primary hover:bg-muted px-1 rounded transition-colors"
+                    )}
+                  >
+                    {currentUnit}
+                  </span>
+                </PopoverTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-[200px]">
+                {unitInfo ? (
+                  <div className="space-y-0.5">
+                    <p className="font-semibold text-xs">{unitInfo.label} <span className="font-mono opacity-60">({currentUnit})</span></p>
+                    <p className="text-xs text-muted-foreground leading-snug">{unitInfo.description}</p>
+                    {safeUnits.length > 1 && (
+                      <p className="text-[10px] text-muted-foreground/60 pt-0.5 border-t border-border/50 mt-1">
+                        Click to select unit
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs">{currentUnit}</p>
                 )}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleUnit();
-                }}
-              >
-                {currentUnit}
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="right" className="max-w-[200px]">
-              {unitInfo ? (
-                <div className="space-y-0.5">
-                  <p className="font-semibold text-xs">{unitInfo.label} <span className="font-mono opacity-60">({currentUnit})</span></p>
-                  <p className="text-xs text-muted-foreground leading-snug">{unitInfo.description}</p>
-                  {safeUnits.length > 1 && (
-                    <p className="text-[10px] text-muted-foreground/60 pt-0.5 border-t border-border/50 mt-1">
-                      Click to cycle: {safeUnits.join(" → ")}
-                    </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          {safeUnits.length > 1 && (
+            <PopoverContent side="right" align="start" className="w-40 p-1">
+              {safeUnits.map((unit) => (
+                <button
+                  key={unit}
+                  onClick={() => selectUnit(unit)}
+                  className={cn(
+                    "flex items-center gap-2 w-full text-left px-2 py-1 text-xs rounded hover:bg-muted",
+                    unit === currentUnit && "text-primary font-medium"
                   )}
-                </div>
-              ) : (
-                <p className="text-xs">{currentUnit}{safeUnits.length > 1 ? ` — click to cycle: ${safeUnits.join(" → ")}` : ""}</p>
-              )}
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+                >
+                  <span className="font-mono w-6">{unit || "—"}</span>
+                  <span className="text-muted-foreground">{UNIT_DESCRIPTIONS[unit]?.label ?? ""}</span>
+                </button>
+              ))}
+            </PopoverContent>
+          )}
+        </Popover>
       )}
     </div>
   );

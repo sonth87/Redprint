@@ -1,6 +1,7 @@
 import React from "react";
 import { ScrollArea, Label, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, Separator } from "@ui-builder/ui";
 import { CollapsibleSection } from "../components/CollapsibleSection";
+import { PropInfoTooltip } from "../components/PropInfoTooltip";
 import { PropControl } from "../controls/PropControl";
 import { ImageFilterPicker } from "../../ImageFilterPicker";
 import { GridTemplateEditor } from "../controls/GridTemplateEditor";
@@ -34,21 +35,21 @@ export function DesignTab({
     return (
       <div className="grid grid-cols-2 gap-2 mt-2">
         <div className="grid gap-1">
-          <Label className="text-[10px] text-muted-foreground">Size</Label>
+          <Label className="text-[10px] text-muted-foreground">{t("design.backgroundSize")}</Label>
           <Select
             value={String(style.backgroundSize ?? "cover")}
             onValueChange={(v) => onStyleChange("backgroundSize", v)}
           >
             <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {[["cover","cover"],["contain","contain"],["fill","100% 100%"],["auto","auto"]].map(([label, value]) => (
+              {([ ["cover","cover"], ["contain","contain"], ["fill","100% 100%"], ["auto","auto"] ] as [string, string][]).map(([label, value]) => (
                 <SelectItem key={value} value={value} className="text-xs">{label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
         <div className="grid gap-1">
-          <Label className="text-[10px] text-muted-foreground">Position</Label>
+          <Label className="text-[10px] text-muted-foreground">{t("design.backgroundPosition")}</Label>
           <Select
             value={String(style.backgroundPosition ?? "center")}
             onValueChange={(v) => onStyleChange("backgroundPosition", v)}
@@ -62,7 +63,7 @@ export function DesignTab({
           </Select>
         </div>
         <div className="grid gap-1 col-span-2">
-          <Label className="text-[10px] text-muted-foreground">Repeat</Label>
+          <Label className="text-[10px] text-muted-foreground">{t("design.backgroundRepeat")}</Label>
           <Select
             value={String(style.backgroundRepeat ?? "no-repeat")}
             onValueChange={(v) => onStyleChange("backgroundRepeat", v)}
@@ -86,7 +87,7 @@ export function DesignTab({
     if (isGradient) {
       return (
         <div className="grid gap-1">
-          <Label className="text-[10px] text-muted-foreground">Background Image</Label>
+          <Label className="text-[10px] text-muted-foreground">{t("design.backgroundImage")}</Label>
           <Input
             className="h-7 text-xs font-mono"
             value={rawBg}
@@ -97,7 +98,7 @@ export function DesignTab({
     }
     return (
       <ImagePropControl
-        schema={{ key: "backgroundImage", type: "image", label: "Background Image" } as any}
+        schema={{ key: "backgroundImage", type: "image", label: t("design.backgroundImage") } as any}
         value={urlMatch ? urlMatch[1] : ""}
         onChange={(val) => {
           if (!val) {
@@ -207,7 +208,7 @@ export function DesignTab({
 
       {/* Image filter picker — shown only for Image nodes */}
       {selectedNode.type === "Image" && (
-        <CollapsibleSection title="Filter" defaultOpen={false}>
+        <CollapsibleSection title={t("design.filter")} defaultOpen={false}>
           <ImageFilterPicker
             previewSrc={String(resolvedPropsMap["src"] ?? "")}
             value={String(resolvedPropsMap["filter"] ?? "none")}
@@ -224,7 +225,10 @@ export function DesignTab({
           <>
             <CollapsibleSection title={t("design.background")}>
               <div className="grid gap-1.5">
-                <Label className="text-[10px] text-muted-foreground">Background Color</Label>
+                <div className="flex items-center">
+                  <Label className="text-[10px] text-muted-foreground">{t("design.backgroundColor")}</Label>
+                  <PropInfoTooltip text={t("design.info.backgroundColor")} />
+                </div>
                 <div className="flex items-center gap-2">
                   <ColorSwatch
                     value={String(style.backgroundColor ?? "")}
@@ -292,7 +296,10 @@ export function DesignTab({
         <div className="grid grid-cols-2 gap-2">
           {["width", "height", "minWidth", "maxWidth", "minHeight", "maxHeight"].map((key) => (
             <div key={key} className="grid gap-1">
-              <Label className="text-[10px] text-muted-foreground capitalize">{key}</Label>
+              <div className="flex items-center">
+                <Label className="text-[10px] text-muted-foreground">{t(`design.${key}`)}</Label>
+                <PropInfoTooltip text={t(`design.info.${key}`)} />
+              </div>
               <NumericPropertyInput
                 value={String(style[key] ?? "")}
                 placeholder="auto"
@@ -313,9 +320,12 @@ export function DesignTab({
         <div className="grid grid-cols-2 gap-2">
           {["padding", "paddingTop", "paddingRight", "paddingBottom", "paddingLeft"].map((key) => (
             <div key={key} className="grid gap-1">
-              <Label className="text-[10px] text-muted-foreground capitalize">
-                {key === "padding" ? "All" : key.replace("padding", "").toLowerCase()}
-              </Label>
+              <div className="flex items-center">
+                <Label className="text-[10px] text-muted-foreground">
+                  {key === "padding" ? t("design.all") : t(`design.${key.replace("padding", "").toLowerCase()}`)}
+                </Label>
+                <PropInfoTooltip text={t(`design.info.${key}`)} />
+              </div>
               <NumericPropertyInput
                 value={String(style[key] ?? "")}
                 placeholder="0"
@@ -328,9 +338,12 @@ export function DesignTab({
         <div className="grid grid-cols-2 gap-2">
           {["margin", "marginTop", "marginRight", "marginBottom", "marginLeft"].map((key) => (
             <div key={key} className="grid gap-1">
-              <Label className="text-[10px] text-muted-foreground capitalize">
-                {key === "margin" ? "All" : key.replace("margin", "").toLowerCase()}
-              </Label>
+              <div className="flex items-center">
+                <Label className="text-[10px] text-muted-foreground">
+                  {key === "margin" ? t("design.all") : t(`design.${key.replace("margin", "").toLowerCase()}`)}
+                </Label>
+                <PropInfoTooltip text={t(`design.info.${key}`)} />
+              </div>
               <NumericPropertyInput
                 value={String(style[key] ?? "")}
                 placeholder="0"
@@ -345,7 +358,10 @@ export function DesignTab({
       <CollapsibleSection title={t("design.typography")}>
         <div className="grid grid-cols-2 gap-2">
           <div className="grid gap-1">
-            <Label className="text-[10px] text-muted-foreground">Font Family</Label>
+            <div className="flex items-center">
+              <Label className="text-[10px] text-muted-foreground">{t("design.fontFamily")}</Label>
+              <PropInfoTooltip text={t("design.info.fontFamily")} />
+            </div>
             <Input
               className="h-7 text-xs"
               value={String(style.fontFamily ?? "")}
@@ -354,7 +370,10 @@ export function DesignTab({
             />
           </div>
           <div className="grid gap-1">
-            <Label className="text-[10px] text-muted-foreground">Font Size</Label>
+            <div className="flex items-center">
+              <Label className="text-[10px] text-muted-foreground">{t("design.fontSize")}</Label>
+              <PropInfoTooltip text={t("design.info.fontSize")} />
+            </div>
             <NumericPropertyInput
               value={String(style.fontSize ?? "")}
               placeholder="16px"
@@ -362,13 +381,16 @@ export function DesignTab({
             />
           </div>
           <div className="grid gap-1">
-            <Label className="text-[10px] text-muted-foreground">Font Weight</Label>
+            <div className="flex items-center">
+              <Label className="text-[10px] text-muted-foreground">{t("design.fontWeight")}</Label>
+              <PropInfoTooltip text={t("design.info.fontWeight")} />
+            </div>
             <Select
               value={String(style.fontWeight ?? "")}
               onValueChange={(v) => onStyleChange("fontWeight", v || undefined)}
             >
               <SelectTrigger className="h-7 text-xs">
-                <SelectValue placeholder="Weight" />
+                <SelectValue placeholder={t("design.fontWeight")} />
               </SelectTrigger>
               <SelectContent>
                 {["100","200","300","400","500","600","700","800","900"].map((w) => (
@@ -378,7 +400,10 @@ export function DesignTab({
             </Select>
           </div>
           <div className="grid gap-1">
-            <Label className="text-[10px] text-muted-foreground">Line Height</Label>
+            <div className="flex items-center">
+              <Label className="text-[10px] text-muted-foreground">{t("design.lineHeight")}</Label>
+              <PropInfoTooltip text={t("design.info.lineHeight")} />
+            </div>
             <Input
               className="h-7 text-xs"
               value={String(style.lineHeight ?? "")}
@@ -387,7 +412,10 @@ export function DesignTab({
             />
           </div>
           <div className="grid gap-1">
-            <Label className="text-[10px] text-muted-foreground">Letter Spacing</Label>
+            <div className="flex items-center">
+              <Label className="text-[10px] text-muted-foreground">{t("design.letterSpacing")}</Label>
+              <PropInfoTooltip text={t("design.info.letterSpacing")} />
+            </div>
             <NumericPropertyInput
               value={String(style.letterSpacing ?? "")}
               placeholder="0"
@@ -395,13 +423,16 @@ export function DesignTab({
             />
           </div>
           <div className="grid gap-1">
-            <Label className="text-[10px] text-muted-foreground">Text Align</Label>
+            <div className="flex items-center">
+              <Label className="text-[10px] text-muted-foreground">{t("design.textAlign")}</Label>
+              <PropInfoTooltip text={t("design.info.textAlign")} />
+            </div>
             <Select
               value={String(style.textAlign ?? "")}
               onValueChange={(v) => onStyleChange("textAlign", v || undefined)}
             >
               <SelectTrigger className="h-7 text-xs">
-                <SelectValue placeholder="Align" />
+                <SelectValue placeholder={t("design.textAlign")} />
               </SelectTrigger>
               <SelectContent>
                 {["left", "center", "right", "justify"].map((a) => (
@@ -412,7 +443,10 @@ export function DesignTab({
           </div>
         </div>
         <div className="grid gap-1.5 mt-2">
-          <Label className="text-[10px] text-muted-foreground">Color</Label>
+          <div className="flex items-center">
+            <Label className="text-[10px] text-muted-foreground">{t("design.color")}</Label>
+            <PropInfoTooltip text={t("design.info.color")} />
+          </div>
           <div className="flex items-center gap-2">
             <input
               type="color"
@@ -432,7 +466,10 @@ export function DesignTab({
       {/* Background — hidden for Section (handled in merged block above) */}
       {!isSectionNode && <CollapsibleSection title={t("design.background")} defaultOpen={false}>
         <div className="grid gap-1.5">
-          <Label className="text-[10px] text-muted-foreground">Background Color</Label>
+          <div className="flex items-center">
+            <Label className="text-[10px] text-muted-foreground">{t("design.backgroundColor")}</Label>
+            <PropInfoTooltip text={t("design.info.backgroundColor")} />
+          </div>
           <div className="flex items-center gap-2">
             <ColorSwatch
               value={String(style.backgroundColor ?? "")}
@@ -455,7 +492,10 @@ export function DesignTab({
       <CollapsibleSection title={t("design.border")} defaultOpen={false}>
         <div className="grid grid-cols-2 gap-2">
           <div className="grid gap-1">
-            <Label className="text-[10px] text-muted-foreground">Width</Label>
+            <div className="flex items-center">
+              <Label className="text-[10px] text-muted-foreground">{t("design.borderWidth")}</Label>
+              <PropInfoTooltip text={t("design.info.borderWidth")} />
+            </div>
             <NumericPropertyInput
               value={String(style.borderWidth ?? "")}
               placeholder="0"
@@ -463,13 +503,16 @@ export function DesignTab({
             />
           </div>
           <div className="grid gap-1">
-            <Label className="text-[10px] text-muted-foreground">Style</Label>
+            <div className="flex items-center">
+              <Label className="text-[10px] text-muted-foreground">{t("design.borderStyle")}</Label>
+              <PropInfoTooltip text={t("design.info.borderStyle")} />
+            </div>
             <Select
               value={String(style.borderStyle ?? "")}
               onValueChange={(v) => onStyleChange("borderStyle", v || undefined)}
             >
               <SelectTrigger className="h-7 text-xs">
-                <SelectValue placeholder="Style" />
+                <SelectValue placeholder={t("design.borderStyle")} />
               </SelectTrigger>
               <SelectContent>
                 {["none","solid","dashed","dotted","double"].map((s) => (
@@ -479,7 +522,10 @@ export function DesignTab({
             </Select>
           </div>
           <div className="grid gap-1">
-            <Label className="text-[10px] text-muted-foreground">Radius</Label>
+            <div className="flex items-center">
+              <Label className="text-[10px] text-muted-foreground">{t("design.borderRadius")}</Label>
+              <PropInfoTooltip text={t("design.info.borderRadius")} />
+            </div>
             <NumericPropertyInput
               value={String(style.borderRadius ?? "")}
               placeholder="0"
@@ -487,7 +533,10 @@ export function DesignTab({
             />
           </div>
           <div className="grid gap-1.5">
-            <Label className="text-[10px] text-muted-foreground">Color</Label>
+            <div className="flex items-center">
+              <Label className="text-[10px] text-muted-foreground">{t("design.borderColor")}</Label>
+              <PropInfoTooltip text={t("design.info.borderColor")} />
+            </div>
             <div className="flex items-center gap-1.5">
               <input
                 type="color"
@@ -517,13 +566,16 @@ export function DesignTab({
       <CollapsibleSection title={t("design.layout")} defaultOpen={false}>
         <div className="grid grid-cols-2 gap-2">
           <div className="grid gap-1">
-            <Label className="text-[10px] text-muted-foreground">Display</Label>
+            <div className="flex items-center">
+              <Label className="text-[10px] text-muted-foreground">{t("design.display")}</Label>
+              <PropInfoTooltip text={t("design.info.display")} />
+            </div>
             <Select
               value={String(style.display ?? "")}
               onValueChange={(v) => onStyleChange("display", v || undefined)}
             >
               <SelectTrigger className="h-7 text-xs">
-                <SelectValue placeholder="Display" />
+                <SelectValue placeholder={t("design.display")} />
               </SelectTrigger>
               <SelectContent>
                 {["block","flex","grid","inline-block","inline","none"].map((d) => (
@@ -533,13 +585,16 @@ export function DesignTab({
             </Select>
           </div>
           <div className="grid gap-1">
-            <Label className="text-[10px] text-muted-foreground">Position</Label>
+            <div className="flex items-center">
+              <Label className="text-[10px] text-muted-foreground">{t("design.position")}</Label>
+              <PropInfoTooltip text={t("design.info.position")} />
+            </div>
             <Select
               value={String(style.position ?? "")}
               onValueChange={(v) => onStyleChange("position", v || undefined)}
             >
               <SelectTrigger className="h-7 text-xs">
-                <SelectValue placeholder="Position" />
+                <SelectValue placeholder={t("design.position")} />
               </SelectTrigger>
               <SelectContent>
                 {["static","relative","absolute","fixed","sticky"].map((p) => (
@@ -549,13 +604,16 @@ export function DesignTab({
             </Select>
           </div>
           <div className="grid gap-1">
-            <Label className="text-[10px] text-muted-foreground">Overflow</Label>
+            <div className="flex items-center">
+              <Label className="text-[10px] text-muted-foreground">{t("design.overflow")}</Label>
+              <PropInfoTooltip text={t("design.info.overflow")} />
+            </div>
             <Select
               value={String(style.overflow ?? "")}
               onValueChange={(v) => onStyleChange("overflow", v || undefined)}
             >
               <SelectTrigger className="h-7 text-xs">
-                <SelectValue placeholder="Overflow" />
+                <SelectValue placeholder={t("design.overflow")} />
               </SelectTrigger>
               <SelectContent>
                 {["visible","hidden","scroll","auto"].map((o) => (
@@ -565,7 +623,10 @@ export function DesignTab({
             </Select>
           </div>
           <div className="grid gap-1">
-            <Label className="text-[10px] text-muted-foreground">Z-Index</Label>
+            <div className="flex items-center">
+              <Label className="text-[10px] text-muted-foreground">{t("design.zIndex")}</Label>
+              <PropInfoTooltip text={t("design.info.zIndex")} />
+            </div>
             <NumericPropertyInput
               value={String(style.zIndex ?? "")}
               placeholder="auto"
@@ -579,10 +640,13 @@ export function DesignTab({
         {(style.display === "flex" || style.display === "inline-flex") && (
           <>
             <Separator className="my-2" />
-            <p className="text-[10px] font-semibold text-muted-foreground">Flex</p>
+            <p className="text-[10px] font-semibold text-muted-foreground">{t("design.flex")}</p>
             <div className="grid grid-cols-2 gap-2">
               <div className="grid gap-1">
-                <Label className="text-[10px] text-muted-foreground">Direction</Label>
+                <div className="flex items-center">
+                  <Label className="text-[10px] text-muted-foreground">{t("design.flexDirection")}</Label>
+                  <PropInfoTooltip text={t("design.info.flexDirection")} />
+                </div>
                 <Select
                   value={String(style.flexDirection ?? "")}
                   onValueChange={(v) => onStyleChange("flexDirection", v || undefined)}
@@ -598,7 +662,10 @@ export function DesignTab({
                 </Select>
               </div>
               <div className="grid gap-1">
-                <Label className="text-[10px] text-muted-foreground">Wrap</Label>
+                <div className="flex items-center">
+                  <Label className="text-[10px] text-muted-foreground">{t("design.flexWrap")}</Label>
+                  <PropInfoTooltip text={t("design.info.flexWrap")} />
+                </div>
                 <Select
                   value={String(style.flexWrap ?? "")}
                   onValueChange={(v) => onStyleChange("flexWrap", v || undefined)}
@@ -614,7 +681,10 @@ export function DesignTab({
                 </Select>
               </div>
               <div className="grid gap-1">
-                <Label className="text-[10px] text-muted-foreground">Justify</Label>
+                <div className="flex items-center">
+                  <Label className="text-[10px] text-muted-foreground">{t("design.justifyContent")}</Label>
+                  <PropInfoTooltip text={t("design.info.justifyContent")} />
+                </div>
                 <Select
                   value={String(style.justifyContent ?? "")}
                   onValueChange={(v) => onStyleChange("justifyContent", v || undefined)}
@@ -630,7 +700,10 @@ export function DesignTab({
                 </Select>
               </div>
               <div className="grid gap-1">
-                <Label className="text-[10px] text-muted-foreground">Align Items</Label>
+                <div className="flex items-center">
+                  <Label className="text-[10px] text-muted-foreground">{t("design.alignItems")}</Label>
+                  <PropInfoTooltip text={t("design.info.alignItems")} />
+                </div>
                 <Select
                   value={String(style.alignItems ?? "")}
                   onValueChange={(v) => onStyleChange("alignItems", v || undefined)}
@@ -646,7 +719,10 @@ export function DesignTab({
                 </Select>
               </div>
               <div className="grid gap-1 col-span-2">
-                <Label className="text-[10px] text-muted-foreground">Gap</Label>
+                <div className="flex items-center">
+                  <Label className="text-[10px] text-muted-foreground">{t("design.gap")}</Label>
+                  <PropInfoTooltip text={t("design.info.gap")} />
+                </div>
                 <Input
                   className="h-7 text-xs"
                   value={String(style.gap ?? "")}
@@ -663,7 +739,10 @@ export function DesignTab({
       <CollapsibleSection title={t("design.visual")} defaultOpen={false}>
         <div className="grid gap-2">
           <div className="flex items-center justify-between">
-            <Label className="text-[10px] text-muted-foreground">Opacity</Label>
+            <div className="flex items-center">
+              <Label className="text-[10px] text-muted-foreground">{t("design.opacity")}</Label>
+              <PropInfoTooltip text={t("design.info.opacity")} />
+            </div>
             <span className="text-[10px] tabular-nums text-muted-foreground">
               {Math.round((Number(style.opacity ?? 1)) * 100)}%
             </span>
@@ -677,7 +756,10 @@ export function DesignTab({
           />
         </div>
         <div className="grid gap-1">
-          <Label className="text-[10px] text-muted-foreground">Filter</Label>
+          <div className="flex items-center">
+            <Label className="text-[10px] text-muted-foreground">{t("design.filter")}</Label>
+            <PropInfoTooltip text={t("design.info.filter")} />
+          </div>
           <Input
             className="h-7 text-xs font-mono"
             value={String(style.filter ?? "")}
@@ -686,7 +768,10 @@ export function DesignTab({
           />
         </div>
         <div className="grid gap-1">
-          <Label className="text-[10px] text-muted-foreground">Backdrop Filter</Label>
+          <div className="flex items-center">
+            <Label className="text-[10px] text-muted-foreground">{t("design.backdropFilter")}</Label>
+            <PropInfoTooltip text={t("design.info.backdropFilter")} />
+          </div>
           <Input
             className="h-7 text-xs font-mono"
             value={String(style.backdropFilter ?? "")}
@@ -695,7 +780,10 @@ export function DesignTab({
           />
         </div>
         <div className="grid gap-1">
-          <Label className="text-[10px] text-muted-foreground">Mix Blend Mode</Label>
+          <div className="flex items-center">
+            <Label className="text-[10px] text-muted-foreground">{t("design.mixBlendMode")}</Label>
+            <PropInfoTooltip text={t("design.info.mixBlendMode")} />
+          </div>
           <Select
             value={String(style.mixBlendMode ?? "")}
             onValueChange={(v) => onStyleChange("mixBlendMode", v || undefined)}
@@ -715,7 +803,10 @@ export function DesignTab({
       {/* Transform */}
       <CollapsibleSection title={t("design.transform")} defaultOpen={false}>
         <div className="grid gap-1">
-          <Label className="text-[10px] text-muted-foreground">Transform</Label>
+          <div className="flex items-center">
+            <Label className="text-[10px] text-muted-foreground">{t("design.transform")}</Label>
+            <PropInfoTooltip text={t("design.info.transform")} />
+          </div>
           <Input
             className="h-7 text-xs font-mono"
             value={String(style.transform ?? "")}
