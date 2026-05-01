@@ -45,7 +45,7 @@ export const GalleryGridComponent: ComponentDefinition = {
   },
   propSchema: [
     { key: "columns", label: "Columns", type: "number", default: 3, min: 1, max: 6 },
-    { key: "gap", label: "Gap (px)", type: "number", default: 8, min: 0, max: 48 },
+    { key: "gap", label: "Gap", type: "number", default: 8, min: 0, max: 48, step: 2, unit: "px" },
     { key: "imageCount", label: "Number of Images", type: "slider", min: 1, max: MAX_SLOTS, default: 6 },
     {
       key: "aspectRatio",

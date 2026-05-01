@@ -20,7 +20,7 @@ export const GalleryProComponent: ComponentDefinition = {
   },
   propSchema: [
     { key: "images", label: "Images (JSON array of {src, alt})", type: "json" },
-    { key: "gap", label: "Gap (px)", type: "number", default: 12, min: 0, max: 48 },
+    { key: "gap", label: "Gap", type: "number", default: 12, min: 0, max: 48, step: 2, unit: "px" },
     {
       key: "layout",
       label: "Layout",

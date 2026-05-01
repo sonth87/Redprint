@@ -146,7 +146,7 @@ export const NavigationMenuComponent: ComponentDefinition = {
     { key: "navPadding", label: "Nav Padding", type: "string", default: "" },
     { key: "fontSize", label: "Font Size", type: "string", default: "14px" },
     { key: "letterSpacing", label: "Letter Spacing", type: "string", default: "" },
-    { key: "gap", label: "Gap (px)", type: "number", default: 24, min: 4, max: 64 },
+    { key: "gap", label: "Gap", type: "number", default: 24, min: 4, max: 64, step: 4, unit: "px" },
     { key: "activeIndex", label: "Active Item Index", type: "number", default: 0, min: 0, max: 20 },
     {
       key: "floatingMode",

@@ -28,7 +28,7 @@ export const DividerComponent: ComponentDefinition = {
       ],
       default: "horizontal",
     },
-    { key: "thickness", label: "Thickness (px)", type: "number", default: 1, min: 1, max: 16 },
+    { key: "thickness", label: "Thickness", type: "number", default: 1, min: 1, max: 16, step: 1, unit: "px" },
     { key: "color", label: "Color", type: "color", default: "#e5e7eb" },
   ],
   defaultProps: { orientation: "horizontal", thickness: 1, color: "#e5e7eb" },

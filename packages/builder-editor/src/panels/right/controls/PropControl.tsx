@@ -49,7 +49,10 @@ export function PropControl({
               const num = parseFloat(v);
               if (!isNaN(num)) onChange(num);
             }}
-            units={schema.unit ? [schema.unit] : ["px"]}
+            units={schema.unit !== undefined ? [schema.unit] : [""]}
+            min={schema.min}
+            max={schema.max}
+            step={schema.step ?? 1}
           />
         </div>
       );

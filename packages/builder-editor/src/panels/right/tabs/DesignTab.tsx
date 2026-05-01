@@ -303,6 +303,7 @@ export function DesignTab({
               <NumericPropertyInput
                 value={String(style[key] ?? "")}
                 placeholder="auto"
+                min={0}
                 units={
                   ["width", "maxWidth"].includes(key) ? ["px", "%"] :
                   ["height", "minHeight", "maxHeight"].includes(key) ? ["px", "%", "vh"] :
@@ -329,6 +330,7 @@ export function DesignTab({
               <NumericPropertyInput
                 value={String(style[key] ?? "")}
                 placeholder="0"
+                min={0}
                 onChange={(val) => onStyleChange(key, val || undefined)}
               />
             </div>
@@ -377,6 +379,7 @@ export function DesignTab({
             <NumericPropertyInput
               value={String(style.fontSize ?? "")}
               placeholder="16px"
+              min={0}
               onChange={(val) => onStyleChange("fontSize", val || undefined)}
             />
           </div>
@@ -499,6 +502,7 @@ export function DesignTab({
             <NumericPropertyInput
               value={String(style.borderWidth ?? "")}
               placeholder="0"
+              min={0}
               onChange={(val) => onStyleChange("borderWidth", val || undefined)}
             />
           </div>
@@ -529,6 +533,7 @@ export function DesignTab({
             <NumericPropertyInput
               value={String(style.borderRadius ?? "")}
               placeholder="0"
+              min={0}
               onChange={(val) => onStyleChange("borderRadius", val || undefined)}
             />
           </div>

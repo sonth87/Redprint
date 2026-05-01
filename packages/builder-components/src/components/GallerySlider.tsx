@@ -226,7 +226,7 @@ export const GallerySliderComponent: ComponentDefinition = {
   propSchema: [
     { key: "slideCount", label: "Number of Slides", type: "slider", min: 1, max: MAX_SLIDES, default: 3 },
     { key: "autoPlay", label: "Auto Play", type: "boolean", default: false },
-    { key: "autoPlaySpeed", label: "Auto Play Speed (ms)", type: "number", default: 3000, min: 500, max: 10000 },
+    { key: "autoPlaySpeed", label: "Auto Play Speed", type: "number", default: 3000, min: 500, max: 10000, step: 500, unit: "ms" },
     { key: "loop", label: "Loop", type: "boolean", default: true },
     { key: "showArrows", label: "Show Arrows", type: "boolean", default: true },
     { key: "showDots", label: "Show Dots", type: "boolean", default: true },

@@ -25,7 +25,7 @@ export const RepeaterComponent: ComponentDefinition = {
   propSchema: [
     { key: "count", label: "Preview Items", type: "number", default: 3, min: 1, max: 12 },
     { key: "columns", label: "Columns", type: "number", default: 3, min: 1, max: 6 },
-    { key: "gap", label: "Gap (px)", type: "number", default: 16, min: 0, max: 64 },
+    { key: "gap", label: "Gap", type: "number", default: 16, min: 0, max: 64, step: 4, unit: "px" },
   ],
   defaultProps: { count: 3, columns: 3, gap: 16 },
   defaultStyle: { width: "100%", padding: "16px" },
