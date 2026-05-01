@@ -214,6 +214,8 @@ export const GallerySliderComponent: ComponentDefinition = {
   subGroup: "gallery-slider",
   description: "A horizontal image slideshow with per-slide image picker, caption, and link.",
   version: "3.0.0",
+  deprecated: true,
+  replacedBy: "GallerySliderPro",
   tags: ["gallery", "slider", "carousel", "slideshow"],
   capabilities: {
     canContainChildren: false,
@@ -264,6 +266,13 @@ export const GallerySliderComponent: ComponentDefinition = {
     ),
   },
   defaultStyle: { width: "100%" },
-  editorRenderer: (props) => <EditorRenderer {...props} />,
+  editorRenderer: (props) => (
+    <div data-node-id={props.node.id}>
+      <div style={{ background: "#fef3c7", color: "#92400e", fontSize: 9, padding: "2px 8px", fontWeight: 600, letterSpacing: "0.02em" }}>
+        Deprecated — use Gallery Slider
+      </div>
+      <EditorRenderer {...props} />
+    </div>
+  ),
   runtimeRenderer: (props) => <RuntimeRenderer {...props} />,
 };

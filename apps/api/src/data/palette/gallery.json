@@ -9,255 +9,155 @@
   },
   "types": [
     {
-      "id": "grid-galleries",
-      "label": "Grid Galleries",
+      "id": "standard-galleries",
+      "label": "Standard",
       "order": 0,
       "layout": "preview",
-      "i18n": {
-        "en": "Grid Galleries",
-        "vi": "Bộ sưu tập lưới"
-      },
+      "i18n": { "en": "Standard", "vi": "Tiêu chuẩn" },
       "items": [
         {
-          "id": "gallery-grid-3col",
-          "componentType": "GalleryGrid",
-          "name": "3-Column Grid",
+          "id": "gallery-grid",
+          "componentType": "GalleryPro",
+          "name": "Grid",
           "thumbnail": null,
-          "i18n": {
-            "en": {
-              "name": "3-Column Grid"
-            },
-            "vi": {
-              "name": "Lưới 3 cột"
-            }
-          },
-          "props": {
-            "columns": 3,
-            "gap": 8,
-            "aspectRatio": "1/1"
-          },
-          "tags": ["gallery", "grid", "3-column"]
+          "i18n": { "en": { "name": "Grid" }, "vi": { "name": "Lưới" } },
+          "props": { "layoutMode": "grid", "columns": 3, "gap": 12, "aspectRatio": "1/1" },
+          "tags": ["gallery", "grid"]
         },
         {
-          "id": "gallery-grid-2col",
-          "componentType": "GalleryGrid",
-          "name": "2-Column Grid",
+          "id": "gallery-masonry",
+          "componentType": "GalleryPro",
+          "name": "Masonry",
           "thumbnail": null,
-          "i18n": {
-            "en": {
-              "name": "2-Column Grid"
-            },
-            "vi": {
-              "name": "Lưới 2 cột"
-            }
-          },
-          "props": {
-            "columns": 2,
-            "gap": 12,
-            "aspectRatio": "4/3"
-          },
-          "tags": ["gallery", "grid", "2-column"]
+          "i18n": { "en": { "name": "Masonry" }, "vi": { "name": "Masonry" } },
+          "props": { "layoutMode": "masonry", "columns": 3, "gap": 12 },
+          "tags": ["gallery", "masonry", "pinterest"]
         },
         {
-          "id": "gallery-grid-4col",
-          "componentType": "GalleryGrid",
-          "name": "4-Column Grid",
+          "id": "gallery-collage",
+          "componentType": "GalleryPro",
+          "name": "Collage",
           "thumbnail": null,
-          "i18n": {
-            "en": {
-              "name": "4-Column Grid"
-            },
-            "vi": {
-              "name": "Lưới 4 cột"
-            }
-          },
-          "props": {
-            "columns": 4,
-            "gap": 4,
-            "aspectRatio": "1/1"
-          },
-          "tags": ["gallery", "grid", "4-column"]
+          "i18n": { "en": { "name": "Collage" }, "vi": { "name": "Ghép ảnh" } },
+          "props": { "layoutMode": "collage", "gap": 8 },
+          "tags": ["gallery", "collage", "mosaic"]
         },
         {
-          "id": "gallery-grid-portrait",
-          "componentType": "GalleryGrid",
-          "name": "Portrait Grid",
+          "id": "gallery-thumbnails",
+          "componentType": "GalleryPro",
+          "name": "Thumbnails",
           "thumbnail": null,
-          "i18n": {
-            "en": {
-              "name": "Portrait Grid"
-            },
-            "vi": {
-              "name": "Lưới dọc"
-            }
-          },
-          "props": {
-            "columns": 3,
-            "gap": 8,
-            "aspectRatio": "3/4"
-          },
-          "tags": ["gallery", "grid", "portrait"]
+          "i18n": { "en": { "name": "Thumbnails" }, "vi": { "name": "Xem nhanh" } },
+          "props": { "layoutMode": "thumbnails", "gap": 8 },
+          "tags": ["gallery", "thumbnails", "filmstrip"]
         },
         {
-          "id": "gallery-grid-widescreen",
-          "componentType": "GalleryGrid",
-          "name": "Widescreen Grid",
+          "id": "gallery-strip",
+          "componentType": "GalleryPro",
+          "name": "Strip",
           "thumbnail": null,
-          "i18n": {
-            "en": {
-              "name": "Widescreen Grid"
-            },
-            "vi": {
-              "name": "Lưới màn hình rộng"
-            }
-          },
-          "props": {
-            "columns": 2,
-            "gap": 16,
-            "aspectRatio": "16/9"
-          },
-          "tags": ["gallery", "grid", "widescreen"]
+          "i18n": { "en": { "name": "Strip" }, "vi": { "name": "Dải ngang" } },
+          "props": { "layoutMode": "strip", "gap": 8 },
+          "tags": ["gallery", "strip", "editorial"]
         },
         {
-          "id": "gallery-masonry-3",
-          "componentType": "GalleryGrid",
-          "name": "Masonry 3-Col",
+          "id": "gallery-column",
+          "componentType": "GalleryPro",
+          "name": "Column",
           "thumbnail": null,
-          "props": {
-            "columns": 3,
-            "gap": 8,
-            "layout": "masonry"
-          },
-          "tags": ["masonry", "gallery", "3-col"]
+          "i18n": { "en": { "name": "Column" }, "vi": { "name": "Cột" } },
+          "props": { "layoutMode": "column", "gap": 12 },
+          "tags": ["gallery", "column"]
         },
         {
-          "id": "gallery-masonry-2",
-          "componentType": "GalleryGrid",
-          "name": "Masonry 2-Col",
+          "id": "gallery-bricks",
+          "componentType": "GalleryPro",
+          "name": "Bricks",
           "thumbnail": null,
-          "props": {
-            "columns": 2,
-            "gap": 12,
-            "layout": "masonry"
-          },
-          "tags": ["masonry", "gallery", "2-col"]
+          "i18n": { "en": { "name": "Bricks" }, "vi": { "name": "Gạch" } },
+          "props": { "layoutMode": "bricks", "gap": 8, "aspectRatio": "4/3" },
+          "tags": ["gallery", "bricks", "metro"]
         }
       ]
     },
     {
-      "id": "pro-galleries",
-      "label": "Pro Galleries",
+      "id": "slide-galleries",
+      "label": "Slides & Carousel",
       "order": 1,
       "layout": "preview",
-      "i18n": { "en": "Pro Galleries", "vi": "Thư viện chuyên nghiệp" },
+      "i18n": { "en": "Slides & Carousel", "vi": "Trình chiếu" },
       "items": [
         {
-          "id": "pro-mosaic",
+          "id": "gallery-slider",
           "componentType": "GalleryPro",
-          "name": "Mosaic Large",
-          "props": { "layout": "mosaic", "gap": 8 }
+          "name": "Slider",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Slider" }, "vi": { "name": "Slider" } },
+          "props": { "layoutMode": "slider", "aspectRatio": "16/9", "showArrows": true, "showDots": true, "loop": true },
+          "tags": ["gallery", "slider", "carousel"]
         },
         {
-          "id": "pro-magazine",
+          "id": "gallery-slider-square",
           "componentType": "GalleryPro",
-          "name": "Magazine Grid",
-          "props": { "layout": "magazine", "gap": 12 }
+          "name": "Slider Square",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Slider Square" }, "vi": { "name": "Slider vuông" } },
+          "props": { "layoutMode": "slider", "aspectRatio": "1/1", "showArrows": true, "showDots": true, "loop": true },
+          "tags": ["gallery", "slider", "square"]
         },
         {
-          "id": "pro-strip",
+          "id": "gallery-slideshow",
           "componentType": "GalleryPro",
-          "name": "Strip Layout",
-          "props": { "layout": "strip", "gap": 8 }
-        },
-        {
-          "id": "pro-editorial",
-          "componentType": "GalleryPro",
-          "name": "Editorial",
-          "props": { "layout": "editorial", "gap": 12 }
-        },
-        {
-          "id": "pro-showcase",
-          "componentType": "GalleryPro",
-          "name": "Showcase",
-          "props": { "layout": "showcase", "gap": 8 }
+          "name": "Slideshow",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Slideshow" }, "vi": { "name": "Trình chiếu tự động" } },
+          "props": { "layoutMode": "slideshow", "autoPlay": true, "autoPlaySpeed": 4000, "loop": true },
+          "tags": ["gallery", "slideshow", "autoplay", "fullscreen"]
         }
       ]
     },
-
     {
-      "id": "slider-galleries",
-      "label": "Slider Galleries",
+      "id": "creative-galleries",
+      "label": "Creative",
       "order": 2,
       "layout": "preview",
-      "i18n": {
-        "en": "Slider Galleries",
-        "vi": "Bộ sưu tập trình chiếu"
-      },
+      "i18n": { "en": "Creative", "vi": "Sáng tạo" },
       "items": [
         {
-          "id": "slider-basic",
-          "componentType": "GallerySlider",
-          "name": "Basic Slider",
-          "props": {
-            "slideCount": 5,
-            "showArrows": true,
-            "showDots": true,
-            "loop": true,
-            "aspectRatio": "16/9",
-            "shape": "rectangle"
-          }
+          "id": "gallery-honeycomb",
+          "componentType": "GalleryPro",
+          "name": "Honeycomb",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Honeycomb" }, "vi": { "name": "Tổ ong" } },
+          "props": { "layoutMode": "honeycomb", "columns": 4, "gap": 8 },
+          "tags": ["gallery", "honeycomb", "hexagon", "creative"]
         },
         {
-          "id": "slider-square",
-          "componentType": "GallerySlider",
-          "name": "Square Slider",
-          "props": {
-            "slideCount": 5,
-            "showArrows": true,
-            "showDots": true,
-            "loop": true,
-            "aspectRatio": "1/1",
-            "shape": "rectangle"
-          }
+          "id": "gallery-freestyle",
+          "componentType": "GalleryPro",
+          "name": "Freestyle",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Freestyle" }, "vi": { "name": "Ngẫu nhiên" } },
+          "props": { "layoutMode": "freestyle", "columns": 3 },
+          "tags": ["gallery", "freestyle", "scattered", "creative"]
         },
         {
-          "id": "slider-circle",
-          "componentType": "GallerySlider",
-          "name": "Circle Slider",
-          "props": {
-            "slideCount": 5,
-            "showArrows": true,
-            "showDots": true,
-            "loop": true,
-            "aspectRatio": "1/1",
-            "shape": "circle"
-          }
+          "id": "gallery-3d-carousel",
+          "componentType": "GalleryPro",
+          "name": "3D Carousel",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "3D Carousel" }, "vi": { "name": "Carousel 3D" } },
+          "props": { "layoutMode": "carousel-3d" },
+          "tags": ["gallery", "3d", "carousel", "coverflow", "creative"]
         },
         {
-          "id": "slider-oval",
-          "componentType": "GallerySlider",
-          "name": "Oval Slider",
-          "props": {
-            "slideCount": 5,
-            "showArrows": true,
-            "showDots": true,
-            "loop": true,
-            "aspectRatio": "4/3",
-            "shape": "oval"
-          }
-        },
-        {
-          "id": "slider-portrait",
-          "componentType": "GallerySlider",
-          "name": "Portrait Slider",
-          "props": {
-            "slideCount": 5,
-            "showArrows": true,
-            "showDots": false,
-            "loop": true,
-            "aspectRatio": "3/4",
-            "shape": "rectangle"
-          }
+          "id": "gallery-stacked",
+          "componentType": "GalleryPro",
+          "name": "Stacked",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Stacked" }, "vi": { "name": "Xếp chồng" } },
+          "props": { "layoutMode": "stacked" },
+          "tags": ["gallery", "stacked", "cards", "depth", "creative"]
         }
       ]
     }

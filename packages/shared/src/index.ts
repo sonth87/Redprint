@@ -186,3 +186,9 @@ export * from "./imageFrames";
 
 // ── Animation presets & keyframes ──────────────────────────────────────────
 export * from "./animations";
+
+// ── Gallery types, layout modes, and shared utilities ──────────────────────
+export * from "./gallery";
+
+// ── Carousel (Swiper-based) config types and presets ───────────────────────
+export * from "./carousel";

@@ -4,6 +4,8 @@ import * as LucideIcons from "lucide-react";
 import { cn } from "@ui-builder/ui";
 import type { PaletteItem } from "@ui-builder/builder-core";
 import { useTranslation } from "react-i18next";
+import type { GalleryLayoutMode } from "@ui-builder/shared";
+import { LayoutMiniPreview } from "../gallery/LayoutMiniPreview";
 
 // ── Helper to dynamically load lucide icons ─────────────────────────────────
 
@@ -218,12 +220,30 @@ const MiniPreview: React.FC<MiniPreviewProps> = ({ item }) => {
     );
   }
 
-  if (type === "GallerySlider" || type === "GalleryPro") {
+  // GalleryPro and all gallery variants — use LayoutMiniPreview with the item's layoutMode
+  const GALLERY_TYPES = new Set([
+    "GalleryPro", "GalleryMasonry", "GalleryCollage", "GallerySliderPro",
+    "GallerySlideshow", "GalleryThumbnails", "GalleryHoneycomb",
+    "GalleryFreestyle", "Gallery3DCarousel", "GalleryStacked",
+    "GalleryGrid", "GallerySlider",
+  ]);
+  if (GALLERY_TYPES.has(type)) {
+    // Derive layout mode from item props; fall back based on component type
+    let layoutMode: GalleryLayoutMode = (p["layoutMode"] as GalleryLayoutMode) ?? "grid";
+    if (!p["layoutMode"]) {
+      if (type === "GallerySlider" || type === "GallerySliderPro") layoutMode = "slider";
+      else if (type === "GallerySlideshow") layoutMode = "slideshow";
+      else if (type === "GalleryMasonry") layoutMode = "masonry";
+      else if (type === "GalleryCollage") layoutMode = "collage";
+      else if (type === "GalleryThumbnails") layoutMode = "thumbnails";
+      else if (type === "GalleryHoneycomb") layoutMode = "honeycomb";
+      else if (type === "GalleryFreestyle") layoutMode = "freestyle";
+      else if (type === "Gallery3DCarousel") layoutMode = "carousel-3d";
+      else if (type === "GalleryStacked") layoutMode = "stacked";
+    }
     return (
-      <div className="flex items-center justify-center w-full h-full p-2 bg-gradient-to-br from-muted to-muted-foreground/10 rounded">
-        <div style={{ fontSize: 12, fontWeight: 500, color: "#6b7280", textAlign: "center" }}>
-          {type === "GallerySlider" ? "🎬 Slider" : "🎨 Pro"}
-        </div>
+      <div className="w-full h-full">
+        <LayoutMiniPreview mode={layoutMode} animated={false} />
       </div>
     );
   }

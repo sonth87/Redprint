@@ -260,6 +260,10 @@ export interface ComponentDefinition {
   lifecycle?: ComponentLifecycle;
   a11y?: ComponentA11yConfig;
   editorConfig?: ComponentEditorConfig;
+  /** When true, this component is deprecated and should not be used in new documents. */
+  deprecated?: boolean;
+  /** The replacement component type to suggest when deprecated is true. */
+  replacedBy?: string;
 }
 
 // ── Filter ────────────────────────────────────────────────────────────────
