@@ -96,6 +96,23 @@
   }
 }
 
+/* ── Builder animation keyframes (rb- prefix avoids conflicts) ── */
+@keyframes rb-fadeIn        { from{opacity:0}                                     to{opacity:1} }
+@keyframes rb-fadeOut       { from{opacity:1}                                     to{opacity:0} }
+@keyframes rb-slideInLeft   { from{opacity:0;transform:translateX(-40px)}         to{opacity:1;transform:translateX(0)} }
+@keyframes rb-slideInRight  { from{opacity:0;transform:translateX(40px)}          to{opacity:1;transform:translateX(0)} }
+@keyframes rb-slideInUp     { from{opacity:0;transform:translateY(40px)}          to{opacity:1;transform:translateY(0)} }
+@keyframes rb-slideInDown   { from{opacity:0;transform:translateY(-40px)}         to{opacity:1;transform:translateY(0)} }
+@keyframes rb-zoomIn        { from{opacity:0;transform:scale(0.8)}                to{opacity:1;transform:scale(1)} }
+@keyframes rb-zoomOut       { from{opacity:0;transform:scale(1.2)}                to{opacity:1;transform:scale(1)} }
+@keyframes rb-bounceIn      { 0%{opacity:0;transform:scale(.3)} 50%{opacity:1;transform:scale(1.05)} 70%{transform:scale(.9)} 100%{transform:scale(1)} }
+@keyframes rb-rotateIn      { from{opacity:0;transform:rotate(-200deg)}           to{opacity:1;transform:rotate(0)} }
+@keyframes rb-pulse         { 0%,100%{transform:scale(1)}  50%{transform:scale(1.05)} }
+@keyframes rb-shake         { 0%,100%{transform:translateX(0)} 10%,30%,50%,70%,90%{transform:translateX(-6px)} 20%,40%,60%,80%{transform:translateX(6px)} }
+@keyframes rb-flash         { 0%,50%,100%{opacity:1} 25%,75%{opacity:0} }
+@keyframes rb-swing         { 20%{transform:rotate(15deg)} 40%{transform:rotate(-10deg)} 60%{transform:rotate(5deg)} 80%{transform:rotate(-5deg)} 100%{transform:rotate(0)} }
+@keyframes rb-tada          { 0%{transform:scale(1)} 10%,20%{transform:scale(.9) rotate(-3deg)} 30%,50%,70%,90%{transform:scale(1.1) rotate(3deg)} 40%,60%,80%{transform:scale(1.1) rotate(-3deg)} 100%{transform:scale(1) rotate(0)} }
+
 @layer base {
   * {
     @apply border-border;

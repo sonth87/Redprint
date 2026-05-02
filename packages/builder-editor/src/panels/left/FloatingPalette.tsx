@@ -4,6 +4,7 @@ import { Layers } from "lucide-react";
 import { cn, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@ui-builder/ui";
 import type { PaletteCatalog, PaletteGroup } from "@ui-builder/builder-core";
 import { useTranslation } from "react-i18next";
+import { GLASS_PANEL, GLASS_TOOLTIP } from "../../constants/panel-styles";
 
 // ── Dynamic Lucide icon helper ─────────────────────────────────────────────
 
@@ -130,7 +131,6 @@ export const FloatingPalette: React.FC<FloatingPaletteProps> = ({
         ref={panelRef}
         className={cn(
           "fixed z-50 flex flex-col items-center gap-2 select-none",
-          isDragging && "opacity-90",
         )}
         style={{ left: position.x, top: position.y }}
       >
@@ -138,8 +138,7 @@ export const FloatingPalette: React.FC<FloatingPaletteProps> = ({
         <div
           className={cn(
             "flex flex-col items-center gap-1 py-2 px-1.5",
-            "bg-background/50 backdrop-blur-md border border-border/50 rounded-xl shadow-xl",
-            isDragging && "shadow-2xl",
+            isDragging ? GLASS_PANEL.dragging : GLASS_PANEL.normal,
           )}
         >
           {/* Drag handle */}
@@ -154,7 +153,7 @@ export const FloatingPalette: React.FC<FloatingPaletteProps> = ({
             </TooltipTrigger>
             <TooltipContent
               side="right"
-              className="bg-black/30 backdrop-blur-lg border-white/20 text-foreground"
+              className={GLASS_TOOLTIP.dark}
             >
               {t("palette.dragToMove", { defaultValue: "Drag to reposition" })}
             </TooltipContent>
@@ -184,7 +183,7 @@ export const FloatingPalette: React.FC<FloatingPaletteProps> = ({
                 </TooltipTrigger>
                 <TooltipContent
                   side="right"
-                  className="bg-white/40 backdrop-blur-md border border-white/20 text-foreground"
+                  className={GLASS_TOOLTIP.light}
                 >
                   {label}
                 </TooltipContent>
@@ -210,8 +209,7 @@ export const FloatingPalette: React.FC<FloatingPaletteProps> = ({
           <div
             className={cn(
               "flex flex-col items-center py-1.5 px-1.5",
-              "bg-background/50 backdrop-blur-md border border-border/50 rounded-xl shadow-xl",
-              isDragging && "shadow-2xl",
+              isDragging ? GLASS_PANEL.dragging : GLASS_PANEL.normal,
             )}
           >
             <Tooltip>
@@ -236,7 +234,7 @@ export const FloatingPalette: React.FC<FloatingPaletteProps> = ({
               </TooltipTrigger>
               <TooltipContent
                 side="right"
-                className="bg-black/30 backdrop-blur-lg border-white/20 text-foreground"
+                className={GLASS_TOOLTIP.dark}
               >
                 Layers
               </TooltipContent>

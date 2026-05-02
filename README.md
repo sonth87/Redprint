@@ -505,7 +505,7 @@ chore: update dependencies
 
 1. **Branch naming** — `feature/description` or `fix/description`
 2. **Write tests** for new functionality
-3. **Update docs** if adding/changing APIs
+3. **Review docs impact** after every code change — update user-facing docs and AI-facing docs/instructions when behavior, APIs, workflows, constraints, or assumptions change
 4. **Run quality checks** — `pnpm typecheck && pnpm lint && pnpm build`
 5. **Request review** from maintainers
 

@@ -34,6 +34,8 @@ export const GalleryGridComponent: ComponentDefinition = {
   subGroup: "gallery-grid",
   description: "A responsive image grid gallery with per-image picker and captions.",
   version: "2.0.0",
+  deprecated: true,
+  replacedBy: "GalleryPro",
   tags: ["gallery", "grid", "images", "photos", "masonry"],
   capabilities: {
     canContainChildren: false,
@@ -45,7 +47,7 @@ export const GalleryGridComponent: ComponentDefinition = {
   },
   propSchema: [
     { key: "columns", label: "Columns", type: "number", default: 3, min: 1, max: 6 },
-    { key: "gap", label: "Gap (px)", type: "number", default: 8, min: 0, max: 48 },
+    { key: "gap", label: "Gap", type: "number", default: 8, min: 0, max: 48, step: 2, unit: "px" },
     { key: "imageCount", label: "Number of Images", type: "slider", min: 1, max: MAX_SLOTS, default: 6 },
     {
       key: "aspectRatio",
@@ -95,6 +97,11 @@ export const GalleryGridComponent: ComponentDefinition = {
     const layout = String(node.props.layout ?? "grid");
     const aspect = String(node.props.aspectRatio ?? "1/1");
     const count = Math.max(1, Math.min(MAX_SLOTS, Number(node.props.imageCount ?? 6)));
+    const DeprecationBanner = () => (
+      <div style={{ background: "#fef3c7", color: "#92400e", fontSize: 9, padding: "2px 8px", fontWeight: 600, letterSpacing: "0.02em" }}>
+        Deprecated — use Gallery Pro
+      </div>
+    );
 
     const imgs = Array.from({ length: count }, (_, i) => {
       const fallback = DEFAULT_IMAGES[i % DEFAULT_IMAGES.length] ?? DEFAULT_IMAGES[0]!;
@@ -105,31 +112,21 @@ export const GalleryGridComponent: ComponentDefinition = {
       };
     });
 
-    if (layout === "masonry") {
-      return (
-        <div
-          data-node-id={node.id}
-          style={{ ...(style as React.CSSProperties), columnCount: cols, columnGap: `${gap}px` } as React.CSSProperties}
-        >
-          {imgs.map((img, i) => (
-            <div key={i} style={{ breakInside: "avoid", marginBottom: `${gap}px`, overflow: "hidden", borderRadius: 4, background: "#f3f4f6", position: "relative" }}>
-              <img src={img.src} alt={img.alt} style={{ width: "100%", display: "block" }} draggable={false} />
-              {img.caption && (
-                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(0,0,0,0.5)", color: "#fff", fontSize: 11, padding: "4px 6px" }}>
-                  {img.caption}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      );
-    }
-
-    return (
-      <div
-        data-node-id={node.id}
-        style={{ ...(style as React.CSSProperties), display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: `${gap}px` }}
-      >
+    const gridContent = layout === "masonry" ? (
+      <div style={{ columnCount: cols, columnGap: `${gap}px` } as React.CSSProperties}>
+        {imgs.map((img, i) => (
+          <div key={i} style={{ breakInside: "avoid", marginBottom: `${gap}px`, overflow: "hidden", borderRadius: 4, background: "#f3f4f6", position: "relative" }}>
+            <img src={img.src} alt={img.alt} style={{ width: "100%", display: "block" }} draggable={false} />
+            {img.caption && (
+              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(0,0,0,0.5)", color: "#fff", fontSize: 11, padding: "4px 6px" }}>
+                {img.caption}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: `${gap}px` }}>
         {imgs.map((img, i) => (
           <div key={i} style={{ aspectRatio: aspect, overflow: "hidden", borderRadius: 4, background: "#f3f4f6", position: "relative" }}>
             <img src={img.src} alt={img.alt} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} draggable={false} />
@@ -140,6 +137,13 @@ export const GalleryGridComponent: ComponentDefinition = {
             )}
           </div>
         ))}
+      </div>
+    );
+
+    return (
+      <div data-node-id={node.id} style={style as React.CSSProperties}>
+        <DeprecationBanner />
+        {gridContent}
       </div>
     );
   },

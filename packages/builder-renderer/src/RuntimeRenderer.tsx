@@ -1,9 +1,27 @@
-import React, { createContext, useContext, useState, useCallback, useMemo, memo } from "react";
+import React, { createContext, useContext, useState, useCallback, useMemo, memo, useRef, useEffect } from "react";
 import type { BuilderDocument, Breakpoint, ComponentDefinition } from "@ui-builder/builder-core";
-import { ComponentRegistry, resolveStyle, resolveProps, resolveVisibility } from "@ui-builder/builder-core";
+import { ComponentRegistry, resolveProps, resolveVisibility } from "@ui-builder/builder-core";
+import { ANIMATION_KEYFRAMES_CSS, PRESET_KEYFRAME, PRESET_INITIAL } from "@ui-builder/shared";
 import type { RendererConfig } from "./types";
 import { StylePipeline } from "./pipeline/StylePipeline";
 import { InteractionBinder } from "./pipeline/InteractionBinder";
+
+function AnimationKeyframes() {
+  return <style>{ANIMATION_KEYFRAMES_CSS}</style>;
+}
+
+// Walk up the DOM to find the nearest scrollable ancestor.
+// Used as IntersectionObserver root so it works inside overflow:auto containers
+// (e.g. editor preview pane) as well as normal window-scroll pages.
+function findScrollContainer(el: Element): Element | null {
+  let parent = el.parentElement;
+  while (parent && parent !== document.documentElement) {
+    const { overflow, overflowY } = getComputedStyle(parent);
+    if (/auto|scroll/.test(overflow) || /auto|scroll/.test(overflowY)) return parent;
+    parent = parent.parentElement;
+  }
+  return null;
+}
 
 // ── Runtime Context ───────────────────────────────────────────────────────
 
@@ -31,9 +49,39 @@ const RuntimeNode = memo(function RuntimeNode({ nodeId }: { nodeId: string }) {
   const ctx = useRuntimeContext();
   const node = ctx.document.nodes[nodeId];
 
-  if (!node) return null;
+  // ── Animation state ──────────────────────────────────────────────
+  const animPreset = node?.props._animation as string | undefined;
+  const hasAnimation = !!(animPreset && animPreset !== "none" && PRESET_KEYFRAME[animPreset]);
+  const elementRef = useRef<Element | null>(null);
+  const [animActive, setAnimActive] = useState(false);
+  const hasAnimatedRef = useRef(false);
 
-  // Resolve per-breakpoint visibility (respects both global hidden and responsiveHidden)
+  useEffect(() => {
+    if (!hasAnimation || !elementRef.current) return;
+    const playOnce = node?.props._animationPlayOnce !== false; // default true
+    const root = findScrollContainer(elementRef.current);
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry?.isIntersecting) {
+        setAnimActive(true);
+        hasAnimatedRef.current = true;
+        if (playOnce) observer.disconnect();
+      } else if (!playOnce && hasAnimatedRef.current) {
+        setAnimActive(false);
+      }
+    }, { root, threshold: 0.1 });
+    observer.observe(elementRef.current);
+    return () => observer.disconnect();
+  }, [hasAnimation, animPreset, node?.props._animationPlayOnce]);
+
+  // ── Hover state ──────────────────────────────────────────────────
+  const hoverTransform = node?.props._hoverTransform as string | undefined;
+  const hoverOpacity   = node?.props._hoverOpacity   as string | undefined;
+  const hoverShadow    = node?.props._hoverShadow    as string | undefined;
+  const hasHover = !!(hoverTransform || hoverOpacity || hoverShadow);
+  const [hovered, setHovered] = useState(false);
+
+  // ── Early exits ──────────────────────────────────────────────────
+  if (!node) return null;
   if (!resolveVisibility(node, ctx.breakpoint)) return null;
 
   const def =
@@ -49,7 +97,6 @@ const RuntimeNode = memo(function RuntimeNode({ nodeId }: { nodeId: string }) {
 
   // Resolve style for active breakpoint
   const resolvedStyle = StylePipeline.resolve(node, ctx.breakpoint);
-  const cssProps = StylePipeline.toCSSProperties(resolvedStyle);
 
   // Bind interactions to React event handlers
   const interactionHandlers = InteractionBinder.bindAll(
@@ -60,7 +107,6 @@ const RuntimeNode = memo(function RuntimeNode({ nodeId }: { nodeId: string }) {
         const { key, value } = payload as { key: string; value: unknown };
         ctx.setVariable(key, value);
       }
-      // Other action types handled externally
     },
   );
 
@@ -74,27 +120,74 @@ const RuntimeNode = memo(function RuntimeNode({ nodeId }: { nodeId: string }) {
     React.createElement(RuntimeNode, { key: id, nodeId: id }),
   );
 
-  const extraProps: Record<string, unknown> = {
-    ...interactionHandlers,
-  };
+  // ── Build extra props ────────────────────────────────────────────
+  const extraProps: Record<string, unknown> = { ...interactionHandlers };
 
   if (ctx.attachNodeIds) {
     extraProps["data-node-id"] = nodeId;
   }
 
+  // Callback ref for IntersectionObserver — works with cloneElement on HTML elements
+  if (hasAnimation) {
+    extraProps["ref"] = (el: Element | null) => { elementRef.current = el; };
+  }
+
+  // Hover handlers — merged with existing interaction handlers
+  if (hasHover) {
+    const prevEnter = extraProps["onMouseEnter"] as ((e: unknown) => void) | undefined;
+    const prevLeave = extraProps["onMouseLeave"] as ((e: unknown) => void) | undefined;
+    extraProps["onMouseEnter"] = (e: unknown) => { setHovered(true);  prevEnter?.(e); };
+    extraProps["onMouseLeave"] = (e: unknown) => { setHovered(false); prevLeave?.(e); };
+  }
+
+  // Animation style: hidden initial state → active animation
+  const animStyle: React.CSSProperties = hasAnimation
+    ? animActive
+      ? {
+          animation: `${PRESET_KEYFRAME[animPreset!]} ${Number(node.props._animationDuration ?? 600)}ms ${String(node.props._animationEasing ?? "ease")} ${Number(node.props._animationDelay ?? 0)}ms both`,
+        }
+      : (PRESET_INITIAL[animPreset!] ?? {})
+    : {};
+
+  // Hover style: applied on hover state, overrides animation transform if both active
+  const hoverStyle: React.CSSProperties = hovered
+    ? {
+        ...(hoverTransform ? { transform: hoverTransform } : {}),
+        ...(hoverOpacity   ? { opacity: Number(hoverOpacity) } : {}),
+        ...(hoverShadow    ? { boxShadow: hoverShadow } : {}),
+      }
+    : {};
+
+  const hasStyleOverride =
+    Object.keys(animStyle).length > 0 || Object.keys(hoverStyle).length > 0;
+
   try {
-    // Resolve per-breakpoint props override
     const resolvedNodeProps = resolveProps(node.props, node.responsiveProps, ctx.breakpoint);
     const rendered = def.runtimeRenderer({
       node: { ...node, props: resolvedNodeProps },
       children: children.length > 0 ? children : undefined,
       style: resolvedStyle,
       interactions: node.interactions,
+      breakpoint: ctx.breakpoint,
     });
 
-    // Inject extra props into the top-level element if it's a React element
-    if (React.isValidElement(rendered) && (extraProps["data-node-id"] || Object.keys(interactionHandlers).length > 0)) {
-      return React.cloneElement(rendered as React.ReactElement<Record<string, unknown>>, extraProps);
+    const shouldInject =
+      ctx.attachNodeIds ||
+      Object.keys(interactionHandlers).length > 0 ||
+      hasAnimation ||
+      hasHover;
+
+    if (React.isValidElement(rendered) && shouldInject) {
+      if (hasStyleOverride) {
+        // Merge: renderer's own style → animation override → hover override (hover wins)
+        const renderedStyle =
+          (rendered.props as Record<string, unknown>).style as React.CSSProperties ?? {};
+        extraProps["style"] = { ...renderedStyle, ...animStyle, ...hoverStyle };
+      }
+      return React.cloneElement(
+        rendered as React.ReactElement<Record<string, unknown>>,
+        extraProps,
+      );
     }
     return rendered as React.ReactElement;
   } catch (err) {
@@ -166,6 +259,7 @@ export function RuntimeRenderer({ document, registry, config = {} }: RuntimeRend
   return React.createElement(
     RuntimeContext.Provider,
     { value: contextValue },
+    React.createElement(AnimationKeyframes, null),
     React.createElement(RuntimeNode, { nodeId: document.rootNodeId }),
   );
 }

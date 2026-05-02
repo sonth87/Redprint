@@ -4,6 +4,9 @@ import { Search, Grip, ChevronRight } from "lucide-react";
 import type { ComponentDefinition } from "@ui-builder/builder-core";
 import type { GroupRegistry, GroupTreeNode } from "@ui-builder/builder-core";
 import { cn } from "@ui-builder/ui";
+import type { GalleryLayoutMode } from "@ui-builder/shared";
+import { LayoutMiniPreview } from "../gallery/LayoutMiniPreview";
+import { GLASS_TOOLTIP } from "../../constants/panel-styles";
 
 export interface ComponentPaletteProps {
   components: ComponentDefinition[];
@@ -148,7 +151,7 @@ export const ComponentPalette = memo(function ComponentPalette({
                   </TooltipTrigger>
                   <TooltipContent
                     side="right"
-                    className="bg-black/30 backdrop-blur-lg border-white/20 text-foreground"
+                    className={GLASS_TOOLTIP.dark}
                   >
                     {group.label}
                   </TooltipContent>
@@ -184,18 +187,26 @@ export const ComponentPalette = memo(function ComponentPalette({
                             </TooltipTrigger>
                             <TooltipContent
                               side="right"
-                              className="bg-black/40 backdrop-blur-md border border-white/20 text-white/90"
+                              className={GLASS_TOOLTIP.dark}
                             >
                               {subGroup.label}
                             </TooltipContent>
                           </Tooltip>
 
                           {!isSubCollapsed && (
-                            <ComponentGrid
-                              components={subComps}
-                              onDragStart={onDragStart}
-                              className="pl-3"
-                            />
+                            subGroup.parentGroupId === "gallery" ? (
+                              <GalleryComponentGrid
+                                components={subComps}
+                                onDragStart={onDragStart}
+                                className="pl-2"
+                              />
+                            ) : (
+                              <ComponentGrid
+                                components={subComps}
+                                onDragStart={onDragStart}
+                                className="pl-3"
+                              />
+                            )
                           )}
                         </div>
                       );
@@ -231,7 +242,7 @@ export const ComponentPalette = memo(function ComponentPalette({
                     </TooltipTrigger>
                     <TooltipContent
                       side="right"
-                      className="bg-black/40 backdrop-blur-md border border-white/20 text-white/90"
+                      className={GLASS_TOOLTIP.dark}
                     >
                       {category}
                     </TooltipContent>
@@ -297,6 +308,72 @@ const ComponentGrid = memo(function ComponentGrid({
             )}
           </TooltipContent>
         </Tooltip>
+      ))}
+    </div>
+  );
+});
+
+// ── Gallery component grid — 2-col cards with animated layout previews ────────
+
+function GalleryCard({
+  comp,
+  onDragStart,
+}: {
+  comp: ComponentDefinition;
+  onDragStart: (componentType: string, e: React.DragEvent) => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const layoutMode = (comp.defaultProps?.["layoutMode"] as GalleryLayoutMode) ?? "grid";
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div
+          className={cn(
+            "flex flex-col rounded-md border border-transparent overflow-hidden",
+            "hover:border-border hover:bg-muted/40 cursor-grab active:cursor-grabbing",
+            "transition-colors select-none",
+          )}
+          draggable
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+          onDragStart={(e) => {
+            e.dataTransfer.setData("text/plain", JSON.stringify({ type: comp.type }));
+            e.dataTransfer.effectAllowed = "copy";
+            onDragStart(comp.type, e);
+          }}
+        >
+          {/* Layout preview */}
+          <div className="h-[68px] w-full overflow-hidden bg-muted/50 rounded-t-md">
+            <LayoutMiniPreview mode={layoutMode} animated={hovered} />
+          </div>
+          {/* Name */}
+          <div className="px-1.5 py-1.5 text-center">
+            <span className="text-[10px] font-medium leading-tight text-foreground/80 line-clamp-2">
+              {comp.name}
+            </span>
+          </div>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent side="right">
+        <p className="font-medium">{comp.name}</p>
+        {comp.description && (
+          <p className="text-xs text-muted-foreground max-w-[200px]">{comp.description}</p>
+        )}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
+const GalleryComponentGrid = memo(function GalleryComponentGrid({
+  components,
+  onDragStart,
+  className,
+}: ComponentGridProps) {
+  return (
+    <div className={cn("grid grid-cols-2 gap-1.5 p-1.5", className)}>
+      {components.map((comp) => (
+        <GalleryCard key={comp.type} comp={comp} onDragStart={onDragStart} />
       ))}
     </div>
   );

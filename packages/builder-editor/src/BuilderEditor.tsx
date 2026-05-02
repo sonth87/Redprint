@@ -25,6 +25,7 @@ import {
 import {
   TRANSITION_FAST_CSS,
   TRANSITION_MID_CSS,
+  type GalleryItem,
 } from "@ui-builder/shared";
 import { Monitor, Smartphone, LocateFixed, LayoutTemplate, Sparkles, Layers } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
@@ -64,6 +65,7 @@ import { initI18n, type SupportedLocale } from "./i18n";
 import { useTranslation } from "react-i18next";
 import { type RemotePaletteProvider } from "./types/remote-palette";
 import { MediaManager } from "./panels/MediaManager";
+import { GalleryMediaManager } from "./panels/gallery";
 
 import { useViewport } from "./hooks/useViewport";
 import { useResizeGesture } from "./hooks/useResizeGesture";
@@ -198,6 +200,25 @@ function EditorInner({
     // URL-based assets are passed directly to the picker callback without persisting
     // The ImageControl already handles raw URL input via its text field
   }, []);
+
+  // ── Gallery media manager state ──────────────────────────────────────────
+  const [galleryManagerOpen, setGalleryManagerOpen] = React.useState(false);
+  const [galleryManagerNodeId, setGalleryManagerNodeId] = React.useState<string | null>(null);
+
+  const handleOpenGalleryManager = React.useCallback(() => {
+    const nodeId = selectedNodeIds[0];
+    if (!nodeId) return;
+    setGalleryManagerNodeId(nodeId);
+    setGalleryManagerOpen(true);
+  }, [selectedNodeIds]);
+
+  const handleGalleryItemsChange = React.useCallback((nodeId: string, items: GalleryItem[]) => {
+    dispatch({
+      type: "UPDATE_PROPS",
+      payload: { nodeId, props: { items } },
+      description: "Update gallery items",
+    });
+  }, [dispatch]);
 
   // For ContextualToolbar: open media manager and apply result to a prop key
   const handleOpenMediaManagerForProp = React.useCallback((propKey: string) => {
@@ -407,7 +428,7 @@ function EditorInner({
   const { handleDragStart, handlePaletteDragStart, handleDrop, handleDragOver, handleDragEnter, handleDragLeave, isDSDragging, paletteFlowDropTarget } =
     useDragHandlers({ rootNodeId: document.rootNodeId, zoom, canvasFrameRef, dispatch, nodes: document.nodes, getContainerConfig, onAfterDrop: handlePaletteClose });
 
-  const { addItem: handlePaletteItemClick } = useClickToAdd({ rootNodeId: document.rootNodeId, nodes: document.nodes, selectedNodeIds, pendingTargetSectionId, zoom, panOffset, canvasContainerRef, canvasFrameRef: activeFrameRef, dispatch, onAfterAdd: handlePaletteClose });
+  const { addItem: handlePaletteItemClick } = useClickToAdd({ rootNodeId: document.rootNodeId, nodes: document.nodes, selectedNodeIds, pendingTargetSectionId, zoom, breakpoint, canvasContainerRef, canvasFrameRef: activeFrameRef, resolveComponentDefinition: (componentType) => registry?.getComponent(componentType), dispatch, onAfterAdd: handlePaletteClose });
 
   const { handlePointerDown } = usePointerDown({
     activeTool, zoom, rootNodeId: document.rootNodeId, nodes: document.nodes, canvasFrameRef, activeFrameRef,
@@ -772,6 +793,7 @@ function EditorInner({
               onMoveUp={onMoveUp} onMoveDown={onMoveDown}
               onDragHandlePointerDown={handleDragHandlePointerDown}
               onOpenMediaManager={assetProvider ? handleOpenMediaManagerForProp : undefined}
+              onOpenGalleryManager={assetProvider ? handleOpenGalleryManager : undefined}
             />
           )}
 
@@ -855,6 +877,20 @@ function EditorInner({
         onConfirm={executeConfirmedDelete}
         onCancel={() => setDeleteConfirmNodeId(null)}
       />
+
+      {/* Gallery Media Manager dialog — shown when "Manage Media" clicked on a gallery node */}
+      {galleryManagerOpen && galleryManagerNodeId && (
+        <GalleryMediaManager
+          open={galleryManagerOpen}
+          onOpenChange={(open) => {
+            if (!open) setGalleryManagerNodeId(null);
+            setGalleryManagerOpen(open);
+          }}
+          items={((document.nodes[galleryManagerNodeId]?.props["items"]) as GalleryItem[] | undefined) ?? []}
+          onItemsChange={(items) => handleGalleryItemsChange(galleryManagerNodeId, items)}
+          onOpenMediaManager={handleOpenMediaManager}
+        />
+      )}
 
       {/* Media Manager dialog — shown when any image control triggers open */}
       <MediaManager

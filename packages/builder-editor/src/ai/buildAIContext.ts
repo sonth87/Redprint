@@ -152,8 +152,8 @@ export function buildAIContext(
                 .map(([k]) => k)
             : undefined,
           propSchema: selectedDef?.propSchema
-            .filter((s) => s.type !== "group")
-            .map((s) => ({ key: s.key, label: s.label, type: s.type })),
+            .filter((s) => s.type !== "group" && s.type !== "row")
+            .map((s) => ({ key: s.key, label: (s as { label?: string }).label ?? s.key, type: s.type })),
         }
       : null,
     availableComponents: components.map((c) => ({
@@ -164,8 +164,8 @@ export function buildAIContext(
         .filter(([, v]) => Boolean(v))
         .map(([k]) => k),
       propSchema: c.propSchema
-        .filter((s) => s.type !== "group")
-        .map((s) => ({ key: s.key, label: s.label, type: s.type })),
+        .filter((s) => s.type !== "group" && s.type !== "row")
+        .map((s) => ({ key: s.key, label: (s as { label?: string }).label ?? s.key, type: s.type })),
     })),
     activeBreakpoint: state.editor.activeBreakpoint,
     pageNodes,

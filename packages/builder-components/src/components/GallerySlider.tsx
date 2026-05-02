@@ -214,6 +214,8 @@ export const GallerySliderComponent: ComponentDefinition = {
   subGroup: "gallery-slider",
   description: "A horizontal image slideshow with per-slide image picker, caption, and link.",
   version: "3.0.0",
+  deprecated: true,
+  replacedBy: "GallerySliderPro",
   tags: ["gallery", "slider", "carousel", "slideshow"],
   capabilities: {
     canContainChildren: false,
@@ -226,7 +228,7 @@ export const GallerySliderComponent: ComponentDefinition = {
   propSchema: [
     { key: "slideCount", label: "Number of Slides", type: "slider", min: 1, max: MAX_SLIDES, default: 3 },
     { key: "autoPlay", label: "Auto Play", type: "boolean", default: false },
-    { key: "autoPlaySpeed", label: "Auto Play Speed (ms)", type: "number", default: 3000, min: 500, max: 10000 },
+    { key: "autoPlaySpeed", label: "Auto Play Speed", type: "number", default: 3000, min: 500, max: 10000, step: 500, unit: "ms" },
     { key: "loop", label: "Loop", type: "boolean", default: true },
     { key: "showArrows", label: "Show Arrows", type: "boolean", default: true },
     { key: "showDots", label: "Show Dots", type: "boolean", default: true },
@@ -264,6 +266,13 @@ export const GallerySliderComponent: ComponentDefinition = {
     ),
   },
   defaultStyle: { width: "100%" },
-  editorRenderer: (props) => <EditorRenderer {...props} />,
+  editorRenderer: (props) => (
+    <div data-node-id={props.node.id}>
+      <div style={{ background: "#fef3c7", color: "#92400e", fontSize: 9, padding: "2px 8px", fontWeight: 600, letterSpacing: "0.02em" }}>
+        Deprecated — use Gallery Slider
+      </div>
+      <EditorRenderer {...props} />
+    </div>
+  ),
   runtimeRenderer: (props) => <RuntimeRenderer {...props} />,
 };

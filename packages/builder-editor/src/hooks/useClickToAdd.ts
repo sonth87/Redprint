@@ -1,6 +1,8 @@
-import { useCallback } from "react";
+import React, { useCallback } from "react";
+import { createRoot } from "react-dom/client";
+import { flushSync } from "react-dom";
 import { v4 as uuidv4 } from "uuid";
-import type { PaletteItem, Breakpoint, BuilderNode } from "@ui-builder/builder-core";
+import type { PaletteItem, Breakpoint, BuilderNode, ComponentDefinition } from "@ui-builder/builder-core";
 import { generateRecursiveAddActions } from "./presetUtils";
 import { getDropTargetSection } from "./dragUtils";
 
@@ -9,9 +11,10 @@ interface UseClickToAddOptions {
   nodes: Record<string, BuilderNode>;
   selectedNodeIds: string[];
   zoom: number;
-  panOffset: { x: number; y: number };
+  breakpoint: Breakpoint;
   canvasContainerRef: React.RefObject<HTMLDivElement | null>;
   canvasFrameRef?: React.RefObject<HTMLDivElement | null>;
+  resolveComponentDefinition?: (componentType: string) => ComponentDefinition | undefined;
   dispatch: (action: { type: string; payload: unknown; description?: string; groupId?: string }) => void;
   onAfterAdd?: () => void;
   /**
@@ -30,9 +33,10 @@ export function useClickToAdd({
   nodes,
   selectedNodeIds,
   zoom,
-  panOffset,
+  breakpoint,
   canvasContainerRef,
   canvasFrameRef,
+  resolveComponentDefinition,
   dispatch,
   onAfterAdd,
   pendingTargetSectionId,
@@ -47,6 +51,81 @@ export function useClickToAdd({
       icon: item.icon,
     };
   }, []);
+
+  const measureRenderedSize = useCallback((
+    item: PaletteItem,
+    componentDef: ComponentDefinition | undefined,
+    parentWidth: number,
+  ): { width: number; height: number } | null => {
+    if (!componentDef || typeof document === "undefined") return null;
+
+    const host = document.createElement("div");
+    host.style.position = "absolute";
+    host.style.left = "-100000px";
+    host.style.top = "0";
+    host.style.width = `${Math.max(parentWidth, 0)}px`;
+    host.style.visibility = "hidden";
+    host.style.pointerEvents = "none";
+    host.style.zIndex = "-1";
+
+    const mount = document.createElement("div");
+    mount.style.position = "relative";
+    mount.style.width = `${Math.max(parentWidth, 0)}px`;
+    host.appendChild(mount);
+    document.body.appendChild(host);
+
+    const root = createRoot(mount);
+    const nodeId = "__measure_node__";
+    const timestamp = new Date().toISOString();
+    const measuredNode: BuilderNode = {
+      id: nodeId,
+      type: item.componentType,
+      parentId: null,
+      order: 0,
+      props: { ...(componentDef.defaultProps ?? {}), ...buildPresetProps(item) },
+      style: {
+        ...(componentDef.defaultStyle ?? {}),
+        ...(item.style ?? {}),
+        position: "absolute",
+        left: "0px",
+        top: "0px",
+      },
+      responsiveStyle: {},
+      interactions: [],
+      metadata: { createdAt: timestamp, updatedAt: timestamp },
+    };
+
+    try {
+      flushSync(() => {
+        root.render(
+          React.createElement(
+            React.Fragment,
+            null,
+            componentDef.editorRenderer({
+              node: measuredNode,
+              style: measuredNode.style,
+              interactions: measuredNode.interactions,
+              breakpoint,
+            }) as React.ReactNode,
+          ),
+        );
+      });
+
+      const measuredEl = mount.querySelector(`[data-node-id="${nodeId}"]`) as HTMLElement | null;
+      const targetEl = measuredEl ?? (mount.firstElementChild as HTMLElement | null);
+      if (!targetEl) return null;
+
+      return {
+        width: targetEl.offsetWidth,
+        height: targetEl.offsetHeight,
+      };
+    } catch {
+      return null;
+    } finally {
+      root.unmount();
+      host.remove();
+    }
+  }, [breakpoint, buildPresetProps]);
 
   const addItem = useCallback(
     (item: PaletteItem) => {
@@ -109,48 +188,50 @@ export function useClickToAdd({
         }
       } else {
         // --- Standard logic for other components ---
-        
-        // Compute canvas-space centre of the visible viewport
-        let x = 100;
-        let y = 100;
+        let x = 0;
+        let y = 0;
         let parentId = rootNodeId;
-        
-        if (canvasContainerRef.current) {
-          const containerWidth = canvasContainerRef.current.offsetWidth;
-          const containerHeight = canvasContainerRef.current.offsetHeight;
-          
-          // Account for the fixed palette sidebar (380px) to find the true visual center
-          const isPaletteOpen = !!globalThis.document.querySelector('[class*="AddElementsPanel"]');
-          const sidebarWidth = isPaletteOpen ? 380 : 0;
-          
-          const centerX = (containerWidth - sidebarWidth) / 2 + sidebarWidth;
-          const centerY = containerHeight / 2;
-          
-          x = Math.round((-panOffset.x + centerX) / zoom);
-          y = Math.round((-panOffset.y + centerY) / zoom);
 
-          // Center the component itself (assuming default widths)
-          const estWidth = (item.componentType === "Container" || item.componentType === "Grid") ? 400 : 200;
-          x -= (estWidth / 2);
-          y -= 25; // rough half-height for most elements
-          
-          if (canvasFrameRef?.current) {
-            const rect = canvasContainerRef.current.getBoundingClientRect();
-            const hitClientY = rect.top + centerY;
-            parentId = getDropTargetSection(hitClientY, canvasFrameRef.current, nodes, rootNodeId);
-            
-            if (parentId !== rootNodeId) {
-              const sectionEl = canvasFrameRef.current.querySelector(`[data-node-id="${parentId}"]`) as HTMLElement | null;
-              if (sectionEl) {
-                const sr = sectionEl.getBoundingClientRect();
-                const fr = canvasFrameRef.current.getBoundingClientRect();
-                const sectionYOffset = (sr.top - fr.top) / zoom;
-                const sectionXOffset = (sr.left - fr.left) / zoom;
-                y -= sectionYOffset;
-                x -= sectionXOffset;
-              }
-            }
+        if (canvasContainerRef.current && canvasFrameRef?.current) {
+          const containerRect = canvasContainerRef.current.getBoundingClientRect();
+          const fr = canvasFrameRef.current.getBoundingClientRect();
+
+          // Target drop position in screen space = center of the editor viewport,
+          // clamped so it lands inside the canvas frame.
+          // getBoundingClientRect() already encodes zoom+pan, so the correct inverse is:
+          //   canvas_coord = (screen_coord - frame_origin) / zoom
+          // No panOffset manipulation needed.
+          const targetScreenX = containerRect.left + containerRect.width / 2;
+          const targetScreenY = Math.max(fr.top + 1, Math.min(fr.bottom - 1,
+            containerRect.top + containerRect.height / 2,
+          ));
+
+          // Determine parent section from the hit Y position
+          parentId = getDropTargetSection(targetScreenY, canvasFrameRef.current, nodes, rootNodeId);
+
+          const parentEl = parentId !== rootNodeId
+            ? (canvasFrameRef.current.querySelector(`[data-node-id="${parentId}"]`) as HTMLElement | null)
+            : canvasFrameRef.current;
+          const pr = parentEl?.getBoundingClientRect() ?? fr;
+
+          // Convert screen target → parent-local canvas coordinates
+          // (works because all children share the same zoom transform origin)
+          const localX = (targetScreenX - pr.left) / zoom;
+          const localY = (targetScreenY - pr.top) / zoom;
+
+          const componentDef = resolveComponentDefinition?.(item.componentType);
+          const measuredSize = measureRenderedSize(item, componentDef, pr.width / zoom);
+
+          if (measuredSize) {
+            x = Math.round(localX - measuredSize.width / 2);
+            y = Math.round(localY - measuredSize.height / 2);
+          } else {
+            x = Math.round(localX);
+            y = Math.round(localY);
           }
+
+          x = Math.max(0, x);
+          y = Math.max(0, y);
         }
 
         const nodeId = uuidv4();
@@ -210,7 +291,7 @@ export function useClickToAdd({
         onAfterAdd();
       }
     },
-    [rootNodeId, nodes, selectedNodeIds, pendingTargetSectionId, zoom, panOffset, canvasContainerRef, canvasFrameRef, dispatch, onAfterAdd, buildPresetProps],
+    [rootNodeId, nodes, selectedNodeIds, pendingTargetSectionId, zoom, breakpoint, canvasContainerRef, canvasFrameRef, resolveComponentDefinition, dispatch, onAfterAdd, buildPresetProps, measureRenderedSize],
   );
 
   return { addItem };

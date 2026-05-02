@@ -58,7 +58,7 @@ export const ShapeComponent: ComponentDefinition = {
     },
     { key: "fill", label: "Fill Color", type: "color", default: "#111827" },
     { key: "stroke", label: "Stroke Color", type: "color", default: "transparent" },
-    { key: "strokeWidth", label: "Stroke Width", type: "number", default: 0, min: 0, max: 20 },
+    { key: "strokeWidth", label: "Stroke Width", type: "number", default: 0, min: 0, max: 20, step: 1, unit: "px" },
   ],
   defaultProps: { shape: "rectangle", fill: "#111827", stroke: "transparent", strokeWidth: 0 },
   defaultStyle: { width: "100px", height: "100px", display: "block" },

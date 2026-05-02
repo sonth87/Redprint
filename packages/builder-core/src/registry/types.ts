@@ -4,6 +4,7 @@
 
 import type { BuilderDocument, BuilderNode, StyleConfig } from "../document/types";
 import type { InteractionConfig } from "../document/interactions";
+import type { Breakpoint } from "../responsive/types";
 
 // ── Prop Schema ───────────────────────────────────────────────────────────
 
@@ -46,6 +47,7 @@ export type PropSchema =
   | { key: string; type: "icon"; label: string }
   | { key: string; type: "font"; label: string }
   | { key: string; type: "slider"; label: string; min: number; max: number; step?: number; default?: number }
+  | { key: string; type: "row"; children: PropSchema[] }
   | { key: string; type: "group"; label: string; children: PropSchema[]; collapsible?: boolean };
 
 // ── Container & Layout ────────────────────────────────────────────────────
@@ -212,6 +214,7 @@ export type ComponentRenderer = (props: {
   children?: unknown;
   style: StyleConfig;
   interactions: InteractionConfig[];
+  breakpoint: Breakpoint;
 }) => unknown;
 
 // ── ComponentDefinition ───────────────────────────────────────────────────
@@ -257,6 +260,10 @@ export interface ComponentDefinition {
   lifecycle?: ComponentLifecycle;
   a11y?: ComponentA11yConfig;
   editorConfig?: ComponentEditorConfig;
+  /** When true, this component is deprecated and should not be used in new documents. */
+  deprecated?: boolean;
+  /** The replacement component type to suggest when deprecated is true. */
+  replacedBy?: string;
 }
 
 // ── Filter ────────────────────────────────────────────────────────────────
