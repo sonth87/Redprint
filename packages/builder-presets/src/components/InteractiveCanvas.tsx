@@ -14,6 +14,8 @@ import {
 import type { ResizeHandleType } from "@ui-builder/builder-editor";
 import { PresetContextualToolbar } from "./PresetContextualToolbar";
 import { PresetInlineEditor } from "./PresetInlineEditor";
+import { SlotOverlays } from "./SlotOverlays";
+import type { InsertTarget } from "./NodeTreePanel";
 
 const ZOOM_LEVELS = [0.1, 0.25, 0.33, 0.5, 0.67, 0.75, 1, 1.25, 1.5, 2] as const;
 
@@ -31,7 +33,11 @@ function getRelativeRect(el: HTMLElement, ref: HTMLElement): Rect {
   return { x: er.left - rr.left, y: er.top - rr.top, width: er.width, height: er.height };
 }
 
-export function InteractiveCanvas() {
+interface InteractiveCanvasProps {
+  onRequestInsert?: (target: InsertTarget) => void;
+}
+
+export function InteractiveCanvas({ onRequestInsert }: InteractiveCanvasProps = {}) {
   const { state, dispatch, builder } = useBuilder();
   const { selectedNodeIds, select, clearSelection } = useSelection();
   const { breakpoint, setBreakpoint } = useBreakpoint();
@@ -525,6 +531,14 @@ export function InteractiveCanvas() {
               zoom={scale}
               onCommit={handleHTMLCommit}
               onExit={handleInlineExit}
+            />
+          )}
+
+          {onRequestInsert && (
+            <SlotOverlays 
+              canvasFrameRef={canvasFrameRef} 
+              zoom={scale} 
+              onRequestInsert={onRequestInsert} 
             />
           )}
         </div>

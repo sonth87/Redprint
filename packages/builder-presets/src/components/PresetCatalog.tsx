@@ -42,6 +42,7 @@ function PaletteItemRow({
     <div
       role="button"
       tabIndex={0}
+      draggable={true}
       className={
         "w-full text-left px-3 py-1.5 text-xs transition-colors flex items-center gap-2 cursor-pointer " +
         (selected
@@ -51,6 +52,21 @@ function PaletteItemRow({
       onClick={() => onSelect(item)}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(item); }
+      }}
+      onDragStart={(e) => {
+        const dragData = {
+          source: "palette-item",
+          componentType: item.componentType,
+          presetData: {
+            props: item.props,
+            style: item.style,
+            responsiveStyle: item.responsiveStyle,
+            responsiveProps: item.responsiveProps,
+            children: item.children,
+          },
+        };
+        e.dataTransfer.setData("text/plain", JSON.stringify(dragData));
+        e.dataTransfer.setData("application/builder-component-type", item.componentType);
       }}
     >
       <div

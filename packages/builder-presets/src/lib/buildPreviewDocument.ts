@@ -1,78 +1,63 @@
-import type { BuilderDocument, BuilderNode, StyleConfig } from "@ui-builder/builder-core";
-import { CURRENT_SCHEMA_VERSION, DEFAULT_BREAKPOINTS } from "@ui-builder/builder-core";
-import type { PaletteItemChild } from "../types/palette.types";
+import type { BuilderDocument, PresetDefinition, StyleConfig } from "@ui-builder/builder-core";
+import { migratePaletteItem, presetToDocument } from "@ui-builder/builder-core";
+import type { PaletteItem, PaletteItemChild } from "../types/palette.types";
 
+function buildTransientPaletteItem(
+  type: string,
+  props: Record<string, unknown>,
+  style: Partial<StyleConfig>,
+  children?: PaletteItemChild[],
+): PaletteItem {
+  return {
+    id: "__preview__",
+    componentType: type,
+    name: `${type} Preview`,
+    props,
+    style: style as Record<string, unknown>,
+    children,
+  };
+}
+
+export function buildPreviewDocument(item: PaletteItem): BuilderDocument;
 export function buildPreviewDocument(
   type: string,
   props: Record<string, unknown>,
   style: Partial<StyleConfig>,
   children?: PaletteItemChild[],
+): BuilderDocument;
+export function buildPreviewDocument(
+  itemOrType: PaletteItem | string,
+  props?: Record<string, unknown>,
+  style?: Partial<StyleConfig>,
+  children?: PaletteItemChild[],
 ): BuilderDocument {
-  const rootId = "root";
-  const nodes: Record<string, BuilderNode> = {};
+  const item = typeof itemOrType === "string"
+    ? buildTransientPaletteItem(itemOrType, props ?? {}, style ?? {}, children)
+    : itemOrType;
 
-  nodes[rootId] = {
-    id: rootId,
-    type,
-    parentId: null,
-    order: 0,
-    props,
-    style: style as StyleConfig,
-    responsiveStyle: {},
-    interactions: [],
-  };
+  const preset: PresetDefinition = migratePaletteItem({
+    id: item.id,
+    type: item.type ?? (item.children?.length ? "group" : "variant"),
+    componentType: item.componentType,
+    name: item.name,
+    description: item.description,
+    thumbnail: item.thumbnail,
+    i18n: item.i18n,
+    props: item.props,
+    style: item.style,
+    responsiveProps: item.responsiveProps as PresetDefinition["root"]["responsiveProps"],
+    responsiveStyle: item.responsiveStyle as PresetDefinition["root"]["responsiveStyle"],
+    children: item.children as any,
+    tags: item.tags,
+    purpose: item.purpose,
+    industryHints: item.industryHints,
+    layoutVariant: item.layoutVariant,
+    category: item.category,
+  });
 
-  if (children) {
-    addChildNodes(children, rootId, nodes);
-  }
-
-  return {
+  return presetToDocument(preset, {
     id: "preview-doc",
-    schemaVersion: CURRENT_SCHEMA_VERSION,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    name: `${type} Preview`,
-    nodes,
-    rootNodeId: rootId,
-    breakpoints: DEFAULT_BREAKPOINTS,
-    variables: {},
-    assets: { version: "1.0", assets: [] },
-    plugins: [],
-    canvasConfig: {
-      showGrid: false,
-      gridSize: 8,
-      snapEnabled: false,
-      snapThreshold: 6,
-      snapToGrid: false,
-      snapToComponents: false,
-      rulerEnabled: false,
-      showHelperLines: false,
-    },
-    metadata: {},
-  };
-}
-
-function addChildNodes(
-  children: PaletteItemChild[],
-  parentId: string,
-  nodes: Record<string, BuilderNode>,
-): void {
-  children.forEach((child, index) => {
-    // Stable positional ID: e.g. "root-0", "root-0-2", etc.
-    const id = `${parentId}-${index}`;
-    nodes[id] = {
-      id,
-      type: child.componentType,
-      parentId,
-      order: index,
-      props: child.props ?? {},
-      style: (child.style ?? {}) as StyleConfig,
-      responsiveStyle: {},
-      interactions: [],
-      ...(child.name ? { name: child.name } : {}),
-    };
-    if (child.children?.length) {
-      addChildNodes(child.children, id, nodes);
-    }
+    name: item.name,
+    description: item.description,
   });
 }

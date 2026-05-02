@@ -199,3 +199,28 @@ export type {
   PaletteItem,
   PaletteDragData,
 } from "./presets/palette-types";
+export type {
+  PresetKind,
+  PresetCatalogItem,
+  PresetSlotDefinition,
+  PresetAuthoringConfig,
+  PresetNodeEditorConfig,
+  PresetNodeConstraints,
+  PresetNodeDefinition,
+  PresetPlacementPolicy,
+  PresetDefinition,
+} from "./presets/schema";
+export {
+  detectPresetVersion,
+  isPresetDefinition,
+  migrateComponentPreset,
+  migratePaletteItem,
+  migratePreset,
+  CURRENT_PRESET_VERSION as CURRENT_PRESET_SCHEMA_VERSION,
+  LEGACY_PRESET_VERSION,
+} from "./presets/migrate";
+export {
+  PRESET_NODE_PLUGIN_DATA_KEY,
+  presetToDocument,
+  documentToPreset,
+} from "./presets/document-adapter";
