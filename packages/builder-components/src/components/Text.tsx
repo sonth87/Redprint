@@ -1,5 +1,6 @@
 import React from "react";
 import type { ComponentDefinition } from "@ui-builder/builder-core";
+import { sanitizeHtml } from "../utils/sanitize";
 
 export const TextComponent: ComponentDefinition = {
   type: "Text",
@@ -50,7 +51,7 @@ export const TextComponent: ComponentDefinition = {
     },
   ],
   defaultProps: { text: "<p>Hello World</p>", tag: "p" },
-  defaultStyle: { fontSize: "16px", color: "#111827", lineHeight: "1.6" },
+  defaultStyle: { fontSize: "16px", color: "#111827", lineHeight: "1.6", width: "360px" },
   editorRenderer: ({ node, style }) => {
     const Tag = (node.props.tag ?? "p") as keyof React.JSX.IntrinsicElements;
     const html = String(node.props.text ?? "<p>Text</p>");
@@ -60,7 +61,7 @@ export const TextComponent: ComponentDefinition = {
         style={style as React.CSSProperties}
         className="outline-none"
         // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{ __html: html }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(html) }}
       />
     );
   },
@@ -70,7 +71,7 @@ export const TextComponent: ComponentDefinition = {
       <Tag
         style={style as React.CSSProperties}
         // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{ __html: String(node.props.text ?? "") }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(String(node.props.text ?? "")) }}
       />
     );
   },

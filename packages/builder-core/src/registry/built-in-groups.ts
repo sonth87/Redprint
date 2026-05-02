@@ -76,9 +76,9 @@ export const BUILT_IN_SUB_GROUPS: ComponentSubGroup[] = [
   { id: "button-group",        parentGroupId: "button", label: "Button Group",         icon: "layout-template",      order: 4, i18nKey: "subGroups.buttonGroup" },
 
   // ── Gallery sub-groups ───────────────────────────────────────────────────
-  { id: "gallery-grid",    parentGroupId: "gallery", label: "Grid Galleries",    icon: "layout-grid",         order: 0, i18nKey: "subGroups.galleryGrid" },
-  { id: "gallery-slider",  parentGroupId: "gallery", label: "Slider Galleries",  icon: "layout-panel-top",    order: 1, i18nKey: "subGroups.gallerySlider" },
-  { id: "gallery-more",    parentGroupId: "gallery", label: "More Galleries",    icon: "images",              order: 2, i18nKey: "subGroups.galleryMore" },
+  { id: "gallery-standard",  parentGroupId: "gallery", label: "Standard",          icon: "layout-grid",         order: 0, i18nKey: "subGroups.galleryStandard" },
+  { id: "gallery-slides",    parentGroupId: "gallery", label: "Slides & Carousel", icon: "layout-panel-top",    order: 1, i18nKey: "subGroups.gallerySlides" },
+  { id: "gallery-creative",  parentGroupId: "gallery", label: "Creative",          icon: "sparkles",            order: 2, i18nKey: "subGroups.galleryCreative" },
 
   // ── Decorative sub-groups ────────────────────────────────────────────────
   { id: "basic-shapes",    parentGroupId: "decorative", label: "Basic Shapes",   icon: "shapes",              order: 0, i18nKey: "subGroups.basicShapes" },

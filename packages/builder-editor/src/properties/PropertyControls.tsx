@@ -6,6 +6,7 @@
  */
 import React, { memo, useCallback } from "react";
 import { useNodeProperty } from "@ui-builder/builder-react";
+import { ColorSwatch } from "../controls/color/ColorSwatch";
 import {
   STYLE_PROPERTIES,
   PROP_PROPERTIES,
@@ -82,11 +83,10 @@ export const ColorControl = memo(function ColorControl({
     <div className="grid gap-1">
       {!compact && <Label className="text-[10px] text-muted-foreground">{descriptor.label}</Label>}
       <div className="flex items-center gap-1.5">
-        <input
-          type="color"
-          className="h-7 w-8 rounded border border-input bg-background cursor-pointer shrink-0"
+        <ColorSwatch
           value={value ?? "#000000"}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={setValue}
+          label={descriptor.label}
         />
         <Input
           className="h-7 text-xs flex-1 font-mono"

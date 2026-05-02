@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from "react";
+import React, { useMemo, useRef, useEffect } from "react";
 import {
   BuilderProvider,
   useBuilder,
@@ -12,6 +12,9 @@ import {
 import {
   DEVICE_VIEWPORT_PRESETS,
   resolveProps,
+  type Asset,
+  type AssetProvider,
+  type AssetType,
   type BuilderAPI,
   type BuilderConfig,
   type CanvasMode,
@@ -22,10 +25,11 @@ import {
 import {
   TRANSITION_FAST_CSS,
   TRANSITION_MID_CSS,
+  type GalleryItem,
 } from "@ui-builder/shared";
-import { Monitor, Smartphone, LocateFixed, LayoutTemplate, Sparkles } from "lucide-react";
+import { Monitor, Smartphone, LocateFixed, LayoutTemplate, Sparkles, Layers } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
-import { cn } from "@ui-builder/ui";
+import { cn, Toaster, toast } from "@ui-builder/ui";
 
 import { CanvasRoot } from "./canvas/CanvasRoot";
 import {
@@ -36,7 +40,6 @@ import {
   LiveDimensionsDisplay,
 } from "./overlay/EditorOverlay";
 import { SectionOverlay } from "./overlay/SectionOverlay";
-import { SpacingHighlightOverlay } from "./overlay/SpacingHighlightOverlay";
 import { SectionToolbar } from "./overlay/SectionToolbar";
 import { EditorToolbar } from "./toolbar/EditorToolbar";
 import { ComponentPalette } from "./panels/left/ComponentPalette";
@@ -55,13 +58,14 @@ import { AIAssistant } from "./ai/AIAssistant";
 import { AIConfigPanel } from "./ai/AIConfig";
 import { buildAIContext } from "./ai/buildAIContext";
 import { AIConfigProvider } from "./ai/AIConfigContext";
-import { PageGeneratorModal } from "./ai/page-generator";
 import { FigmaImportDialog } from "./figma/FigmaImportDialog";
 import { ArtboardLabel } from "./canvas/ArtboardLabel";
 import { FlowDropPlaceholderLayer } from "./canvas/FlowDropPlaceholderLayer";
 import { initI18n, type SupportedLocale } from "./i18n";
 import { useTranslation } from "react-i18next";
 import { type RemotePaletteProvider } from "./types/remote-palette";
+import { MediaManager } from "./panels/MediaManager";
+import { GalleryMediaManager } from "./panels/gallery";
 
 import { useViewport } from "./hooks/useViewport";
 import { useResizeGesture } from "./hooks/useResizeGesture";
@@ -92,6 +96,7 @@ import { useNodeHandlers } from "./hooks/useNodeHandlers";
 import { useDragHandleGesture } from "./hooks/useDragHandleGesture";
 import { useRubberBandSelect } from "./hooks/useRubberBandSelect";
 import { useCanvasActions } from "./hooks/useCanvasActions";
+import { useBeforeUnload } from "./hooks/useBeforeUnload";
 
 import {
   DEFAULT_COMPONENTS_PANEL_POS,
@@ -114,11 +119,15 @@ function EditorInner({
   paletteCatalog,
   remotePaletteProvider,
   locale,
+  warnOnLeave,
+  assetProvider,
 }: {
   groupRegistry?: GroupRegistry;
   paletteCatalog?: PaletteCatalog;
   remotePaletteProvider?: RemotePaletteProvider;
   locale?: string;
+  warnOnLeave?: boolean;
+  assetProvider?: AssetProvider;
 }) {
   const { t } = useTranslation();
   const { builder, state, dispatch } = useBuilder();
@@ -127,17 +136,111 @@ function EditorInner({
   const { breakpoint, setBreakpoint } = useBreakpoint();
   const { undo, redo, canUndo, canRedo } = useHistory();
 
+  useBeforeUnload((warnOnLeave ?? true) && canUndo);
+
+  // ── Media / Asset state ──────────────────────────────────────────────────
+  const [assets, setAssets] = React.useState<Asset[]>([]);
+  const [mediaManagerOpen, setMediaManagerOpen] = React.useState(false);
+  // Callback to call when user selects an asset in MediaManager
+  const mediaSelectCallbackRef = React.useRef<((asset: Asset) => void) | null>(null);
+
+  // Load assets on mount and whenever provider changes
+  React.useEffect(() => {
+    if (!assetProvider) return;
+    assetProvider.listAssets({}).then((result) => setAssets(result.assets)).catch(() => {});
+  }, [assetProvider]);
+
+  const handleOpenMediaManager = React.useCallback((onSelect: (asset: Asset) => void) => {
+    mediaSelectCallbackRef.current = onSelect;
+    setMediaManagerOpen(true);
+  }, []);
+
+  const handleMediaSelect = React.useCallback((asset: Asset) => {
+    mediaSelectCallbackRef.current?.(asset);
+    mediaSelectCallbackRef.current = null;
+    setMediaManagerOpen(false);
+    // Refresh asset list
+    assetProvider?.listAssets({}).then((r) => setAssets(r.assets)).catch(() => {});
+  }, [assetProvider]);
+
+  const handleMediaUpload = React.useCallback(async (files: File[]): Promise<Asset[]> => {
+    if (!assetProvider?.upload) return [];
+    const results = await Promise.allSettled(files.map((f) => assetProvider.upload!(f)));
+    const uploaded: Asset[] = [];
+    let errorCount = 0;
+    for (const r of results) {
+      if (r.status === "fulfilled") uploaded.push(r.value);
+      else errorCount++;
+    }
+    if (uploaded.length > 0) {
+      setAssets((prev) => {
+        const existingIds = new Set(prev.map((a) => a.id));
+        return [...prev, ...uploaded.filter((a) => !existingIds.has(a.id))];
+      });
+      toast.success(
+        uploaded.length === 1
+          ? `"${uploaded[0]!.name}" uploaded`
+          : `${uploaded.length} files uploaded`,
+        { duration: 3000 }
+      );
+    }
+    if (errorCount > 0) {
+      toast.error(`${errorCount} file${errorCount > 1 ? "s" : ""} failed to upload`);
+    }
+    return uploaded;
+  }, [assetProvider]);
+
+  const handleMediaDelete = React.useCallback(async (assetId: string) => {
+    if (!assetProvider?.delete) return;
+    await assetProvider.delete(assetId);
+    setAssets((prev) => prev.filter((a) => a.id !== assetId));
+  }, [assetProvider]);
+
+  const handleMediaUrlAdd = React.useCallback((_url: string, _type: AssetType) => {
+    // URL-based assets are passed directly to the picker callback without persisting
+    // The ImageControl already handles raw URL input via its text field
+  }, []);
+
+  // ── Gallery media manager state ──────────────────────────────────────────
+  const [galleryManagerOpen, setGalleryManagerOpen] = React.useState(false);
+  const [galleryManagerNodeId, setGalleryManagerNodeId] = React.useState<string | null>(null);
+
+  const handleOpenGalleryManager = React.useCallback(() => {
+    const nodeId = selectedNodeIds[0];
+    if (!nodeId) return;
+    setGalleryManagerNodeId(nodeId);
+    setGalleryManagerOpen(true);
+  }, [selectedNodeIds]);
+
+  const handleGalleryItemsChange = React.useCallback((nodeId: string, items: GalleryItem[]) => {
+    dispatch({
+      type: "UPDATE_PROPS",
+      payload: { nodeId, props: { items } },
+      description: "Update gallery items",
+    });
+  }, [dispatch]);
+
+  // For ContextualToolbar: open media manager and apply result to a prop key
+  const handleOpenMediaManagerForProp = React.useCallback((propKey: string) => {
+    const nodeId = selectedNodeIds[0];
+    if (!nodeId) return;
+    handleOpenMediaManager((asset) => {
+      dispatch({ type: "UPDATE_PROPS", payload: { nodeId, props: { [propKey]: asset.url } }, description: "Change Image" });
+    });
+  }, [selectedNodeIds, handleOpenMediaManager, dispatch]);
+
   const canvasMode: CanvasMode = state.editor.canvasMode ?? "single";
   const editingNodeId  = state.editor.editingNodeId  ?? null;
   const editingPropKey = state.editor.editingPropKey ?? null;
 
   // ── Panel state ──────────────────────────────────────────────────────────
-  const { paletteMode, activePaletteGroupId, setActivePaletteGroupId, handleGroupSelect, handlePaletteClose } =
-    usePaletteState();
+  const {
+    paletteMode, activePaletteGroupId, setActivePaletteGroupId, handleGroupSelect, handlePaletteClose,
+    pendingTargetSectionId, handleDSButtonClick,
+  } = usePaletteState();
   const { layersOpen, layersPanelPos, handleLayersToggle } = useLayersPanel();
-  const { aiOpen, setAiOpen, pageGeneratorOpen, setPageGeneratorOpen, aiConfig, handleAIConfigChange } = useAIConfig();
+  const { aiOpen, setAiOpen, aiConfig, handleAIConfigChange } = useAIConfig();
   const [figmaOpen, setFigmaOpen] = React.useState(false);
-  const [spacingHover, setSpacingHover] = React.useState<"padding" | "margin" | null>(null);
 
   const [remoteCatalog, setRemoteCatalog] = React.useState<PaletteCatalog | undefined>();
   const [loadedGroups, setLoadedGroups] = React.useState<Set<string>>(new Set());
@@ -196,6 +299,7 @@ function EditorInner({
   const { zoom, setZoom, panOffset, setPanOffset, activeTool, setActiveTool, showGrid, toggleGrid } = useViewport();
 
   const canvasContainerRef = useRef<HTMLDivElement>(null);
+  const canvasAreaRef      = useRef<HTMLDivElement>(null);
   const canvasFrameRef     = useRef<HTMLDivElement>(null);
   const mobileFrameRef     = useRef<HTMLDivElement>(null);
   const activeFrameRef = useRef<HTMLDivElement | null>(null);
@@ -245,7 +349,9 @@ function EditorInner({
     handleAddSection,
     toggleCanvasMode,
   } = useCanvasActions({
-    document, allComponents, registry, canvasMode, canvasWidth, canvasMinHeight, showGrid, dispatch,
+    document, allComponents, registry, canvasMode, canvasWidth, canvasMinHeight,
+    canvasActualHeight: actualDesktopHeight,
+    showGrid, dispatch,
   });
 
   const { handleRubberBandSelect } = useRubberBandSelect({
@@ -266,8 +372,9 @@ function EditorInner({
     () => buildAIContext(state, allComponents, {
       includePageContext: aiConfig.includePageContext,
       paletteCatalog: paletteCatalog ?? undefined,
+      designTokens: aiConfig.designTokens,
     }),
-    [state, allComponents, aiConfig.includePageContext, paletteCatalog],
+    [state, allComponents, aiConfig.includePageContext, paletteCatalog, aiConfig.designTokens],
   );
 
   // ── Snap engine (now handled by hook) ────────────────────────────────────
@@ -279,8 +386,24 @@ function EditorInner({
 
   const { rubberBanding, setRubberBanding, rubberBandRect } = useRubberBand({ zoom, canvasFrameRef, onSelectionEnd: handleRubberBandSelect });
 
-  const { moving, setMoving, dragStartedRef, snapGuides: moveSnapGuides, distanceGuides: moveDistanceGuides, liveDimensions: moveLiveDimensions, flowDragOffset, flowDropTarget } =
+  const { moving, setMoving, dragStartedRef, snapGuides: moveSnapGuides, distanceGuides: moveDistanceGuides, liveDimensions: moveLiveDimensions, flowDragOffset, flowDropTarget, highlightedNodeIds } =
     useMoveGesture({ zoom, breakpoint, snapEnabled: showGrid, snapEngine, nodes: document.nodes, canvasFrameRef, activeFrameRef, dispatch, rootNodeId: document.rootNodeId, getContainerConfig });
+
+  useEffect(() => {
+    const frameEl = activeFrameRef?.current ?? canvasFrameRef.current;
+    if (!frameEl || highlightedNodeIds.length === 0) return;
+    const els = highlightedNodeIds
+      .map(id => frameEl.querySelector(`[data-node-id="${id}"]`) as HTMLElement | null)
+      .filter((el): el is HTMLElement => el !== null);
+    els.forEach(el => {
+      el.style.boxShadow = "0 0 0 1px hsl(var(--snap-guide-color, 221.2 83.2% 53.3%))";
+    });
+    return () => {
+      els.forEach(el => {
+        el.style.boxShadow = "";
+      });
+    };
+  }, [highlightedNodeIds, activeFrameRef, canvasFrameRef]);
 
   const { rotating, startRotate } = useRotateGesture({ breakpoint, dispatch });
   const { sectionResizing, startSectionResize } = useSectionResize({ zoom, showGrid, gridSize: document.canvasConfig.gridSize, breakpoint, dispatch });
@@ -295,17 +418,17 @@ function EditorInner({
   });
 
 
-  const { hoverRect, handleMouseOver, handleMouseOut } = useHoverRect({
+  const { hoverRect, handleMouseOver, handleMouseOut, setHoveredNodeIdFromLayer } = useHoverRect({
     selectedNodeIds, rootNodeId: document.rootNodeId, zoom, panOffset, nodes: document.nodes, canvasFrameRef, nodeQueryRef: activeFrameRef,
   });
 
   useDimensionCapture({ nodes: document.nodes, breakpoint, canvasFrameRef, dispatch });
 
   // ── Interaction hooks ────────────────────────────────────────────────────
-  const { handleDragStart, handlePaletteDragStart, handleDrop, handleDragOver, handleDragEnter } =
+  const { handleDragStart, handlePaletteDragStart, handleDrop, handleDragOver, handleDragEnter, handleDragLeave, isDSDragging, paletteFlowDropTarget } =
     useDragHandlers({ rootNodeId: document.rootNodeId, zoom, canvasFrameRef, dispatch, nodes: document.nodes, getContainerConfig, onAfterDrop: handlePaletteClose });
 
-  const { addItem: handlePaletteItemClick } = useClickToAdd({ rootNodeId: document.rootNodeId, zoom, panOffset, canvasContainerRef, dispatch, onAfterAdd: handlePaletteClose });
+  const { addItem: handlePaletteItemClick } = useClickToAdd({ rootNodeId: document.rootNodeId, nodes: document.nodes, selectedNodeIds, pendingTargetSectionId, zoom, breakpoint, canvasContainerRef, canvasFrameRef: activeFrameRef, resolveComponentDefinition: (componentType) => registry?.getComponent(componentType), dispatch, onAfterAdd: handlePaletteClose });
 
   const { handlePointerDown } = usePointerDown({
     activeTool, zoom, rootNodeId: document.rootNodeId, nodes: document.nodes, canvasFrameRef, activeFrameRef,
@@ -354,6 +477,7 @@ function EditorInner({
     onMouseOut: handleMouseOut,
     onDragEnter: handleDragEnter,
     onDragOver: handleDragOver,
+    onDragLeave: handleDragLeave,
     onDrop: handleDrop,
   } as const;
 
@@ -363,10 +487,18 @@ function EditorInner({
     zoom,
     panOffset,
     onAddSection: handleAddSection,
-    onResizeStart: (nodeId: string, clientY: number, currentHeightPx: number, gid: string) =>
-      startSectionResize(nodeId, clientY, currentHeightPx, gid),
+    onResizeStart: (nodeId: string, clientY: number, currentHeightPx: number, gid: string, minAllowedHeight: number) =>
+      startSectionResize(nodeId, clientY, currentHeightPx, gid, minAllowedHeight),
     isResizing: sectionResizing !== null,
     onSelect: (nodeId: string) => select([nodeId]),
+    selectedNodeIds,
+    onOpenPaletteGroup: handleGroupSelect,
+    onDSButtonClick: handleDSButtonClick,
+    isDSDragging,
+    aiConfig,
+    dispatch,
+    undo,
+    availableComponentTypes: allComponents.map((c) => c.type),
   } as const;
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -379,6 +511,7 @@ function EditorInner({
         style={{ outline: "none" }}
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
         <EditorToolbar
@@ -389,7 +522,6 @@ function EditorInner({
           onToolChange={(tool) => { setActiveTool(tool); if (tool === "pan") clearSelection(); }}
           onCanvasModeToggle={toggleCanvasMode} onFitToScreen={handleFitToScreen}
           onAIOpen={() => setAiOpen(true)}
-          onPageGeneratorOpen={() => setPageGeneratorOpen(true)}
           onFigmaOpen={() => setFigmaOpen(true)}
         />
 
@@ -419,10 +551,11 @@ function EditorInner({
 
         {/* Layers */}
         {layersOpen && (
-          <FloatingPanel id="layers" title="Layers" defaultPosition={layersPanelPos} onClose={handleLayersToggle}>
-            <div className="h-[30vh] min-h-[250px] overflow-hidden">
+          <FloatingPanel id="layers" title="Layers" icon={<Layers className="h-3.5 w-3.5" />} defaultPosition={layersPanelPos} onClose={handleLayersToggle}>
+            <div className="h-[48vh] min-h-[250px] overflow-hidden">
               <LayerTree document={document} selectedIds={selectedNodeIds} onSelect={select}
-                onToggleHidden={handleToggleHidden} onToggleLocked={handleToggleLocked} />
+                onToggleHidden={handleToggleHidden} onToggleLocked={handleToggleLocked}
+                onNodeHover={setHoveredNodeIdFromLayer} />
             </div>
           </FloatingPanel>
         )}
@@ -431,14 +564,10 @@ function EditorInner({
         <FloatingPanel id="properties" title={selectedNode ? "Properties" : "Page Settings"} defaultPosition={DEFAULT_PROPERTIES_PANEL_POS}>
           <div className="flex h-[75vh] max-h-[800px] min-h-[500px] flex-col overflow-hidden">
             {selectedNode ? (
-              <PropertyPanel
-                selectedNode={selectedNode}
-                definition={selectedDefinition}
-                breakpoint={breakpoint}
-                onPropChange={handlePropChange}
-                onStyleChange={handleStyleChange}
-                onSpacingHover={setSpacingHover}
-              />
+              <PropertyPanel selectedNode={selectedNode} definition={selectedDefinition} breakpoint={breakpoint}
+                onPropChange={handlePropChange} onStyleChange={handleStyleChange}
+                assets={assets}
+                onOpenMediaManager={handleOpenMediaManager} />
             ) : (
               <div className="flex flex-col h-full">
                 <PageSettings document={document} onCanvasConfigChange={handleCanvasConfigChange} />
@@ -450,14 +579,14 @@ function EditorInner({
           </div>
         </FloatingPanel>
 
-        <AIAssistant open={aiOpen} onOpenChange={setAiOpen} config={aiConfig} onConfigChange={handleAIConfigChange} context={aiContext} />
-        <PageGeneratorModal open={pageGeneratorOpen} onOpenChange={setPageGeneratorOpen} config={aiConfig} context={aiContext} />
+        <AIAssistant open={aiOpen} onOpenChange={setAiOpen} config={aiConfig} context={aiContext} />
         <FigmaImportDialog open={figmaOpen} onOpenChange={setFigmaOpen} />
 
         {/* Canvas area */}
-        <div className="bg-muted/20 absolute inset-0 z-0 overflow-hidden">
+        <div ref={canvasAreaRef} className="bg-muted/20 absolute inset-0 z-0 overflow-hidden">
           <CanvasRoot canvasConfig={canvasConfigParams} zoom={zoom} panOffset={panOffset}
             onZoomChange={setZoom} onPanOffsetChange={setPanOffset} activeTool={activeTool} className="h-full w-full"
+            wheelListenerParent={canvasAreaRef}
             onPointerDown={(e) => {
               const target = e.target as HTMLElement;
               // Ignore clicks on floating panels, resize handles, or other interactive overlays
@@ -534,7 +663,7 @@ function EditorInner({
                             </p>
                           </div>
                           <button
-                            onClick={() => setPageGeneratorOpen(true)}
+                            onClick={() => setAiOpen(true)}
                             className="flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 active:scale-95 transition-all"
                           >
                             <Sparkles className="h-3 w-3" />
@@ -590,6 +719,7 @@ function EditorInner({
               onDoubleClick={handleCanvasDoubleClick}
               onResizeStart={(handle, e) => {
                 if (!selectionRect || !selectedNodeId) return;
+                if (document.nodes[selectedNodeId]?.locked) return;
                 setResizing({
                   handle, nodeId: selectedNodeId,
                   startPoint: { x: e.clientX, y: e.clientY },
@@ -599,6 +729,7 @@ function EditorInner({
               }}
               onRotateStart={(e) => {
                 if (!selectionRect || !selectedNodeId) return;
+                if (document.nodes[selectedNodeId]?.locked) return;
                 const queryRoot = activeFrameRef.current ?? canvasFrameRef.current;
                 if (!queryRoot) return;
                 const el = queryRoot.querySelector(`[data-node-id="${selectedNodeId}"]`) as HTMLElement;
@@ -610,19 +741,12 @@ function EditorInner({
               }}
             />
 
-            <SpacingHighlightOverlay
-              type={spacingHover}
-              node={selectedNode}
-              breakpoint={breakpoint}
-              selectionRect={selectionRect}
-              zoom={zoom}
-            />
-
             {hoverRect && <HoverOutline rect={hoverRect} zoom={zoom} />}
 
             <SnapGuides
               guides={document.canvasConfig.showHelperLines ? snapGuides : []}
-              canvasWidth={canvasWidth} canvasHeight={canvasMinHeight}
+              canvasWidth={canvasMode === "dual" ? boundingWidth : canvasWidth}
+              canvasHeight={canvasMode === "dual" ? boundingHeight : actualDesktopHeight}
               helperLineColor={document.canvasConfig.helperLineColor}
             />
             <DistanceGuides guides={distanceGuides} zoom={zoom} />
@@ -635,13 +759,19 @@ function EditorInner({
               activeFrameRef={activeFrameRef} canvasFrameRef={canvasFrameRef}
               nodes={document.nodes} zoom={zoom}
             />
+            {/* Palette drag overlay — shows drop position when dragging from AddElements panel */}
+            <FlowDropPlaceholderLayer
+              flowDropTarget={paletteFlowDropTarget} moving={null}
+              activeFrameRef={activeFrameRef} canvasFrameRef={canvasFrameRef}
+              nodes={document.nodes} zoom={zoom}
+            />
           </CanvasRoot>
 
           {/* Section toolbar (screen-space) */}
           {selectedSectionNode && (
             <SectionToolbar
               node={selectedSectionNode} sectionNodes={sectionNodes} zoom={zoom} panOffset={panOffset}
-              canvasFrameRef={canvasFrameRef} canvasContainerRef={canvasContainerRef} dispatch={dispatch} newNodeId={uuidv4}
+              canvasFrameRef={activeFrameRef} canvasContainerRef={canvasContainerRef} dispatch={dispatch} newNodeId={uuidv4}
               canvasMode={canvasMode} activeBreakpoint={breakpoint}
               desktopFrameWidth={document.canvasConfig.width ?? DEVICE_VIEWPORT_PRESETS.desktop.width}
               mobileFramePos={mobileFramePos} onDelete={handleDeleteNode}
@@ -662,6 +792,8 @@ function EditorInner({
               })}
               onMoveUp={onMoveUp} onMoveDown={onMoveDown}
               onDragHandlePointerDown={handleDragHandlePointerDown}
+              onOpenMediaManager={assetProvider ? handleOpenMediaManagerForProp : undefined}
+              onOpenGalleryManager={assetProvider ? handleOpenGalleryManager : undefined}
             />
           )}
 
@@ -745,6 +877,37 @@ function EditorInner({
         onConfirm={executeConfirmedDelete}
         onCancel={() => setDeleteConfirmNodeId(null)}
       />
+
+      {/* Gallery Media Manager dialog — shown when "Manage Media" clicked on a gallery node */}
+      {galleryManagerOpen && galleryManagerNodeId && (
+        <GalleryMediaManager
+          open={galleryManagerOpen}
+          onOpenChange={(open) => {
+            if (!open) setGalleryManagerNodeId(null);
+            setGalleryManagerOpen(open);
+          }}
+          items={((document.nodes[galleryManagerNodeId]?.props["items"]) as GalleryItem[] | undefined) ?? []}
+          onItemsChange={(items) => handleGalleryItemsChange(galleryManagerNodeId, items)}
+          onOpenMediaManager={handleOpenMediaManager}
+        />
+      )}
+
+      {/* Media Manager dialog — shown when any image control triggers open */}
+      <MediaManager
+        open={mediaManagerOpen}
+        onOpenChange={(open) => {
+          if (!open) mediaSelectCallbackRef.current = null;
+          setMediaManagerOpen(open);
+        }}
+        assets={assets}
+        onSelect={handleMediaSelect}
+        onUpload={assetProvider?.upload ? handleMediaUpload : undefined}
+        onDelete={assetProvider?.delete ? handleMediaDelete : undefined}
+        onUrlAdd={handleMediaUrlAdd}
+        acceptTypes={["image"]}
+      />
+
+      <Toaster position="bottom-right" richColors />
     </AIConfigProvider>
   );
 }
@@ -772,6 +935,13 @@ export interface BuilderEditorProps {
   i18nResources?: Record<string, { translation: Record<string, unknown> }>;
   /** Key separator for i18n. Default: "." Set to false to disable nesting. */
   i18nKeySeparator?: string | false;
+  /** Show browser leave-confirmation when there are unsaved changes. Default: true */
+  warnOnLeave?: boolean;
+  /**
+   * Asset provider for media management (upload, list, delete).
+   * When provided, enables the MediaManager dialog and image controls.
+   */
+  assetProvider?: AssetProvider;
 }
 
 export function BuilderEditor({
@@ -780,11 +950,13 @@ export function BuilderEditor({
   className,
   groupRegistry,
   paletteCatalog,
-  useRemotePalette,
+  useRemotePalette: _useRemotePalette,
   remotePaletteProvider,
   locale,
   i18nResources,
   i18nKeySeparator,
+  warnOnLeave,
+  assetProvider,
 }: BuilderEditorProps) {
   React.useEffect(() => {
     if (locale || i18nResources || i18nKeySeparator !== undefined) {
@@ -796,11 +968,13 @@ export function BuilderEditor({
     <BuilderProvider builder={builder} config={config}>
       <RemotePaletteContext.Provider value={remotePaletteProvider ?? null}>
         <div className={cn("h-full w-full", className)}>
-          <EditorInner 
-            groupRegistry={groupRegistry} 
-            paletteCatalog={paletteCatalog} 
-            remotePaletteProvider={remotePaletteProvider} 
-            locale={locale} 
+          <EditorInner
+            groupRegistry={groupRegistry}
+            paletteCatalog={paletteCatalog}
+            remotePaletteProvider={remotePaletteProvider}
+            locale={locale}
+            warnOnLeave={warnOnLeave}
+            assetProvider={assetProvider}
           />
         </div>
       </RemotePaletteContext.Provider>

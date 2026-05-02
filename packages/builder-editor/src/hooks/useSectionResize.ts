@@ -6,6 +6,7 @@ interface SectionResizingState {
   startY: number;
   startHeight: number;
   gestureGroupId: string;
+  minAllowedHeight: number;
 }
 
 interface UseSectionResizeOptions {
@@ -18,7 +19,7 @@ interface UseSectionResizeOptions {
 
 export interface UseSectionResizeReturn {
   sectionResizing: SectionResizingState | null;
-  startSectionResize: (nodeId: string, startY: number, currentHeight: number, gestureGroupId: string) => void;
+  startSectionResize: (nodeId: string, startY: number, currentHeight: number, gestureGroupId: string, minAllowedHeight: number) => void;
 }
 
 export function useSectionResize({
@@ -45,7 +46,7 @@ export function useSectionResize({
 
       const deltaY = (e.clientY - state.startY) / zoom;
       let newHeight = Math.round(state.startHeight + deltaY);
-      newHeight = Math.max(MIN_HEIGHT, newHeight);
+      newHeight = Math.max(state.minAllowedHeight || MIN_HEIGHT, newHeight);
 
       if (showGrid) {
         newHeight = snapToGrid(newHeight, gridSize);
@@ -95,8 +96,9 @@ export function useSectionResize({
     startY: number,
     currentHeight: number,
     gestureGroupId: string,
+    minAllowedHeight: number,
   ) => {
-    setSectionResizing({ nodeId, startY, startHeight: currentHeight, gestureGroupId });
+    setSectionResizing({ nodeId, startY, startHeight: currentHeight, gestureGroupId, minAllowedHeight });
   };
 
   return { sectionResizing, startSectionResize };

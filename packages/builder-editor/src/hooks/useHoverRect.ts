@@ -19,6 +19,7 @@ export interface UseHoverRectReturn {
   hoverRect: Rect | null;
   handleMouseOver: (e: React.MouseEvent) => void;
   handleMouseOut: (e: React.MouseEvent) => void;
+  setHoveredNodeIdFromLayer: (nodeId: string | null) => void;
 }
 
 export function useHoverRect({
@@ -54,6 +55,10 @@ export function useHoverRect({
     if (!target?.closest("[data-node-id]")) setHoveredNodeId(null);
   }, []);
 
+  const setHoveredNodeIdFromLayer = useCallback((nodeId: string | null) => {
+    setHoveredNodeId(nodeId);
+  }, []);
+
   useEffect(() => {
     if (!hoveredNodeId || !canvasFrameRef.current) {
       setHoverRect(null);
@@ -77,5 +82,5 @@ export function useHoverRect({
     });
   }, [hoveredNodeId, zoom, panOffset, nodes, canvasFrameRef, nodeQueryRef]);
 
-  return { hoveredNodeId, hoverRect, handleMouseOver, handleMouseOut };
+  return { hoveredNodeId, hoverRect, handleMouseOver, handleMouseOut, setHoveredNodeIdFromLayer };
 }

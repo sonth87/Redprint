@@ -73,6 +73,27 @@ export function useResizeGesture({
         newY += dy; // Move top position when dragging top edge
       }
 
+      // Maintain aspect ratio if Ctrl/Cmd is pressed and dragging a corner
+      if ((e.ctrlKey || e.metaKey) && resizing.handle.length === 2 && resizing.startRect.height > 0) {
+        const ratio = resizing.startRect.width / resizing.startRect.height;
+        const wChange = Math.abs(width - resizing.startRect.width);
+        const hChange = Math.abs(height - resizing.startRect.height);
+        
+        if (wChange > hChange) {
+          height = width / ratio;
+        } else {
+          width = height * ratio;
+        }
+        
+        // Re-adjust newX/newY based on the corrected width/height
+        if (resizing.handle.includes("w")) {
+          newX = x - (width - resizing.startRect.width);
+        }
+        if (resizing.handle.includes("n")) {
+          newY = y - (height - resizing.startRect.height);
+        }
+      }
+
       width = Math.max(10, Math.round(width));
       height = Math.max(10, Math.round(height));
       newX = Math.round(newX);
@@ -92,7 +113,12 @@ export function useResizeGesture({
       const node = nodes[resizing.nodeId];
       const frameEl = activeFrameRef?.current ?? canvasFrameRef.current;
       if (node?.parentId && frameEl) {
+        // Use the desktop frame (canvasFrameRef) as origin so that guide positions are
+        // in CanvasRoot coordinate space — matching newX/newY which come from selectionRect
+        // (also computed relative to canvasFrameRef). In dual mode this prevents guides
+        // from being offset by the mobile frame's canvas position.
         const fr = frameEl.getBoundingClientRect();
+        const originRect = canvasFrameRef.current?.getBoundingClientRect() ?? fr;
         const siblings: Rect[] = [];
         for (const n of Object.values(nodes) as BuilderNode[]) {
           if (n.parentId === node.parentId && n.id !== resizing.nodeId) {
@@ -100,8 +126,8 @@ export function useResizeGesture({
             if (el) {
               const er = el.getBoundingClientRect();
               siblings.push({
-                x: (er.left - fr.left) / zoom,
-                y: (er.top - fr.top) / zoom,
+                x: (er.left - originRect.left) / zoom,
+                y: (er.top - originRect.top) / zoom,
                 width: er.width / zoom,
                 height: er.height / zoom,
               });
@@ -120,8 +146,8 @@ export function useResizeGesture({
           if (el.getAttribute("data-node-id") === resizing.nodeId) continue;
           const er = el.getBoundingClientRect();
           allOtherRects.push({
-            x: (er.left - fr.left) / zoom,
-            y: (er.top - fr.top) / zoom,
+            x: (er.left - originRect.left) / zoom,
+            y: (er.top - originRect.top) / zoom,
             width: er.width / zoom,
             height: er.height / zoom,
           });

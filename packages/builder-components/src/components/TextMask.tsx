@@ -20,8 +20,8 @@ export const TextMaskComponent: ComponentDefinition = {
   },
   propSchema: [
     { key: "text", label: "Text", type: "string", default: "HELLO" },
-    { key: "backgroundImage", label: "Background Image URL", type: "string", default: "" },
     { key: "gradient", label: "Gradient (CSS)", type: "string", default: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" },
+    { key: "backgroundImage", label: "Background Image URL", type: "string", default: "" },
     { key: "fontSize", label: "Font Size", type: "string", default: "120px" },
     {
       key: "fontWeight",
@@ -33,8 +33,8 @@ export const TextMaskComponent: ComponentDefinition = {
   ],
   defaultProps: {
     text: "HELLO",
-    backgroundImage: "",
     gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    backgroundImage: "",
     fontSize: "120px",
     fontWeight: "900",
   },

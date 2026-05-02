@@ -18,6 +18,9 @@ export type { ButtonProps } from "./components/button";
 export { Input } from "./components/input";
 export type { InputProps } from "./components/input";
 
+export { Textarea } from "./components/textarea";
+export type { TextareaProps } from "./components/textarea";
+
 export { Label } from "./components/label";
 export type { LabelProps } from "./components/label";
 
@@ -26,6 +29,8 @@ export { Separator } from "./components/separator";
 export { Slider } from "./components/slider";
 
 export { Switch } from "./components/switch";
+
+export { Checkbox } from "./components/checkbox";
 
 export { Toggle, toggleVariants } from "./components/toggle";
 export type { ToggleProps } from "./components/toggle";
@@ -82,3 +87,6 @@ export { Popover, PopoverTrigger, PopoverContent, PopoverAnchor } from "./compon
 
 export { Badge, badgeVariants } from "./components/badge";
 export type { BadgeProps } from "./components/badge";
+
+// ── Toast (sonner) ────────────────────────────────────────────────────────
+export { Toaster, toast } from "sonner";

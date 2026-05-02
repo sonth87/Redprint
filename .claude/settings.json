@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s http://localhost:3000)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d, indent=2\\)\\)\")",
+      "Bash(node -e ' *)",
+      "Bash(curl -s http://localhost:3002/api/palette/catalog)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\([g['id'] for g in d.get\\('groups',[]\\)]\\)\")",
+      "Bash(curl -s \"http://localhost:3002/api/palette/groups/layout\")",
+      "Bash(python3 -c ' *)",
+      "Bash(open http://localhost:3000)",
+      "Bash(npx tsx *)",
+      "Bash(curl -s http://localhost:3002/health)",
+      "Bash(kill %1)",
+      "Read(//dev/**)",
+      "Bash(pnpm --filter @ui-builder/builder-core build)",
+      "Bash(pnpm --filter @ui-builder/builder-components build)",
+      "Bash(pnpm --filter playground tsc --noEmit)",
+      "Bash(pnpm --filter api build)",
+      "Bash(pnpm --filter @ui-builder/ui add sonner)",
+      "Bash(pnpm --filter @ui-builder/ui build)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\('dependencies',{}\\), indent=2\\)\\)\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({k: d[k] for k in ['dependencies','devDependencies','peerDependencies'] if k in d}, indent=2\\)\\)\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(d.get\\('name'\\)\\)\")"
+    ]
+  }
+}

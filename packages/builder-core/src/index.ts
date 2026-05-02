@@ -37,6 +37,8 @@ export type {
   AssetQuery,
   AssetListResult,
   AssetType,
+  MediaRef,
+  Uploadable,
 } from "./document/assets";
 export { CURRENT_SCHEMA_VERSION } from "./document/constants";
 
@@ -116,6 +118,7 @@ export {
   CMD_SET_CANVAS_MODE,
   CMD_ENTER_TEXT_EDIT,
   CMD_EXIT_TEXT_EDIT,
+  CMD_SET_THEME_COLORS,
 } from "./commands/built-in";
 export type {
   AddNodePayload,
@@ -135,6 +138,7 @@ export type {
   SetCanvasModePayload,
   EnterTextEditPayload,
   ExitTextEditPayload,
+  SetThemeColorsPayload,
 } from "./commands/built-in";
 
 // ── History ────────────────────────────────────────────────────────────────
@@ -195,3 +199,28 @@ export type {
   PaletteItem,
   PaletteDragData,
 } from "./presets/palette-types";
+export type {
+  PresetKind,
+  PresetCatalogItem,
+  PresetSlotDefinition,
+  PresetAuthoringConfig,
+  PresetNodeEditorConfig,
+  PresetNodeConstraints,
+  PresetNodeDefinition,
+  PresetPlacementPolicy,
+  PresetDefinition,
+} from "./presets/schema";
+export {
+  detectPresetVersion,
+  isPresetDefinition,
+  migrateComponentPreset,
+  migratePaletteItem,
+  migratePreset,
+  CURRENT_PRESET_VERSION as CURRENT_PRESET_SCHEMA_VERSION,
+  LEGACY_PRESET_VERSION,
+} from "./presets/migrate";
+export {
+  PRESET_NODE_PLUGIN_DATA_KEY,
+  presetToDocument,
+  documentToPreset,
+} from "./presets/document-adapter";

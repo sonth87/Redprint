@@ -63,7 +63,6 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
         "justifyContent": "center",
         "padding": "80px 20px",
         "backgroundColor": "#fff9f0",
-        "backgroundImage": "radial-gradient(#ffdfba 1px, transparent 1px)",
         "backgroundSize": "40px 40px"
       },
       "responsiveStyle": {},
@@ -3053,7 +3052,7 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
     snapEnabled: true,
     snapToGrid: true,
     snapToComponents: true,
-    snapThreshold: 6,
+    snapThreshold: 10,
     rulerEnabled: true,
     showHelperLines: true,
   },

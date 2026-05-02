@@ -58,10 +58,11 @@ export function buildMovingSnapshots(
     let startLeft = 0;
     let startTop = 0;
 
-    if (style.position === "absolute") {
-      startLeft = parseFloat(String(style.left ?? "0")) || 0;
-      startTop = parseFloat(String(style.top ?? "0")) || 0;
-    } else if (el) {
+    if (el) {
+      // Use the DOM element's actual rendered position so that responsive-style
+      // overrides (e.g. responsiveStyle.mobile.left) are reflected correctly.
+      // For position:absolute nodes, offsetLeft/offsetTop equal the effective
+      // CSS left/top relative to the offsetParent — the same value UPDATE_STYLE sets.
       startLeft = el.offsetLeft;
       startTop = el.offsetTop;
 
@@ -70,6 +71,9 @@ export function buildMovingSnapshots(
         startLeft = (elRect.left - frameRect.left) / zoom;
         startTop = (elRect.top - frameRect.top) / zoom;
       }
+    } else if (style.position === "absolute") {
+      startLeft = parseFloat(String(style.left ?? "0")) || 0;
+      startTop = parseFloat(String(style.top ?? "0")) || 0;
     }
 
     return {
@@ -81,4 +85,42 @@ export function buildMovingSnapshots(
       wasAbsolute: style.position === "absolute",
     };
   });
+}
+
+/**
+ * Geometric hit test: find which section the pointer is hovering over,
+ * or the closest section if Out Of Bounds.
+ */
+export function getDropTargetSection(
+  clientY: number,
+  frameEl: HTMLElement,
+  nodes: Record<string, BuilderNode>,
+  rootNodeId: string
+): string {
+  const sectionNodes = Object.values(nodes).filter(n => n.type === "Section" && n.parentId === rootNodeId);
+
+  if (sectionNodes.length === 0) return rootNodeId;
+  
+  let closestSectionId: string | null = null;
+  let minDistance = Infinity;
+
+  for (const sn of sectionNodes) {
+    const el = frameEl.querySelector(`[data-node-id="${sn.id}"]`) as HTMLElement | null;
+    if (!el) continue;
+    const rect = el.getBoundingClientRect();
+    
+    // Exact hit
+    if (clientY >= rect.top && clientY <= rect.bottom) {
+      return sn.id;
+    }
+    
+    // Out of bounds distance tracking
+    const distTarget = clientY < rect.top ? rect.top - clientY : clientY - rect.bottom;
+    if (distTarget < minDistance) {
+      minDistance = distTarget;
+      closestSectionId = sn.id;
+    }
+  }
+
+  return closestSectionId ?? rootNodeId;
 }

@@ -53,6 +53,14 @@ export type { TextEditToolbarProps } from "./toolbar/TextEditToolbar";
 export { InlineTextEditor } from "./canvas/InlineTextEditor";
 export type { InlineTextEditorProps } from "./canvas/InlineTextEditor";
 
+// Gesture hooks (for reuse in consumer packages like builder-presets)
+export { useResizeGesture } from "./hooks/useResizeGesture";
+export type { UseResizeGestureReturn } from "./hooks/useResizeGesture";
+export { useRotateGesture } from "./hooks/useRotateGesture";
+export type { UseRotateGestureReturn } from "./hooks/useRotateGesture";
+export { useSelectionRect } from "./hooks/useSelectionRect";
+export type { UseSelectionRectReturn } from "./hooks/useSelectionRect";
+
 // Snap + shortcuts
 export { SnapEngine } from "./snap/SnapEngine";
 export type { SnapEngineConfig, SnapResult } from "./snap/SnapEngine";

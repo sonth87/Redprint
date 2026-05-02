@@ -1,8 +1,21 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { GripHorizontal } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 import { cn } from "@ui-builder/ui";
 import type { PaletteItem } from "@ui-builder/builder-core";
 import { useTranslation } from "react-i18next";
+import type { GalleryLayoutMode } from "@ui-builder/shared";
+import { LayoutMiniPreview } from "../gallery/LayoutMiniPreview";
+
+// ── Helper to dynamically load lucide icons ─────────────────────────────────
+
+function getLucideIcon(name: string): React.ElementType {
+  const pascal = name
+    .split("-")
+    .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+    .join("");
+  return (LucideIcons as Record<string, unknown>)[pascal] as React.ElementType ?? LucideIcons.GripHorizontal;
+}
 
 // ── Simple-type live preview ───────────────────────────────────────────────
 
@@ -17,6 +30,10 @@ const SIMPLE_PREVIEW_TYPES = new Set([
   "Anchor",
   "Image",
   "Container",
+  "GalleryGrid",
+  "GallerySlider",
+  "GalleryPro",
+  "Section",
 ]);
 
 interface MiniPreviewProps {
@@ -24,6 +41,7 @@ interface MiniPreviewProps {
 }
 
 const MiniPreview: React.FC<MiniPreviewProps> = ({ item }) => {
+  const [hovered, setHovered] = useState(false);
   const type = item.componentType;
   const s = item.style ?? {};
   const p = item.props ?? {};
@@ -73,33 +91,76 @@ const MiniPreview: React.FC<MiniPreviewProps> = ({ item }) => {
 
   if (type === "Button") {
     const label = String(p.label ?? item.name).replace(/<[^>]+>/g, "");
-    const bg = s.backgroundColor as string | undefined;
-    const color = s.color as string | undefined;
-    const radius = s.borderRadius as string | undefined;
-    const border = s.border as string | undefined;
-    const fs = (s as Record<string, unknown>).fontStyle as string | undefined;
-    const tt = s.textTransform as React.CSSProperties["textTransform"];
+    const iconName = (p.icon as string | undefined) || (item.icon as string | undefined);
+    const iconPosition = p.iconPosition === "end" ? "end" : "start";
+    const showOnlyIcon = Boolean(iconName && !label.trim());
+    const hoverStyle = (p.hoverStyle as React.CSSProperties | undefined) ?? {};
+    const mergedStyle = {
+      ...(s as React.CSSProperties),
+      ...(hovered ? hoverStyle : {}),
+    } satisfies React.CSSProperties;
+    const parsedFontSize =
+      typeof mergedStyle.fontSize === "string"
+        ? parseFloat(mergedStyle.fontSize)
+        : Number(mergedStyle.fontSize ?? 14);
+    const previewFontSize = Number.isFinite(parsedFontSize) ? `${Math.max(12, Math.min(parsedFontSize, 16))}px` : "14px";
+    const iconSize = showOnlyIcon ? 18 : 16;
+    const previewButtonStyle: React.CSSProperties = {
+      ...mergedStyle,
+      background: mergedStyle.background ?? mergedStyle.backgroundColor ?? "#111827",
+      color: mergedStyle.color ?? "#fff",
+      borderRadius: mergedStyle.borderRadius ?? "4px",
+      padding: showOnlyIcon ? (mergedStyle.padding ?? "0") : (mergedStyle.padding ?? "8px 16px"),
+      fontSize: previewFontSize,
+      fontWeight: mergedStyle.fontWeight ?? 600,
+      fontStyle: mergedStyle.fontStyle,
+      textTransform: mergedStyle.textTransform,
+      letterSpacing: mergedStyle.letterSpacing,
+      lineHeight: 1,
+      whiteSpace: "nowrap",
+      boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+      boxSizing: "border-box",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: showOnlyIcon ? 0 : "6px",
+      width: mergedStyle.width ?? undefined,
+      height: mergedStyle.height ?? undefined,
+      minWidth: showOnlyIcon ? (mergedStyle.width ?? "40px") : undefined,
+      minHeight: showOnlyIcon ? (mergedStyle.height ?? "40px") : undefined,
+      maxWidth: "100%",
+      overflow: "visible",
+      transition: "all 150ms ease",
+    };
+
+    if (mergedStyle.border) {
+      previewButtonStyle.border = mergedStyle.border;
+    }
+
+    if (mergedStyle.borderBottom) {
+      previewButtonStyle.borderBottom = mergedStyle.borderBottom;
+    }
 
     return (
-      <div className="flex items-center justify-center w-full h-full p-1.5">
-        <div
-          style={{
-            background: bg ?? "#111827",
-            color: color ?? "#fff",
-            borderRadius: radius ?? "4px",
-            border: border ?? undefined,
-            padding: "4px 10px",
-            fontSize: "10px",
-            fontWeight: 600,
-            fontStyle: fs,
-            textTransform: tt,
-            whiteSpace: "nowrap",
-            transform: "scale(0.85)",
-            transformOrigin: "center center",
-            boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-          }}
-        >
-          {label.length > 16 ? label.slice(0, 16) + "…" : label}
+      <div
+        className="flex items-center justify-center w-full h-full"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        <div style={previewButtonStyle}>
+          {iconName && iconPosition === "start" && (() => {
+            const Icon = getLucideIcon(iconName);
+            return <Icon size={iconSize} />;
+          })()}
+          {!showOnlyIcon && (
+            <span>
+              {label.length > 16 ? label.slice(0, 16) + "…" : label}
+            </span>
+          )}
+          {iconName && iconPosition === "end" && !showOnlyIcon && (() => {
+            const Icon = getLucideIcon(iconName);
+            return <Icon size={iconSize} />;
+          })()}
         </div>
       </div>
     );
@@ -116,13 +177,16 @@ const MiniPreview: React.FC<MiniPreviewProps> = ({ item }) => {
     }
   }
 
-  if (type === "Container") {
+  if (type === "Container" || type === "Section") {
     const bg = (s.background as string) || (s.backgroundColor as string);
     const border = s.border || (s.borderWidth ? `${s.borderWidth} ${s.borderStyle || "solid"} ${s.borderColor || "transparent"}` : undefined);
     return (
       <div className="flex items-center justify-center w-full h-full p-2">
         <div
-          className="w-full h-full flex flex-col items-center justify-center gap-1 border border-dashed border-muted-foreground/20 rounded"
+          className={cn(
+            "w-full h-full flex flex-col items-center justify-center gap-1 border rounded",
+            type === "Section" ? "border-solid border-muted-foreground/30 bg-muted/5" : "border-dashed border-muted-foreground/20"
+          )}
           style={{
             background: bg ?? "transparent",
             border: (border as string) ?? undefined,
@@ -133,6 +197,53 @@ const MiniPreview: React.FC<MiniPreviewProps> = ({ item }) => {
           <div className="w-4 h-0.5 bg-muted-foreground/20 rounded-full" />
           <div className="w-6 h-0.5 bg-muted-foreground/10 rounded-full" />
         </div>
+      </div>
+    );
+  }
+
+  if (type === "GalleryGrid") {
+    const cols = Number(p.columns ?? 3);
+    const gap = Number(p.gap ?? 8);
+    return (
+      <div
+        className="flex items-center justify-center w-full h-full p-2"
+        style={{
+          display: "grid",
+          gridTemplateColumns: `repeat(${Math.min(cols, 3)}, 1fr)`,
+          gap: `${gap / 2}px`,
+        }}
+      >
+        {Array.from({ length: Math.min(cols * 2, 6) }, (_, i) => (
+          <div key={i} style={{ background: "#d1d5db", borderRadius: 2, aspectRatio: "1/1" }} />
+        ))}
+      </div>
+    );
+  }
+
+  // GalleryPro and all gallery variants — use LayoutMiniPreview with the item's layoutMode
+  const GALLERY_TYPES = new Set([
+    "GalleryPro", "GalleryMasonry", "GalleryCollage", "GallerySliderPro",
+    "GallerySlideshow", "GalleryThumbnails", "GalleryHoneycomb",
+    "GalleryFreestyle", "Gallery3DCarousel", "GalleryStacked",
+    "GalleryGrid", "GallerySlider",
+  ]);
+  if (GALLERY_TYPES.has(type)) {
+    // Derive layout mode from item props; fall back based on component type
+    let layoutMode: GalleryLayoutMode = (p["layoutMode"] as GalleryLayoutMode) ?? "grid";
+    if (!p["layoutMode"]) {
+      if (type === "GallerySlider" || type === "GallerySliderPro") layoutMode = "slider";
+      else if (type === "GallerySlideshow") layoutMode = "slideshow";
+      else if (type === "GalleryMasonry") layoutMode = "masonry";
+      else if (type === "GalleryCollage") layoutMode = "collage";
+      else if (type === "GalleryThumbnails") layoutMode = "thumbnails";
+      else if (type === "GalleryHoneycomb") layoutMode = "honeycomb";
+      else if (type === "GalleryFreestyle") layoutMode = "freestyle";
+      else if (type === "Gallery3DCarousel") layoutMode = "carousel-3d";
+      else if (type === "GalleryStacked") layoutMode = "stacked";
+    }
+    return (
+      <div className="w-full h-full">
+        <LayoutMiniPreview mode={layoutMode} animated={false} />
       </div>
     );
   }
@@ -252,40 +363,45 @@ export const PaletteItemCard: React.FC<PaletteItemCardProps> = ({
           if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); }
         }}
         className={cn(
-          "min-h-12 flex items-center justify-center rounded-lg overflow-hidden cursor-grab active:cursor-grabbing",
-          "hover:scale-[1.02] transition-all",
+          "min-h-16 flex items-center justify-center rounded-lg overflow-hidden cursor-grab active:cursor-grabbing",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring select-none group",
-          !showThumbnail && "border border-border/40 bg-muted/10"
+          // !showThumbnail && "border border-border/40 bg-muted/10"
         )}
         title={displayName}
       >
         {showThumbnail ? (
           <img src={effectiveThumbnail!} alt={displayName} className="max-h-full max-w-full object-contain" draggable={false} />
         ) : SIMPLE_PREVIEW_TYPES.has(item.componentType) ? (
-          <div
-            className="w-full flex items-center justify-center"
-            style={item.componentType === "Button" || item.componentType === "Text" ? {
-              background: (s.backgroundColor as string | undefined) ?? (s.background as string | undefined) ?? "transparent",
-              color: (s.color as string | undefined) ?? "#111827",
-              borderRadius: (s.borderRadius as string | undefined) ?? "4px",
-              border,
-              padding: "8px 16px",
-              fontSize: "14px",
-              fontWeight: (s.fontWeight as string | number | undefined) ?? 500,
-              fontFamily: (s.fontFamily as string | undefined),
-              fontStyle: ((s as Record<string, unknown>).fontStyle as string | undefined),
-              textTransform: (s.textTransform as React.CSSProperties["textTransform"]),
-              letterSpacing: (s.letterSpacing as string | undefined),
-              textAlign: "center",
-              width: "100%",
-              boxShadow: s.boxShadow as string,
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            } : { width: "100%", height: 60 }}
-          >
-            {item.componentType === "Button" || item.componentType === "Text" ? label : <MiniPreview item={item} />}
-          </div>
+          item.componentType === "Text" ? (
+            <div
+              className="w-full flex items-center justify-center"
+              style={{
+                background: (s.backgroundColor as string | undefined) ?? (s.background as string | undefined) ?? "transparent",
+                color: (s.color as string | undefined) ?? "#111827",
+                borderRadius: (s.borderRadius as string | undefined) ?? "4px",
+                border,
+                padding: "8px 16px",
+                fontSize: "14px",
+                fontWeight: (s.fontWeight as string | number | undefined) ?? 500,
+                fontFamily: s.fontFamily as string | undefined,
+                fontStyle: (s as Record<string, unknown>).fontStyle as string | undefined,
+                textTransform: s.textTransform as React.CSSProperties["textTransform"],
+                letterSpacing: s.letterSpacing as string | undefined,
+                textAlign: "center",
+                width: "100%",
+                boxShadow: s.boxShadow as string,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {label}
+            </div>
+          ) : (
+            <div className="w-full h-[72px]">
+              <MiniPreview item={item} />
+            </div>
+          )
         ) : (
           <div className="flex items-center justify-center w-full h-12 text-muted-foreground/30">
             <GripHorizontal className="w-5 h-5" />
@@ -343,10 +459,10 @@ export const PaletteItemCard: React.FC<PaletteItemCardProps> = ({
             fontFamily: ff,
             fontStyle: fs,
             color: color ?? undefined,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
             lineHeight: 1.2,
+            whiteSpace: "normal",
+            overflow: "visible",
+            wordBreak: "break-word",
             ...(item.componentType === "TextMask" ? {
               backgroundImage: (item.props?.gradient as string) ?? "linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)",
               WebkitBackgroundClip: "text",
@@ -356,7 +472,7 @@ export const PaletteItemCard: React.FC<PaletteItemCardProps> = ({
             ...(item.componentType === "CollapsibleText" ? { textDecoration: "underline", textDecorationColor: "rgba(0,0,0,0.2)" } : {})
           }}
         >
-          {rawText.length > 50 ? rawText.slice(0, 50) + "…" : rawText}
+          {rawText}
           {item.componentType === "TextMarquee"}
         </span>
       </div>
@@ -390,11 +506,11 @@ export const PaletteItemCard: React.FC<PaletteItemCardProps> = ({
 
         {/* Label */}
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium text-foreground/80 group-hover:text-foreground truncate leading-tight">
+          <p className="text-xs font-medium text-foreground/80 group-hover:text-foreground line-clamp-2 whitespace-normal break-words leading-tight">
             {displayName}
           </p>
           {item.description && (
-            <p className="text-[10px] text-muted-foreground/60 truncate mt-0.5 leading-tight">
+            <p className="text-[10px] text-muted-foreground/60 line-clamp-2 whitespace-normal break-words mt-0.5 leading-tight">
               {item.description}
             </p>
           )}
@@ -410,7 +526,7 @@ export const PaletteItemCard: React.FC<PaletteItemCardProps> = ({
       className={cn(sharedClasses, "flex flex-col gap-1")}
     >
       {/* Preview area */}
-      <div className="relative h-16 w-full overflow-hidden bg-background/60 border-b border-border/30">
+      <div className="relative h-16 w-full overflow-hidden">
         {showThumbnail ? (
           <img
             src={effectiveThumbnail!}
@@ -428,8 +544,8 @@ export const PaletteItemCard: React.FC<PaletteItemCardProps> = ({
       </div>
 
       {/* Label */}
-      <div className="px-2 pb-2">
-        <p className="text-[11px] font-medium text-foreground/80 group-hover:text-foreground truncate leading-tight">
+      <div className="px-2 pb-2 text-center">
+        <p className="text-[11px] font-medium text-foreground/80 group-hover:text-foreground line-clamp-2 whitespace-normal break-words leading-tight">
           {displayName}
         </p>
       </div>

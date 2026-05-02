@@ -43,6 +43,22 @@ export interface AssetListResult {
 /** Portable file-like type — avoids DOM dependency in builder-core. Compatible with browser File. */
 export type Uploadable = { readonly name: string; readonly size: number; readonly type: string };
 
+/**
+ * A reference to a media asset stored in the document's AssetManifest or as an external URL.
+ * Used as the value type for image/video props that support the full media management feature set.
+ */
+export interface MediaRef {
+  /** ID in AssetManifest (present when uploaded via MediaManager) */
+  assetId?: string;
+  /** Resolved URL — always present, derived from assetId or pasted directly */
+  url: string;
+  alt?: string;
+  width?: number;
+  height?: number;
+  /** Focal point as 0–1 fractions of image dimensions. Default {x:0.5, y:0.5} (center) */
+  focalPoint?: { x: number; y: number };
+}
+
 export interface AssetProvider {
   id: string;
   name: string;

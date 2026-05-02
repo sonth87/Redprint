@@ -1,0 +1,165 @@
+{
+  "id": "gallery",
+  "label": "Gallery",
+  "icon": "images",
+  "order": 3,
+  "i18n": {
+    "en": "Gallery",
+    "vi": "Thư viện ảnh"
+  },
+  "types": [
+    {
+      "id": "standard-galleries",
+      "label": "Standard",
+      "order": 0,
+      "layout": "preview",
+      "i18n": { "en": "Standard", "vi": "Tiêu chuẩn" },
+      "items": [
+        {
+          "id": "gallery-grid",
+          "componentType": "GalleryPro",
+          "name": "Grid",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Grid" }, "vi": { "name": "Lưới" } },
+          "props": { "layoutMode": "grid", "columns": 3, "gap": 12, "aspectRatio": "1/1" },
+          "tags": ["gallery", "grid"]
+        },
+        {
+          "id": "gallery-masonry",
+          "componentType": "GalleryPro",
+          "name": "Masonry",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Masonry" }, "vi": { "name": "Masonry" } },
+          "props": { "layoutMode": "masonry", "columns": 3, "gap": 12 },
+          "tags": ["gallery", "masonry", "pinterest"]
+        },
+        {
+          "id": "gallery-collage",
+          "componentType": "GalleryPro",
+          "name": "Collage",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Collage" }, "vi": { "name": "Ghép ảnh" } },
+          "props": { "layoutMode": "collage", "gap": 8 },
+          "tags": ["gallery", "collage", "mosaic"]
+        },
+        {
+          "id": "gallery-thumbnails",
+          "componentType": "GalleryPro",
+          "name": "Thumbnails",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Thumbnails" }, "vi": { "name": "Xem nhanh" } },
+          "props": { "layoutMode": "thumbnails", "gap": 8 },
+          "tags": ["gallery", "thumbnails", "filmstrip"]
+        },
+        {
+          "id": "gallery-strip",
+          "componentType": "GalleryPro",
+          "name": "Strip",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Strip" }, "vi": { "name": "Dải ngang" } },
+          "props": { "layoutMode": "strip", "gap": 8 },
+          "tags": ["gallery", "strip", "editorial"]
+        },
+        {
+          "id": "gallery-column",
+          "componentType": "GalleryPro",
+          "name": "Column",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Column" }, "vi": { "name": "Cột" } },
+          "props": { "layoutMode": "column", "gap": 12 },
+          "tags": ["gallery", "column"]
+        },
+        {
+          "id": "gallery-bricks",
+          "componentType": "GalleryPro",
+          "name": "Bricks",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Bricks" }, "vi": { "name": "Gạch" } },
+          "props": { "layoutMode": "bricks", "gap": 8, "aspectRatio": "4/3" },
+          "tags": ["gallery", "bricks", "metro"]
+        }
+      ]
+    },
+    {
+      "id": "slide-galleries",
+      "label": "Slides & Carousel",
+      "order": 1,
+      "layout": "preview",
+      "i18n": { "en": "Slides & Carousel", "vi": "Trình chiếu" },
+      "items": [
+        {
+          "id": "gallery-slider",
+          "componentType": "GalleryPro",
+          "name": "Slider",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Slider" }, "vi": { "name": "Slider" } },
+          "props": { "layoutMode": "slider", "aspectRatio": "16/9", "showArrows": true, "showDots": true, "loop": true },
+          "tags": ["gallery", "slider", "carousel"]
+        },
+        {
+          "id": "gallery-slider-square",
+          "componentType": "GalleryPro",
+          "name": "Slider Square",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Slider Square" }, "vi": { "name": "Slider vuông" } },
+          "props": { "layoutMode": "slider", "aspectRatio": "1/1", "showArrows": true, "showDots": true, "loop": true },
+          "tags": ["gallery", "slider", "square"]
+        },
+        {
+          "id": "gallery-slideshow",
+          "componentType": "GalleryPro",
+          "name": "Slideshow",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Slideshow" }, "vi": { "name": "Trình chiếu tự động" } },
+          "props": { "layoutMode": "slideshow", "autoPlay": true, "autoPlaySpeed": 4000, "loop": true },
+          "tags": ["gallery", "slideshow", "autoplay", "fullscreen"]
+        }
+      ]
+    },
+    {
+      "id": "creative-galleries",
+      "label": "Creative",
+      "order": 2,
+      "layout": "preview",
+      "i18n": { "en": "Creative", "vi": "Sáng tạo" },
+      "items": [
+        {
+          "id": "gallery-honeycomb",
+          "componentType": "GalleryPro",
+          "name": "Honeycomb",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Honeycomb" }, "vi": { "name": "Tổ ong" } },
+          "props": { "layoutMode": "honeycomb", "columns": 4, "gap": 8 },
+          "tags": ["gallery", "honeycomb", "hexagon", "creative"]
+        },
+        {
+          "id": "gallery-freestyle",
+          "componentType": "GalleryPro",
+          "name": "Freestyle",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Freestyle" }, "vi": { "name": "Ngẫu nhiên" } },
+          "props": { "layoutMode": "freestyle", "columns": 3 },
+          "tags": ["gallery", "freestyle", "scattered", "creative"]
+        },
+        {
+          "id": "gallery-3d-carousel",
+          "componentType": "GalleryPro",
+          "name": "3D Carousel",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "3D Carousel" }, "vi": { "name": "Carousel 3D" } },
+          "props": { "layoutMode": "carousel-3d" },
+          "tags": ["gallery", "3d", "carousel", "coverflow", "creative"]
+        },
+        {
+          "id": "gallery-stacked",
+          "componentType": "GalleryPro",
+          "name": "Stacked",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Stacked" }, "vi": { "name": "Xếp chồng" } },
+          "props": { "layoutMode": "stacked" },
+          "tags": ["gallery", "stacked", "cards", "depth", "creative"]
+        }
+      ]
+    }
+  ]
+}

@@ -7,6 +7,7 @@ const DEFAULT_AI_CONFIG: AIConfig = {
   maxTokens: 8192,
   streamingEnabled: false,
   includePageContext: false,
+  designTokens: {},
 };
 
 const STORAGE_KEY = "ui-builder:ai-config";
@@ -14,16 +15,13 @@ const STORAGE_KEY = "ui-builder:ai-config";
 export interface UseAIConfigReturn {
   aiOpen: boolean;
   setAiOpen: (open: boolean) => void;
-  pageGeneratorOpen: boolean;
-  setPageGeneratorOpen: (open: boolean) => void;
   aiConfig: AIConfig;
   handleAIConfigChange: (config: AIConfig) => void;
 }
 
-/** Manages AI assistant + page generator open state and config (with localStorage persistence). */
+/** Manages AI assistant open state and config (with localStorage persistence). */
 export function useAIConfig(): UseAIConfigReturn {
   const [aiOpen, setAiOpen] = useState(false);
-  const [pageGeneratorOpen, setPageGeneratorOpen] = useState(false);
   const [aiConfig, setAiConfig] = useState<AIConfig>(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -48,5 +46,5 @@ export function useAIConfig(): UseAIConfigReturn {
     }
   }, []);
 
-  return { aiOpen, setAiOpen, pageGeneratorOpen, setPageGeneratorOpen, aiConfig, handleAIConfigChange };
+  return { aiOpen, setAiOpen, aiConfig, handleAIConfigChange };
 }

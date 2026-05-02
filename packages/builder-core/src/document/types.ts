@@ -75,6 +75,7 @@ export interface StyleConfig {
   borderColor?: string;
   borderStyle?: string;
   boxShadow?: string;
+  clipPath?: string;
   opacity?: number;
   overflow?: string;
   overflowX?: string;
@@ -214,4 +215,6 @@ export interface BuilderDocument {
   plugins: PluginReference[];
   canvasConfig: CanvasConfig;
   metadata: DocumentMetadata;
+  /** Project-level color palette shown in all color pickers. Defaults applied by createBuilder. */
+  themeColors?: string[];
 }

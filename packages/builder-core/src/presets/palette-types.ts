@@ -72,6 +72,8 @@ export interface PaletteType {
    * - `"preview"`: 2-column grid — full-width visual-only card, no label. Suits styled buttons, badges.
    */
   layout?: "grid" | "list" | "preview";
+  /** Number of columns for grid/preview layouts (default: 2). Allows flexible layouts (3, 4+ columns). */
+  columns?: number;
   /** Optional description shown as a section hint */
   description?: string;
   /** Per-locale label overrides */
@@ -103,6 +105,11 @@ export interface PaletteItem {
   /** Optional description shown in item tooltip */
   description?: string;
   /**
+   * Optional lucide icon name for button items (e.g. "map-pin", "download", "home").
+   * When provided, the palette preview renders the icon instead of the button text.
+   */
+  icon?: string;
+  /**
    * Preview thumbnail URL or data-URI.
    */
   thumbnail?: string | null;
@@ -127,6 +134,12 @@ export interface PaletteItem {
   children?: PresetChildNode[];
   /** Tags used for cross-group search */
   tags?: string[];
+  /** Semantic purpose for AI context — e.g. "hero", "features", "pricing", "testimonials", "cta". Phase 4A. */
+  purpose?: string;
+  /** Industry hints for AI pattern matching — e.g. ["saas", "ecommerce", "portfolio"]. Phase 4A. */
+  industryHints?: string[];
+  /** Layout variant — e.g. "center", "split-left", "3col-grid", "slider", "accordion". Phase 4A. */
+  layoutVariant?: string;
 }
 
 /**

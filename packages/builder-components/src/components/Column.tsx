@@ -7,7 +7,7 @@ export const ColumnComponent: ComponentDefinition = {
   category: "layout",
   group: "layout",
   subGroup: "grid",
-  description: "A flex column container. Children stack vertically without absolute positioning.",
+  description: "A flex container. Children stack vertically or horizontally without absolute positioning.",
   version: "1.0.0",
   tags: ["layout", "column", "flex", "stack"],
   capabilities: {
@@ -37,8 +37,31 @@ export const ColumnComponent: ComponentDefinition = {
       ],
       default: "stretch",
     },
+    {
+      key: "justifyContent",
+      label: "Justify Content",
+      type: "select",
+      options: [
+        { value: "flex-start", label: "Start" },
+        { value: "center", label: "Center" },
+        { value: "flex-end", label: "End" },
+        { value: "space-between", label: "Space Between" },
+        { value: "space-around", label: "Space Around" },
+      ],
+      default: "flex-start",
+    },
+    {
+      key: "direction",
+      label: "Direction",
+      type: "select",
+      options: [
+        { value: "column", label: "Vertical" },
+        { value: "row", label: "Horizontal" },
+      ],
+      default: "column",
+    },
   ],
-  defaultProps: { gap: 8, padding: 16, alignItems: "stretch" },
+  defaultProps: { gap: 8, padding: 16, alignItems: "stretch", justifyContent: "flex-start", direction: "column" },
   defaultStyle: {
     display: "flex",
     flexDirection: "column",
@@ -52,6 +75,8 @@ export const ColumnComponent: ComponentDefinition = {
     const gap = Number(node.props.gap ?? 8);
     const padding = Number(node.props.padding ?? 16);
     const alignItems = String(node.props.alignItems ?? "stretch");
+    const justifyContent = String(node.props.justifyContent ?? "flex-start");
+    const flexDirection = String(node.props.direction ?? "column") as React.CSSProperties["flexDirection"];
 
     return (
       <div
@@ -60,10 +85,11 @@ export const ColumnComponent: ComponentDefinition = {
         style={{
           ...(style as React.CSSProperties),
           display: "flex",
-          flexDirection: "column",
+          flexDirection,
           gap: `${gap}px`,
           padding: `${padding}px`,
           alignItems,
+          justifyContent,
           width: "100%",
           minHeight: "80px",
         }}
@@ -92,16 +118,19 @@ export const ColumnComponent: ComponentDefinition = {
     const gap = Number(node.props.gap ?? 8);
     const padding = Number(node.props.padding ?? 16);
     const alignItems = String(node.props.alignItems ?? "stretch");
+    const justifyContent = String(node.props.justifyContent ?? "flex-start");
+    const flexDirection = String(node.props.direction ?? "column") as React.CSSProperties["flexDirection"];
 
     return (
       <div
         style={{
           ...(style as React.CSSProperties),
           display: "flex",
-          flexDirection: "column",
+          flexDirection,
           gap: `${gap}px`,
           padding: `${padding}px`,
           alignItems,
+          justifyContent,
         }}
       >
         {children as React.ReactNode}

@@ -18,12 +18,12 @@ import {
   Hand,
   Columns2,
   Sparkles,
-  LayoutTemplate,
   Maximize2,
   Info,
-  X,
 } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { ZOOM_LEVELS, TOOLTIP_DELAY_EXTENDED_MS } from "@ui-builder/shared";
+import type { EditorTool } from "../types";
+import { ToolbarButton } from "./ToolbarButton";
 
 // Figma logo as a small inline SVG button icon
 const FigmaIcon = ({ size = 14 }: { size?: number }) => (
@@ -35,9 +35,6 @@ const FigmaIcon = ({ size = 14 }: { size?: number }) => (
     <path d="M2 28.5C2 33.1944 5.80558 37 10.5 37H19V20H10.5C5.80558 20 2 23.8056 2 28.5Z" fill="#A259FF"/>
   </svg>
 );
-import { ZOOM_LEVELS, TOOLTIP_DELAY_EXTENDED_MS } from "@ui-builder/shared";
-import type { EditorTool } from "../types";
-import { ToolbarButton } from "./ToolbarButton";
 
 export interface EditorToolbarProps {
   breakpoint: Breakpoint;
@@ -58,8 +55,6 @@ export interface EditorToolbarProps {
   onCanvasModeToggle: () => void;
   onFitToScreen?: () => void;
   onAIOpen?: () => void;
-  /** Open the full-page AI generator dialog */
-  onPageGeneratorOpen?: () => void;
   /** Open the Figma import dialog */
   onFigmaOpen?: () => void;
 }
@@ -86,7 +81,6 @@ export const EditorToolbar = memo(function EditorToolbar({
   onCanvasModeToggle,
   onFitToScreen,
   onAIOpen,
-  onPageGeneratorOpen,
   onFigmaOpen,
 }: EditorToolbarProps) {
   const zoomPct = Math.round(zoom * 100);
@@ -118,185 +112,185 @@ export const EditorToolbar = memo(function EditorToolbar({
 
   return (
     <TooltipProvider delayDuration={TOOLTIP_DELAY_EXTENDED_MS}>
-      <div className="bg-background/60 absolute left-1/2 top-4 z-40 flex h-10 -translate-x-1/2 items-center gap-1.5 rounded-full border px-3 shadow-sm backdrop-blur-md">
-        {/* Tool selection */}
-        <div className="mr-2 flex items-center gap-0.5 rounded-md p-1">
-          <ToolbarButton
-            icon={MousePointer2}
-            tooltip={`${t("toolbar.select")} (V)`}
-            isActive={activeTool === "select"}
-            onClick={() => onToolChange("select")}
-            aria-label={`${t("toolbar.select")} (V)`}
-            compact
-          />
-          <ToolbarButton
-            icon={Hand}
-            tooltip={`${t("toolbar.pan")} (H)`}
-            isActive={activeTool === "pan"}
-            onClick={() => onToolChange("pan")}
-            aria-label={`${t("toolbar.pan")} (H)`}
-            compact
-          />
-        </div>
+      <div className="bg-background/60 absolute left-1/2 top-4 z-40 flex h-10 -translate-x-1/2 items-center gap-1.5 rounded-full border px-3 shadow-sm backdrop-blur-md" style={{ pointerEvents: "none" }}>
+          {/* Tool selection */}
+          <div className="mr-2 flex items-center gap-0.5 rounded-md p-1" style={{ pointerEvents: "auto" }}>
+            <ToolbarButton
+              icon={MousePointer2}
+              tooltip={`${t("toolbar.select")} (V)`}
+              isActive={activeTool === "select"}
+              onClick={() => onToolChange("select")}
+              aria-label={`${t("toolbar.select")} (V)`}
+              compact
+            />
+            <ToolbarButton
+              icon={Hand}
+              tooltip={`${t("toolbar.pan")} (H)`}
+              isActive={activeTool === "pan"}
+              onClick={() => onToolChange("pan")}
+              aria-label={`${t("toolbar.pan")} (H)`}
+              compact
+            />
+          </div>
 
-        {/* Undo / Redo */}
-        <ToolbarButton
-          icon={Undo2}
-          tooltip={`${t("toolbar.undo")} (⌘Z)`}
-          disabled={!canUndo}
-          onClick={onUndo}
-          aria-label={`${t("toolbar.undo")} (⌘Z)`}
-        />
-        <ToolbarButton
-          icon={Redo2}
-          tooltip={`${t("toolbar.redo")} (⌘⇧Z)`}
-          disabled={!canRedo}
-          onClick={onRedo}
-          aria-label={`${t("toolbar.redo")} (⌘Y)`}
-        />
+          {/* Undo / Redo */}
+          <div style={{ pointerEvents: "auto" }}>
+            <ToolbarButton
+              icon={Undo2}
+              tooltip={`${t("toolbar.undo")} (⌘Z)`}
+              disabled={!canUndo}
+              onClick={onUndo}
+              aria-label={`${t("toolbar.undo")} (⌘Z)`}
+            />
+          </div>
+          <div style={{ pointerEvents: "auto" }}>
+            <ToolbarButton
+              icon={Redo2}
+              tooltip={`${t("toolbar.redo")} (⌘⇧Z)`}
+              disabled={!canRedo}
+              onClick={onRedo}
+              aria-label={`${t("toolbar.redo")} (⌘Y)`}
+            />
+          </div>
 
-        {/* Separator */}
-        <div className="bg-border mx-1 h-6 w-px" />
+          {/* Separator */}
+          <div className="bg-border mx-1 h-6 w-px" />
 
-        {/* Breakpoints — Desktop and Mobile only */}
-        {canvasMode !== "dual" && (
-          <>
-            <div className="flex items-center gap-0.5">
-              {breakpointOptions.map(({ bp, label, icon: Icon, shortcut }) => {
-                const isMobile = bp === "mobile";
-                return (
-                  <div key={bp} className="relative">
-                    <ToolbarButton
-                      icon={Icon}
-                      tooltip={`${label} ${DEVICE_VIEWPORT_PRESETS[bp].width}px (${shortcut})`}
-                      isActive={breakpoint === bp}
-                      onClick={() => onBreakpointChange(bp)}
-                      aria-label={`${label} breakpoint`}
-                      compact
-                    />
-                    {isMobile && (
-                      <TooltipProvider>
-                        <ToolbarButton
-                          icon={Info}
-                          className="absolute -right-1 -top-1 h-3.5 w-3.5 rounded-full bg-indigo-600 p-0 text-[8px] text-white hover:bg-indigo-700 border border-background shadow-sm"
-                          tooltip={
-                            <div className="w-[280px] p-1 text-[11px] leading-relaxed">
-                              {t("toolbar.mobileSyncNotice")}
-                            </div>
-                          }
-                          compact
-                        />
-                      </TooltipProvider>
-                    )}
-                  </div>
-                );
-              })}
+          {/* Breakpoints — Desktop and Mobile only */}
+          {canvasMode !== "dual" && (
+            <>
+              <div className="flex items-center gap-0.5" style={{ pointerEvents: "auto" }}>
+                {breakpointOptions.map(({ bp, label, icon: Icon, shortcut }) => {
+                  const isMobile = bp === "mobile";
+                  return (
+                    <div key={bp} className="relative">
+                      <ToolbarButton
+                        icon={Icon}
+                        tooltip={`${label} ${DEVICE_VIEWPORT_PRESETS[bp].width}px (${shortcut})`}
+                        isActive={breakpoint === bp}
+                        onClick={() => onBreakpointChange(bp)}
+                        aria-label={`${label} breakpoint`}
+                        compact
+                      />
+                      {isMobile && (
+                        <TooltipProvider>
+                          <ToolbarButton
+                            icon={Info}
+                            className="absolute -right-1 -top-1 h-3.5 w-3.5 rounded-full bg-indigo-600 p-0 text-[8px] text-white hover:bg-indigo-700 border border-background shadow-sm"
+                            tooltip={
+                              <div className="w-[280px] p-1 text-[11px] leading-relaxed">
+                                {t("toolbar.mobileSyncNotice")}
+                              </div>
+                            }
+                            compact
+                          />
+                        </TooltipProvider>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Current device width indicator */}
+              <span className="text-muted-foreground select-none px-1 text-[10px] tabular-nums">
+                {deviceWidth}px
+              </span>
+
+              {/* Separator */}
+              <div className="bg-border mx-1 h-6 w-px" />
+            </>
+          )}
+
+          {/* Zoom */}
+          <div className="flex items-center gap-1" style={{ pointerEvents: "auto" }}>
+            <ToolbarButton
+              icon={ZoomOut}
+              tooltip={t("toolbar.zoomOut")}
+              onClick={zoomOut}
+              aria-label={t("toolbar.zoomOut")}
+              compact
+            />
+            <span className="w-10 text-center text-xs tabular-nums">{zoomPct}%</span>
+            <ToolbarButton
+              icon={ZoomIn}
+              tooltip="Zoom in"
+              onClick={zoomIn}
+              aria-label="Zoom in"
+              compact
+            />
+          </div>
+
+          {/* Fit to Screen */}
+          {onFitToScreen && (
+            <div style={{ pointerEvents: "auto" }}>
+              <ToolbarButton
+                icon={Maximize2}
+                tooltip={`${t("toolbar.fitToScreen")} (⇧1)`}
+                onClick={onFitToScreen}
+                aria-label={t("toolbar.fitToScreen")}
+                compact
+              />
             </div>
+          )}
 
-            {/* Current device width indicator */}
-            <span className="text-muted-foreground select-none px-1 text-[10px] tabular-nums">
-              {deviceWidth}px
-            </span>
+          {/* Separator */}
+          <div className="bg-border mx-1 h-6 w-px" />
 
-            {/* Separator */}
-            <div className="bg-border mx-1 h-6 w-px" />
-          </>
-        )}
+          {/* Grid toggle */}
+          <div style={{ pointerEvents: "auto" }}>
+            <ToolbarButton
+              icon={Grid}
+              tooltip="Toggle Grid"
+              isActive={showGrid}
+              onClick={onGridToggle}
+              aria-label="Toggle grid"
+              compact
+            />
+          </div>
 
-        {/* Zoom */}
-        <div className="flex items-center gap-1">
-          <ToolbarButton
-            icon={ZoomOut}
-            tooltip={t("toolbar.zoomOut")}
-            onClick={zoomOut}
-            aria-label={t("toolbar.zoomOut")}
-            compact
-          />
-          <span className="w-10 text-center text-xs tabular-nums">{zoomPct}%</span>
-          <ToolbarButton
-            icon={ZoomIn}
-            tooltip="Zoom in"
-            onClick={zoomIn}
-            aria-label="Zoom in"
-            compact
-          />
-        </div>
+          {/* Dual canvas toggle */}
+          <div style={{ pointerEvents: "auto" }}>
+            <ToolbarButton
+              icon={Columns2}
+              tooltip={
+                canvasMode === "dual"
+                  ? "Single canvas (current: side-by-side)"
+                  : "Dual canvas — Desktop + Mobile side-by-side"
+              }
+              isActive={canvasMode === "dual"}
+              onClick={onCanvasModeToggle}
+              aria-label="Toggle dual canvas mode"
+              compact
+            />
+          </div>
 
-        {/* Fit to Screen */}
-        {onFitToScreen && (
-          <ToolbarButton
-            icon={Maximize2}
-            tooltip={`${t("toolbar.fitToScreen")} (⇧1)`}
-            onClick={onFitToScreen}
-            aria-label={t("toolbar.fitToScreen")}
-            compact
-          />
-        )}
+          {(onAIOpen || onFigmaOpen) && (
+            <div style={{ pointerEvents: "auto", display: "flex", alignItems: "center", gap: "0.375rem" }}>
+              {/* Separator */}
+              <div className="bg-border mx-1 h-6 w-px" />
 
-        {/* Separator */}
-        <div className="bg-border mx-1 h-6 w-px" />
+              {onFigmaOpen && (
+                <button
+                  onClick={onFigmaOpen}
+                  aria-label="Import từ Figma"
+                  title="Import từ Figma"
+                  className="flex h-7 w-7 items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground"
+                >
+                  <FigmaIcon size={14} />
+                </button>
+              )}
 
-        {/* Grid toggle */}
-        <ToolbarButton
-          icon={Grid}
-          tooltip="Toggle Grid"
-          isActive={showGrid}
-          onClick={onGridToggle}
-          aria-label="Toggle grid"
-          compact
-        />
-
-        {/* Dual canvas toggle */}
-        <ToolbarButton
-          icon={Columns2}
-          tooltip={
-            canvasMode === "dual"
-              ? "Single canvas (current: side-by-side)"
-              : "Dual canvas — Desktop + Mobile side-by-side"
-          }
-          isActive={canvasMode === "dual"}
-          onClick={onCanvasModeToggle}
-          aria-label="Toggle dual canvas mode"
-          compact
-        />
-
-        {(onAIOpen || onFigmaOpen || onPageGeneratorOpen) && (
-          <>
-            {/* Separator */}
-            <div className="bg-border mx-1 h-6 w-px" />
-
-            {onFigmaOpen && (
-              <button
-                onClick={onFigmaOpen}
-                aria-label="Import từ Figma"
-                title="Import từ Figma"
-                className="flex h-7 w-7 items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground"
-              >
-                <FigmaIcon size={14} />
-              </button>
-            )}
-
-            {onPageGeneratorOpen && (
-              <ToolbarButton
-                icon={LayoutTemplate}
-                tooltip={t("toolbar.aiGeneratePage")}
-                onClick={onPageGeneratorOpen}
-                aria-label={t("toolbar.aiGeneratePage")}
-                compact
-              />
-            )}
-
-            {onAIOpen && (
-              <ToolbarButton
-                icon={Sparkles}
-                tooltip={t("toolbar.aiAssistant")}
-                onClick={onAIOpen}
-                aria-label={t("toolbar.aiAssistant")}
-                compact
-              />
-            )}
-          </>
-        )}
+              {onAIOpen && (
+                <ToolbarButton
+                  icon={Sparkles}
+                  tooltip={t("toolbar.aiAssistant")}
+                  onClick={onAIOpen}
+                  aria-label={t("toolbar.aiAssistant")}
+                  compact
+                />
+              )}
+            </div>
+          )}
       </div>
     </TooltipProvider>
   );

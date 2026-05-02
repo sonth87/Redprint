@@ -202,6 +202,7 @@ export function useKeyboardShortcuts({
           selectedNodeIds.forEach(id => {
             const node = nodes[id];
             if (!node) return;
+            if (node.locked) return;
             const left = parseFloat(String(node.style.left ?? "0")) || 0;
             const top = parseFloat(String(node.style.top ?? "0")) || 0;
             dispatch({

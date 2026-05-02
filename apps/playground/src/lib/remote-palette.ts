@@ -1,6 +1,6 @@
 import type { RemotePaletteProvider } from "@ui-builder/builder-editor";
 import type { PaletteCatalog, PaletteItem } from "@ui-builder/builder-core";
-import tempCatalog from "../fixtures/palette-catalog.json";
+import tempCatalog from "../../../api/src/data/palette.combined.json";
 
 const BASE_URL = "http://localhost:3002/api/palette";
 

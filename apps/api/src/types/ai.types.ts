@@ -75,10 +75,29 @@ export interface AIPageNode {
   style: Record<string, unknown>;
 }
 
+/** Ultra-slim node for hierarchical tree — structure only (Phase 3A) */
+export interface AIPageNodeSlim {
+  id: string;
+  type: string;
+  name?: string;
+  parentId: string | null;
+  order: number;
+}
+
+/** Hierarchical page context: slim tree for structure + focused nodes for details */
+export interface AIPageNodeSummary {
+  /** All nodes with structure only (id, type, name, parentId, order) */
+  tree: Record<string, AIPageNodeSlim>;
+  /** Selected node + parent + siblings with full props/style detail */
+  focusedNodes: Record<string, AIPageNode>;
+}
+
 // ── Request / SSE Event types ─────────────────────────────────────────────
 
 export interface GeneratePageRequest {
   prompt: string;
+  /** If true, client will clear existing nodes before applying new sections */
+  fullPageMode?: boolean;
   /** Available components the AI can use */
   availableComponents: Array<{
     type: string;
@@ -87,8 +106,12 @@ export interface GeneratePageRequest {
   }>;
   /** Palette presets for layout suggestions */
   availablePresets?: AIPresetGroup[];
+  /** Compact preset summary — serializePresetsCompact() output. Phase 1C. */
+  availablePresetsCompact?: string;
   /** Canvas-level design tokens for consistency across sections */
   designTokens?: DesignTokens;
+  /** Derived nesting rules — deriveNestingRules() output. Phase 1B. */
+  nestingRules?: string;
   /** Current page nodes (used for edit context) */
   pageNodes?: Record<string, AIPageNode>;
 }
@@ -102,7 +125,18 @@ export interface ChatRequest {
     availableComponents: Array<{ type: string; name: string; category: string }>;
     activeBreakpoint: string;
     pageNodes?: Record<string, AIPageNode>;
+    pageNodesSummary?: AIPageNodeSummary;
     availablePresets?: AIPresetGroup[];
+    /** Compact component manifest — serializeComponentsCompact() output. Phase 1B. */
+    componentsManifest?: string;
+    /** Derived nesting rules — deriveNestingRules() output. Phase 1B. */
+    nestingRules?: string;
+    /** Compact preset summary — serializePresetsCompact() output. Phase 1C. */
+    availablePresetsCompact?: string;
+    /** Design tokens for consistent styling. Phase 2A. */
+    designTokens?: DesignTokens;
+    /** If true, backend will prepend REMOVE_NODE commands for all children of root node. */
+    fullPageMode?: boolean;
   };
 }
 
@@ -114,9 +148,12 @@ export interface ChatResponse {
 export interface DesignTokens {
   primaryColor?: string;
   secondaryColor?: string;
+  accentColor?: string;
   fontFamily?: string;
+  headingFontFamily?: string;
   borderRadius?: string;
   backgroundColor?: string;
+  textColor?: string;
 }
 
 // ── SSE Event payloads ──────────────────────────────────────────────────
@@ -124,6 +161,7 @@ export interface DesignTokens {
 export type SSEEventType =
   | { event: "outline_ready"; data: { sections: SectionOutline[] } }
   | { event: "section_ready"; data: { index: number; sectionId: string; commands: AICommandSuggestion[] } }
+  | { event: "section_error"; data: { index: number; sectionId: string; error: string } }
   | { event: "error"; data: { message: string } }
   | { event: "complete"; data: Record<string, never> };
 
@@ -137,6 +175,9 @@ export interface SectionDesignContext {
     type: string;
     dominantColors: string[];
     fontSizes: string[];
+    fontFamilies: string[];
+    borderRadii: string[];
+    buttonStyles: Array<{ backgroundColor?: string; color?: string; borderRadius?: string }>;
   }>;
   /** The full original user prompt */
   originalPrompt: string;

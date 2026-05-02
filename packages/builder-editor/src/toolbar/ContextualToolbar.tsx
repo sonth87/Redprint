@@ -1,12 +1,41 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { Copy, Trash2, ArrowUp, ArrowDown, GripVertical, CornerLeftUp } from "lucide-react";
+import { Copy, Trash2, ArrowUp, ArrowDown, GripVertical, CornerLeftUp, ImageIcon, Link2, Paintbrush, Frame, Images, Settings2 } from "lucide-react";
 import { useDocument, useBuilder } from "@ui-builder/builder-react";
-import { Button, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@ui-builder/ui";
+import { Button, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider, ScrollArea } from "@ui-builder/ui";
 import { TOOLTIP_DELAY_MS } from "@ui-builder/shared";
 import { AIToolsPopover } from "../ai/ai-tools/AIToolsPopover";
 import { AISectionPopover } from "../ai/ai-section/AISectionPopover";
 import { useAIConfig } from "../ai/AIConfigContext";
+import { ImageFilterPicker } from "../panels/ImageFilterPicker";
+import { ImageFramePanel } from "../panels/ImageFramePanel";
+import { FloatingPanel } from "../panels/FloatingPanel";
+import { GallerySettingsPanel, CarouselSettingsPanel } from "../panels/gallery";
+import type { CarouselConfig } from "@ui-builder/shared";
+import { DEFAULT_CAROUSEL_CONFIG, normalizeCarouselConfig } from "@ui-builder/shared";
+
+function getClampedPanelPos(
+  rect: DOMRect,
+  panelWidth: number,
+  panelHeight: number,
+) {
+  const margin = 8;
+  let x = rect.left;
+  let y = rect.bottom + 6;
+
+  if (x + panelWidth + margin > window.innerWidth) {
+    x = window.innerWidth - panelWidth - margin;
+  }
+  if (x < margin) x = margin;
+
+  if (y + panelHeight + margin > window.innerHeight) {
+    y = rect.top - panelHeight - 6;
+  }
+  if (y < margin) y = margin;
+
+  return { x, y };
+}
 
 export interface ContextualToolbarProps {
   nodeId: string;
@@ -18,13 +47,44 @@ export interface ContextualToolbarProps {
   onMoveUp: () => void;
   onMoveDown: () => void;
   onDragHandlePointerDown: (e: React.PointerEvent) => void;
+  /** Open media manager and apply selected asset URL to given prop key */
+  onOpenMediaManager?: (propKey: string) => void;
+  /** Open the GalleryMediaManager dialog for the selected gallery node */
+  onOpenGalleryManager?: () => void;
 }
 
-export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, rect, zoom, panOffset, onDelete, onDuplicate, onMoveUp, onMoveDown, onDragHandlePointerDown }) => {
-  const { document } = useDocument();
+// All component types that use the GalleryPro engine (share Manage Media + Settings buttons)
+const GALLERY_TYPES = new Set([
+  "GalleryPro", "GalleryMasonry", "GalleryCollage", "GallerySliderPro",
+  "GallerySlideshow", "GalleryThumbnails", "GalleryHoneycomb",
+  "GalleryFreestyle", "Gallery3DCarousel", "GalleryStacked",
+]);
+
+export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, rect, zoom, panOffset, onDelete, onDuplicate, onMoveUp, onMoveDown, onDragHandlePointerDown, onOpenMediaManager, onOpenGalleryManager }) => {
+  const [filterOpen, setFilterOpen] = React.useState(false);
+  const [frameOpen, setFrameOpen] = React.useState(false);
+  const [gallerySettingsOpen, setGallerySettingsOpen] = React.useState(false);
+  const [carouselSettingsOpen, setCarouselSettingsOpen] = React.useState(false);
+  const [filterPos, setFilterPos] = React.useState({ x: 0, y: 0 });
+  const [framePos, setFramePos] = React.useState({ x: 0, y: 0 });
+  const [gallerySettingsPos, setGallerySettingsPos] = React.useState({ x: 0, y: 0 });
+  const [carouselSettingsPos, setCarouselSettingsPos] = React.useState({ x: 0, y: 0 });
+
+  // Close floating panels when the selected node changes
+  React.useEffect(() => {
+    setFilterOpen(false);
+    setFrameOpen(false);
+    setGallerySettingsOpen(false);
+    setCarouselSettingsOpen(false);
+  }, [nodeId]);
+  const filterBtnRef = useRef<HTMLButtonElement>(null);
+  const frameBtnRef = useRef<HTMLButtonElement>(null);
+  const gallerySettingsBtnRef = useRef<HTMLButtonElement>(null);
+  const carouselSettingsBtnRef = useRef<HTMLButtonElement>(null);
+  const { document: builderDoc } = useDocument();
   const { builder, dispatch } = useBuilder();
   const { t } = useTranslation();
-  const node = document.nodes[nodeId];
+  const node = builderDoc.nodes[nodeId];
   const aiConfig = useAIConfig();
 
   // Resolve component definition to check AI capabilities
@@ -37,8 +97,12 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
 
   // Section AI Assistant
   const isSection = node?.type === "Section";
+  const isGalleryNode = node ? GALLERY_TYPES.has(node.type) : false;
+  // Carousel mode: slider/slideshow/carousel-3d use CarouselSettingsPanel instead of GallerySettingsPanel
+  const isCarouselMode = isGalleryNode &&
+    ["slider", "slideshow", "carousel-3d"].includes(String(node?.props?.["layoutMode"] ?? ""));
   const currentChildIds = isSection
-    ? Object.values(document.nodes)
+    ? Object.values(builderDoc.nodes)
         .filter((n) => n.parentId === nodeId)
         .map((n) => n.id)
     : [];
@@ -179,6 +243,249 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
               dispatch={dispatch}
               undo={handleUndo}
             />
+          </>
+        )}
+
+        {/* Image-specific quick actions */}
+        {node.type === "Image" && (
+          <>
+            <div className="w-px h-4 bg-border mx-0.5" />
+
+            {/* Change Image */}
+            {onOpenMediaManager && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="h-6 w-6"
+                    onClick={wrap(() => {
+                      setFilterOpen(false);
+                      setFrameOpen(false);
+                      onOpenMediaManager("src");
+                    })}
+                  >
+                    <ImageIcon className="h-3 w-3" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">Change Image</TooltipContent>
+              </Tooltip>
+            )}
+
+            {/* Filter picker — draggable FloatingPanel */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  ref={filterBtnRef}
+                  variant="ghost"
+                  size="icon-sm"
+                  className="h-6 w-6"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (filterBtnRef.current) {
+                      const r = filterBtnRef.current.getBoundingClientRect();
+                      setFilterPos(getClampedPanelPos(r, 256, 400));
+                    }
+                    setFilterOpen((v) => !v);
+                  }}
+                >
+                  <Paintbrush className="h-3 w-3" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">Filter</TooltipContent>
+            </Tooltip>
+            {filterOpen && createPortal(
+              <FloatingPanel
+                title="Image Filter"
+                defaultPosition={{ x: filterPos.x, y: filterPos.y }}
+                width={256}
+                onClose={() => setFilterOpen(false)}
+              >
+                <ScrollArea>
+                  <ImageFilterPicker
+                    previewSrc={String(node.props.src ?? "")}
+                    value={String(node.props.filter ?? "none")}
+                    onChange={(filter) => {
+                      dispatch({
+                        type: "UPDATE_PROPS",
+                        payload: { nodeId, props: { filter } },
+                        description: "Set image filter",
+                      });
+                    }}
+                  />
+                </ScrollArea>
+              </FloatingPanel>,
+              document.body,
+            )}
+
+            {/* Frame Design — draggable FloatingPanel */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  ref={frameBtnRef}
+                  variant="ghost"
+                  size="icon-sm"
+                  className="h-6 w-6"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (frameBtnRef.current) {
+                      const r = frameBtnRef.current.getBoundingClientRect();
+                      setFramePos(getClampedPanelPos(r, 320, 500));
+                    }
+                    setFrameOpen((v) => !v);
+                  }}
+                >
+                  <Frame className="h-3 w-3" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">Frame Design</TooltipContent>
+            </Tooltip>
+            {frameOpen && createPortal(
+              <FloatingPanel
+                title="Frame Design"
+                defaultPosition={{ x: framePos.x, y: framePos.y }}
+                width={320}
+                onClose={() => setFrameOpen(false)}
+              >
+                <ImageFramePanel
+                  node={node}
+                  onStyleChange={(style) => {
+                    dispatch({
+                      type: "UPDATE_STYLE",
+                      payload: { nodeId, style },
+                      description: "Set image frame",
+                    });
+                  }}
+                  onPropChange={(props) => {
+                    dispatch({
+                      type: "UPDATE_PROPS",
+                      payload: { nodeId, props },
+                      description: "Set image frame effect",
+                    });
+                  }}
+                />
+              </FloatingPanel>,
+              document.body,
+            )}
+
+            {/* Set Link */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className="h-6 w-6"
+                  onClick={wrap(() => {
+                    const url = window.prompt("Link URL:", String(node.props.linkUrl ?? ""));
+                    if (url !== null) {
+                      dispatch({ type: "UPDATE_PROPS", payload: { nodeId, props: { linkUrl: url } }, description: "Set image link" });
+                    }
+                  })}
+                >
+                  <Link2 className="h-3 w-3" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">Set Link</TooltipContent>
+            </Tooltip>
+          </>
+        )}
+
+        {/* Gallery-specific quick actions — shown for all GalleryPro-engine variants */}
+        {isGalleryNode && (
+          <>
+            <div className="w-px h-4 bg-border mx-0.5" />
+
+            {/* Manage Media */}
+            {onOpenGalleryManager && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="h-6 w-6"
+                    onClick={wrap(() => {
+                      setGallerySettingsOpen(false);
+                      onOpenGalleryManager();
+                    })}
+                  >
+                    <Images className="h-3 w-3" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">Manage Media</TooltipContent>
+              </Tooltip>
+            )}
+
+            {/* Settings button — opens CarouselSettingsPanel (slider modes) or GallerySettingsPanel (other modes) */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  ref={isCarouselMode ? carouselSettingsBtnRef : gallerySettingsBtnRef}
+                  variant="ghost"
+                  size="icon-sm"
+                  className="h-6 w-6"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (isCarouselMode) {
+                      if (carouselSettingsBtnRef.current) {
+                        const r = carouselSettingsBtnRef.current.getBoundingClientRect();
+                        setCarouselSettingsPos(getClampedPanelPos(r, 380, 560));
+                      }
+                      setCarouselSettingsOpen((v) => !v);
+                    } else {
+                      if (gallerySettingsBtnRef.current) {
+                        const r = gallerySettingsBtnRef.current.getBoundingClientRect();
+                        setGallerySettingsPos(getClampedPanelPos(r, 320, 540));
+                      }
+                      setGallerySettingsOpen((v) => !v);
+                    }
+                  }}
+                >
+                  <Settings2 className="h-3 w-3" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">{isCarouselMode ? "Carousel Settings" : "Gallery Settings"}</TooltipContent>
+            </Tooltip>
+
+            {/* Gallery Settings panel (non-carousel modes) */}
+            {gallerySettingsOpen && !isCarouselMode && node && createPortal(
+              <FloatingPanel
+                title="Gallery Settings"
+                defaultPosition={{ x: gallerySettingsPos.x, y: gallerySettingsPos.y }}
+                width={320}
+                onClose={() => setGallerySettingsOpen(false)}
+              >
+                <GallerySettingsPanel
+                  node={node}
+                  onPropChange={(props) => {
+                    dispatch({ type: "UPDATE_PROPS", payload: { nodeId, props }, description: "Gallery settings" });
+                  }}
+                />
+              </FloatingPanel>,
+              document.body,
+            )}
+
+            {/* Carousel Settings panel (slider/slideshow/carousel-3d modes) */}
+            {carouselSettingsOpen && isCarouselMode && node && createPortal(
+              <FloatingPanel
+                title="Carousel Settings"
+                defaultPosition={{ x: carouselSettingsPos.x, y: carouselSettingsPos.y }}
+                width={380}
+                onClose={() => setCarouselSettingsOpen(false)}
+              >
+                <CarouselSettingsPanel
+                  node={node}
+                  onConfigChange={(partial) => {
+                    const current = normalizeCarouselConfig(node.props["carouselConfig"]);
+                    dispatch({
+                      type: "UPDATE_PROPS",
+                      payload: { nodeId, props: { carouselConfig: { ...current, ...partial } } },
+                      description: "Carousel settings",
+                    });
+                  }}
+                />
+              </FloatingPanel>,
+              document.body,
+            )}
           </>
         )}
 

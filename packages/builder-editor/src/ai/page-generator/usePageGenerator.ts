@@ -10,6 +10,7 @@
 import { useCallback, useRef, useState } from "react";
 import { useBuilder } from "@ui-builder/builder-react";
 import { normalizeAICommands } from "../normalizeAICommands";
+import { applyAICommandsProgressive } from "../applyAICommandsProgressive";
 import type { AIConfig, AIBuilderContext, AICommandSuggestion } from "../types";
 
 // ── Types ────────────────────────────────────────────────────────────────
@@ -43,6 +44,7 @@ const ALLOWED_COMMANDS = new Set([
   "UPDATE_RESPONSIVE_STYLE",
   "RENAME_NODE",
   "DUPLICATE_NODE",
+  "REMOVE_NODE",
   "UPDATE_CANVAS_CONFIG",
   "UPDATE_INTERACTIONS",
   "TOGGLE_RESPONSIVE_HIDDEN",
@@ -66,20 +68,19 @@ export function usePageGenerator(config: AIConfig, context: AIBuilderContext) {
   const applyCommands = useCallback(
     (commands: AICommandSuggestion[], rootNodeId: string) => {
       const normalized = normalizeAICommands(commands, rootNodeId);
-      for (const cmd of normalized) {
-        if (!ALLOWED_COMMANDS.has(cmd.type)) continue;
-        try {
-          dispatch({ type: cmd.type, payload: cmd.payload } as never);
-        } catch (err) {
-          console.warn(`[PageGenerator] Command ${cmd.type} failed:`, err);
-        }
-      }
+      // fire-and-forget: sections arrive seconds apart (one LLM call each),
+      // so phase 2 of section N always completes before section N+1 arrives.
+      void applyAICommandsProgressive(
+        normalized,
+        (cmd) => dispatch({ type: cmd.type, payload: cmd.payload } as never),
+        (cmd) => ALLOWED_COMMANDS.has(cmd.type),
+      );
     },
     [dispatch],
   );
 
   const generate = useCallback(
-    async (prompt: string) => {
+    async (prompt: string, options?: { fullPageMode?: boolean }) => {
       if (!prompt.trim()) return;
 
       // Cancel any ongoing generation
@@ -105,11 +106,30 @@ export function usePageGenerator(config: AIConfig, context: AIBuilderContext) {
         return;
       }
 
+      // Clear existing nodes if fullPageMode is enabled
+      if (options?.fullPageMode && context.pageNodes) {
+        const childrenToRemove = Object.values(context.pageNodes).filter(
+          (node) => node.parentId === context.document.rootNodeId
+        );
+        for (const node of childrenToRemove) {
+          try {
+            dispatch({ type: "REMOVE_NODE", payload: { id: node.id } } as never);
+          } catch (err) {
+            console.warn("[PageGenerator] REMOVE_NODE failed for:", node.id, err);
+          }
+        }
+      }
+
+      // Phase 1B/1C: send compact manifest + presets instead of full versions
       const requestBody = {
         prompt,
+        fullPageMode: options?.fullPageMode ?? false,
         availableComponents: context.availableComponents,
+        availablePresetsCompact: context.availablePresetsCompact,
+        nestingRules: context.nestingRules,
+        // Keep full presets for backward compat (phase may still need them)
         availablePresets: context.availablePresets,
-        designTokens: {},
+        designTokens: config.designTokens ?? {},
       };
 
       // Timeout logic

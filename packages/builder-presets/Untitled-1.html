@@ -1,0 +1,99 @@
+<div id="chat-widget"></div>
+
+<script>
+  const access_token = "";
+  const refresh_token = "";
+
+  const script = document.createElement("script");
+  script.src = "https://sdk.dainam.edu.vn/sdk.js";
+
+  script.onload = () => {
+    new SDKManager({
+      selector: "#chat-widget",
+      type: "chat-sdk",
+      options: {
+        mode: "widget",
+
+        config: {
+          mode: "chatbox",
+          guestMode: true,
+
+          // Nếu user đã login thì truyền token
+          // accessToken: access_token,
+          // refreshToken: refresh_token,
+          
+          chatbox: {
+            orgCode: "IT_DEPARTMENT", // Mã tổ chức
+            entityCode: "DNU", // Mã thực thể
+            tenantCode: "openapi.dainam.edu.vn", // Tenant code
+            businessCode: "OMNI_CHANNEL", // Mã nghiệp vụ
+            extension: "", // Môi trường
+            accountIdentifier: "DNU-XT-THISINH", // Định danh tài khoản
+
+            pageCode: "https://hosoxettuyen.dainam.edu.vn", // Page tích hợp
+            storageStrategy: "local", // Storage strategy
+
+            appCode: "DNU-XT-THISINH", // Mã ứng dụng
+            moduleCode: "DNU-XT-THISINH", // Mã module
+
+            sessionType: "CHATBOT", // Loại session
+            method: "WEB", // Phương thức
+          },
+        },
+
+        // UI config
+        position: "bottom-right",
+        size: "large",
+        defaultOpen: false,
+        zIndex: 99999,
+        closeOnOutsideClick: true,
+
+        theme: {
+          primaryColor: "#2563eb",
+          headerBackground: "#2563eb",
+          headerTextColor: "#ffffff",
+        },
+
+        headerConfig: {
+          title: "AI Assistant",
+          subtitle: "Powered by DNU",
+          showCloseButton: true,
+        },
+
+        buttonConfig: {
+          size: 58,
+          backgroundColor: "#2563eb",
+          pulseAnimation: true,
+        },
+
+        messageStyles: {
+          userBubble: {
+            background: "#3b82f6",
+            textColor: "#ffffff",
+            borderRadius: "1rem",
+          },
+          assistantBubble: {
+            background: "#e0edff",
+            textColor: "#1e3a5f",
+            borderRadius: "1rem",
+          },
+        },
+
+        // Callbacks
+        onOpen: () => {
+          console.log("[chat-sdk] widget opened");
+        },
+
+        onClose: () => {
+          console.log("[chat-sdk] widget closed");
+        },
+
+        onError: (error) => {
+          console.error("[chat-sdk] error:", error);
+        },
+      },
+    });
+  };
+
+  document.head.appendChild(script);
+</script>

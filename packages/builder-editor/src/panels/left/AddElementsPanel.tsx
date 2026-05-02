@@ -77,9 +77,12 @@ const TypeSection: React.FC<TypeSectionProps> = ({ type, items, locale, onDragSt
         <div className={cn(
           "px-3 pb-2",
           layout === "list" ? "flex flex-col gap-1" :
-          layout === "preview" ? "grid grid-cols-2 gap-4" :
-          "grid grid-cols-2 gap-2"
-        )}>
+          layout === "preview" ? `grid gap-4` :
+          "grid gap-2"
+        )}
+        style={layout !== "list" ? {
+          gridTemplateColumns: `repeat(${type.columns ?? 2}, 1fr)`
+        } : undefined}>
           {items.map((item) => (
             <PaletteItemCard
               key={item.id}

@@ -42,6 +42,7 @@ import {
   CMD_SET_CANVAS_MODE,
   CMD_ENTER_TEXT_EDIT,
   CMD_EXIT_TEXT_EDIT,
+  CMD_SET_THEME_COLORS,
   type AddNodePayload,
   type RemoveNodePayload,
   type DuplicateNodePayload,
@@ -63,6 +64,7 @@ import {
   type SetCanvasModePayload,
   type EnterTextEditPayload,
   type ExitTextEditPayload,
+  type SetThemeColorsPayload,
 } from "./built-in";
 
 // ── Editor-only command types (no undo/redo) ─────────────────────────────
@@ -1235,5 +1237,22 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
 
       return { ...state, editor: baseEditor };
     },
+  );
+
+  // ── SET_THEME_COLORS ───────────────────────────────────────────────────────
+  engine.registerHandler<SetThemeColorsPayload>(
+    CMD_SET_THEME_COLORS,
+    (state, payload) => ({
+      ...state,
+      document: {
+        ...state.document,
+        updatedAt: now(),
+        themeColors: payload.colors,
+      },
+    }),
+    (state) => ({
+      type: CMD_SET_THEME_COLORS,
+      payload: { colors: state.document.themeColors ?? [] },
+    }),
   );
 }

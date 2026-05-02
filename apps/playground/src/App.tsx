@@ -22,7 +22,7 @@ type Locale = "en" | "vi" | "ko" | "ko-flat";
  * Tab "JSON" → raw document JSON inspector
  */
 export function App() {
-  const { builder, groupRegistry, useRemotePalette } = useBuilderSetup();
+  const { builder, groupRegistry, useRemotePalette, assetProvider } = useBuilderSetup();
   const [activeTab, setActiveTab] = useState<Tab>("editor");
   const [locale, setLocale] = useState<Locale>("en");
 
@@ -80,7 +80,13 @@ export function App() {
           ).map(({ id, label, icon: Icon }) => (
             <button
               key={id}
-              onClick={() => setActiveTab(id)}
+              onClick={() => {
+                // Clear selection when leaving editor so floating panels (portaled to body) close
+                if (id !== "editor" && activeTab === "editor") {
+                  builder.dispatch({ type: "CLEAR_SELECTION", payload: {} });
+                }
+                setActiveTab(id);
+              }}
               className={
                 "flex items-center gap-1.5 px-3 py-1 rounded text-xs font-medium transition-colors " +
                 (activeTab === id
@@ -132,9 +138,11 @@ export function App() {
             builder={builder}
             groupRegistry={groupRegistry}
             remotePaletteProvider={useRemotePalette ? remotePaletteProvider : undefined}
+            assetProvider={assetProvider}
             locale={locale}
             i18nResources={i18nResources}
             className="h-full"
+            warnOnLeave={true}
           />
         </div>
 

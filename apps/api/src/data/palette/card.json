@@ -1,0 +1,354 @@
+{
+  "id": "card",
+  "label": "Cards",
+  "icon": "IdCard",
+  "order": 99,
+  "i18n": {
+    "en": "Cards",
+    "vi": "Thẻ"
+  },
+  "types": [
+    {
+      "id": "testimonial",
+      "label": "Testimonial",
+      "order": 0,
+      "layout": "grid",
+      "i18n": {
+        "en": "Testimonial",
+        "vi": "Đánh giá"
+      },
+      "items": [
+        {
+          "id": "testimonial-indigo",
+          "componentType": "TestimonialCard",
+          "name": "Indigo",
+          "description": "Classic testimonial card with indigo accent",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Indigo"
+            },
+            "vi": {
+              "name": "Xanh indigo"
+            }
+          },
+          "props": {
+            "quote": "This product changed our workflow completely. Highly recommended!",
+            "author": "Jane Smith",
+            "role": "Product Manager, Acme Corp",
+            "accentColor": "#4f46e5",
+            "bgColor": "#ffffff",
+            "starCount": 5
+          },
+          "style": {
+            "width": "320px",
+            "padding": "24px",
+            "borderRadius": "12px"
+          },
+          "tags": [
+            "testimonial",
+            "quote",
+            "review"
+          ]
+        },
+        {
+          "id": "testimonial-emerald",
+          "componentType": "TestimonialCard",
+          "name": "Emerald",
+          "description": "Testimonial card with green accent",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Emerald"
+            },
+            "vi": {
+              "name": "Xanh lá"
+            }
+          },
+          "props": {
+            "quote": "Incredible results in just two weeks. Our team loves it!",
+            "author": "Mark Johnson",
+            "role": "CTO, Startup Inc",
+            "accentColor": "#059669",
+            "bgColor": "#f0fdf4",
+            "starCount": 5
+          },
+          "style": {
+            "width": "320px",
+            "padding": "24px",
+            "borderRadius": "12px"
+          },
+          "tags": [
+            "testimonial",
+            "quote",
+            "green"
+          ]
+        },
+        {
+          "id": "testimonial-rose",
+          "componentType": "TestimonialCard",
+          "name": "Rose",
+          "description": "Testimonial card with rose accent",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Rose"
+            },
+            "vi": {
+              "name": "Hồng"
+            }
+          },
+          "props": {
+            "quote": "The best investment we made this year. 10/10.",
+            "author": "Sara Lee",
+            "role": "Head of Design, Agency Co",
+            "accentColor": "#e11d48",
+            "bgColor": "#fff1f2",
+            "starCount": 4
+          },
+          "style": {
+            "width": "320px",
+            "padding": "24px",
+            "borderRadius": "12px"
+          },
+          "tags": [
+            "testimonial",
+            "quote",
+            "rose"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pricing",
+      "label": "Pricing",
+      "order": 1,
+      "layout": "grid",
+      "i18n": {
+        "en": "Pricing",
+        "vi": "Giá cả"
+      },
+      "items": [
+        {
+          "id": "pricing-basic",
+          "componentType": "PricingCard",
+          "name": "Basic",
+          "description": "Standard pricing tier card",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Basic"
+            },
+            "vi": {
+              "name": "Cơ bản"
+            }
+          },
+          "props": {
+            "planName": "Starter",
+            "price": "$9",
+            "period": "/ month",
+            "description": "Perfect for individuals and small projects.",
+            "features": "3 projects\n1 team member\nEmail support\n5 GB storage",
+            "ctaLabel": "Get started",
+            "accentColor": "#6b7280",
+            "highlighted": false
+          },
+          "style": {
+            "width": "280px",
+            "padding": "28px 24px",
+            "borderRadius": "16px"
+          },
+          "tags": [
+            "pricing",
+            "plan",
+            "starter"
+          ]
+        },
+        {
+          "id": "pricing-pro",
+          "componentType": "PricingCard",
+          "name": "Pro (highlighted)",
+          "description": "Highlighted popular pricing tier",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Pro (highlighted)"
+            },
+            "vi": {
+              "name": "Pro (nổi bật)"
+            }
+          },
+          "props": {
+            "planName": "Pro",
+            "price": "$49",
+            "period": "/ month",
+            "description": "Everything you need to grow your business.",
+            "features": "Unlimited projects\n10 team members\nPriority support\nAdvanced analytics\nCustom domains",
+            "ctaLabel": "Get started",
+            "accentColor": "#4f46e5",
+            "highlighted": true
+          },
+          "style": {
+            "width": "280px",
+            "padding": "28px 24px",
+            "borderRadius": "16px"
+          },
+          "tags": [
+            "pricing",
+            "plan",
+            "pro",
+            "popular"
+          ]
+        },
+        {
+          "id": "pricing-enterprise",
+          "componentType": "PricingCard",
+          "name": "Enterprise",
+          "description": "Enterprise pricing tier card",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Enterprise"
+            },
+            "vi": {
+              "name": "Doanh nghiệp"
+            }
+          },
+          "props": {
+            "planName": "Enterprise",
+            "price": "$199",
+            "period": "/ month",
+            "description": "Tailored solutions for large organizations.",
+            "features": "Unlimited everything\nDedicated support\nSSO & compliance\nSLA guarantee\nCustom integrations",
+            "ctaLabel": "Contact sales",
+            "accentColor": "#1d4ed8",
+            "highlighted": false
+          },
+          "style": {
+            "width": "280px",
+            "padding": "28px 24px",
+            "borderRadius": "16px"
+          },
+          "tags": [
+            "pricing",
+            "plan",
+            "enterprise"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hero-banner",
+      "label": "Hero Banner",
+      "order": 2,
+      "layout": "list",
+      "i18n": {
+        "en": "Hero Banner",
+        "vi": "Banner hero"
+      },
+      "items": [
+        {
+          "id": "hero-indigo-violet",
+          "componentType": "HeroBanner",
+          "name": "Indigo → Violet",
+          "description": "Bold hero heading with indigo-to-violet gradient",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Indigo → Violet"
+            },
+            "vi": {
+              "name": "Indigo → Tím"
+            }
+          },
+          "props": {
+            "text": "Build faster,\nship smarter.",
+            "fontSize": "52px",
+            "fontWeight": "800",
+            "textAlign": "center",
+            "color": "#fff",
+            "gradientFrom": "#4f46e5",
+            "gradientTo": "#7c3aed"
+          },
+          "style": {
+            "width": "100%",
+            "padding": "80px 40px"
+          },
+          "tags": [
+            "hero",
+            "gradient",
+            "heading",
+            "indigo"
+          ]
+        },
+        {
+          "id": "hero-rose-orange",
+          "componentType": "HeroBanner",
+          "name": "Rose → Orange",
+          "description": "Warm hero heading with rose-to-orange gradient",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Rose → Orange"
+            },
+            "vi": {
+              "name": "Hồng → Cam"
+            }
+          },
+          "props": {
+            "text": "Create.\nInspire.\nRepeat.",
+            "fontSize": "56px",
+            "fontWeight": "900",
+            "textAlign": "center",
+            "color": "#fff",
+            "gradientFrom": "#e11d48",
+            "gradientTo": "#f97316"
+          },
+          "style": {
+            "width": "100%",
+            "padding": "80px 40px"
+          },
+          "tags": [
+            "hero",
+            "gradient",
+            "heading",
+            "warm"
+          ]
+        },
+        {
+          "id": "hero-dark",
+          "componentType": "HeroBanner",
+          "name": "Dark",
+          "description": "Dark background hero heading",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Dark"
+            },
+            "vi": {
+              "name": "Tối"
+            }
+          },
+          "props": {
+            "text": "Your vision.\nOur platform.",
+            "fontSize": "48px",
+            "fontWeight": "800",
+            "textAlign": "center",
+            "color": "#f9fafb",
+            "gradientFrom": "#111827",
+            "gradientTo": "#1f2937"
+          },
+          "style": {
+            "width": "100%",
+            "padding": "80px 40px"
+          },
+          "tags": [
+            "hero",
+            "dark",
+            "heading"
+          ]
+        }
+      ]
+    }
+  ]
+}

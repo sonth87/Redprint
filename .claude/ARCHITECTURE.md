@@ -3,8 +3,10 @@
 > **This file is project-specific.** It describes the architecture, features, and technical decisions of this project.
 > It may **override or extend** sections from `RULES.md` — see the override mechanism in [Rules Reference](#rules-reference).
 >
-> **Version:** 1.2 | **Last updated:** 2026-04 | **Updated by:** Tech Lead
+> **Version:** 1.4 | **Last updated:** 2026-04 | **Updated by:** Tech Lead
 > **Changelog:**
+> - v1.4 — Added **Image Frame Design System**: 5-tab panel (Frame, Shadow, Shape, Border, Special) for applying decorative frames, shadows, clip-paths, and special effects (tape corners, polaroid) to images. New `frameStyle` prop, `clipPath` StyleConfig property, and preset arrays in shared package.
+> - v1.3 — Implemented **Spatial Reparenting**: Component ownership is now determined by geometric position (hit-testing) rather than DOM hierarchy. Updated AI prompts to enforce strict `parentId` assignment to sections, preventing "root" clutter.
 > - v1.2 — Added `builder-components` package (17 built-in ComponentDefinitions, `extendComponent()`, `BASE_COMPONENTS[]`); updated architecture diagram, dependency rules, and package table; added Built-in Component Library section
 > - v1.1 — Expanded with comprehensive type contracts, design principles, command system, panel specs, event catalogue, error boundaries, and keyboard shortcuts from Technical Specification v2.1
 
@@ -97,9 +99,9 @@ These principles govern all architectural decisions in the project:
 ┌─────────────────────────────────────────────────────────┐
 │                   Consumer Application                   │
 ├─────────────────────────────────────────────────────────┤
-│ builder-editor          │  builder-renderer              │
-│ (Visual editor UI)      │  (Production runtime renderer) │
-├─────────────────────────┴────────────────────────────────┤
+│ builder-editor  │ builder-presets  │ builder-renderer    │
+│ (Visual editor) │ (Preset mgmt UI) │ (Runtime renderer)  │
+├────────────────┴──────────────────┴─────────────────────┤
 │                    builder-react                          │
 │         (React adapter — hooks, context, provider)        │
 ├──────────────────────────────────────────────────────────┤
@@ -117,11 +119,12 @@ These principles govern all architectural decisions in the project:
 ### Package Dependency Rules
 
 ```
-builder-core          ← no dependencies (framework-agnostic)
-builder-components    ← depends on builder-core only (NO React/DOM in runtime)
-builder-react         ← depends on builder-core
-builder-editor        ← depends on builder-core, builder-react, builder-components, packages/ui
-builder-renderer      ← depends on builder-core, builder-react
+builder-core           ← no dependencies (framework-agnostic)
+builder-components     ← depends on builder-core only (NO React/DOM in runtime)
+builder-react          ← depends on builder-core
+builder-presets        ← depends on builder-core, builder-react, builder-components, builder-renderer, packages/ui
+builder-editor         ← depends on builder-core, builder-react, builder-components, packages/ui
+builder-renderer       ← depends on builder-core, builder-react
 ```
 
 | Package                | Role                                                        | Output           | Peer deps   |
@@ -129,6 +132,7 @@ builder-renderer      ← depends on builder-core, builder-react
 | `builder-core`         | Central engine — framework-agnostic                         | ESM + CJS        | none        |
 | `builder-components`   | 17 built-in ComponentDefinitions + `extendComponent()`      | ESM + CJS        | React ≥18   |
 | `builder-react`        | React adapter layer                                         | ESM only         | React ≥18   |
+| `builder-presets`      | Preset catalog UI — catalog browser, preset editor, prop controls | ESM + CJS | React ≥18   |
 | `builder-editor`       | Visual editor — canvas, panels, drag-drop, toolbar          | ESM + CSS bundle | React ≥18   |
 | `builder-renderer`     | Runtime renderer — production, no editor code               | ESM              | React ≥18   |
 | `packages/ui`          | shadcn-based design system for editor UI components         | ESM              | React ≥18   |
@@ -228,6 +232,210 @@ const HeroBanner = extendComponent(TextComponent, {
 ```
 
 > Project-specific / playground-only custom components live in `apps/playground/src/components/sample-components.tsx` and follow the same `ComponentDefinition` protocol.
+
+### Image Component — Filter System
+
+**Location:** `packages/shared/src/imageFilters.ts` (source of truth), `packages/builder-components/src/components/Image.tsx`, `packages/builder-editor/src/panels/ImageFilterPicker.tsx`
+
+The Image component includes a sophisticated **39-filter preset system** supporting Instagram-style effects via three rendering modes:
+
+#### Filter Modes
+
+| Mode | Technique | Examples |
+|------|-----------|----------|
+| **CSS** | Direct CSS `filter` property chain | Kennedy, Darken, Lighten, Orca, Gotham |
+| **SVG** | SVG `<feColorMatrix>` + `feOffset` for complex effects | 3D (anaglyph split channel), Ink (high-contrast grayscale) |
+| **Overlay** | CSS filter on `<img>` + color `<div>` with `mix-blend-mode` | Hulk (green multiply), Marge (yellow), Lucille (red), Barney (purple), Neptune (blue), etc. |
+
+#### Filter List (39 presets)
+
+```
+Row 1:  None, Kennedy, Darken
+Row 2:  Blur, Lighten, Faded
+Row 3:  Kerouac, Orca, Sangria
+Row 4:  Gotham, Nightrain, Whistler
+Row 5:  Feathered, Soledad, Goldie
+Row 6:  3D, Ink, Manhattan
+Row 7:  Gumby, Organic, Elmo
+Row 8:  Neptune, Jellybean, Neon Sky
+Row 9:  Hulk, Bauhaus, Yoda
+Row 10: Midnight, Unicorn, Blue Ray
+Row 11: Malibu, Red Rum, Flamingo
+Row 12: Hydra, Kool-Aid, Barney
+Row 13: Pixie, Marge, Lucille
+```
+
+#### Architecture Notes
+
+- **Shared definition:** `IMAGE_FILTERS: ImageFilter[]` in `@ui-builder/shared` (no React/DOM deps)
+  - Both `builder-components` and `builder-editor` import from shared
+  - Helper functions: `getFilterDef()`, `buildCssFilter()`, `collectSvgFilterDefs()`
+- **SVG filter injection:** Hidden `<svg>` with `<defs>` rendered inline in containers (both editor and runtime)
+  - Anaglyph 3D uses `feOffset` to split red channel left, cyan right
+  - Ink uses `feComponentTransfer` for ultra-high contrast
+- **Overlay rendering:** Filter definition includes `overlayColor`, `overlayOpacity`, `overlayBlend` for duotone effects
+  - Applied as a positioned `<div>` on top of `<img>` with `mix-blend-mode: multiply | soft-light`
+- **Preview:** `ImageFilterPicker` component (editor) renders 3×N grid with live preview swatches showing applied filter
+  - Each swatch shows both CSS/SVG effect AND overlay layer correctly
+
+#### Usage in Image Component
+
+```tsx
+// Get filter definition by stored key
+const filterDef = getFilterDef(node.props.filter);  // e.g. "hulk"
+
+// Build CSS filter string (handles all 3 modes)
+const cssFilter = buildCssFilter(filterDef);  // "url(#if-3d)" or "saturate(...)" or "contrast(...)"
+
+// Render overlay if needed
+{filterDef?.mode === "overlay" && (
+  <div style={{
+    backgroundColor: filterDef.overlayColor,
+    opacity: filterDef.overlayOpacity,
+    mixBlendMode: filterDef.overlayBlend,
+    mixBlendMode: filterDef.overlayBlend,
+  }} />
+)}
+```
+
+### Image Component — Frame Design System
+
+**Location:** `packages/shared/src/imageFrames.ts` (presets), `packages/builder-editor/src/panels/ImageFramePanel.tsx` (UI), `packages/builder-components/src/components/Image.tsx` (renderers)
+
+The Image component includes a **Frame Design panel** that allows users to apply decorative frames, borders, shadows, and clip-path shapes to image nodes through a tabbed interface.
+
+#### Frame Design Panel (5 tabs)
+
+| Tab | Content | Dispatch | Data Source |
+|-----|---------|----------|-------------|
+| **Frame** | Border preset grid (none, thin/thick black/white, dashed, dotted, double) | `UPDATE_STYLE { border, borderRadius }` | `FRAME_PRESETS` |
+| **Shadow** | Box-shadow preset grid (soft, medium, hard, offset, glows, layered) | `UPDATE_STYLE { boxShadow }` | `SHADOW_PRESETS` |
+| **Shape** | Clip-path shapes (circle, hexagon, diamond, triangle, star, arch) | `UPDATE_STYLE { clipPath, borderRadius }` | `SHAPE_PRESETS` |
+| **Border** | Manual controls: radius slider, width slider, color picker, style select | `UPDATE_STYLE` real-time | `node.style` |
+| **Special** | Decorative effects: tape corners, polaroid, vintage border | `UPDATE_PROPS { frameStyle }` + optional style injection | `SPECIAL_PRESETS` |
+
+#### Preset Architecture
+
+- **Shared definition:** `FRAME_PRESETS`, `SHADOW_PRESETS`, `SHAPE_PRESETS`, `SPECIAL_PRESETS` in `@ui-builder/shared/src/imageFrames.ts`
+  - Zero React/DOM dependencies — reusable by editor and renderers
+  - Helper functions: `getSpecialPreset(value)`
+- **Special effects handling:**
+  - **CSS-only effects** (polaroid, vintage): `UPDATE_STYLE` injects container CSS (padding, background, transform)
+  - **Custom markup effects** (tape): stored as `frameStyle: "tape"` prop → Image renderer adds tape corner `<div>` overlays
+  - Tape corners positioned absolutely outside container bounds → container `overflow: visible` when tape is active
+
+#### Image Component Props & Styles
+
+**New prop:**
+- `frameStyle: SpecialFrameStyle` — one of: `"none" | "tape" | "polaroid" | "vintage"`
+
+**Affected style property:**
+- `clipPath: string` — CSS clip-path value for shape presets. Added to `StyleConfig` in `builder-core/src/document/types.ts`
+
+#### Tape Decoration Implementation
+
+When `frameStyle === "tape"`, the Image renderer (both `editorRenderer` and `runtimeRenderer`) renders a `<TapeDecoration>` component:
+
+```tsx
+function TapeDecoration() {
+  // Four semi-transparent beige tape strips, one per corner
+  // Positioned absolutely with negative top/bottom/left/right offsets
+  // Rotated -20° to 20° for realistic angle
+  // z-index: 2 to layer over image
+}
+```
+
+Container style adjustments when tape is active:
+- `overflow: "visible"` — allows tape to extend outside bounds
+- All other effects (border, shadow, clip-path) coexist normally
+
+#### Panel UI Pattern
+
+- Rendered inside a **Popover** triggered by a "Frame Design" button (Frame icon) on the ContextualToolbar
+- Follows the same Popover pattern as ImageFilterPicker (existing filter picker)
+- Tab switching managed via `<Tabs>` from `@ui-builder/ui`
+- Swatch grids use visual preview boxes; shape/special tabs show icon-style thumbnails
+- Current selection highlighted with `ring-2 ring-primary`
+
+#### Usage Flow
+
+1. User selects Image node on canvas
+2. Contextual toolbar appears with Frame Design button (Frame icon)
+3. Click opens Popover with ImageFramePanel
+4. User clicks a preset or adjusts manual controls
+5. Dispatch fires `UPDATE_STYLE` (CSS presets) or `UPDATE_PROPS` (special effects)
+6. Command handler merges changes into node, image re-renders
+
+### Media Management System
+
+**Location:** `packages/builder-editor/src/panels/MediaManager.tsx`, `packages/builder-core/src/document/assets.ts`, `apps/api/src/routes/media.routes.ts`
+
+The Media Management system provides a **unified UI for browsing, uploading, and selecting media assets** (images, videos, fonts, files) in the builder canvas.
+
+#### Architecture
+
+- **Frontend UI:** `MediaManager` dialog component with 3 tabs
+  - **Library:** Browse existing assets, search/filter, select, delete
+  - **Upload:** Drag-and-drop file upload with per-file progress tracking
+  - **URL:** Paste external URLs (auto-detect type by extension)
+- **Backend API:** Express routes at `/api/media/upload`, `/api/media/:id`, `/api/media`
+  - File storage in `apps/api/uploads/`
+  - Metadata persisted in `apps/api/uploads/metadata.json`
+  - Max 50 MB per file, whitelist of allowed MIME types
+- **Type contracts in `builder-core`:** `Asset`, `AssetType`, `AssetManifest`, `AssetProvider`, `MediaRef`
+  - Zero DOM deps — used in server-side contexts
+  - Extensible via `AssetProvider` interface for custom sources (S3, Cloudinary, etc.)
+
+#### Key Interfaces
+
+```ts
+interface Asset {
+  id: string;
+  type: "image" | "video" | "font" | "file" | "icon";
+  name: string;
+  url: string;                    // Resolved URL
+  thumbnailUrl?: string;
+  size?: number;                  // Bytes
+  dimensions?: { width: number; height: number };
+  mimeType?: string;
+  uploadedAt?: string;
+  tags?: string[];
+  source: "local" | "url" | string;  // Provider ID
+}
+
+interface MediaRef {
+  assetId?: string;               // ID in document's AssetManifest
+  url: string;                    // Always present
+  alt?: string;
+  focalPoint?: { x: number; y: number };  // Smart crop 0–1 fractions
+}
+
+interface AssetProvider {
+  id: string;
+  name: string;
+  supportedTypes: AssetType[];
+  listAssets(query: AssetQuery): Promise<AssetListResult>;
+  upload?(file: Uploadable): Promise<Asset>;
+  delete?(assetId: string): Promise<void>;
+}
+```
+
+#### Integration with Image Component
+
+Image component `src` prop accepts either:
+- Direct URL: `"https://example.com/photo.jpg"`
+- `MediaRef` with focal point: `{ assetId: "uuid", url: "...", focalPoint: {x:0.5, y:0.5} }`
+
+When user clicks **Image → Open media manager**, the `MediaManager` dialog opens for selection.
+
+#### Data Flow (Upload)
+
+```
+Drag file → handleDrop() → queue with preview → sequential upload
+  → POST /api/media/upload → file stored, metadata saved
+  → status: pending → uploading → done/error
+  → after all: switch to Library tab, show new assets
+```
 
 ---
 
@@ -355,6 +563,16 @@ Supported prop types for dynamic property panel generation: `string`, `number`, 
 
 ### ContainerConfig & Layout Types
 
+`containerConfig` on a `ComponentDefinition` controls both drop behavior and drag-mode selection:
+
+```ts
+interface ContainerConfig {
+  layoutType: 'flow' | 'flex' | 'grid' | 'absolute' | 'slot-based';
+  disallowedChildTypes?: string[];   // component types blocked from dropping here
+  emptyStateConfig?: { message: string; allowDrop: boolean };
+}
+```
+
 | Layout       | Description                                                  |
 | ------------ | ------------------------------------------------------------ |
 | `flow`       | Block flow, children stack in document order                 |
@@ -362,6 +580,8 @@ Supported prop types for dynamic property panel generation: `string`, `number`, 
 | `grid`       | CSS grid — column/row templates configurable                 |
 | `absolute`   | Free-form positioning with x/y coordinates                   |
 | `slot-based` | Container defines named slots; children assigned to specific slot |
+
+`layoutType: "flex"` or `"grid"` automatically activates **flow-mode drag** (preview clone + insert-line indicator) for static children. `layoutType: "absolute"` activates **absolute-mode drag** (snap guides + section reparenting). The system selects the mode automatically — no per-component drag code needed.
 
 ---
 
@@ -464,6 +684,47 @@ interface HistoryEntry {
 
 ## Drag-and-Drop System
 
+### Architecture — Strategy Pattern
+
+The drag system uses a **Strategy Pattern** to isolate each interaction mode. All implementation lives in `packages/builder-editor/src/dragdrop/`.
+
+```
+dragdrop/
+  types.ts                  — DragContext, DragVisualState, DragStrategy, DropResolution
+  DragCoordinator.ts        — selects active strategy (first canHandle() wins), delegates move/drop/cancel
+  DropTargetResolver.ts     — pure drop-position math (no React, no side effects)
+  strategies/
+    FlowDragStrategy.ts     — flex/grid reorder + floating preview clone
+    AbsoluteDragStrategy.ts — snap guides + section reparenting (catch-all)
+```
+
+**`useMoveGesture.ts`** is a thin React wrapper (~100 lines) that wires the coordinator into state. It registers `FlowDragStrategy` first, `AbsoluteDragStrategy` as catch-all, and returns the same public API as before. **Never modify `BuilderEditor.tsx`, `usePointerDown.ts`, or `dragUtils.ts`** — they are stable integration points.
+
+**`useDragHandlers.ts`** handles palette drag (panel → canvas) independently. It imports `resolveContainerDropPosition` directly from `dragdrop/DropTargetResolver`.
+
+### Interaction Modes
+
+| Mode | Strategy | Triggered when |
+|------|----------|----------------|
+| Flow drag | `FlowDragStrategy` | Single node, static child of `flex`/`grid` parent |
+| Absolute drag | `AbsoluteDragStrategy` | Everything else (absolute nodes, multi-select) |
+| Palette drag | `useDragHandlers` | Dragging from AddElementsPanel |
+
+### Key Contracts
+
+- **`DragContext`** — immutable snapshot assembled once per gesture, passed to all strategy methods. Contains `frameEl`, `snapEngine`, `movingSnapshots`, `getContainerConfig`, etc.
+- **`DragVisualState`** — pure data describing overlays: `snapGuides`, `distanceGuides`, `flowDropTarget`, `flowDragOffset`, `highlightedNodeIds`, `liveDimensions`.
+- **`DropTargetResolver.resolveDropTarget()`** — walks `elementsFromPoint`, finds first valid flow/grid container, returns `DropResolution { parentId, insertIndex, gridCell?, indicator }`.
+- **Section reparenting** — `AbsoluteDragStrategy.onDrop` calls `getDropTargetSection()` from `dragUtils.ts` to determine target section by geometric hit-test, then dispatches `UPDATE_STYLE` → `MOVE_NODE` → `REORDER_NODE` in sequence.
+- **`useDropSlotResolver.ts`** is now a re-export shim — all logic is in `DropTargetResolver.ts`. Do not add logic back to it.
+
+### Adding a New Drag Mode
+
+1. Create `dragdrop/strategies/MyStrategy.ts` implementing `DragStrategy`
+2. `canHandle(ctx)` returns true for the cases it owns
+3. Register in `useMoveGesture.ts` `buildCoordinator()` **before** `AbsoluteDragStrategy`
+4. Add tests in `dragdrop/__tests__/MyStrategy.test.ts`
+
 ```ts
 type DropPosition = 'before' | 'after' | 'inside' | 'replace' | 'slot';
 
@@ -480,6 +741,7 @@ interface DropTarget {
 ```
 
 **Validation rules:** All drops validated against `ContainerConfig` of target — type restrictions, max children limit, self-nesting prevention, slot availability. Invalid drops must show clear visual feedback (red color, forbidden icon).
+**Spatial hit-testing:** Ownership for absolute-positioned components is determined by geometric overlap with `Section` containers, bypassing traditional DOM event bubbling to ensure robust nesting even when components overlap.
 
 ---
 

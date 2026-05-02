@@ -4,6 +4,9 @@ import { Search, Grip, ChevronRight } from "lucide-react";
 import type { ComponentDefinition } from "@ui-builder/builder-core";
 import type { GroupRegistry, GroupTreeNode } from "@ui-builder/builder-core";
 import { cn } from "@ui-builder/ui";
+import type { GalleryLayoutMode } from "@ui-builder/shared";
+import { LayoutMiniPreview } from "../gallery/LayoutMiniPreview";
+import { GLASS_TOOLTIP } from "../../constants/panel-styles";
 
 export interface ComponentPaletteProps {
   components: ComponentDefinition[];
@@ -126,23 +129,33 @@ export const ComponentPalette = memo(function ComponentPalette({
             return (
               <div key={group.id} className="border-b last:border-b-0">
                 {/* Group header */}
-                <button
-                  className="flex items-center justify-between w-full px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-muted/50 transition-colors"
-                  onClick={() => toggleGroup(group.id)}
-                >
-                  <div className="flex items-center gap-1.5">
-                    <ChevronRight
-                      className={cn(
-                        "h-3 w-3 transition-transform text-muted-foreground/60",
-                        !isGroupCollapsed && "rotate-90",
-                      )}
-                    />
-                    <span className="capitalize">{group.label}</span>
-                  </div>
-                  <span className="text-[10px] tabular-nums text-muted-foreground/60">
-                    {isGroupCollapsed ? `+${totalCount}` : totalCount}
-                  </span>
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      className="flex items-center justify-between w-full px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-muted/50 transition-colors"
+                      onClick={() => toggleGroup(group.id)}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <ChevronRight
+                          className={cn(
+                            "h-3 w-3 transition-transform text-muted-foreground/60",
+                            !isGroupCollapsed && "rotate-90",
+                          )}
+                        />
+                        <span className="capitalize">{group.label}</span>
+                      </div>
+                      <span className="text-[10px] tabular-nums text-muted-foreground/60">
+                        {isGroupCollapsed ? `+${totalCount}` : totalCount}
+                      </span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="right"
+                    className={GLASS_TOOLTIP.dark}
+                  >
+                    {group.label}
+                  </TooltipContent>
+                </Tooltip>
 
                 {!isGroupCollapsed && (
                   <div className="pb-1">
@@ -152,30 +165,48 @@ export const ComponentPalette = memo(function ComponentPalette({
                       return (
                         <div key={subGroup.id}>
                           {/* Sub-group header */}
-                          <button
-                            className="flex items-center justify-between w-full px-4 py-1 text-[10px] font-medium text-muted-foreground/80 hover:bg-muted/40 transition-colors"
-                            onClick={() => toggleSubGroup(subGroup.id)}
-                          >
-                            <div className="flex items-center gap-1">
-                              <ChevronRight
-                                className={cn(
-                                  "h-2.5 w-2.5 transition-transform text-muted-foreground/40",
-                                  !isSubCollapsed && "rotate-90",
-                                )}
-                              />
-                              <span>{subGroup.label}</span>
-                            </div>
-                            <span className="text-[9px] tabular-nums text-muted-foreground/40">
-                              {subComps.length}
-                            </span>
-                          </button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                className="flex items-center justify-between w-full px-4 py-1 text-[10px] font-medium text-muted-foreground/80 hover:bg-muted/40 transition-colors"
+                                onClick={() => toggleSubGroup(subGroup.id)}
+                              >
+                                <div className="flex items-center gap-1">
+                                  <ChevronRight
+                                    className={cn(
+                                      "h-2.5 w-2.5 transition-transform text-muted-foreground/40",
+                                      !isSubCollapsed && "rotate-90",
+                                    )}
+                                  />
+                                  <span>{subGroup.label}</span>
+                                </div>
+                                <span className="text-[9px] tabular-nums text-muted-foreground/40">
+                                  {subComps.length}
+                                </span>
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent
+                              side="right"
+                              className={GLASS_TOOLTIP.dark}
+                            >
+                              {subGroup.label}
+                            </TooltipContent>
+                          </Tooltip>
 
                           {!isSubCollapsed && (
-                            <ComponentGrid
-                              components={subComps}
-                              onDragStart={onDragStart}
-                              className="pl-3"
-                            />
+                            subGroup.parentGroupId === "gallery" ? (
+                              <GalleryComponentGrid
+                                components={subComps}
+                                onDragStart={onDragStart}
+                                className="pl-2"
+                              />
+                            ) : (
+                              <ComponentGrid
+                                components={subComps}
+                                onDragStart={onDragStart}
+                                className="pl-3"
+                              />
+                            )
                           )}
                         </div>
                       );
@@ -197,15 +228,25 @@ export const ComponentPalette = memo(function ComponentPalette({
               const isCollapsed = collapsedGroups.has(category);
               return (
                 <div key={category} className="border-b last:border-b-0">
-                  <button
-                    className="flex items-center justify-between w-full px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-muted/50 transition-colors"
-                    onClick={() => toggleGroup(category)}
-                  >
-                    <span className="capitalize">{category}</span>
-                    <span className="text-[10px] tabular-nums text-muted-foreground/60">
-                      {isCollapsed ? `+${cats.length}` : cats.length}
-                    </span>
-                  </button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        className="flex items-center justify-between w-full px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-muted/50 transition-colors"
+                        onClick={() => toggleGroup(category)}
+                      >
+                        <span className="capitalize">{category}</span>
+                        <span className="text-[10px] tabular-nums text-muted-foreground/60">
+                          {isCollapsed ? `+${cats.length}` : cats.length}
+                        </span>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="right"
+                      className={GLASS_TOOLTIP.dark}
+                    >
+                      {category}
+                    </TooltipContent>
+                  </Tooltip>
                   {!isCollapsed && (
                     <ComponentGrid components={cats} onDragStart={onDragStart} />
                   )}
@@ -267,6 +308,72 @@ const ComponentGrid = memo(function ComponentGrid({
             )}
           </TooltipContent>
         </Tooltip>
+      ))}
+    </div>
+  );
+});
+
+// ── Gallery component grid — 2-col cards with animated layout previews ────────
+
+function GalleryCard({
+  comp,
+  onDragStart,
+}: {
+  comp: ComponentDefinition;
+  onDragStart: (componentType: string, e: React.DragEvent) => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const layoutMode = (comp.defaultProps?.["layoutMode"] as GalleryLayoutMode) ?? "grid";
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div
+          className={cn(
+            "flex flex-col rounded-md border border-transparent overflow-hidden",
+            "hover:border-border hover:bg-muted/40 cursor-grab active:cursor-grabbing",
+            "transition-colors select-none",
+          )}
+          draggable
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+          onDragStart={(e) => {
+            e.dataTransfer.setData("text/plain", JSON.stringify({ type: comp.type }));
+            e.dataTransfer.effectAllowed = "copy";
+            onDragStart(comp.type, e);
+          }}
+        >
+          {/* Layout preview */}
+          <div className="h-[68px] w-full overflow-hidden bg-muted/50 rounded-t-md">
+            <LayoutMiniPreview mode={layoutMode} animated={hovered} />
+          </div>
+          {/* Name */}
+          <div className="px-1.5 py-1.5 text-center">
+            <span className="text-[10px] font-medium leading-tight text-foreground/80 line-clamp-2">
+              {comp.name}
+            </span>
+          </div>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent side="right">
+        <p className="font-medium">{comp.name}</p>
+        {comp.description && (
+          <p className="text-xs text-muted-foreground max-w-[200px]">{comp.description}</p>
+        )}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
+const GalleryComponentGrid = memo(function GalleryComponentGrid({
+  components,
+  onDragStart,
+  className,
+}: ComponentGridProps) {
+  return (
+    <div className={cn("grid grid-cols-2 gap-1.5 p-1.5", className)}>
+      {components.map((comp) => (
+        <GalleryCard key={comp.type} comp={comp} onDragStart={onDragStart} />
       ))}
     </div>
   );

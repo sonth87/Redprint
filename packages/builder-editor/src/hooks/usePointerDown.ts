@@ -84,7 +84,11 @@ export function usePointerDown({
       const target = e.target as HTMLElement;
       if (
         target.closest("[data-resize-handle]") ||
-        target.closest("[data-rotation-handle]")
+        target.closest("[data-rotation-handle]") ||
+        target.closest("[data-section-handle]") ||
+        target.closest("[data-section-action]") ||
+        target.closest("[data-section-handle]") ||
+        target.closest("[data-section-action]")
       ) return;
 
       // ── PRIORITY 1: Multi-select group drag ───────────────────────────────
@@ -111,11 +115,15 @@ export function usePointerDown({
             e.clientX >= unionRect.left  && e.clientX <= unionRect.right &&
             e.clientY >= unionRect.top   && e.clientY <= unionRect.bottom
           ) {
+            // Filter out locked nodes from the group drag
+            const movingNodeIds = selectedNodeIds.filter(id => !nodes[id]?.locked);
+            if (movingNodeIds.length === 0) return; // All nodes are locked
+
             const groupFrameRect = groupFrameEl.getBoundingClientRect();
-            const movingNodes    = buildMovingSnapshots(selectedNodeIds, nodes, groupFrameEl, groupFrameRect, zoom);
+            const movingNodes    = buildMovingSnapshots(movingNodeIds, nodes, groupFrameEl, groupFrameRect, zoom);
             dragStartedRef.current = false;
             setMoving({
-              nodeId:         selectedNodeIds[0]!,
+              nodeId:         movingNodeIds[0]!,
               nodes:          movingNodes,
               startPoint:     { x: e.clientX, y: e.clientY },
               gestureGroupId: uuidv4(),
@@ -216,6 +224,9 @@ export function usePointerDown({
             return;
           }
 
+          // Check if the node is locked
+          if (node?.locked) return;
+
           // Nodes to move:
           //  - If this node is already part of the single selection → move the selection
           //  - If shift held → append to selection and move all
@@ -224,10 +235,14 @@ export function usePointerDown({
             ? (isAlreadySelected ? selectedNodeIds : [...selectedNodeIds, id])
             : [id];
 
+          // Filter out locked nodes from the move operation
+          const unlockedMovingNodeIds = movingNodeIds.filter(nid => !nodes[nid]?.locked);
+          if (unlockedMovingNodeIds.length === 0) return; // All nodes to move are locked
+
           const frameRect = frameEl?.getBoundingClientRect();
           const movingNodes: NodeMovingSnapshot[] = frameEl
-            ? buildMovingSnapshots(movingNodeIds, nodes, frameEl, frameRect ?? null, zoom)
-            : movingNodeIds.map((nodeId) => ({
+            ? buildMovingSnapshots(unlockedMovingNodeIds, nodes, frameEl, frameRect ?? null, zoom)
+            : unlockedMovingNodeIds.map((nodeId) => ({
                 nodeId,
                 startLeft: 0,
                 startTop: 0,

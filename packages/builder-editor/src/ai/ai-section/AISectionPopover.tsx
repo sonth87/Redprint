@@ -74,6 +74,7 @@ export interface AISectionPopoverProps {
   aiConfig: AIConfig;
   dispatch: (command: Command) => void;
   undo: () => void;
+  trigger?: React.ReactNode;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────
@@ -85,14 +86,18 @@ export function AISectionPopover({
   aiConfig,
   dispatch,
   undo,
+  trigger,
 }: AISectionPopoverProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const { state: builderState, builder } = useBuilder();
 
   const getBuilderContext = useCallback(() => {
-    return buildAIContext(builderState, builder.registry.listComponents(), { includePageContext: true });
-  }, [builderState, builder]);
+    return buildAIContext(builderState, builder.registry.listComponents(), {
+      includePageContext: true,
+      designTokens: aiConfig.designTokens,
+    });
+  }, [builderState, builder, aiConfig.designTokens]);
 
   const handleClose = useCallback(() => setOpen(false), []);
 
@@ -159,18 +164,22 @@ export function AISectionPopover({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <PopoverTrigger asChild>
-            <button
-              className="flex h-7 w-7 cursor-pointer items-center justify-center rounded text-purple-500 transition-colors hover:bg-purple-50 hover:text-purple-600 dark:hover:bg-purple-950/30"
-            >
-              <Sparkles size={16} />
-            </button>
-          </PopoverTrigger>
-        </TooltipTrigger>
-        <TooltipContent side="right">{t("aiSection.buttonTooltip")}</TooltipContent>
-      </Tooltip>
+      {trigger ? (
+        <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+      ) : (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger asChild>
+              <button
+                className="flex h-7 w-7 cursor-pointer items-center justify-center rounded text-purple-500 transition-colors hover:bg-purple-50 hover:text-purple-600 dark:hover:bg-purple-950/30"
+              >
+                <Sparkles size={16} />
+              </button>
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="right">{t("aiSection.buttonTooltip")}</TooltipContent>
+        </Tooltip>
+      )}
 
       <PopoverContent
         className="w-72 p-0 shadow-xl"

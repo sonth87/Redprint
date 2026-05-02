@@ -1,0 +1,478 @@
+{
+  "id": "decorative",
+  "label": "Decorative",
+  "icon": "shapes",
+  "order": 4,
+  "i18n": {
+    "en": "Decorative",
+    "vi": "Trang trí"
+  },
+  "types": [
+    {
+      "id": "basic-shapes",
+      "label": "Basic Shapes",
+      "order": 0,
+      "i18n": {
+        "en": "Basic Shapes",
+        "vi": "Hình cơ bản"
+      },
+      "items": [
+        {
+          "id": "shape-rectangle",
+          "componentType": "Shape",
+          "name": "Rectangle",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Rectangle"
+            },
+            "vi": {
+              "name": "Hình chữ nhật"
+            }
+          },
+          "props": {
+            "shape": "rectangle",
+            "fill": "#111827"
+          },
+          "style": {
+            "width": "120px",
+            "height": "80px"
+          },
+          "tags": [
+            "shape",
+            "rectangle",
+            "box"
+          ]
+        },
+        {
+          "id": "shape-circle",
+          "componentType": "Shape",
+          "name": "Circle",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Circle"
+            },
+            "vi": {
+              "name": "Hình tròn"
+            }
+          },
+          "props": {
+            "shape": "circle",
+            "fill": "#4f46e5"
+          },
+          "style": {
+            "width": "100px",
+            "height": "100px"
+          },
+          "tags": [
+            "shape",
+            "circle",
+            "round"
+          ]
+        },
+        {
+          "id": "shape-triangle",
+          "componentType": "Shape",
+          "name": "Triangle",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Triangle"
+            },
+            "vi": {
+              "name": "Hình tam giác"
+            }
+          },
+          "props": {
+            "shape": "triangle",
+            "fill": "#f59e0b"
+          },
+          "style": {
+            "width": "100px",
+            "height": "100px"
+          },
+          "tags": [
+            "shape",
+            "triangle"
+          ]
+        },
+        {
+          "id": "shape-star",
+          "componentType": "Shape",
+          "name": "Star",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Star"
+            },
+            "vi": {
+              "name": "Ngôi sao"
+            }
+          },
+          "props": {
+            "shape": "star",
+            "fill": "#f59e0b"
+          },
+          "style": {
+            "width": "100px",
+            "height": "100px"
+          },
+          "tags": [
+            "shape",
+            "star",
+            "favorite"
+          ]
+        },
+        {
+          "id": "shape-heart",
+          "componentType": "Shape",
+          "name": "Heart",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Heart"
+            },
+            "vi": {
+              "name": "Trái tim"
+            }
+          },
+          "props": {
+            "shape": "heart",
+            "fill": "#ef4444"
+          },
+          "style": {
+            "width": "100px",
+            "height": "100px"
+          },
+          "tags": [
+            "shape",
+            "heart",
+            "love"
+          ]
+        },
+        {
+          "id": "shape-hexagon",
+          "componentType": "Shape",
+          "name": "Hexagon",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Hexagon"
+            },
+            "vi": {
+              "name": "Lục giác"
+            }
+          },
+          "props": {
+            "shape": "hexagon",
+            "fill": "#10b981"
+          },
+          "style": {
+            "width": "100px",
+            "height": "100px"
+          },
+          "tags": [
+            "shape",
+            "hexagon"
+          ]
+        },
+        {
+          "id": "shape-diamond",
+          "componentType": "Shape",
+          "name": "Diamond",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Diamond"
+            },
+            "vi": {
+              "name": "Kim cương"
+            }
+          },
+          "props": {
+            "shape": "diamond",
+            "fill": "#3b82f6"
+          },
+          "style": {
+            "width": "80px",
+            "height": "80px"
+          },
+          "tags": [
+            "shape",
+            "diamond"
+          ]
+        },
+        {
+          "id": "shape-blob",
+          "componentType": "Shape",
+          "name": "Blob",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Blob"
+            },
+            "vi": {
+              "name": "Hình loang"
+            }
+          },
+          "props": {
+            "shape": "blob",
+            "fill": "#a78bfa"
+          },
+          "style": {
+            "width": "150px",
+            "height": "150px"
+          },
+          "tags": [
+            "shape",
+            "blob",
+            "organic",
+            "decorative"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "arrows",
+      "label": "Arrows",
+      "order": 1,
+      "i18n": {
+        "en": "Arrows",
+        "vi": "Mũi tên"
+      },
+      "items": [
+        {
+          "id": "shape-arrow-right",
+          "componentType": "Shape",
+          "name": "Arrow Right",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Arrow Right"
+            },
+            "vi": {
+              "name": "Mũi tên phải"
+            }
+          },
+          "props": {
+            "shape": "arrow-right",
+            "fill": "#374151"
+          },
+          "style": {
+            "width": "80px",
+            "height": "50px"
+          },
+          "tags": [
+            "arrow",
+            "right",
+            "direction"
+          ]
+        },
+        {
+          "id": "shape-arrow-left",
+          "componentType": "Shape",
+          "name": "Arrow Left",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Arrow Left"
+            },
+            "vi": {
+              "name": "Mũi tên trái"
+            }
+          },
+          "props": {
+            "shape": "arrow-left",
+            "fill": "#374151"
+          },
+          "style": {
+            "width": "80px",
+            "height": "50px"
+          },
+          "tags": [
+            "arrow",
+            "left",
+            "direction"
+          ]
+        },
+        {
+          "id": "shape-arrow-up",
+          "componentType": "Shape",
+          "name": "Arrow Up",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Arrow Up"
+            },
+            "vi": {
+              "name": "Mũi tên lên"
+            }
+          },
+          "props": {
+            "shape": "arrow-up",
+            "fill": "#374151"
+          },
+          "style": {
+            "width": "50px",
+            "height": "80px"
+          },
+          "tags": [
+            "arrow",
+            "up",
+            "direction"
+          ]
+        },
+        {
+          "id": "shape-arrow-down",
+          "componentType": "Shape",
+          "name": "Arrow Down",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Arrow Down"
+            },
+            "vi": {
+              "name": "Mũi tên xuống"
+            }
+          },
+          "props": {
+            "shape": "arrow-down",
+            "fill": "#374151"
+          },
+          "style": {
+            "width": "50px",
+            "height": "80px"
+          },
+          "tags": [
+            "arrow",
+            "down",
+            "direction"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lines",
+      "label": "Lines",
+      "order": 2,
+      "i18n": {
+        "en": "Lines",
+        "vi": "Đường kẻ"
+      },
+      "items": [
+        {
+          "id": "divider-solid",
+          "componentType": "Divider",
+          "name": "Solid Line",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Solid Line"
+            },
+            "vi": {
+              "name": "Đường liền"
+            }
+          },
+          "props": {
+            "orientation": "horizontal",
+            "thickness": 1,
+            "color": "#e5e7eb"
+          },
+          "style": {
+            "width": "100%"
+          },
+          "tags": [
+            "divider",
+            "line",
+            "solid"
+          ]
+        },
+        {
+          "id": "divider-thick",
+          "componentType": "Divider",
+          "name": "Thick Line",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Thick Line"
+            },
+            "vi": {
+              "name": "Đường dày"
+            }
+          },
+          "props": {
+            "orientation": "horizontal",
+            "thickness": 3,
+            "color": "#111827"
+          },
+          "style": {
+            "width": "80px"
+          },
+          "tags": [
+            "divider",
+            "line",
+            "thick",
+            "accent"
+          ]
+        },
+        {
+          "id": "divider-accent",
+          "componentType": "Divider",
+          "name": "Accent Line",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Accent Line"
+            },
+            "vi": {
+              "name": "Đường nhấn"
+            }
+          },
+          "props": {
+            "orientation": "horizontal",
+            "thickness": 4,
+            "color": "#4f46e5"
+          },
+          "style": {
+            "width": "60px"
+          },
+          "tags": [
+            "divider",
+            "line",
+            "accent",
+            "color"
+          ]
+        },
+        {
+          "id": "divider-vertical",
+          "componentType": "Divider",
+          "name": "Vertical Line",
+          "thumbnail": null,
+          "i18n": {
+            "en": {
+              "name": "Vertical Line"
+            },
+            "vi": {
+              "name": "Đường dọc"
+            }
+          },
+          "props": {
+            "orientation": "vertical",
+            "thickness": 1,
+            "color": "#e5e7eb"
+          },
+          "style": {
+            "height": "80px",
+            "width": "1px"
+          },
+          "tags": [
+            "divider",
+            "line",
+            "vertical"
+          ]
+        }
+      ]
+    }
+  ]
+}

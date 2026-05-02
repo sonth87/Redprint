@@ -19,6 +19,8 @@ interface UseCanvasActionsParams {
   canvasMode: CanvasMode;
   canvasWidth: number;
   canvasMinHeight: number;
+  /** Actual rendered canvas height (offsetHeight) for accurate snap bounds */
+  canvasActualHeight?: number;
   showGrid: boolean;
   dispatch: (command: Command) => CommandResult | void;
 }
@@ -38,6 +40,7 @@ export function useCanvasActions({
   canvasMode,
   canvasWidth,
   canvasMinHeight,
+  canvasActualHeight,
   showGrid,
   dispatch,
 }: UseCanvasActionsParams) {
@@ -50,9 +53,9 @@ export function useCanvasActions({
         snapToComponents: document.canvasConfig.snapToComponents,
         threshold: document.canvasConfig.snapThreshold,
         canvasWidth,
-        canvasHeight: canvasMinHeight,
+        canvasHeight: canvasActualHeight ?? canvasMinHeight,
       }),
-    [document.canvasConfig, showGrid, canvasWidth, canvasMinHeight],
+    [document.canvasConfig, showGrid, canvasWidth, canvasMinHeight, canvasActualHeight],
   );
 
   const getContainerConfig = useCallback(

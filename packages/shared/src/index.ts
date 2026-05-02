@@ -177,3 +177,18 @@ export function boxToCSS(box: BoxValue): string {
 // ── Constants ──────────────────────────────────────────────────────────────
 // Timing, colors, zoom, and layout constants used across packages.
 export * from "./constants";
+
+// ── Image filters ──────────────────────────────────────────────────────────
+export * from "./imageFilters";
+
+// ── Image frames ───────────────────────────────────────────────────────────
+export * from "./imageFrames";
+
+// ── Animation presets & keyframes ──────────────────────────────────────────
+export * from "./animations";
+
+// ── Gallery types, layout modes, and shared utilities ──────────────────────
+export * from "./gallery";
+
+// ── Carousel (Swiper-based) config types and presets ───────────────────────
+export * from "./carousel";

@@ -4,6 +4,7 @@
 
 import type { BuilderDocument, BuilderNode, StyleConfig } from "../document/types";
 import type { InteractionConfig } from "../document/interactions";
+import type { Breakpoint } from "../responsive/types";
 
 // ── Prop Schema ───────────────────────────────────────────────────────────
 
@@ -30,12 +31,12 @@ export interface RichtextToolbarConfig {
 }
 
 export type PropSchema =
-  | { key: string; type: "string"; label: string; default?: string; multiline?: boolean; placeholder?: string; required?: boolean }
-  | { key: string; type: "number"; label: string; default?: number; min?: number; max?: number; step?: number; unit?: string; required?: boolean }
-  | { key: string; type: "boolean"; label: string; default?: boolean; required?: boolean }
-  | { key: string; type: "select"; label: string; options: SelectOption[]; default?: string; multiple?: boolean }
+  | { key: string; type: "string"; label: string; default?: string; multiline?: boolean; placeholder?: string; required?: boolean; description?: string }
+  | { key: string; type: "number"; label: string; default?: number; min?: number; max?: number; step?: number; unit?: string; required?: boolean; description?: string }
+  | { key: string; type: "boolean"; label: string; default?: boolean; required?: boolean; description?: string }
+  | { key: string; type: "select"; label: string; options: SelectOption[]; default?: string; multiple?: boolean; description?: string }
   | { key: string; type: "color"; label: string; default?: string; allowGradient?: boolean; allowTransparent?: boolean }
-  | { key: string; type: "image"; label: string; accept?: string | string[]; required?: boolean }
+  | { key: string; type: "image"; label: string; accept?: string | string[]; required?: boolean; focalPoint?: boolean }
   | { key: string; type: "video"; label: string; accept?: string | string[]; required?: boolean }
   | { key: string; type: "richtext"; label: string; toolbar?: RichtextToolbarConfig; required?: boolean }
   | { key: string; type: "data-binding"; label: string; sourceType?: string; required?: boolean }
@@ -46,6 +47,7 @@ export type PropSchema =
   | { key: string; type: "icon"; label: string }
   | { key: string; type: "font"; label: string }
   | { key: string; type: "slider"; label: string; min: number; max: number; step?: number; default?: number }
+  | { key: string; type: "row"; children: PropSchema[] }
   | { key: string; type: "group"; label: string; children: PropSchema[]; collapsible?: boolean };
 
 // ── Container & Layout ────────────────────────────────────────────────────
@@ -212,6 +214,7 @@ export type ComponentRenderer = (props: {
   children?: unknown;
   style: StyleConfig;
   interactions: InteractionConfig[];
+  breakpoint: Breakpoint;
 }) => unknown;
 
 // ── ComponentDefinition ───────────────────────────────────────────────────
@@ -257,6 +260,10 @@ export interface ComponentDefinition {
   lifecycle?: ComponentLifecycle;
   a11y?: ComponentA11yConfig;
   editorConfig?: ComponentEditorConfig;
+  /** When true, this component is deprecated and should not be used in new documents. */
+  deprecated?: boolean;
+  /** The replacement component type to suggest when deprecated is true. */
+  replacedBy?: string;
 }
 
 // ── Filter ────────────────────────────────────────────────────────────────

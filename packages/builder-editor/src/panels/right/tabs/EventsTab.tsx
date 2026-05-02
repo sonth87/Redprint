@@ -1,20 +1,20 @@
 import React from "react";
 import { ScrollArea } from "@ui-builder/ui";
-import { Zap, Plus } from "lucide-react";
+import { Plus, Zap } from "lucide-react";
+import { InteractionRow } from "../components/InteractionRow";
+import type { InteractionConfig } from "@ui-builder/builder-core";
 import { useTranslation } from "react-i18next";
-import { InteractionRow } from "../controls/InteractionRow";
-import type { BuilderNode, InteractionConfig } from "@ui-builder/builder-core";
 
-interface EventsTabProps {
-  node: BuilderNode;
+export function EventsTab({
+  interactions,
+  onInteractionsChange,
+}: {
+  interactions: InteractionConfig[];
   onInteractionsChange?: (interactions: InteractionConfig[]) => void;
-}
-
-export function EventsTab({ node, onInteractionsChange }: EventsTabProps) {
+}) {
   const { t } = useTranslation();
-  const interactions = node.interactions ?? [];
 
-  const handleAdd = () => {
+  const handleAddInteraction = () => {
     if (!onInteractionsChange) return;
     const newInteraction: InteractionConfig = {
       id: crypto.randomUUID(),
@@ -25,14 +25,14 @@ export function EventsTab({ node, onInteractionsChange }: EventsTabProps) {
     onInteractionsChange([...interactions, newInteraction]);
   };
 
-  const handleUpdate = (index: number, updated: InteractionConfig) => {
+  const handleUpdateInteraction = (index: number, updated: InteractionConfig) => {
     if (!onInteractionsChange) return;
     const next = [...interactions];
     next[index] = updated;
     onInteractionsChange(next);
   };
 
-  const handleRemove = (index: number) => {
+  const handleRemoveInteraction = (index: number) => {
     if (!onInteractionsChange) return;
     onInteractionsChange(interactions.filter((_, i) => i !== index));
   };
@@ -42,21 +42,23 @@ export function EventsTab({ node, onInteractionsChange }: EventsTabProps) {
       <div className="p-3 space-y-3">
         <div className="flex items-center justify-between">
           <p className="text-xs font-semibold text-muted-foreground">
-            {t("propertyPanel.events")} ({interactions.length})
+            Interactions ({interactions.length})
           </p>
           <button
-            type="button"
             className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
-            onClick={handleAdd}
+            onClick={handleAddInteraction}
           >
-            <Plus className="h-3 w-3" /> Add
+            <Plus className="h-3 w-3" />
+            Add
           </button>
         </div>
 
         {interactions.length === 0 && (
-          <div className="rounded-md border border-dashed p-6 text-center">
+          <div className="rounded-md border border-dashed p-4 text-center">
             <Zap className="h-6 w-6 mx-auto text-muted-foreground/40 mb-2" />
-            <p className="text-xs text-muted-foreground">{t("events.noInteractions")}</p>
+            <p className="text-xs text-muted-foreground">
+              {t("events.noInteractions")}
+            </p>
           </div>
         )}
 
@@ -65,8 +67,8 @@ export function EventsTab({ node, onInteractionsChange }: EventsTabProps) {
             key={i}
             interaction={interaction}
             index={i}
-            onChange={(updated) => handleUpdate(i, updated)}
-            onRemove={() => handleRemove(i)}
+            onChange={(updated) => handleUpdateInteraction(i, updated)}
+            onRemove={() => handleRemoveInteraction(i)}
           />
         ))}
       </div>

@@ -9,6 +9,7 @@ interface MovingState {
   nodes: NodeMovingSnapshot[];
   startPoint: Point;
   gestureGroupId: string;
+  fromToolbar?: boolean;
 }
 
 interface UseDragHandleGestureOptions {
@@ -72,6 +73,7 @@ export function useDragHandleGesture({
         nodes: movingNodes,
         startPoint: { x: e.clientX, y: e.clientY },
         gestureGroupId: uuidv4(),
+        fromToolbar: true,
       });
     },
     [selectedNodeId, selectedNodeIds, nodes, zoom, activeFrameRef, canvasFrameRef, dragStartedRef, setMoving],

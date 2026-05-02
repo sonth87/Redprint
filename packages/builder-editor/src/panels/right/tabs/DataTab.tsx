@@ -1,44 +1,43 @@
 import React from "react";
-import { ScrollArea, Label, Input, Switch, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@ui-builder/ui";
+import { ScrollArea, Label, Switch, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@ui-builder/ui";
 import { Database } from "lucide-react";
-import { useTranslation } from "react-i18next";
-import { CollapsibleSection } from "../controls/CollapsibleSection";
+import { CollapsibleSection } from "../components/CollapsibleSection";
 import type { BuilderNode } from "@ui-builder/builder-core";
+import { useTranslation } from "react-i18next";
 
-interface DataTabProps {
-  node: BuilderNode;
+export function DataTab({
+  selectedNode,
+  onPropChange,
+}: {
+  selectedNode: BuilderNode;
   onPropChange: (key: string, value: unknown) => void;
-}
-
-export function DataTab({ node, onPropChange }: DataTabProps) {
+}) {
   const { t } = useTranslation();
-
   return (
     <ScrollArea className="h-full">
-      <div className="space-y-0">
-        <div className="p-3 pb-1">
-          <div className="rounded-md border border-dashed p-4 text-center">
-            <Database className="h-5 w-5 mx-auto text-muted-foreground/40 mb-2" />
-            <p className="text-xs text-muted-foreground">{t("dataTab.description")}</p>
-          </div>
+      <div className="p-3 space-y-3">
+        <div className="rounded-md border border-dashed p-4 text-center">
+          <Database className="h-6 w-6 mx-auto text-muted-foreground/40 mb-2" />
+          <p className="text-xs text-muted-foreground">
+            {t("dataTab.description")}
+          </p>
         </div>
 
-        {/* Repeater */}
         <CollapsibleSection title={t("dataTab.repeater")} defaultOpen={false}>
-          <div className="space-y-2">
+          <div className="grid gap-2">
             <div className="flex items-center justify-between">
-              <Label className="text-xs">Repeat data</Label>
+              <Label className="text-xs">Repeat Data</Label>
               <Switch
-                checked={Boolean(node.props._repeaterEnabled)}
+                checked={Boolean(selectedNode.props._repeaterEnabled)}
                 onCheckedChange={(v) => onPropChange("_repeaterEnabled", v)}
               />
             </div>
-            {Boolean(node.props._repeaterEnabled) && (
+            {Boolean(selectedNode.props._repeaterEnabled) && (
               <div className="grid gap-1">
-                <Label className="text-[10px] text-muted-foreground">Data key</Label>
+                <Label className="text-[10px] text-muted-foreground">Data Key</Label>
                 <Input
                   className="h-7 text-xs font-mono"
-                  value={String(node.props._repeaterKey ?? "")}
+                  value={String(selectedNode.props._repeaterKey ?? "")}
                   placeholder="items"
                   onChange={(e) => onPropChange("_repeaterKey", e.target.value)}
                 />
@@ -47,23 +46,22 @@ export function DataTab({ node, onPropChange }: DataTabProps) {
           </div>
         </CollapsibleSection>
 
-        {/* Conditional visibility */}
         <CollapsibleSection title={t("dataTab.conditionalVisibility")} defaultOpen={false}>
-          <div className="space-y-2">
+          <div className="grid gap-2">
             <div className="flex items-center justify-between">
               <Label className="text-xs">Conditional</Label>
               <Switch
-                checked={Boolean(node.props._conditionalVisibility)}
+                checked={Boolean(selectedNode.props._conditionalVisibility)}
                 onCheckedChange={(v) => onPropChange("_conditionalVisibility", v)}
               />
             </div>
-            {Boolean(node.props._conditionalVisibility) && (
+            {Boolean(selectedNode.props._conditionalVisibility) && (
               <>
                 <div className="grid gap-1">
                   <Label className="text-[10px] text-muted-foreground">Variable</Label>
                   <Input
                     className="h-7 text-xs font-mono"
-                    value={String(node.props._conditionVariable ?? "")}
+                    value={String(selectedNode.props._conditionVariable ?? "")}
                     placeholder="isLoggedIn"
                     onChange={(e) => onPropChange("_conditionVariable", e.target.value)}
                   />
@@ -71,20 +69,16 @@ export function DataTab({ node, onPropChange }: DataTabProps) {
                 <div className="grid gap-1">
                   <Label className="text-[10px] text-muted-foreground">Operator</Label>
                   <Select
-                    value={String(node.props._conditionOperator ?? "eq")}
+                    value={String(selectedNode.props._conditionOperator ?? "eq")}
                     onValueChange={(v) => onPropChange("_conditionOperator", v)}
                   >
                     <SelectTrigger className="h-7 text-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {["eq", "neq", "gt", "lt", "gte", "lte", "truthy", "falsy", "contains"].map(
-                        (op) => (
-                          <SelectItem key={op} value={op} className="text-xs">
-                            {op}
-                          </SelectItem>
-                        ),
-                      )}
+                      {["eq","neq","gt","lt","gte","lte","truthy","falsy","contains"].map((op) => (
+                        <SelectItem key={op} value={op} className="text-xs">{op}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -92,7 +86,7 @@ export function DataTab({ node, onPropChange }: DataTabProps) {
                   <Label className="text-[10px] text-muted-foreground">Value</Label>
                   <Input
                     className="h-7 text-xs"
-                    value={String(node.props._conditionValue ?? "")}
+                    value={String(selectedNode.props._conditionValue ?? "")}
                     placeholder="true"
                     onChange={(e) => onPropChange("_conditionValue", e.target.value)}
                   />

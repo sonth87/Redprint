@@ -22,16 +22,23 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@ui-builder/builder-core": "workspace:*"
+    "@ui-builder/builder-core": "workspace:*",
+    "@ui-builder/shared": "workspace:*",
+    "dompurify": "^3.2.4",
+    "embla-carousel-autoplay": "^8.6.0",
+    "embla-carousel-react": "^8.6.0",
+    "swiper": "^12.1.4",
+    "lucide-react": "^1.7.0"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0"
   },
   "devDependencies": {
-    "@ui-builder/config": "workspace:*",
+    "@types/dompurify": "^3.2.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@ui-builder/config": "workspace:*",
     "tsup": "^8.3.0",
     "typescript": "^5.7.0"
   }
