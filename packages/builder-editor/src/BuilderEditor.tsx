@@ -428,7 +428,7 @@ function EditorInner({
   const { handleDragStart, handlePaletteDragStart, handleDrop, handleDragOver, handleDragEnter, handleDragLeave, isDSDragging, paletteFlowDropTarget } =
     useDragHandlers({ rootNodeId: document.rootNodeId, zoom, canvasFrameRef, dispatch, nodes: document.nodes, getContainerConfig, onAfterDrop: handlePaletteClose });
 
-  const { addItem: handlePaletteItemClick } = useClickToAdd({ rootNodeId: document.rootNodeId, nodes: document.nodes, selectedNodeIds, pendingTargetSectionId, zoom, panOffset, canvasContainerRef, canvasFrameRef: activeFrameRef, dispatch, onAfterAdd: handlePaletteClose });
+  const { addItem: handlePaletteItemClick } = useClickToAdd({ rootNodeId: document.rootNodeId, nodes: document.nodes, selectedNodeIds, pendingTargetSectionId, zoom, breakpoint, canvasContainerRef, canvasFrameRef: activeFrameRef, resolveComponentDefinition: (componentType) => registry?.getComponent(componentType), dispatch, onAfterAdd: handlePaletteClose });
 
   const { handlePointerDown } = usePointerDown({
     activeTool, zoom, rootNodeId: document.rootNodeId, nodes: document.nodes, canvasFrameRef, activeFrameRef,
