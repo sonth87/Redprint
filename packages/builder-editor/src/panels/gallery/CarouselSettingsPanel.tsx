@@ -198,6 +198,7 @@ export function CarouselSettingsPanel({ node, onConfigChange }: CarouselSettings
                   </SelectContent>
                 </Select>
               </Row>
+              <SliderRow label="Slide border radius" value={cc.slideRadius} min={0} max={48} unit="px" onChange={v => set({ slideRadius: v })} />
               <Row label="Loop">
                 <Seg
                   options={[{ label: "Off", value: "off" }, { label: "Loop", value: "loop" }, { label: "Rewind", value: "rewind" }]}

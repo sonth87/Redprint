@@ -1029,7 +1029,7 @@ function SwiperSliderRuntime({
         hashNavigation={!isEditor && cc.hashNavigation}
       >
         {items.map((img, i) => (
-          <SwiperSlide key={img.id ?? i} style={{ position: "relative", overflow: "hidden" }}>
+          <SwiperSlide key={img.id ?? i} style={{ position: "relative", overflow: "hidden", borderRadius: cc.slideRadius > 0 ? `${cc.slideRadius}px` : undefined }}>
             <div
               data-swiper-parallax={cc.parallax ? "-150" : undefined}
               style={{

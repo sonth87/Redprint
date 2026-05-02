@@ -6,6 +6,7 @@ import type { GroupRegistry, GroupTreeNode } from "@ui-builder/builder-core";
 import { cn } from "@ui-builder/ui";
 import type { GalleryLayoutMode } from "@ui-builder/shared";
 import { LayoutMiniPreview } from "../gallery/LayoutMiniPreview";
+import { GLASS_TOOLTIP } from "../../constants/panel-styles";
 
 export interface ComponentPaletteProps {
   components: ComponentDefinition[];
@@ -150,7 +151,7 @@ export const ComponentPalette = memo(function ComponentPalette({
                   </TooltipTrigger>
                   <TooltipContent
                     side="right"
-                    className="bg-black/30 backdrop-blur-lg border-white/20 text-foreground"
+                    className={GLASS_TOOLTIP.dark}
                   >
                     {group.label}
                   </TooltipContent>
@@ -186,7 +187,7 @@ export const ComponentPalette = memo(function ComponentPalette({
                             </TooltipTrigger>
                             <TooltipContent
                               side="right"
-                              className="bg-black/40 backdrop-blur-md border border-white/20 text-white/90"
+                              className={GLASS_TOOLTIP.dark}
                             >
                               {subGroup.label}
                             </TooltipContent>
@@ -241,7 +242,7 @@ export const ComponentPalette = memo(function ComponentPalette({
                     </TooltipTrigger>
                     <TooltipContent
                       side="right"
-                      className="bg-black/40 backdrop-blur-md border border-white/20 text-white/90"
+                      className={GLASS_TOOLTIP.dark}
                     >
                       {category}
                     </TooltipContent>

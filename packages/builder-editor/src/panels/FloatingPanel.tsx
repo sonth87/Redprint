@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback } from "react";
 import { Minus, Plus, X } from "lucide-react";
 import { cn } from "@ui-builder/ui";
+import { GLASS_PANEL } from "../constants/panel-styles";
 
 // Module-level counter — increments each time a panel is focused/dragged so
 // the most-recently-interacted panel always renders on top.
@@ -98,8 +99,8 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
       ref={panelRef}
       onPointerDownCapture={handlePanelPointerDown}
       className={cn(
-        "fixed flex flex-col bg-background/95 backdrop-blur-md rounded-lg border shadow-lg overflow-hidden select-none",
-        isDragging && "shadow-xl bg-background/80",
+        "fixed flex flex-col overflow-hidden select-none",
+        isDragging ? GLASS_PANEL.dragging : GLASS_PANEL.normal,
       )}
       style={{
         width,

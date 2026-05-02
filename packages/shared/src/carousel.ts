@@ -86,6 +86,8 @@ export interface CarouselConfig {
   slideToClickedSlide: boolean;
   loopMode: "off" | "loop" | "rewind";
   aspectRatio: string;
+  /** Border-radius applied to each slide item in px. Default 0. */
+  slideRadius: number;
 
   // Effect
   effect: "slide" | "fade" | "cube" | "flip" | "cards" | "coverflow" | "creative";
@@ -133,6 +135,7 @@ export const DEFAULT_CAROUSEL_CONFIG: CarouselConfig = {
   slideToClickedSlide: false,
   loopMode: "loop",
   aspectRatio: "16/9",
+  slideRadius: 0,
 
   effect: "slide",
   speed: 300,
@@ -216,19 +219,19 @@ export const CAROUSEL_PRESETS: CarouselPreset[] = [
     id: "peek",
     label: "Peek",
     description: "Shows edge of adjacent slides",
-    config: { effect: "slide", slidesPerView: 1.15, centeredSlides: true, spaceBetween: 16 },
+    config: { effect: "slide", slidesPerView: 1.15, centeredSlides: true, spaceBetween: 16, slideRadius: 8 },
   },
   {
     id: "multi",
     label: "Multi-Slide",
     description: "2–3 slides visible at once",
-    config: { effect: "slide", slidesPerView: 2.5, spaceBetween: 16, centeredSlides: true },
+    config: { effect: "slide", slidesPerView: 2.5, spaceBetween: 16, centeredSlides: true, slideRadius: 4 },
   },
   {
     id: "cards",
     label: "Cards",
     description: "Stacked card effect",
-    config: { effect: "cards", centeredSlides: true },
+    config: { effect: "cards", centeredSlides: true, slideRadius: 12 },
   },
   {
     id: "coverflow",
@@ -239,6 +242,7 @@ export const CAROUSEL_PRESETS: CarouselPreset[] = [
       centeredSlides: true,
       slidesPerView: 3,
       spaceBetween: 0,
+      slideRadius: 8,
       coverflowEffect: { rotate: 50, stretch: 0, depth: 100, modifier: 1, scale: 1, slideShadows: true },
     },
   },
