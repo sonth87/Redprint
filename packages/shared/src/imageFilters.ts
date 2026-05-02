@@ -43,14 +43,20 @@ export interface ImageFilter {
  * Anaglyph 3D — splits RGB channels: red shifted left, cyan shifted right.
  */
 const SVG_3D = `
-<filter id="if-3d" color-interpolation-filters="sRGB" x="-5%" width="110%">
+<filter id="if-3d" color-interpolation-filters="sRGB" x="0%" y="0%" width="100%" height="100%">
   <feColorMatrix type="matrix" in="SourceGraphic" result="red"
     values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0"/>
   <feOffset in="red" dx="-6" dy="0" result="redShifted"/>
   <feColorMatrix type="matrix" in="SourceGraphic" result="cyan"
     values="0 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0"/>
   <feOffset in="cyan" dx="6" dy="0" result="cyanShifted"/>
-  <feBlend in="redShifted" in2="cyanShifted" mode="screen"/>
+  <feBlend in="redShifted" in2="cyanShifted" mode="screen" result="blended"/>
+  <feOffset in="SourceAlpha" dx="-6" dy="0" result="redMask"/>
+  <feOffset in="SourceAlpha" dx="6" dy="0" result="cyanMask"/>
+  <feComposite in="redMask" in2="cyanMask" operator="in" result="validMask"/>
+  <feComposite in="blended" in2="validMask" operator="in" result="maskedBlend"/>
+  <feComposite in="SourceGraphic" in2="validMask" operator="out" result="edgeFill"/>
+  <feComposite in="maskedBlend" in2="edgeFill" operator="over"/>
 </filter>`;
 
 /**
