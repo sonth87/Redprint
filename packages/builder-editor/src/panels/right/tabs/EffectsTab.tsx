@@ -22,7 +22,7 @@ export function EffectsTab({
   onStyleChange,
 }: {
   selectedNode: BuilderNode;
-  style: Record<string, any>;
+  style: Record<string, unknown>;
   onPropChange: (key: string, value: unknown) => void;
   onStyleChange: (key: string, value: unknown) => void;
 }) {

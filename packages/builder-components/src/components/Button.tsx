@@ -1,7 +1,9 @@
 import React from "react";
-import type { ComponentDefinition } from "@ui-builder/builder-core";
+import type { ComponentDefinition, ComponentRenderer } from "@ui-builder/builder-core";
 import * as LucideIcons from "lucide-react";
 import { sanitizeHtml } from "../utils/sanitize";
+
+type RendererProps = Parameters<ComponentRenderer>[0];
 
 function getLucideIcon(name: string): React.ElementType {
   const pascal = name
@@ -160,23 +162,25 @@ export const ButtonComponent: ComponentDefinition = {
       </button>
     );
   },
-  runtimeRenderer: ({ node, style }) => {
-    const [hovered, setHovered] = React.useState(false);
-    const hs = (node.props.hoverStyle ?? {}) as React.CSSProperties;
-    const labelHtml = String(node.props.label ?? "<p>Button</p>");
-    const iconName = typeof node.props.icon === "string" ? node.props.icon : undefined;
-    const iconPosition = node.props.iconPosition === "end" ? "end" : "start";
-    return (
-      <button
-        type="button"
-        style={{ appearance: "none", WebkitAppearance: "none", ...(style as React.CSSProperties), ...(hovered ? hs : {}) }}
-        disabled={Boolean(node.props.disabled)}
-        className="transition-all"
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-      >
-        {renderButtonContent(labelHtml, iconName, iconPosition)}
-      </button>
-    );
-  },
+  runtimeRenderer: (props) => <ButtonRuntime {...props} />,
 };
+
+function ButtonRuntime({ node, style }: RendererProps) {
+  const [hovered, setHovered] = React.useState(false);
+  const hs = (node.props.hoverStyle ?? {}) as React.CSSProperties;
+  const labelHtml = String(node.props.label ?? "<p>Button</p>");
+  const iconName = typeof node.props.icon === "string" ? node.props.icon : undefined;
+  const iconPosition = node.props.iconPosition === "end" ? "end" : "start";
+  return (
+    <button
+      type="button"
+      style={{ appearance: "none", WebkitAppearance: "none", ...(style as React.CSSProperties), ...(hovered ? hs : {}) }}
+      disabled={Boolean(node.props.disabled)}
+      className="transition-all"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {renderButtonContent(labelHtml, iconName, iconPosition)}
+    </button>
+  );
+}

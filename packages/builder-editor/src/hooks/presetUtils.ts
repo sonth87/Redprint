@@ -24,7 +24,7 @@ export function generateRecursiveAddActions(
   children: PresetChildNode[],
   parentId: string,
   groupId: string,
-  dispatch: (action: any) => void
+  dispatch: (action: AddNodeAction) => void
 ): void {
   children.forEach((child, index) => {
     const nodeId = uuidv4();
@@ -35,7 +35,7 @@ export function generateRecursiveAddActions(
       payload: {
         nodeId,
         parentId,
-        componentType: child.componentType || (child as any).type,
+        componentType: child.componentType || (child as { type?: string }).type || "",
         props: child.props,
         style: child.style,
         insertIndex: index,

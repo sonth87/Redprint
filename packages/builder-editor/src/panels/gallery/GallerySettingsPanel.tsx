@@ -1,13 +1,12 @@
 /**
  * GallerySettingsPanel — FloatingPanel content for configuring a GalleryPro node.
  *
- * Rendered inside FloatingPanel (same pattern as ImageFramePanel).
- * Three tabs:
- *   Layout   → visual layout mode picker (uses LayoutModeCard from LayoutMiniPreview)
- *   Settings → layout-specific controls (columns, gap, aspect ratio, autoplay, etc.)
- *   Design   → image fit, border radius
+ * Two tabs:
+ *   Layout → visual layout mode picker split into Gallery / Carousel sections
+ *   Design → all controls: columns, gap, aspect ratio, auto play, image fit, border radius
  */
 import React from "react";
+import { useTranslation } from "react-i18next";
 import type { BuilderNode } from "@ui-builder/builder-core";
 import {
   Tabs, TabsList, TabsTrigger, TabsContent,
@@ -27,77 +26,95 @@ export interface GallerySettingsPanelProps {
   onPropChange: (props: Record<string, unknown>) => void;
 }
 
-// ── GalleryLayoutSettings (Settings tab) ─────────────────────────────────────
+// ── Constants ─────────────────────────────────────────────────────────────────
 
-function GalleryLayoutSettings({ layoutMode, node, onPropChange }: {
+const CAROUSEL_MODES: GalleryLayoutMode[] = ["slider", "slideshow", "thumbnails", "carousel-3d"];
+const ASPECT_RATIO_OPTIONS = ["1/1", "4/3", "16/9", "3/4", "2/1"] as const;
+
+// ── GalleryDesignControls ─────────────────────────────────────────────────────
+
+function GalleryDesignControls({
+  layoutMode,
+  node,
+  onPropChange,
+}: {
   layoutMode: GalleryLayoutMode;
   node: BuilderNode;
   onPropChange: (props: Record<string, unknown>) => void;
 }) {
+  const { t } = useTranslation();
   const p = node.props;
 
-  const needsColumns = ["grid", "masonry", "honeycomb", "bricks", "collage", "freestyle"].includes(layoutMode);
-  const needsAspect  = ["grid", "collage", "bricks", "slider"].includes(layoutMode);
-  const needsCarousel = ["slider", "slideshow", "carousel-3d"].includes(layoutMode);
+  const isCarousel = CAROUSEL_MODES.includes(layoutMode);
+  const needsColumns = !isCarousel && ["grid", "masonry", "honeycomb", "bricks", "collage", "freestyle"].includes(layoutMode);
+  const needsAspect = ["grid", "collage", "bricks", "slider", "slideshow"].includes(layoutMode);
 
   return (
-    <div className="p-3 space-y-3">
-      {needsColumns && (
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <Label className="text-[10px] text-muted-foreground">Columns</Label>
-            <span className="text-[10px] font-medium">{Number(p["columns"] ?? 3)}</span>
-          </div>
-          <Slider
-            min={1} max={6} step={1}
-            value={[Number(p["columns"] ?? 3)]}
-            onValueChange={(vals) => onPropChange({ columns: vals[0] })}
-          />
+    <div className="p-3 space-y-4">
+      {/* ── Gallery section ── */}
+      {(needsColumns || needsAspect) && (
+        <div className="space-y-3">
+          <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">
+            {t("galleryPanel.sections.gallery")}
+          </p>
+
+          {needsColumns && (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label className="text-[10px] text-muted-foreground">{t("galleryPanel.design.columns")}</Label>
+                <span className="text-[10px] font-medium">{Number(p["columns"] ?? 3)}</span>
+              </div>
+              <Slider
+                min={1} max={6} step={1}
+                value={[Number(p["columns"] ?? 3)]}
+                onValueChange={(vals) => onPropChange({ columns: vals[0] })}
+              />
+            </div>
+          )}
+
+          {needsAspect && (
+            <div className="space-y-1">
+              <Label className="text-[10px] text-muted-foreground">{t("galleryPanel.design.aspectRatio")}</Label>
+              <Select
+                value={String(p["aspectRatio"] ?? "1/1")}
+                onValueChange={(v) => onPropChange({ aspectRatio: v })}
+              >
+                <SelectTrigger className="h-7 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ASPECT_RATIO_OPTIONS.map((v) => (
+                    <SelectItem key={v} value={v} className="text-xs">
+                      {t(`galleryPanel.design.aspectRatioOptions.${v}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
       )}
 
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between">
-          <Label className="text-[10px] text-muted-foreground">Gap</Label>
-          <span className="text-[10px] font-medium">{Number(p["gap"] ?? 12)}px</span>
-        </div>
-        <Slider
-          min={0} max={60} step={2}
-          value={[Number(p["gap"] ?? 12)]}
-          onValueChange={(vals) => onPropChange({ gap: vals[0] })}
-        />
-      </div>
+      {/* ── Carousel section ── */}
+      {isCarousel && (
+        <div className="space-y-3">
+          <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">
+            {t("galleryPanel.sections.carousel")}
+          </p>
 
-      {needsAspect && (
-        <div className="space-y-1">
-          <Label className="text-[10px] text-muted-foreground">Aspect Ratio</Label>
-          <Select value={String(p["aspectRatio"] ?? "1/1")} onValueChange={(v) => onPropChange({ aspectRatio: v })}>
-            <SelectTrigger className="h-7 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {[["1/1","1:1 Square"],["4/3","4:3"],["16/9","16:9"],["3/4","3:4 Portrait"],["2/1","2:1 Wide"]].map(([v, l]) => (
-                <SelectItem key={v} value={v!} className="text-xs">{l}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
-
-      {needsCarousel && (
-        <>
           <div className="flex items-center justify-between">
-            <Label className="text-[10px] text-muted-foreground">Auto Play</Label>
+            <Label className="text-[10px] text-muted-foreground">{t("galleryPanel.design.autoPlay")}</Label>
             <Switch
               checked={Boolean(p["autoPlay"])}
               onCheckedChange={(v) => onPropChange({ autoPlay: v })}
               className="scale-75"
             />
           </div>
+
           {Boolean(p["autoPlay"]) && (
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <Label className="text-[10px] text-muted-foreground">Speed</Label>
+                <Label className="text-[10px] text-muted-foreground">{t("galleryPanel.design.speed")}</Label>
                 <span className="text-[10px] font-medium">{Number(p["autoPlaySpeed"] ?? 3000) / 1000}s</span>
               </div>
               <Slider
@@ -107,18 +124,20 @@ function GalleryLayoutSettings({ layoutMode, node, onPropChange }: {
               />
             </div>
           )}
+
           <div className="flex items-center justify-between">
-            <Label className="text-[10px] text-muted-foreground">Loop</Label>
+            <Label className="text-[10px] text-muted-foreground">{t("galleryPanel.design.loop")}</Label>
             <Switch
               checked={p["loop"] !== false}
               onCheckedChange={(v) => onPropChange({ loop: v })}
               className="scale-75"
             />
           </div>
-          {layoutMode !== "carousel-3d" && (
+
+          {layoutMode !== "carousel-3d" && layoutMode !== "thumbnails" && (
             <>
               <div className="flex items-center justify-between">
-                <Label className="text-[10px] text-muted-foreground">Show Arrows</Label>
+                <Label className="text-[10px] text-muted-foreground">{t("galleryPanel.design.arrows")}</Label>
                 <Switch
                   checked={p["showArrows"] !== false}
                   onCheckedChange={(v) => onPropChange({ showArrows: v })}
@@ -126,7 +145,7 @@ function GalleryLayoutSettings({ layoutMode, node, onPropChange }: {
                 />
               </div>
               <div className="flex items-center justify-between">
-                <Label className="text-[10px] text-muted-foreground">Show Dots</Label>
+                <Label className="text-[10px] text-muted-foreground">{t("galleryPanel.design.dots")}</Label>
                 <Switch
                   checked={p["showDots"] !== false}
                   onCheckedChange={(v) => onPropChange({ showDots: v })}
@@ -135,41 +154,58 @@ function GalleryLayoutSettings({ layoutMode, node, onPropChange }: {
               </div>
             </>
           )}
-        </>
-      )}
-    </div>
-  );
-}
-
-// ── GalleryDesignSettings (Design tab) ───────────────────────────────────────
-
-function GalleryDesignSettings({ node, onPropChange }: { node: BuilderNode; onPropChange: (props: Record<string, unknown>) => void }) {
-  const p = node.props;
-  return (
-    <div className="p-3 space-y-3">
-      <div className="space-y-1">
-        <Label className="text-[10px] text-muted-foreground">Image Fit</Label>
-        <Select value={String(p["imageFit"] ?? "cover")} onValueChange={(v) => onPropChange({ imageFit: v })}>
-          <SelectTrigger className="h-7 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="cover" className="text-xs">Cover (crop to fill)</SelectItem>
-            <SelectItem value="contain" className="text-xs">Contain (letterbox)</SelectItem>
-            <SelectItem value="fill" className="text-xs">Fill (stretch)</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between">
-          <Label className="text-[10px] text-muted-foreground">Border Radius</Label>
-          <span className="text-[10px] font-medium">{Number(p["borderRadius"] ?? 4)}px</span>
         </div>
-        <Slider
-          min={0} max={32} step={1}
-          value={[Number(p["borderRadius"] ?? 4)]}
-          onValueChange={(vals) => onPropChange({ borderRadius: vals[0] })}
-        />
+      )}
+
+      {/* ── Divider ── */}
+      {(needsColumns || needsAspect || isCarousel) && (
+        <div className="border-t border-border/50" />
+      )}
+
+      {/* ── Common design ── */}
+      <div className="space-y-3">
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <Label className="text-[10px] text-muted-foreground">{t("galleryPanel.design.gap")}</Label>
+            <span className="text-[10px] font-medium">{Number(p["gap"] ?? 12)}px</span>
+          </div>
+          <Slider
+            min={0} max={60} step={2}
+            value={[Number(p["gap"] ?? 12)]}
+            onValueChange={(vals) => onPropChange({ gap: vals[0] })}
+          />
+        </div>
+
+        <div className="space-y-1">
+          <Label className="text-[10px] text-muted-foreground">{t("galleryPanel.design.imageFit")}</Label>
+          <Select
+            value={String(p["imageFit"] ?? "cover")}
+            onValueChange={(v) => onPropChange({ imageFit: v })}
+          >
+            <SelectTrigger className="h-7 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {(["cover", "contain", "fill"] as const).map((v) => (
+                <SelectItem key={v} value={v} className="text-xs">
+                  {t(`galleryPanel.design.imageFitOptions.${v}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <Label className="text-[10px] text-muted-foreground">{t("galleryPanel.design.borderRadius")}</Label>
+            <span className="text-[10px] font-medium">{Number(p["borderRadius"] ?? 4)}px</span>
+          </div>
+          <Slider
+            min={0} max={32} step={1}
+            value={[Number(p["borderRadius"] ?? 4)]}
+            onValueChange={(vals) => onPropChange({ borderRadius: vals[0] })}
+          />
+        </div>
       </div>
     </div>
   );
@@ -178,25 +214,32 @@ function GalleryDesignSettings({ node, onPropChange }: { node: BuilderNode; onPr
 // ── Main component ────────────────────────────────────────────────────────────
 
 export function GallerySettingsPanel({ node, onPropChange }: GallerySettingsPanelProps) {
+  const { t } = useTranslation();
   const layoutMode = (node.props["layoutMode"] as GalleryLayoutMode) ?? "grid";
-  const standardModes = GALLERY_LAYOUT_MODES.filter((m) => m.group === "standard");
-  const creativeModes = GALLERY_LAYOUT_MODES.filter((m) => m.group === "creative");
+
+  const galleryModes = GALLERY_LAYOUT_MODES.filter((m) => !CAROUSEL_MODES.includes(m.value));
+  const carouselModes = GALLERY_LAYOUT_MODES.filter((m) => CAROUSEL_MODES.includes(m.value));
 
   return (
     <Tabs defaultValue="layout" className="w-full">
-      <TabsList className="grid grid-cols-3 w-full rounded-none border-b h-8 bg-transparent">
-        <TabsTrigger value="layout" className="text-xs h-full rounded-none">Layout</TabsTrigger>
-        <TabsTrigger value="settings" className="text-xs h-full rounded-none">Settings</TabsTrigger>
-        <TabsTrigger value="design" className="text-xs h-full rounded-none">Design</TabsTrigger>
+      <TabsList className="grid grid-cols-2 w-full rounded-none border-b h-8 bg-transparent">
+        <TabsTrigger value="layout" className="text-xs h-full rounded-none">
+          {t("galleryPanel.tabs.layout")}
+        </TabsTrigger>
+        <TabsTrigger value="design" className="text-xs h-full rounded-none">
+          {t("galleryPanel.tabs.design")}
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="layout" className="m-0">
         <ScrollArea className="h-[420px]">
           <div className="p-2 space-y-3">
             <div>
-              <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-1.5">Standard</p>
+              <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-1.5">
+                {t("galleryPanel.sections.gallery")}
+              </p>
               <div className="grid grid-cols-2 gap-1.5">
-                {standardModes.map((mode) => (
+                {galleryModes.map((mode) => (
                   <LayoutModeCard
                     key={mode.value}
                     mode={mode}
@@ -207,9 +250,11 @@ export function GallerySettingsPanel({ node, onPropChange }: GallerySettingsPane
               </div>
             </div>
             <div>
-              <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-1.5">Creative</p>
+              <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-1.5">
+                {t("galleryPanel.sections.carousel")}
+              </p>
               <div className="grid grid-cols-2 gap-1.5">
-                {creativeModes.map((mode) => (
+                {carouselModes.map((mode) => (
                   <LayoutModeCard
                     key={mode.value}
                     mode={mode}
@@ -223,17 +268,12 @@ export function GallerySettingsPanel({ node, onPropChange }: GallerySettingsPane
         </ScrollArea>
       </TabsContent>
 
-      <TabsContent value="settings" className="m-0">
-        <ScrollArea className="h-[420px]">
-          <GalleryLayoutSettings layoutMode={layoutMode} node={node} onPropChange={onPropChange} />
-        </ScrollArea>
-      </TabsContent>
-
       <TabsContent value="design" className="m-0">
         <ScrollArea className="h-[420px]">
-          <GalleryDesignSettings node={node} onPropChange={onPropChange} />
+          <GalleryDesignControls layoutMode={layoutMode} node={node} onPropChange={onPropChange} />
         </ScrollArea>
       </TabsContent>
     </Tabs>
   );
 }
+

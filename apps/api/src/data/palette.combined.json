@@ -8,7 +8,7 @@
       "order": 100,
       "i18n": {
         "en": "Designed Section",
-        "vi": "Section M\u1eabu"
+        "vi": "Section Mẫu"
       },
       "types": [
         {
@@ -18,7 +18,7 @@
           "layout": "grid",
           "i18n": {
             "en": "Welcome",
-            "vi": "Ch\u00e0o m\u1eebng"
+            "vi": "Chào mừng"
           },
           "items": [
             {
@@ -92,7 +92,7 @@
           "layout": "grid",
           "i18n": {
             "en": "About",
-            "vi": "Gi\u1edbi thi\u1ec7u"
+            "vi": "Giới thiệu"
           },
           "items": [
             {
@@ -174,7 +174,7 @@
           "layout": "grid",
           "i18n": {
             "en": "Services",
-            "vi": "D\u1ecbch v\u1ee5"
+            "vi": "Dịch vụ"
           },
           "items": [
             {
@@ -329,7 +329,7 @@
           "layout": "grid",
           "i18n": {
             "en": "Team",
-            "vi": "\u0110\u1ed9i ng\u0169"
+            "vi": "Đội ngũ"
           },
           "items": [
             {
@@ -368,7 +368,7 @@
           "layout": "grid",
           "i18n": {
             "en": "Contact",
-            "vi": "Li\u00ean h\u1ec7"
+            "vi": "Liên hệ"
           },
           "items": [
             {
@@ -409,7 +409,7 @@
       "order": 0,
       "i18n": {
         "en": "Text",
-        "vi": "V\u0103n b\u1ea3n"
+        "vi": "Văn bản"
       },
       "types": [
         {
@@ -419,7 +419,7 @@
           "layout": "list",
           "i18n": {
             "en": "Themed Text",
-            "vi": "V\u0103n b\u1ea3n ch\u1ee7 \u0111\u1ec1"
+            "vi": "Văn bản chủ đề"
           },
           "items": [
             {
@@ -563,7 +563,7 @@
           "layout": "list",
           "i18n": {
             "en": "Titles",
-            "vi": "Ti\u00eau \u0111\u1ec1"
+            "vi": "Tiêu đề"
           },
           "items": [
             {
@@ -802,7 +802,7 @@
           "layout": "list",
           "i18n": {
             "en": "Paragraphs",
-            "vi": "\u0110o\u1ea1n v\u0103n"
+            "vi": "Đoạn văn"
           },
           "items": [
             {
@@ -815,7 +815,7 @@
                   "name": "Body Large"
                 },
                 "vi": {
-                  "name": "V\u0103n b\u1ea3n l\u1edbn"
+                  "name": "Văn bản lớn"
                 }
               },
               "props": {
@@ -843,7 +843,7 @@
                   "name": "Body Medium"
                 },
                 "vi": {
-                  "name": "V\u0103n b\u1ea3n v\u1eeba"
+                  "name": "Văn bản vừa"
                 }
               },
               "props": {
@@ -871,7 +871,7 @@
                   "name": "Body Small"
                 },
                 "vi": {
-                  "name": "V\u0103n b\u1ea3n nh\u1ecf"
+                  "name": "Văn bản nhỏ"
                 }
               },
               "props": {
@@ -900,7 +900,7 @@
                   "name": "Lead Paragraph"
                 },
                 "vi": {
-                  "name": "\u0110o\u1ea1n d\u1eabn"
+                  "name": "Đoạn dẫn"
                 }
               },
               "props": {
@@ -934,7 +934,7 @@
                   "name": "Blockquote"
                 },
                 "vi": {
-                  "name": "Tr\u00edch d\u1eabn"
+                  "name": "Trích dẫn"
                 }
               },
               "props": {
@@ -965,7 +965,7 @@
           "layout": "list",
           "i18n": {
             "en": "Collapsible Text",
-            "vi": "V\u0103n b\u1ea3n thu g\u1ecdn"
+            "vi": "Văn bản thu gọn"
           },
           "items": [
             {
@@ -978,7 +978,7 @@
                   "name": "Read More"
                 },
                 "vi": {
-                  "name": "\u0110\u1ecdc th\u00eam"
+                  "name": "Đọc thêm"
                 }
               },
               "props": {
@@ -1008,14 +1008,14 @@
                   "name": "Show More"
                 },
                 "vi": {
-                  "name": "Xem th\u00eam"
+                  "name": "Xem thêm"
                 }
               },
               "props": {
                 "text": "<p>This is a longer piece of text that can be expanded. Perfect for product descriptions, bios, and detailed content sections.</p>",
                 "previewLines": 3,
-                "expandLabel": "Show more \u2192",
-                "collapseLabel": "\u2190 Show less"
+                "expandLabel": "Show more →",
+                "collapseLabel": "← Show less"
               },
               "style": {
                 "fontSize": "15px",
@@ -1037,13 +1037,13 @@
                   "name": "Link to Article"
                 },
                 "vi": {
-                  "name": "Li\u00ean k\u1ebft b\u00e0i vi\u1ebft"
+                  "name": "Liên kết bài viết"
                 }
               },
               "props": {
                 "text": "<p>Get the highlights here. For the full story and all the details, follow the link below to read the complete article.</p>",
                 "previewLines": 2,
-                "expandLabel": "Link to full article \u2192",
+                "expandLabel": "Link to full article →",
                 "collapseLabel": "Show less"
               },
               "style": {
@@ -1066,7 +1066,7 @@
           "layout": "list",
           "i18n": {
             "en": "Text Marquee",
-            "vi": "V\u0103n b\u1ea3n ch\u1ea1y"
+            "vi": "Văn bản chạy"
           },
           "items": [
             {
@@ -1079,14 +1079,14 @@
                   "name": "Casual Ticker"
                 },
                 "vi": {
-                  "name": "Ticker th\u00f4ng th\u01b0\u1eddng"
+                  "name": "Ticker thông thường"
                 }
               },
               "props": {
-                "text": "Let's Talk \ud83d\udc4b",
+                "text": "Let's Talk 👋",
                 "speed": 20,
                 "direction": "left",
-                "separator": "  \u2022  "
+                "separator": "  •  "
               },
               "style": {
                 "fontSize": "18px",
@@ -1110,14 +1110,14 @@
                   "name": "Promo Banner"
                 },
                 "vi": {
-                  "name": "Banner khuy\u1ebfn m\u00e3i"
+                  "name": "Banner khuyến mãi"
                 }
               },
               "props": {
-                "text": "FREE SHIPPING WORLDWIDE \ud83c\udf0d",
+                "text": "FREE SHIPPING WORLDWIDE 🌍",
                 "speed": 15,
                 "direction": "left",
-                "separator": "   \ud83c\udf81   "
+                "separator": "   🎁   "
               },
               "style": {
                 "fontSize": "14px",
@@ -1145,14 +1145,14 @@
                   "name": "New Arrivals"
                 },
                 "vi": {
-                  "name": "H\u00e0ng m\u1edbi v\u1ec1"
+                  "name": "Hàng mới về"
                 }
               },
               "props": {
-                "text": "New Arrivals \ud83d\udecd\ufe0f",
+                "text": "New Arrivals 🛍️",
                 "speed": 25,
                 "direction": "left",
-                "separator": "  \u2605  "
+                "separator": "  ★  "
               },
               "style": {
                 "fontSize": "28px",
@@ -1176,14 +1176,14 @@
                   "name": "Hello Beautiful"
                 },
                 "vi": {
-                  "name": "Xin ch\u00e0o"
+                  "name": "Xin chào"
                 }
               },
               "props": {
-                "text": "Hello Beautiful \u2665",
+                "text": "Hello Beautiful ♥",
                 "speed": 30,
                 "direction": "right",
-                "separator": "  \u2726  "
+                "separator": "  ✦  "
               },
               "style": {
                 "fontSize": "24px",
@@ -1207,7 +1207,7 @@
           "layout": "list",
           "i18n": {
             "en": "Text Mask",
-            "vi": "Hi\u1ec7u \u1ee9ng m\u1eb7t n\u1ea1"
+            "vi": "Hiệu ứng mặt nạ"
           },
           "items": [
             {
@@ -1220,7 +1220,7 @@
                   "name": "Purple Gradient"
                 },
                 "vi": {
-                  "name": "Chuy\u1ec3n m\u00e0u t\u00edm"
+                  "name": "Chuyển màu tím"
                 }
               },
               "props": {
@@ -1245,7 +1245,7 @@
                   "name": "Sunset"
                 },
                 "vi": {
-                  "name": "Ho\u00e0ng h\u00f4n"
+                  "name": "Hoàng hôn"
                 }
               },
               "props": {
@@ -1270,7 +1270,7 @@
                   "name": "Ocean"
                 },
                 "vi": {
-                  "name": "\u0110\u1ea1i d\u01b0\u01a1ng"
+                  "name": "Đại dương"
                 }
               },
               "props": {
@@ -1297,7 +1297,7 @@
       "order": 1,
       "i18n": {
         "en": "Image",
-        "vi": "H\u00ecnh \u1ea3nh"
+        "vi": "Hình ảnh"
       },
       "types": [
         {
@@ -1306,7 +1306,7 @@
           "order": 0,
           "i18n": {
             "en": "Single Image",
-            "vi": "\u1ea2nh \u0111\u01a1n"
+            "vi": "Ảnh đơn"
           },
           "items": [
             {
@@ -1319,7 +1319,7 @@
                   "name": "Full Width"
                 },
                 "vi": {
-                  "name": "To\u00e0n chi\u1ec1u r\u1ed9ng"
+                  "name": "Toàn chiều rộng"
                 }
               },
               "props": {
@@ -1353,7 +1353,7 @@
                   "name": "Card Image"
                 },
                 "vi": {
-                  "name": "\u1ea2nh th\u1ebb"
+                  "name": "Ảnh thẻ"
                 }
               },
               "props": {
@@ -1382,7 +1382,7 @@
                   "name": "Circle"
                 },
                 "vi": {
-                  "name": "Tr\u00f2n"
+                  "name": "Tròn"
                 }
               },
               "props": {
@@ -1412,7 +1412,7 @@
                   "name": "Polaroid"
                 },
                 "vi": {
-                  "name": "\u1ea2nh polaroid"
+                  "name": "Ảnh polaroid"
                 }
               },
               "props": {
@@ -1446,7 +1446,7 @@
                   "name": "Banner"
                 },
                 "vi": {
-                  "name": "Bi\u1ec3u ng\u1eef"
+                  "name": "Biểu ngữ"
                 }
               },
               "props": {
@@ -1481,7 +1481,7 @@
       "order": 2,
       "i18n": {
         "en": "Button",
-        "vi": "N\u00fat b\u1ea5m"
+        "vi": "Nút bấm"
       },
       "types": [
         {
@@ -1492,7 +1492,7 @@
           "columns": 2,
           "i18n": {
             "en": "Text & Icon Buttons",
-            "vi": "N\u00fat v\u0103n b\u1ea3n & bi\u1ec3u t\u01b0\u1ee3ng"
+            "vi": "Nút văn bản & biểu tượng"
           },
           "items": [
             {
@@ -1540,9 +1540,9 @@
             {
               "id": "btn-shop",
               "componentType": "Button",
-              "name": "SHOP \u2192",
+              "name": "SHOP →",
               "props": {
-                "label": "<p>SHOP \u2192</p>",
+                "label": "<p>SHOP →</p>",
                 "variant": "primary",
                 "size": "md",
                 "hoverStyle": {
@@ -2294,7 +2294,7 @@
       "order": 6,
       "i18n": {
         "en": "Layout",
-        "vi": "B\u1ed1 c\u1ee5c"
+        "vi": "Bố cục"
       },
       "types": [
         {
@@ -2303,7 +2303,7 @@
           "order": 0,
           "i18n": {
             "en": "Grid",
-            "vi": "L\u01b0\u1edbi"
+            "vi": "Lưới"
           },
           "items": [
             {
@@ -2316,7 +2316,7 @@
                   "name": "2 Columns"
                 },
                 "vi": {
-                  "name": "2 c\u1ed9t"
+                  "name": "2 cột"
                 }
               },
               "props": {
@@ -2353,7 +2353,7 @@
                   "name": "3 Columns"
                 },
                 "vi": {
-                  "name": "3 c\u1ed9t"
+                  "name": "3 cột"
                 }
               },
               "props": {
@@ -2390,7 +2390,7 @@
                   "name": "4 Columns"
                 },
                 "vi": {
-                  "name": "4 c\u1ed9t"
+                  "name": "4 cột"
                 }
               },
               "props": {
@@ -2427,7 +2427,7 @@
                   "name": "Sidebar Left"
                 },
                 "vi": {
-                  "name": "Thanh b\u00ean tr\u00e1i"
+                  "name": "Thanh bên trái"
                 }
               },
               "props": {
@@ -2465,7 +2465,7 @@
                   "name": "Sidebar Right"
                 },
                 "vi": {
-                  "name": "Thanh b\u00ean ph\u1ea3i"
+                  "name": "Thanh bên phải"
                 }
               },
               "props": {
@@ -2503,7 +2503,7 @@
                   "name": "2 Col Tight"
                 },
                 "vi": {
-                  "name": "2 c\u1ed9t kh\u00edt"
+                  "name": "2 cột khít"
                 }
               },
               "props": {
@@ -2540,7 +2540,7 @@
                   "name": "3 Col Tight"
                 },
                 "vi": {
-                  "name": "3 c\u1ed9t kh\u00edt"
+                  "name": "3 cột khít"
                 }
               },
               "props": {
@@ -2651,7 +2651,7 @@
           "order": 1,
           "i18n": {
             "en": "Row & Column",
-            "vi": "H\u00e0ng & C\u1ed9t"
+            "vi": "Hàng & Cột"
           },
           "items": [
             {
@@ -2664,7 +2664,7 @@
                   "name": "Row"
                 },
                 "vi": {
-                  "name": "H\u00e0ng ngang"
+                  "name": "Hàng ngang"
                 }
               },
               "props": {
@@ -2699,7 +2699,7 @@
                   "name": "Row Space Between"
                 },
                 "vi": {
-                  "name": "H\u00e0ng c\u00e1ch \u0111\u1ec1u"
+                  "name": "Hàng cách đều"
                 }
               },
               "props": {
@@ -2736,7 +2736,7 @@
                   "name": "Row Centered"
                 },
                 "vi": {
-                  "name": "H\u00e0ng c\u0103n gi\u1eefa"
+                  "name": "Hàng căn giữa"
                 }
               },
               "props": {
@@ -2773,7 +2773,7 @@
                   "name": "Row Wrap"
                 },
                 "vi": {
-                  "name": "H\u00e0ng xu\u1ed1ng d\u00f2ng"
+                  "name": "Hàng xuống dòng"
                 }
               },
               "props": {
@@ -2809,7 +2809,7 @@
                   "name": "Column"
                 },
                 "vi": {
-                  "name": "C\u1ed9t d\u1ecdc"
+                  "name": "Cột dọc"
                 }
               },
               "props": {
@@ -2844,7 +2844,7 @@
                   "name": "Column Centered"
                 },
                 "vi": {
-                  "name": "C\u1ed9t c\u0103n gi\u1eefa"
+                  "name": "Cột căn giữa"
                 }
               },
               "props": {
@@ -2881,7 +2881,7 @@
                   "name": "Card Column"
                 },
                 "vi": {
-                  "name": "C\u1ed9t th\u1ebb"
+                  "name": "Cột thẻ"
                 }
               },
               "props": {
@@ -2917,7 +2917,7 @@
           "order": 2,
           "i18n": {
             "en": "Container Boxes",
-            "vi": "H\u1ed9p ch\u1ee9a"
+            "vi": "Hộp chứa"
           },
           "items": [
             {
@@ -2930,7 +2930,7 @@
                   "name": "Flex Column"
                 },
                 "vi": {
-                  "name": "C\u1ed9t flex"
+                  "name": "Cột flex"
                 }
               },
               "props": {
@@ -2964,7 +2964,7 @@
                   "name": "Flex Row"
                 },
                 "vi": {
-                  "name": "H\u00e0ng flex"
+                  "name": "Hàng flex"
                 }
               },
               "props": {
@@ -3003,7 +3003,7 @@
                   "name": "Card"
                 },
                 "vi": {
-                  "name": "Th\u1ebb"
+                  "name": "Thẻ"
                 }
               },
               "props": {
@@ -3040,7 +3040,7 @@
                   "name": "Centered Box"
                 },
                 "vi": {
-                  "name": "H\u1ed9p c\u0103n gi\u1eefa"
+                  "name": "Hộp căn giữa"
                 }
               },
               "props": {
@@ -3082,7 +3082,7 @@
                   "name": "Sidebar Layout"
                 },
                 "vi": {
-                  "name": "B\u1ed1 c\u1ee5c c\u1ea1nh"
+                  "name": "Bố cục cạnh"
                 }
               },
               "props": {
@@ -3118,7 +3118,7 @@
           "order": 2,
           "i18n": {
             "en": "Styled Boxes",
-            "vi": "H\u1ed9p c\u00f3 ki\u1ec3u d\u00e1ng"
+            "vi": "Hộp có kiểu dáng"
           },
           "items": [
             {
@@ -3131,7 +3131,7 @@
                   "name": "Glass"
                 },
                 "vi": {
-                  "name": "K\u00ednh"
+                  "name": "Kính"
                 }
               },
               "props": {
@@ -3169,7 +3169,7 @@
                   "name": "Gradient"
                 },
                 "vi": {
-                  "name": "Chuy\u1ec3n m\u00e0u"
+                  "name": "Chuyển màu"
                 }
               },
               "props": {
@@ -3203,7 +3203,7 @@
                   "name": "Bordered"
                 },
                 "vi": {
-                  "name": "C\u00f3 vi\u1ec1n"
+                  "name": "Có viền"
                 }
               },
               "props": {
@@ -3238,7 +3238,7 @@
                   "name": "Dark Box"
                 },
                 "vi": {
-                  "name": "H\u1ed9p t\u1ed1i"
+                  "name": "Hộp tối"
                 }
               },
               "props": {
@@ -3272,7 +3272,7 @@
           "layout": "list",
           "i18n": {
             "en": "Repeaters",
-            "vi": "Ph\u1ea7n l\u1eb7p"
+            "vi": "Phần lặp"
           },
           "items": [
             {
@@ -3285,7 +3285,7 @@
                   "name": "Card Grid"
                 },
                 "vi": {
-                  "name": "L\u01b0\u1edbi th\u1ebb"
+                  "name": "Lưới thẻ"
                 }
               },
               "props": {
@@ -3310,7 +3310,7 @@
                   "name": "2-Column List"
                 },
                 "vi": {
-                  "name": "Danh s\u00e1ch 2 c\u1ed9t"
+                  "name": "Danh sách 2 cột"
                 }
               },
               "props": {
@@ -3339,7 +3339,7 @@
                   "name": "Horizontal Row"
                 },
                 "vi": {
-                  "name": "H\u00e0ng ngang"
+                  "name": "Hàng ngang"
                 }
               },
               "props": {
@@ -3368,7 +3368,7 @@
                   "name": "Testimonials"
                 },
                 "vi": {
-                  "name": "\u0110\u00e1nh gi\u00e1"
+                  "name": "Đánh giá"
                 }
               },
               "props": {
@@ -3397,7 +3397,7 @@
                   "name": "Team Grid"
                 },
                 "vi": {
-                  "name": "L\u01b0\u1edbi nh\u00f3m"
+                  "name": "Lưới nhóm"
                 }
               },
               "props": {
@@ -3430,22 +3430,22 @@
       "order": 3,
       "i18n": {
         "en": "Gallery",
-        "vi": "Th\u01b0 vi\u1ec7n \u1ea3nh"
+        "vi": "Thư viện ảnh"
       },
       "types": [
         {
-          "id": "grid-galleries",
-          "label": "Grid Galleries",
+          "id": "gallery-grid",
+          "label": "Gallery",
           "order": 0,
           "layout": "preview",
           "i18n": {
-            "en": "Grid Galleries",
-            "vi": "B\u1ed9 s\u01b0u t\u1eadp l\u01b0\u1edbi"
+            "en": "Gallery",
+            "vi": "Thu vien anh"
           },
           "items": [
             {
               "id": "gallery-grid-3col",
-              "componentType": "GalleryGrid",
+              "componentType": "GalleryPro",
               "name": "3-Column Grid",
               "thumbnail": null,
               "i18n": {
@@ -3453,10 +3453,11 @@
                   "name": "3-Column Grid"
                 },
                 "vi": {
-                  "name": "L\u01b0\u1edbi 3 c\u1ed9t"
+                  "name": "Luoi 3 cot"
                 }
               },
               "props": {
+                "layoutMode": "grid",
                 "columns": 3,
                 "gap": 8,
                 "aspectRatio": "1/1"
@@ -3469,7 +3470,7 @@
             },
             {
               "id": "gallery-grid-2col",
-              "componentType": "GalleryGrid",
+              "componentType": "GalleryPro",
               "name": "2-Column Grid",
               "thumbnail": null,
               "i18n": {
@@ -3477,10 +3478,11 @@
                   "name": "2-Column Grid"
                 },
                 "vi": {
-                  "name": "L\u01b0\u1edbi 2 c\u1ed9t"
+                  "name": "Luoi 2 cot"
                 }
               },
               "props": {
+                "layoutMode": "grid",
                 "columns": 2,
                 "gap": 12,
                 "aspectRatio": "4/3"
@@ -3493,7 +3495,7 @@
             },
             {
               "id": "gallery-grid-4col",
-              "componentType": "GalleryGrid",
+              "componentType": "GalleryPro",
               "name": "4-Column Grid",
               "thumbnail": null,
               "i18n": {
@@ -3501,10 +3503,11 @@
                   "name": "4-Column Grid"
                 },
                 "vi": {
-                  "name": "L\u01b0\u1edbi 4 c\u1ed9t"
+                  "name": "Luoi 4 cot"
                 }
               },
               "props": {
+                "layoutMode": "grid",
                 "columns": 4,
                 "gap": 4,
                 "aspectRatio": "1/1"
@@ -3517,7 +3520,7 @@
             },
             {
               "id": "gallery-grid-portrait",
-              "componentType": "GalleryGrid",
+              "componentType": "GalleryPro",
               "name": "Portrait Grid",
               "thumbnail": null,
               "i18n": {
@@ -3525,10 +3528,11 @@
                   "name": "Portrait Grid"
                 },
                 "vi": {
-                  "name": "L\u01b0\u1edbi d\u1ecdc"
+                  "name": "Luoi doc"
                 }
               },
               "props": {
+                "layoutMode": "grid",
                 "columns": 3,
                 "gap": 8,
                 "aspectRatio": "3/4"
@@ -3541,7 +3545,7 @@
             },
             {
               "id": "gallery-grid-widescreen",
-              "componentType": "GalleryGrid",
+              "componentType": "GalleryPro",
               "name": "Widescreen Grid",
               "thumbnail": null,
               "i18n": {
@@ -3549,10 +3553,11 @@
                   "name": "Widescreen Grid"
                 },
                 "vi": {
-                  "name": "L\u01b0\u1edbi m\u00e0n h\u00ecnh r\u1ed9ng"
+                  "name": "Luoi man hinh rong"
                 }
               },
               "props": {
+                "layoutMode": "grid",
                 "columns": 2,
                 "gap": 16,
                 "aspectRatio": "16/9"
@@ -3565,13 +3570,21 @@
             },
             {
               "id": "gallery-masonry-3",
-              "componentType": "GalleryGrid",
+              "componentType": "GalleryPro",
               "name": "Masonry 3-Col",
               "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Masonry 3-Col"
+                },
+                "vi": {
+                  "name": "Masonry 3 cot"
+                }
+              },
               "props": {
+                "layoutMode": "masonry",
                 "columns": 3,
-                "gap": 8,
-                "layout": "masonry"
+                "gap": 8
               },
               "tags": [
                 "masonry",
@@ -3581,153 +3594,315 @@
             },
             {
               "id": "gallery-masonry-2",
-              "componentType": "GalleryGrid",
+              "componentType": "GalleryPro",
               "name": "Masonry 2-Col",
               "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Masonry 2-Col"
+                },
+                "vi": {
+                  "name": "Masonry 2 cot"
+                }
+              },
               "props": {
+                "layoutMode": "masonry",
                 "columns": 2,
-                "gap": 12,
-                "layout": "masonry"
+                "gap": 12
               },
               "tags": [
                 "masonry",
                 "gallery",
                 "2-col"
               ]
-            }
-          ]
-        },
-        {
-          "id": "pro-galleries",
-          "label": "Pro Galleries",
-          "order": 1,
-          "layout": "preview",
-          "i18n": {
-            "en": "Pro Galleries",
-            "vi": "Th\u01b0 vi\u1ec7n chuy\u00ean nghi\u1ec7p"
-          },
-          "items": [
-            {
-              "id": "pro-mosaic",
-              "componentType": "GalleryPro",
-              "name": "Mosaic Large",
-              "props": {
-                "layout": "mosaic",
-                "gap": 8
-              }
             },
             {
-              "id": "pro-magazine",
+              "id": "pro-collage",
               "componentType": "GalleryPro",
-              "name": "Magazine Grid",
+              "name": "Collage",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Collage"
+                },
+                "vi": {
+                  "name": "Collage"
+                }
+              },
               "props": {
-                "layout": "magazine",
-                "gap": 12
-              }
+                "layoutMode": "collage",
+                "gap": 8
+              },
+              "tags": [
+                "gallery",
+                "collage"
+              ]
             },
             {
               "id": "pro-strip",
               "componentType": "GalleryPro",
               "name": "Strip Layout",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Strip Layout"
+                },
+                "vi": {
+                  "name": "Dai ngang"
+                }
+              },
               "props": {
-                "layout": "strip",
+                "layoutMode": "strip",
                 "gap": 8
-              }
+              },
+              "tags": [
+                "gallery",
+                "strip"
+              ]
             },
             {
-              "id": "pro-editorial",
+              "id": "pro-column",
               "componentType": "GalleryPro",
-              "name": "Editorial",
+              "name": "Column Layout",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Column Layout"
+                },
+                "vi": {
+                  "name": "Cot doc"
+                }
+              },
               "props": {
-                "layout": "editorial",
+                "layoutMode": "column",
+                "gap": 8
+              },
+              "tags": [
+                "gallery",
+                "column"
+              ]
+            },
+            {
+              "id": "pro-bricks",
+              "componentType": "GalleryPro",
+              "name": "Bricks",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Bricks"
+                },
+                "vi": {
+                  "name": "Gach xep"
+                }
+              },
+              "props": {
+                "layoutMode": "bricks",
+                "gap": 8
+              },
+              "tags": [
+                "gallery",
+                "bricks"
+              ]
+            },
+            {
+              "id": "pro-honeycomb",
+              "componentType": "GalleryPro",
+              "name": "Honeycomb",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Honeycomb"
+                },
+                "vi": {
+                  "name": "To ong"
+                }
+              },
+              "props": {
+                "layoutMode": "honeycomb",
                 "gap": 12
-              }
+              },
+              "tags": [
+                "gallery",
+                "honeycomb"
+              ]
             },
             {
-              "id": "pro-showcase",
+              "id": "pro-freestyle",
               "componentType": "GalleryPro",
-              "name": "Showcase",
+              "name": "Freestyle",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Freestyle"
+                },
+                "vi": {
+                  "name": "Tu do"
+                }
+              },
               "props": {
-                "layout": "showcase",
+                "layoutMode": "freestyle",
+                "gap": 12
+              },
+              "tags": [
+                "gallery",
+                "freestyle"
+              ]
+            },
+            {
+              "id": "pro-stacked",
+              "componentType": "GalleryPro",
+              "name": "Stacked",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Stacked"
+                },
+                "vi": {
+                  "name": "Xep chong"
+                }
+              },
+              "props": {
+                "layoutMode": "stacked",
                 "gap": 8
-              }
+              },
+              "tags": [
+                "gallery",
+                "stacked"
+              ]
+            },
+            {
+              "id": "thumbnails-basic",
+              "componentType": "GalleryPro",
+              "name": "Thumbnails",
+              "thumbnail": null,
+              "i18n": {
+                "en": {
+                  "name": "Thumbnails"
+                },
+                "vi": {
+                  "name": "Hinh thu nho"
+                }
+              },
+              "props": {
+                "layoutMode": "thumbnails",
+                "aspectRatio": "4/3",
+                "gap": 8
+              },
+              "tags": [
+                "gallery",
+                "thumbnails"
+              ]
             }
           ]
         },
         {
-          "id": "slider-galleries",
-          "label": "Slider Galleries",
-          "order": 2,
+          "id": "gallery-carousel",
+          "label": "Carousel",
+          "order": 1,
           "layout": "preview",
           "i18n": {
-            "en": "Slider Galleries",
-            "vi": "B\u1ed9 s\u01b0u t\u1eadp tr\u00ecnh chi\u1ebfu"
+            "en": "Carousel",
+            "vi": "Băng chuyền"
           },
           "items": [
             {
-              "id": "slider-basic",
-              "componentType": "GallerySlider",
-              "name": "Basic Slider",
-              "props": {
-                "slideCount": 5,
-                "showArrows": true,
-                "showDots": true,
-                "loop": true,
-                "aspectRatio": "16/9",
-                "shape": "rectangle"
-              }
+              "id": "gallery-slider",
+              "componentType": "GalleryPro",
+              "name": "Slider",
+              "thumbnail": null,
+              "i18n": { "en": { "name": "Slider" }, "vi": { "name": "Slider" } },
+              "props": { "layoutMode": "slider", "carouselConfig": { "effect": "slide", "aspectRatio": "16/9", "slidesPerView": 1 } },
+              "tags": ["gallery", "slider", "carousel"]
             },
             {
-              "id": "slider-square",
-              "componentType": "GallerySlider",
-              "name": "Square Slider",
-              "props": {
-                "slideCount": 5,
-                "showArrows": true,
-                "showDots": true,
-                "loop": true,
-                "aspectRatio": "1/1",
-                "shape": "rectangle"
-              }
+              "id": "gallery-slider-square",
+              "componentType": "GalleryPro",
+              "name": "Slider Square",
+              "thumbnail": null,
+              "i18n": { "en": { "name": "Slider Square" }, "vi": { "name": "Slider vuông" } },
+              "props": { "layoutMode": "slider", "carouselConfig": { "effect": "slide", "aspectRatio": "1/1", "slidesPerView": 1 } },
+              "tags": ["gallery", "slider", "square"]
             },
             {
-              "id": "slider-circle",
-              "componentType": "GallerySlider",
-              "name": "Circle Slider",
-              "props": {
-                "slideCount": 5,
-                "showArrows": true,
-                "showDots": true,
-                "loop": true,
-                "aspectRatio": "1/1",
-                "shape": "circle"
-              }
+              "id": "gallery-slider-fade",
+              "componentType": "GalleryPro",
+              "name": "Fade",
+              "thumbnail": null,
+              "i18n": { "en": { "name": "Fade" }, "vi": { "name": "Mờ dần" } },
+              "props": { "layoutMode": "slider", "carouselConfig": { "effect": "fade", "fadeCrossFade": true, "aspectRatio": "16/9" } },
+              "tags": ["gallery", "slider", "fade", "transition"]
             },
             {
-              "id": "slider-oval",
-              "componentType": "GallerySlider",
-              "name": "Oval Slider",
-              "props": {
-                "slideCount": 5,
-                "showArrows": true,
-                "showDots": true,
-                "loop": true,
-                "aspectRatio": "4/3",
-                "shape": "oval"
-              }
+              "id": "gallery-slider-peek",
+              "componentType": "GalleryPro",
+              "name": "Peek",
+              "thumbnail": null,
+              "i18n": { "en": { "name": "Peek" }, "vi": { "name": "Hé lộ" } },
+              "props": { "layoutMode": "slider", "carouselConfig": { "effect": "slide", "slidesPerView": 1.15, "centeredSlides": true, "spaceBetween": 16, "slideRadius": 8 } },
+              "tags": ["gallery", "slider", "peek"]
             },
             {
-              "id": "slider-portrait",
-              "componentType": "GallerySlider",
-              "name": "Portrait Slider",
-              "props": {
-                "slideCount": 5,
-                "showArrows": true,
-                "showDots": false,
-                "loop": true,
-                "aspectRatio": "3/4",
-                "shape": "rectangle"
-              }
+              "id": "gallery-slider-multi",
+              "componentType": "GalleryPro",
+              "name": "Multi-Slide",
+              "thumbnail": null,
+              "i18n": { "en": { "name": "Multi-Slide" }, "vi": { "name": "Nhiều slide" } },
+              "props": { "layoutMode": "slider", "carouselConfig": { "effect": "slide", "slidesPerView": 2.5, "spaceBetween": 16, "centeredSlides": true, "slideRadius": 4 } },
+              "tags": ["gallery", "slider", "multi"]
+            },
+            {
+              "id": "gallery-slider-cards",
+              "componentType": "GalleryPro",
+              "name": "Card Stack",
+              "thumbnail": null,
+              "i18n": { "en": { "name": "Card Stack" }, "vi": { "name": "Xếp thẻ" } },
+              "props": { "layoutMode": "slider", "carouselConfig": { "effect": "cards", "centeredSlides": true, "slideRadius": 12 } },
+              "tags": ["gallery", "slider", "cards", "stack"]
+            },
+            {
+              "id": "gallery-slider-coverflow",
+              "componentType": "GalleryPro",
+              "name": "Coverflow",
+              "thumbnail": null,
+              "i18n": { "en": { "name": "Coverflow" }, "vi": { "name": "Coverflow" } },
+              "props": { "layoutMode": "slider", "carouselConfig": { "effect": "coverflow", "centeredSlides": true, "slidesPerView": 3, "coverflowEffect": { "rotate": 50, "stretch": 0, "depth": 100, "modifier": 1, "scale": 1, "slideShadows": true } } },
+              "tags": ["gallery", "slider", "coverflow", "3d"]
+            },
+            {
+              "id": "gallery-slider-cube",
+              "componentType": "GalleryPro",
+              "name": "Cube",
+              "thumbnail": null,
+              "i18n": { "en": { "name": "Cube" }, "vi": { "name": "Khối lập phương" } },
+              "props": { "layoutMode": "slider", "carouselConfig": { "effect": "cube", "cubeEffect": { "shadow": true, "slideShadows": true, "shadowOffset": 20, "shadowScale": 0.94 } } },
+              "tags": ["gallery", "slider", "cube", "3d"]
+            },
+            {
+              "id": "gallery-slider-flip",
+              "componentType": "GalleryPro",
+              "name": "Flip",
+              "thumbnail": null,
+              "i18n": { "en": { "name": "Flip" }, "vi": { "name": "Lật trang" } },
+              "props": { "layoutMode": "slider", "carouselConfig": { "effect": "flip", "flipSlideShadows": true } },
+              "tags": ["gallery", "slider", "flip"]
+            },
+            {
+              "id": "gallery-slideshow",
+              "componentType": "GalleryPro",
+              "name": "Slideshow",
+              "thumbnail": null,
+              "i18n": { "en": { "name": "Slideshow" }, "vi": { "name": "Trình chiếu tự động" } },
+              "props": { "layoutMode": "slideshow", "carouselConfig": { "autoplay": { "enabled": true, "delay": 3000, "stopOnInteraction": true, "pauseOnMouseEnter": true, "reverseDirection": false, "disableOnInteraction": false } } },
+              "tags": ["gallery", "slideshow", "autoplay"]
+            },
+            {
+              "id": "gallery-3d-carousel",
+              "componentType": "GalleryPro",
+              "name": "3D Carousel",
+              "thumbnail": null,
+              "i18n": { "en": { "name": "3D Carousel" }, "vi": { "name": "Carousel 3D" } },
+              "props": { "layoutMode": "carousel-3d" },
+              "tags": ["gallery", "3d", "carousel", "creative"]
             }
           ]
         }
@@ -3740,7 +3915,7 @@
       "order": 4,
       "i18n": {
         "en": "Decorative",
-        "vi": "Trang tr\u00ed"
+        "vi": "Trang trí"
       },
       "types": [
         {
@@ -3749,7 +3924,7 @@
           "order": 0,
           "i18n": {
             "en": "Basic Shapes",
-            "vi": "H\u00ecnh c\u01a1 b\u1ea3n"
+            "vi": "Hình cơ bản"
           },
           "items": [
             {
@@ -3762,7 +3937,7 @@
                   "name": "Rectangle"
                 },
                 "vi": {
-                  "name": "H\u00ecnh ch\u1eef nh\u1eadt"
+                  "name": "Hình chữ nhật"
                 }
               },
               "props": {
@@ -3789,7 +3964,7 @@
                   "name": "Circle"
                 },
                 "vi": {
-                  "name": "H\u00ecnh tr\u00f2n"
+                  "name": "Hình tròn"
                 }
               },
               "props": {
@@ -3816,7 +3991,7 @@
                   "name": "Triangle"
                 },
                 "vi": {
-                  "name": "H\u00ecnh tam gi\u00e1c"
+                  "name": "Hình tam giác"
                 }
               },
               "props": {
@@ -3842,7 +4017,7 @@
                   "name": "Star"
                 },
                 "vi": {
-                  "name": "Ng\u00f4i sao"
+                  "name": "Ngôi sao"
                 }
               },
               "props": {
@@ -3869,7 +4044,7 @@
                   "name": "Heart"
                 },
                 "vi": {
-                  "name": "Tr\u00e1i tim"
+                  "name": "Trái tim"
                 }
               },
               "props": {
@@ -3896,7 +4071,7 @@
                   "name": "Hexagon"
                 },
                 "vi": {
-                  "name": "L\u1ee5c gi\u00e1c"
+                  "name": "Lục giác"
                 }
               },
               "props": {
@@ -3922,7 +4097,7 @@
                   "name": "Diamond"
                 },
                 "vi": {
-                  "name": "Kim c\u01b0\u01a1ng"
+                  "name": "Kim cương"
                 }
               },
               "props": {
@@ -3948,7 +4123,7 @@
                   "name": "Blob"
                 },
                 "vi": {
-                  "name": "H\u00ecnh loang"
+                  "name": "Hình loang"
                 }
               },
               "props": {
@@ -3974,7 +4149,7 @@
           "order": 1,
           "i18n": {
             "en": "Arrows",
-            "vi": "M\u0169i t\u00ean"
+            "vi": "Mũi tên"
           },
           "items": [
             {
@@ -3987,7 +4162,7 @@
                   "name": "Arrow Right"
                 },
                 "vi": {
-                  "name": "M\u0169i t\u00ean ph\u1ea3i"
+                  "name": "Mũi tên phải"
                 }
               },
               "props": {
@@ -4014,7 +4189,7 @@
                   "name": "Arrow Left"
                 },
                 "vi": {
-                  "name": "M\u0169i t\u00ean tr\u00e1i"
+                  "name": "Mũi tên trái"
                 }
               },
               "props": {
@@ -4041,7 +4216,7 @@
                   "name": "Arrow Up"
                 },
                 "vi": {
-                  "name": "M\u0169i t\u00ean l\u00ean"
+                  "name": "Mũi tên lên"
                 }
               },
               "props": {
@@ -4068,7 +4243,7 @@
                   "name": "Arrow Down"
                 },
                 "vi": {
-                  "name": "M\u0169i t\u00ean xu\u1ed1ng"
+                  "name": "Mũi tên xuống"
                 }
               },
               "props": {
@@ -4093,7 +4268,7 @@
           "order": 2,
           "i18n": {
             "en": "Lines",
-            "vi": "\u0110\u01b0\u1eddng k\u1ebb"
+            "vi": "Đường kẻ"
           },
           "items": [
             {
@@ -4106,7 +4281,7 @@
                   "name": "Solid Line"
                 },
                 "vi": {
-                  "name": "\u0110\u01b0\u1eddng li\u1ec1n"
+                  "name": "Đường liền"
                 }
               },
               "props": {
@@ -4133,7 +4308,7 @@
                   "name": "Thick Line"
                 },
                 "vi": {
-                  "name": "\u0110\u01b0\u1eddng d\u00e0y"
+                  "name": "Đường dày"
                 }
               },
               "props": {
@@ -4161,7 +4336,7 @@
                   "name": "Accent Line"
                 },
                 "vi": {
-                  "name": "\u0110\u01b0\u1eddng nh\u1ea5n"
+                  "name": "Đường nhấn"
                 }
               },
               "props": {
@@ -4189,7 +4364,7 @@
                   "name": "Vertical Line"
                 },
                 "vi": {
-                  "name": "\u0110\u01b0\u1eddng d\u1ecdc"
+                  "name": "Đường dọc"
                 }
               },
               "props": {
@@ -4228,7 +4403,7 @@
           "layout": "preview",
           "i18n": {
             "en": "Themed Menus",
-            "vi": "Menu theo ch\u1ee7 \u0111\u1ec1"
+            "vi": "Menu theo chủ đề"
           },
           "items": [
             {
@@ -4241,7 +4416,7 @@
                   "name": "Plain Menu"
                 },
                 "vi": {
-                  "name": "Menu \u0111\u01a1n gi\u1ea3n"
+                  "name": "Menu đơn giản"
                 }
               },
               "props": {
@@ -4293,7 +4468,7 @@
                   "name": "Underline Menu"
                 },
                 "vi": {
-                  "name": "Menu g\u1ea1ch ch\u00e2n"
+                  "name": "Menu gạch chân"
                 }
               },
               "props": {
@@ -4345,7 +4520,7 @@
                   "name": "Boxed Menu"
                 },
                 "vi": {
-                  "name": "Menu vi\u1ec1n khung"
+                  "name": "Menu viền khung"
                 }
               },
               "props": {
@@ -4409,7 +4584,7 @@
                   "name": "Classic Nav"
                 },
                 "vi": {
-                  "name": "Menu c\u1ed5 \u0111i\u1ec3n"
+                  "name": "Menu cổ điển"
                 }
               },
               "props": {
@@ -4460,7 +4635,7 @@
                   "name": "Pill Nav (Green)"
                 },
                 "vi": {
-                  "name": "Menu vi\u00ean thu\u1ed1c xanh"
+                  "name": "Menu viên thuốc xanh"
                 }
               },
               "props": {
@@ -4514,7 +4689,7 @@
                   "name": "Dark Active Nav"
                 },
                 "vi": {
-                  "name": "Menu n\u1ec1n t\u1ed1i"
+                  "name": "Menu nền tối"
                 }
               },
               "props": {
@@ -4568,7 +4743,7 @@
                   "name": "Underline Spaced Nav"
                 },
                 "vi": {
-                  "name": "Menu g\u1ea1ch ch\u00e2n c\u00e1ch ch\u1eef"
+                  "name": "Menu gạch chân cách chữ"
                 }
               },
               "props": {
@@ -4621,7 +4796,7 @@
                   "name": "Pill All Nav (Coral)"
                 },
                 "vi": {
-                  "name": "Menu vi\u00ean thu\u1ed1c san h\u00f4"
+                  "name": "Menu viên thuốc san hô"
                 }
               },
               "props": {
@@ -4673,7 +4848,7 @@
                   "name": "Button Nav (Blue)"
                 },
                 "vi": {
-                  "name": "Menu n\u00fat xanh"
+                  "name": "Menu nút xanh"
                 }
               },
               "props": {
@@ -4783,7 +4958,7 @@
           "layout": "preview",
           "i18n": {
             "en": "Anchors",
-            "vi": "Neo cu\u1ed9n"
+            "vi": "Neo cuộn"
           },
           "items": [
             {
@@ -4797,7 +4972,7 @@
                   "name": "Section Anchor"
                 },
                 "vi": {
-                  "name": "Neo ph\u1ea7n"
+                  "name": "Neo phần"
                 }
               },
               "props": {
@@ -4821,7 +4996,7 @@
                   "name": "Top Anchor"
                 },
                 "vi": {
-                  "name": "Neo \u0111\u1ea7u trang"
+                  "name": "Neo đầu trang"
                 }
               },
               "props": {
@@ -4845,7 +5020,7 @@
       "order": 99,
       "i18n": {
         "en": "Cards",
-        "vi": "Th\u1ebb"
+        "vi": "Thẻ"
       },
       "types": [
         {
@@ -4855,7 +5030,7 @@
           "layout": "grid",
           "i18n": {
             "en": "Testimonial",
-            "vi": "\u0110\u00e1nh gi\u00e1"
+            "vi": "Đánh giá"
           },
           "items": [
             {
@@ -4902,7 +5077,7 @@
                   "name": "Emerald"
                 },
                 "vi": {
-                  "name": "Xanh l\u00e1"
+                  "name": "Xanh lá"
                 }
               },
               "props": {
@@ -4935,7 +5110,7 @@
                   "name": "Rose"
                 },
                 "vi": {
-                  "name": "H\u1ed3ng"
+                  "name": "Hồng"
                 }
               },
               "props": {
@@ -4966,7 +5141,7 @@
           "layout": "grid",
           "i18n": {
             "en": "Pricing",
-            "vi": "Gi\u00e1 c\u1ea3"
+            "vi": "Giá cả"
           },
           "items": [
             {
@@ -4980,7 +5155,7 @@
                   "name": "Basic"
                 },
                 "vi": {
-                  "name": "C\u01a1 b\u1ea3n"
+                  "name": "Cơ bản"
                 }
               },
               "props": {
@@ -5015,7 +5190,7 @@
                   "name": "Pro (highlighted)"
                 },
                 "vi": {
-                  "name": "Pro (n\u1ed5i b\u1eadt)"
+                  "name": "Pro (nổi bật)"
                 }
               },
               "props": {
@@ -5051,7 +5226,7 @@
                   "name": "Enterprise"
                 },
                 "vi": {
-                  "name": "Doanh nghi\u1ec7p"
+                  "name": "Doanh nghiệp"
                 }
               },
               "props": {
@@ -5090,15 +5265,15 @@
             {
               "id": "hero-indigo-violet",
               "componentType": "HeroBanner",
-              "name": "Indigo \u2192 Violet",
+              "name": "Indigo → Violet",
               "description": "Bold hero heading with indigo-to-violet gradient",
               "thumbnail": null,
               "i18n": {
                 "en": {
-                  "name": "Indigo \u2192 Violet"
+                  "name": "Indigo → Violet"
                 },
                 "vi": {
-                  "name": "Indigo \u2192 T\u00edm"
+                  "name": "Indigo → Tím"
                 }
               },
               "props": {
@@ -5124,15 +5299,15 @@
             {
               "id": "hero-rose-orange",
               "componentType": "HeroBanner",
-              "name": "Rose \u2192 Orange",
+              "name": "Rose → Orange",
               "description": "Warm hero heading with rose-to-orange gradient",
               "thumbnail": null,
               "i18n": {
                 "en": {
-                  "name": "Rose \u2192 Orange"
+                  "name": "Rose → Orange"
                 },
                 "vi": {
-                  "name": "H\u1ed3ng \u2192 Cam"
+                  "name": "Hồng → Cam"
                 }
               },
               "props": {
@@ -5166,7 +5341,7 @@
                   "name": "Dark"
                 },
                 "vi": {
-                  "name": "T\u1ed1i"
+                  "name": "Tối"
                 }
               },
               "props": {

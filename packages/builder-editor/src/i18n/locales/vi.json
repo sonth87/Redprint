@@ -590,5 +590,39 @@
     "aiGenerator": "Tạo bằng AI",
     "addElements": "Thêm linh kiện",
     "resizeHint": "Kéo để thay đổi chiều cao"
+  },
+  "galleryPanel": {
+    "tabs": {
+      "layout": "Bố cục",
+      "design": "Thiết kế"
+    },
+    "sections": {
+      "gallery": "Thư viện ảnh",
+      "carousel": "Carousel"
+    },
+    "design": {
+      "columns": "Cột",
+      "gap": "Khoảng cách",
+      "aspectRatio": "Tỉ lệ khung hình",
+      "aspectRatioOptions": {
+        "1/1": "1:1 Vuông",
+        "4/3": "4:3",
+        "16/9": "16:9",
+        "3/4": "3:4 Dọc",
+        "2/1": "2:1 Rộng"
+      },
+      "imageFit": "Vừa khung",
+      "imageFitOptions": {
+        "cover": "Cover (cắt cho vừa)",
+        "contain": "Contain (thu nhỏ)",
+        "fill": "Fill (kéo giãn)"
+      },
+      "borderRadius": "Bo góc",
+      "autoPlay": "Tự động phát",
+      "speed": "Tốc độ",
+      "loop": "Lặp lại",
+      "arrows": "Mũi tên",
+      "dots": "Chấm điều hướng"
+    }
   }
 }

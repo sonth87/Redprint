@@ -9,7 +9,7 @@ import { NumericPropertyInput } from "../controls/NumericPropertyInput";
 import { ShadowControl } from "../../../controls/shadow/ShadowControl";
 import { ImagePropControl } from "../controls/ImagePropControl";
 import { ColorSwatch } from "../../../controls/color/ColorSwatch";
-import type { ComponentDefinition, BuilderNode } from "@ui-builder/builder-core";
+import type { ComponentDefinition, BuilderNode, PropSchema } from "@ui-builder/builder-core";
 import { useTranslation } from "react-i18next";
 
 export function DesignTab({
@@ -22,8 +22,8 @@ export function DesignTab({
 }: {
   definition: ComponentDefinition;
   selectedNode: BuilderNode;
-  resolvedPropsMap: Record<string, any>;
-  style: Record<string, any>;
+  resolvedPropsMap: Record<string, unknown>;
+  style: Record<string, unknown>;
   onPropChange: (key: string, value: unknown) => void;
   onStyleChange: (key: string, value: unknown) => void;
 }) {
@@ -98,7 +98,7 @@ export function DesignTab({
     }
     return (
       <ImagePropControl
-        schema={{ key: "backgroundImage", type: "image", label: t("design.backgroundImage") } as any}
+        schema={{ key: "backgroundImage", type: "image" as const, label: t("design.backgroundImage") }}
         value={urlMatch ? urlMatch[1] : ""}
         onChange={(val) => {
           if (!val) {
@@ -137,8 +137,7 @@ export function DesignTab({
               onColumnTemplateChange={(s) => onPropChange("columnTemplate", s)}
             />
           )}
-          {definition.propSchema.map((_schema) => {
-            const schema = _schema as any;
+          {definition.propSchema.map((schema) => {
             // Skip columnTemplate, customTemplate, columns for Grid — handled by GridTemplateEditor above
             if (selectedNode.type === "Grid" && (schema.key === "columnTemplate" || schema.key === "customTemplate" || schema.key === "columns")) {
               return null;
@@ -153,11 +152,11 @@ export function DesignTab({
                   <p className="text-[10px] font-semibold text-muted-foreground tracking-wide">
                     {schema.label}
                   </p>
-                  {schema.children.map((child: any) => {
+                  {schema.children.map((child: PropSchema) => {
                     if (child.type === "row") {
                       return (
                         <div key={child.key} className="grid grid-cols-2 gap-2">
-                          {child.children.map((subchild: any) => (
+                          {child.children.map((subchild: PropSchema) => (
                             <PropControl
                               key={subchild.key}
                               schema={subchild}
@@ -183,7 +182,7 @@ export function DesignTab({
             if (schema.type === "row") {
               return (
                 <div key={schema.key} className="grid grid-cols-2 gap-2">
-                  {schema.children.map((child: any) => (
+                  {schema.children.map((child: PropSchema) => (
                     <PropControl
                       key={child.key}
                       schema={child}
@@ -219,8 +218,8 @@ export function DesignTab({
 
       {/* Section: merged Background + Options at top */}
       {isSectionNode && (() => {
-        const sectionOptions = (definition.propSchema.find((s: any) => s.key === "sectionOptionsGroup") as any)?.children ?? [];
-        const dividerSchema = (definition.propSchema.find((s: any) => s.key === "dividerGroup") as any);
+        const sectionOptions = (definition.propSchema.find((s) => s.key === "sectionOptionsGroup") as { children?: PropSchema[] } | undefined)?.children ?? [];
+        const dividerSchema = definition.propSchema.find((s) => s.key === "dividerGroup") as { label: string; children: PropSchema[] } | undefined;
         return (
           <>
             <CollapsibleSection title={t("design.background")}>
@@ -247,7 +246,7 @@ export function DesignTab({
               </div>
               <Separator className="my-3" />
               <div className="space-y-3">
-                {sectionOptions.map((child: any) => (
+                {sectionOptions.map((child: PropSchema) => (
                   <PropControl
                     key={child.key}
                     schema={child}
@@ -260,11 +259,11 @@ export function DesignTab({
             {dividerSchema && (
               <CollapsibleSection title={dividerSchema.label} defaultOpen={false}>
                 <div className="space-y-3">
-                  {dividerSchema.children.map((child: any) => {
+                  {dividerSchema.children.map((child: PropSchema) => {
                     if (child.type === "row") {
                       return (
                         <div key={child.key} className="grid grid-cols-2 gap-2">
-                          {child.children.map((subchild: any) => (
+                          {child.children.map((subchild: PropSchema) => (
                             <PropControl
                               key={subchild.key}
                               schema={subchild}

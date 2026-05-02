@@ -1,4 +1,4 @@
-import { loadPalette } from "../data/palette/loader.js";
+import { loadPalette, type PaletteGroup } from "../data/palette/loader.js";
 
 export class PaletteService {
   private static async getRawData() {
@@ -12,13 +12,13 @@ export class PaletteService {
     const data = await this.getRawData();
     return {
       version: data.version,
-      groups: data.groups.map((group: any) => ({
+      groups: data.groups.map((group: PaletteGroup) => ({
         id: group.id,
         label: group.label,
         icon: group.icon,
         order: group.order,
         i18n: group.i18n,
-        types: group.types.map((type: any) => ({
+        types: group.types.map((type) => ({
           id: type.id,
           label: type.label,
           order: type.order,
@@ -36,12 +36,12 @@ export class PaletteService {
    */
   static async getGroupItems(groupId: string) {
     const data = await this.getRawData();
-    const group = data.groups.find((g: any) => g.id === groupId);
+    const group = data.groups.find((g: PaletteGroup) => g.id === groupId);
     if (!group) return null;
 
     return {
       groupId: group.id,
-      types: group.types.map((type: any) => ({
+      types: group.types.map((type) => ({
         id: type.id,
         items: type.items
       }))
@@ -66,7 +66,7 @@ export class PaletteService {
 
     for (const group of data.groups) {
       for (const type of group.types) {
-        foundItem = type.items.find((i: any) => i.id === id);
+        foundItem = type.items.find((i: Record<string, unknown>) => i["id"] === id);
         if (foundItem) break;
       }
       if (foundItem) break;

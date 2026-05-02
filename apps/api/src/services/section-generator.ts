@@ -45,7 +45,7 @@ function extractJSON(text: string): unknown {
 // ── Design tokens instruction builder ────────────────────────────────────
 
 function buildDesignTokensInstruction(tokens: Record<string, unknown>): string {
-  const { primaryColor, secondaryColor, accentColor, fontFamily, headingFontFamily, borderRadius, backgroundColor, textColor } = tokens as any;
+  const { primaryColor, secondaryColor, accentColor, fontFamily, headingFontFamily, borderRadius, backgroundColor, textColor } = tokens as Record<string, string | undefined>;
 
   let instruction = `\n## Design Tokens — MANDATORY\nYou MUST use ONLY these values. Do NOT invent or approximate colors. Apply them specifically:\n`;
 

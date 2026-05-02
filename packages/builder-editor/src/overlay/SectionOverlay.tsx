@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useLayoutEffect, useRef, memo, useCallback, useMemo } from "react";
 import { Plus, UnfoldVertical, LayoutTemplate, Sparkles, PlusSquare } from "lucide-react";
-import type { BuilderNode } from "@ui-builder/builder-core";
+import type { BuilderNode, Command } from "@ui-builder/builder-core";
+import type { AIConfig } from "../ai/types";
 import type { Point } from "@ui-builder/shared";
 import { SECTION_HOVER_ZONE, SECTION_OVERLAY_TRANSITION_FAST } from "../constants";
 import { AISectionPopover } from "../ai/ai-section/AISectionPopover";
@@ -44,8 +45,8 @@ export interface SectionOverlayProps {
   onDSButtonClick?: (sectionId: string) => void;
   /** True while a Designed Section item is being dragged from the palette. Enables drop-zone highlighting. */
   isDSDragging?: boolean;
-  aiConfig?: any; // Adjust type if imported
-  dispatch?: (action: any) => void;
+  aiConfig?: AIConfig;
+  dispatch?: (action: Command) => void;
   undo?: () => void;
   availableComponentTypes?: string[];
 }

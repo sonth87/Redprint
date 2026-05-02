@@ -1,6 +1,8 @@
 import React from "react";
-import type { ComponentDefinition } from "@ui-builder/builder-core";
+import type { ComponentDefinition, ComponentRenderer } from "@ui-builder/builder-core";
 import { sanitizeHtml } from "../utils/sanitize";
+
+type RendererProps = Parameters<ComponentRenderer>[0];
 
 export const CollapsibleTextComponent: ComponentDefinition = {
   type: "CollapsibleText",
@@ -64,31 +66,33 @@ export const CollapsibleTextComponent: ComponentDefinition = {
       </div>
     );
   },
-  runtimeRenderer: ({ node, style }) => {
-    const html = String(node.props.text ?? "<p>Text…</p>");
-    const expandLabel = String(node.props.expandLabel ?? "Read more");
-    const collapseLabel = String(node.props.collapseLabel ?? "Show less");
-
-    const [expanded, setExpanded] = React.useState(false);
-
-    return (
-      <div style={style as React.CSSProperties}>
-        <div
-          style={
-            expanded
-              ? {}
-              : { overflow: "hidden", display: "-webkit-box", WebkitLineClamp: Number(node.props.previewLines ?? 3), WebkitBoxOrient: "vertical" }
-          }
-          // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{ __html: sanitizeHtml(html) }}
-        />
-        <button
-          style={{ display: "inline-block", marginTop: 8, fontSize: "14px", fontWeight: "600", cursor: "pointer", background: "none", border: "none", padding: 0, textDecoration: "underline" }}
-          onClick={() => setExpanded((p) => !p)}
-        >
-          {expanded ? collapseLabel : expandLabel}
-        </button>
-      </div>
-    );
-  },
+  runtimeRenderer: (props) => <CollapsibleTextRuntime {...props} />,
 };
+
+function CollapsibleTextRuntime({ node, style }: RendererProps) {
+  const html = String(node.props.text ?? "<p>Text…</p>");
+  const expandLabel = String(node.props.expandLabel ?? "Read more");
+  const collapseLabel = String(node.props.collapseLabel ?? "Show less");
+
+  const [expanded, setExpanded] = React.useState(false);
+
+  return (
+    <div style={style as React.CSSProperties}>
+      <div
+        style={
+          expanded
+            ? {}
+            : { overflow: "hidden", display: "-webkit-box", WebkitLineClamp: Number(node.props.previewLines ?? 3), WebkitBoxOrient: "vertical" }
+        }
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(html) }}
+      />
+      <button
+        style={{ display: "inline-block", marginTop: 8, fontSize: "14px", fontWeight: "600", cursor: "pointer", background: "none", border: "none", padding: 0, textDecoration: "underline" }}
+        onClick={() => setExpanded((p) => !p)}
+      >
+        {expanded ? collapseLabel : expandLabel}
+      </button>
+    </div>
+  );
+}

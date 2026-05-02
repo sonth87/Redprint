@@ -1,6 +1,7 @@
 import React from "react";
-import type { ComponentDefinition } from "@ui-builder/builder-core";
+import type { ComponentDefinition, ComponentRenderer } from "@ui-builder/builder-core";
 
+type RendererProps = Parameters<ComponentRenderer>[0];
 type MenuItem = { label: string; href: string };
 
 function buildItemStyle(
@@ -245,7 +246,10 @@ export const NavigationMenuComponent: ComponentDefinition = {
       </nav>
     );
   },
-  runtimeRenderer: ({ node, style }) => {
+  runtimeRenderer: (props) => <NavigationMenuRuntime {...props} />,
+};
+
+function NavigationMenuRuntime({ node, style }: RendererProps) {
     const items = Array.isArray(node.props.items) ? (node.props.items as MenuItem[]) : [];
     const layout = String(node.props.layout ?? "horizontal");
     const mobileHamburger = node.props.mobileHamburger !== false;
@@ -352,5 +356,4 @@ export const NavigationMenuComponent: ComponentDefinition = {
         ))}
       </nav>
     );
-  },
-};
+}

@@ -27,8 +27,8 @@ export interface PaletteGroup {
     label: string;
     order?: number;
     layout?: string;
-    i18n?: Record<string, any>;
-    items: any[];
+    i18n?: Record<string, string | Record<string, string>>;
+    items: Record<string, unknown>[];
   }>;
 }
 

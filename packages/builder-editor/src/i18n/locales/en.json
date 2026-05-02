@@ -576,5 +576,39 @@
     "aiGenerator": "AI Section Generator",
     "addElements": "Add Elements",
     "resizeHint": "Drag to change height"
+  },
+  "galleryPanel": {
+    "tabs": {
+      "layout": "Layout",
+      "design": "Design"
+    },
+    "sections": {
+      "gallery": "Gallery",
+      "carousel": "Carousel"
+    },
+    "design": {
+      "columns": "Columns",
+      "gap": "Gap",
+      "aspectRatio": "Aspect Ratio",
+      "aspectRatioOptions": {
+        "1/1": "1:1 Square",
+        "4/3": "4:3",
+        "16/9": "16:9",
+        "3/4": "3:4 Portrait",
+        "2/1": "2:1 Wide"
+      },
+      "imageFit": "Image Fit",
+      "imageFitOptions": {
+        "cover": "Cover (crop to fill)",
+        "contain": "Contain (letterbox)",
+        "fill": "Fill (stretch)"
+      },
+      "borderRadius": "Corner Radius",
+      "autoPlay": "Auto Play",
+      "speed": "Speed",
+      "loop": "Loop",
+      "arrows": "Arrows",
+      "dots": "Dots"
+    }
   }
 }

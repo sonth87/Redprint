@@ -4,16 +4,14 @@ import { useTranslation } from "react-i18next";
 import { Copy, Trash2, ArrowUp, ArrowDown, GripVertical, CornerLeftUp, ImageIcon, Link2, Paintbrush, Frame, Images, Settings2 } from "lucide-react";
 import { useDocument, useBuilder } from "@ui-builder/builder-react";
 import { Button, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider, ScrollArea } from "@ui-builder/ui";
-import { TOOLTIP_DELAY_MS } from "@ui-builder/shared";
+import { TOOLTIP_DELAY_MS, GALLERY_LAYOUT_MODES } from "@ui-builder/shared";
 import { AIToolsPopover } from "../ai/ai-tools/AIToolsPopover";
 import { AISectionPopover } from "../ai/ai-section/AISectionPopover";
 import { useAIConfig } from "../ai/AIConfigContext";
 import { ImageFilterPicker } from "../panels/ImageFilterPicker";
 import { ImageFramePanel } from "../panels/ImageFramePanel";
 import { FloatingPanel } from "../panels/FloatingPanel";
-import { GallerySettingsPanel, CarouselSettingsPanel } from "../panels/gallery";
-import type { CarouselConfig } from "@ui-builder/shared";
-import { DEFAULT_CAROUSEL_CONFIG, normalizeCarouselConfig } from "@ui-builder/shared";
+import { GallerySettingsPanel } from "../panels/gallery";
 
 function getClampedPanelPos(
   rect: DOMRect,
@@ -64,23 +62,19 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
   const [filterOpen, setFilterOpen] = React.useState(false);
   const [frameOpen, setFrameOpen] = React.useState(false);
   const [gallerySettingsOpen, setGallerySettingsOpen] = React.useState(false);
-  const [carouselSettingsOpen, setCarouselSettingsOpen] = React.useState(false);
   const [filterPos, setFilterPos] = React.useState({ x: 0, y: 0 });
   const [framePos, setFramePos] = React.useState({ x: 0, y: 0 });
   const [gallerySettingsPos, setGallerySettingsPos] = React.useState({ x: 0, y: 0 });
-  const [carouselSettingsPos, setCarouselSettingsPos] = React.useState({ x: 0, y: 0 });
 
   // Close floating panels when the selected node changes
   React.useEffect(() => {
     setFilterOpen(false);
     setFrameOpen(false);
     setGallerySettingsOpen(false);
-    setCarouselSettingsOpen(false);
   }, [nodeId]);
   const filterBtnRef = useRef<HTMLButtonElement>(null);
   const frameBtnRef = useRef<HTMLButtonElement>(null);
   const gallerySettingsBtnRef = useRef<HTMLButtonElement>(null);
-  const carouselSettingsBtnRef = useRef<HTMLButtonElement>(null);
   const { document: builderDoc } = useDocument();
   const { builder, dispatch } = useBuilder();
   const { t } = useTranslation();
@@ -98,9 +92,6 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
   // Section AI Assistant
   const isSection = node?.type === "Section";
   const isGalleryNode = node ? GALLERY_TYPES.has(node.type) : false;
-  // Carousel mode: slider/slideshow/carousel-3d use CarouselSettingsPanel instead of GallerySettingsPanel
-  const isCarouselMode = isGalleryNode &&
-    ["slider", "slideshow", "carousel-3d"].includes(String(node?.props?.["layoutMode"] ?? ""));
   const currentChildIds = isSection
     ? Object.values(builderDoc.nodes)
         .filter((n) => n.parentId === nodeId)
@@ -149,13 +140,11 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
 
   // Breadcrumbs string
   let breadcrumb = node.name || node.type;
-  // Tạm bỏ tính năng này.
-  // if (node.parentId && node.parentId !== "root") {
-  //   const pNode = document.nodes[node.parentId];
-  //   if (pNode) {
-  //     breadcrumb = `${pNode.name || pNode.type} > ${breadcrumb}`;
-  //   }
-  // }
+  if (isGalleryNode) {
+    const layoutMode = String(node.props["layoutMode"] ?? "grid");
+    const modeLabel = GALLERY_LAYOUT_MODES.find((m) => m.value === layoutMode)?.label ?? layoutMode;
+    breadcrumb = `Gallery · ${modeLabel}`;
+  }
 
   return (
     <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
@@ -415,39 +404,31 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
               </Tooltip>
             )}
 
-            {/* Settings button — opens CarouselSettingsPanel (slider modes) or GallerySettingsPanel (other modes) */}
+            {/* Settings button — unified GallerySettingsPanel for all modes */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  ref={isCarouselMode ? carouselSettingsBtnRef : gallerySettingsBtnRef}
+                  ref={gallerySettingsBtnRef}
                   variant="ghost"
                   size="icon-sm"
                   className="h-6 w-6"
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (isCarouselMode) {
-                      if (carouselSettingsBtnRef.current) {
-                        const r = carouselSettingsBtnRef.current.getBoundingClientRect();
-                        setCarouselSettingsPos(getClampedPanelPos(r, 380, 560));
-                      }
-                      setCarouselSettingsOpen((v) => !v);
-                    } else {
-                      if (gallerySettingsBtnRef.current) {
-                        const r = gallerySettingsBtnRef.current.getBoundingClientRect();
-                        setGallerySettingsPos(getClampedPanelPos(r, 320, 540));
-                      }
-                      setGallerySettingsOpen((v) => !v);
+                    if (gallerySettingsBtnRef.current) {
+                      const r = gallerySettingsBtnRef.current.getBoundingClientRect();
+                      setGallerySettingsPos(getClampedPanelPos(r, 320, 540));
                     }
+                    setGallerySettingsOpen((v) => !v);
                   }}
                 >
                   <Settings2 className="h-3 w-3" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="top">{isCarouselMode ? "Carousel Settings" : "Gallery Settings"}</TooltipContent>
+              <TooltipContent side="top">Gallery Settings</TooltipContent>
             </Tooltip>
 
-            {/* Gallery Settings panel (non-carousel modes) */}
-            {gallerySettingsOpen && !isCarouselMode && node && createPortal(
+            {/* Unified Gallery Settings panel — Layout tab shows all modes, Design tab adapts */}
+            {gallerySettingsOpen && node && createPortal(
               <FloatingPanel
                 title="Gallery Settings"
                 defaultPosition={{ x: gallerySettingsPos.x, y: gallerySettingsPos.y }}
@@ -458,29 +439,6 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
                   node={node}
                   onPropChange={(props) => {
                     dispatch({ type: "UPDATE_PROPS", payload: { nodeId, props }, description: "Gallery settings" });
-                  }}
-                />
-              </FloatingPanel>,
-              document.body,
-            )}
-
-            {/* Carousel Settings panel (slider/slideshow/carousel-3d modes) */}
-            {carouselSettingsOpen && isCarouselMode && node && createPortal(
-              <FloatingPanel
-                title="Carousel Settings"
-                defaultPosition={{ x: carouselSettingsPos.x, y: carouselSettingsPos.y }}
-                width={380}
-                onClose={() => setCarouselSettingsOpen(false)}
-              >
-                <CarouselSettingsPanel
-                  node={node}
-                  onConfigChange={(partial) => {
-                    const current = normalizeCarouselConfig(node.props["carouselConfig"]);
-                    dispatch({
-                      type: "UPDATE_PROPS",
-                      payload: { nodeId, props: { carouselConfig: { ...current, ...partial } } },
-                      description: "Carousel settings",
-                    });
                   }}
                 />
               </FloatingPanel>,

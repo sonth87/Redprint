@@ -9,14 +9,14 @@
   },
   "types": [
     {
-      "id": "standard-galleries",
-      "label": "Standard",
+      "id": "gallery-grid",
+      "label": "Gallery",
       "order": 0,
       "layout": "preview",
-      "i18n": { "en": "Standard", "vi": "Tiêu chuẩn" },
+      "i18n": { "en": "Gallery", "vi": "Thư viện ảnh" },
       "items": [
         {
-          "id": "gallery-grid",
+          "id": "gallery-grid-basic",
           "componentType": "GalleryPro",
           "name": "Grid",
           "thumbnail": null,
@@ -77,52 +77,7 @@
           "i18n": { "en": { "name": "Bricks" }, "vi": { "name": "Gạch" } },
           "props": { "layoutMode": "bricks", "gap": 8, "aspectRatio": "4/3" },
           "tags": ["gallery", "bricks", "metro"]
-        }
-      ]
-    },
-    {
-      "id": "slide-galleries",
-      "label": "Slides & Carousel",
-      "order": 1,
-      "layout": "preview",
-      "i18n": { "en": "Slides & Carousel", "vi": "Trình chiếu" },
-      "items": [
-        {
-          "id": "gallery-slider",
-          "componentType": "GalleryPro",
-          "name": "Slider",
-          "thumbnail": null,
-          "i18n": { "en": { "name": "Slider" }, "vi": { "name": "Slider" } },
-          "props": { "layoutMode": "slider", "aspectRatio": "16/9", "showArrows": true, "showDots": true, "loop": true },
-          "tags": ["gallery", "slider", "carousel"]
         },
-        {
-          "id": "gallery-slider-square",
-          "componentType": "GalleryPro",
-          "name": "Slider Square",
-          "thumbnail": null,
-          "i18n": { "en": { "name": "Slider Square" }, "vi": { "name": "Slider vuông" } },
-          "props": { "layoutMode": "slider", "aspectRatio": "1/1", "showArrows": true, "showDots": true, "loop": true },
-          "tags": ["gallery", "slider", "square"]
-        },
-        {
-          "id": "gallery-slideshow",
-          "componentType": "GalleryPro",
-          "name": "Slideshow",
-          "thumbnail": null,
-          "i18n": { "en": { "name": "Slideshow" }, "vi": { "name": "Trình chiếu tự động" } },
-          "props": { "layoutMode": "slideshow", "autoPlay": true, "autoPlaySpeed": 4000, "loop": true },
-          "tags": ["gallery", "slideshow", "autoplay", "fullscreen"]
-        }
-      ]
-    },
-    {
-      "id": "creative-galleries",
-      "label": "Creative",
-      "order": 2,
-      "layout": "preview",
-      "i18n": { "en": "Creative", "vi": "Sáng tạo" },
-      "items": [
         {
           "id": "gallery-honeycomb",
           "componentType": "GalleryPro",
@@ -142,6 +97,114 @@
           "tags": ["gallery", "freestyle", "scattered", "creative"]
         },
         {
+          "id": "gallery-stacked",
+          "componentType": "GalleryPro",
+          "name": "Stacked",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Stacked" }, "vi": { "name": "Xếp chồng" } },
+          "props": { "layoutMode": "stacked" },
+          "tags": ["gallery", "stacked", "cards", "depth"]
+        }
+      ]
+    },
+    {
+      "id": "gallery-carousel",
+      "label": "Carousel",
+      "order": 1,
+      "layout": "preview",
+      "i18n": { "en": "Carousel", "vi": "Băng chuyền" },
+      "items": [
+        {
+          "id": "gallery-slider",
+          "componentType": "GalleryPro",
+          "name": "Slider",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Slider" }, "vi": { "name": "Slider" } },
+          "props": { "layoutMode": "slider", "carouselConfig": { "effect": "slide", "aspectRatio": "16/9", "slidesPerView": 1 } },
+          "tags": ["gallery", "slider", "carousel"]
+        },
+        {
+          "id": "gallery-slider-square",
+          "componentType": "GalleryPro",
+          "name": "Slider Square",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Slider Square" }, "vi": { "name": "Slider vuông" } },
+          "props": { "layoutMode": "slider", "carouselConfig": { "effect": "slide", "aspectRatio": "1/1", "slidesPerView": 1 } },
+          "tags": ["gallery", "slider", "square"]
+        },
+        {
+          "id": "gallery-slider-fade",
+          "componentType": "GalleryPro",
+          "name": "Fade",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Fade" }, "vi": { "name": "Mờ dần" } },
+          "props": { "layoutMode": "slider", "carouselConfig": { "effect": "fade", "fadeCrossFade": true, "aspectRatio": "16/9" } },
+          "tags": ["gallery", "slider", "fade", "transition"]
+        },
+        {
+          "id": "gallery-slider-peek",
+          "componentType": "GalleryPro",
+          "name": "Peek",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Peek" }, "vi": { "name": "Hé lộ" } },
+          "props": { "layoutMode": "slider", "carouselConfig": { "effect": "slide", "slidesPerView": 1.15, "centeredSlides": true, "spaceBetween": 16, "slideRadius": 8 } },
+          "tags": ["gallery", "slider", "peek"]
+        },
+        {
+          "id": "gallery-slider-multi",
+          "componentType": "GalleryPro",
+          "name": "Multi-Slide",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Multi-Slide" }, "vi": { "name": "Nhiều slide" } },
+          "props": { "layoutMode": "slider", "carouselConfig": { "effect": "slide", "slidesPerView": 2.5, "spaceBetween": 16, "centeredSlides": true, "slideRadius": 4 } },
+          "tags": ["gallery", "slider", "multi"]
+        },
+        {
+          "id": "gallery-slider-cards",
+          "componentType": "GalleryPro",
+          "name": "Card Stack",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Card Stack" }, "vi": { "name": "Xếp thẻ" } },
+          "props": { "layoutMode": "slider", "carouselConfig": { "effect": "cards", "centeredSlides": true, "slideRadius": 12 } },
+          "tags": ["gallery", "slider", "cards", "stack"]
+        },
+        {
+          "id": "gallery-slider-coverflow",
+          "componentType": "GalleryPro",
+          "name": "Coverflow",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Coverflow" }, "vi": { "name": "Coverflow" } },
+          "props": { "layoutMode": "slider", "carouselConfig": { "effect": "coverflow", "centeredSlides": true, "slidesPerView": 3, "coverflowEffect": { "rotate": 50, "stretch": 0, "depth": 100, "modifier": 1, "scale": 1, "slideShadows": true } } },
+          "tags": ["gallery", "slider", "coverflow", "3d"]
+        },
+        {
+          "id": "gallery-slider-cube",
+          "componentType": "GalleryPro",
+          "name": "Cube",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Cube" }, "vi": { "name": "Khối lập phương" } },
+          "props": { "layoutMode": "slider", "carouselConfig": { "effect": "cube", "cubeEffect": { "shadow": true, "slideShadows": true, "shadowOffset": 20, "shadowScale": 0.94 } } },
+          "tags": ["gallery", "slider", "cube", "3d"]
+        },
+        {
+          "id": "gallery-slider-flip",
+          "componentType": "GalleryPro",
+          "name": "Flip",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Flip" }, "vi": { "name": "Lật trang" } },
+          "props": { "layoutMode": "slider", "carouselConfig": { "effect": "flip", "flipSlideShadows": true } },
+          "tags": ["gallery", "slider", "flip"]
+        },
+        {
+          "id": "gallery-slideshow",
+          "componentType": "GalleryPro",
+          "name": "Slideshow",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Slideshow" }, "vi": { "name": "Trình chiếu tự động" } },
+          "props": { "layoutMode": "slideshow", "carouselConfig": { "autoplay": { "enabled": true, "delay": 3000, "stopOnInteraction": true, "pauseOnMouseEnter": true, "reverseDirection": false, "disableOnInteraction": false } } },
+          "tags": ["gallery", "slideshow", "autoplay"]
+        },
+        {
           "id": "gallery-3d-carousel",
           "componentType": "GalleryPro",
           "name": "3D Carousel",
@@ -149,15 +212,6 @@
           "i18n": { "en": { "name": "3D Carousel" }, "vi": { "name": "Carousel 3D" } },
           "props": { "layoutMode": "carousel-3d" },
           "tags": ["gallery", "3d", "carousel", "coverflow", "creative"]
-        },
-        {
-          "id": "gallery-stacked",
-          "componentType": "GalleryPro",
-          "name": "Stacked",
-          "thumbnail": null,
-          "i18n": { "en": { "name": "Stacked" }, "vi": { "name": "Xếp chồng" } },
-          "props": { "layoutMode": "stacked" },
-          "tags": ["gallery", "stacked", "cards", "depth", "creative"]
         }
       ]
     }

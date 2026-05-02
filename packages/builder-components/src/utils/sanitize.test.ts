@@ -5,10 +5,9 @@ describe("sanitizeHtml", () => {
   it("should return the same string if window is undefined (SSR)", () => {
     // In node environment by default, window should be undefined unless configured otherwise
     const originalWindow = global.window;
-    // @ts-ignore
-    delete global.window;
-
     const input = '<p>Hello <script>alert("xss")</script></p>';
+    // @ts-expect-error — deliberately deleting window for SSR test
+    delete global.window;
     expect(sanitizeHtml(input)).toBe(input);
 
     global.window = originalWindow;
@@ -31,13 +30,13 @@ describe("sanitizeHtml", () => {
     }));
 
     // Mock window
-    global.window = {} as any;
+    global.window = {} as Window & typeof globalThis;
 
     expect(sanitizeHtml(input)).toBe(expected);
 
     // Clean up
     vi.restoreAllMocks();
-    // @ts-ignore
+    // @ts-expect-error — deliberately deleting window after mock test
     delete global.window;
   });
 });
