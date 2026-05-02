@@ -1,0 +1,1 @@
+export { GalleryProComponent } from "./GalleryProComponent";
