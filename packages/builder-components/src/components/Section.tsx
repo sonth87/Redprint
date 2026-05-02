@@ -140,7 +140,7 @@ function SectionFrame({
           
           let vh: number;
           let relativeTop: number;
-          if (activeScrollTarget === window || activeScrollTarget === document) {
+          if (activeScrollTarget === window || activeScrollTarget === (document as unknown as Element)) {
             vh = window.innerHeight;
             relativeTop = rect.top;
           } else {
@@ -250,7 +250,7 @@ function SectionFrame({
         <svg width="0" height="0" aria-hidden="true" style={{ position: "absolute" }}>
           <defs>
             <clipPath id={clipId} clipPathUnits="objectBoundingBox">
-              <path d={dividerState.clipPathData} />
+              <path d={dividerState.clipPathData ?? undefined} />
             </clipPath>
           </defs>
         </svg>

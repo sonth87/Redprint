@@ -89,6 +89,8 @@ export interface CarouselConfig {
 
   // Effect
   effect: "slide" | "fade" | "cube" | "flip" | "cards" | "coverflow" | "creative";
+  /** Transition duration in ms (Swiper `speed`). Default 300. */
+  speed: number;
   fadeCrossFade: boolean;
   coverflowEffect: CarouselCoverflowEffect;
   cubeEffect: CarouselCubeEffect;
@@ -133,6 +135,7 @@ export const DEFAULT_CAROUSEL_CONFIG: CarouselConfig = {
   aspectRatio: "16/9",
 
   effect: "slide",
+  speed: 300,
   fadeCrossFade: true,
   coverflowEffect: { rotate: 50, stretch: 0, depth: 100, modifier: 1, scale: 1, slideShadows: true },
   cubeEffect: { shadow: true, slideShadows: true, shadowOffset: 20, shadowScale: 0.94 },

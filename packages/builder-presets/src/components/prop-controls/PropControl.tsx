@@ -54,7 +54,7 @@ export function PropControl({ schema, value, onChange }: PropControlProps) {
     default:
       return (
         <div className="grid gap-1">
-          <Label className="text-xs">{schema.label}</Label>
+          <Label className="text-xs">{(schema as { label?: string }).label ?? schema.key}</Label>
           <span className="text-[10px] italic text-muted-foreground/60">
             ({schema.type} — not editable in preview)
           </span>

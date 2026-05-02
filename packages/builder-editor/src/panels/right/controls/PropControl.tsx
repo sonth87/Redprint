@@ -134,7 +134,7 @@ export function PropControl({
     default:
       return (
         <div className="text-xs text-muted-foreground">
-          {schema.label}: <span className="italic">Unsupported control ({schema.type})</span>
+          {(schema as { label?: string }).label ?? schema.key}: <span className="italic">Unsupported control ({schema.type})</span>
         </div>
       );
   }

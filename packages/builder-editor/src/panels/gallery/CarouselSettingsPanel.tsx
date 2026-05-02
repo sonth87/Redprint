@@ -223,6 +223,7 @@ export function CarouselSettingsPanel({ node, onConfigChange }: CarouselSettings
                   </SelectContent>
                 </Select>
               </Row>
+              <SliderRow label="Transition duration" value={cc.speed} min={100} max={2000} step={50} unit="ms" onChange={v => set({ speed: v })} />
               {cc.effect === "fade" && (
                 <Row label="Cross-fade"><Switch checked={cc.fadeCrossFade} onCheckedChange={v => set({ fadeCrossFade: v })} className="scale-75 origin-right" /></Row>
               )}
