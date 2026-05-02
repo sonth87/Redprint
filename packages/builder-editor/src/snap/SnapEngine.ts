@@ -90,32 +90,32 @@ export class SnapEngine {
         const oBottom = other.y + other.height;
 
         // Left edge snap
-        if (Math.abs(x - other.x) < this.config.threshold) {
+        if (Math.abs(x - other.x) <= this.config.threshold) {
           x = other.x;
           addGuide({ type: "vertical", position: other.x, source: "component-edge" });
         }
         // Right edge snap
-        if (Math.abs(dragRight - oRight) < this.config.threshold) {
+        if (Math.abs(dragRight - oRight) <= this.config.threshold) {
           x = oRight - draggingRect.width;
           addGuide({ type: "vertical", position: oRight, source: "component-edge" });
         }
         // Center-X snap
-        if (Math.abs(dragCX - oCX) < this.config.threshold) {
+        if (Math.abs(dragCX - oCX) <= this.config.threshold) {
           x = oCX - draggingRect.width / 2;
           addGuide({ type: "vertical", position: oCX, source: "component-center" });
         }
         // Top edge snap
-        if (Math.abs(y - other.y) < this.config.threshold) {
+        if (Math.abs(y - other.y) <= this.config.threshold) {
           y = other.y;
           addGuide({ type: "horizontal", position: other.y, source: "component-edge" });
         }
         // Bottom edge snap
-        if (Math.abs(dragBottom - oBottom) < this.config.threshold) {
+        if (Math.abs(dragBottom - oBottom) <= this.config.threshold) {
           y = oBottom - draggingRect.height;
           addGuide({ type: "horizontal", position: oBottom, source: "component-edge" });
         }
         // Center-Y snap
-        if (Math.abs(dragCY - oCY) < this.config.threshold) {
+        if (Math.abs(dragCY - oCY) <= this.config.threshold) {
           y = oCY - draggingRect.height / 2;
           addGuide({ type: "horizontal", position: oCY, source: "component-center" });
         }

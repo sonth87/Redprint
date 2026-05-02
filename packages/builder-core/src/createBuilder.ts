@@ -66,7 +66,7 @@ export function createBuilder(config: BuilderConfig = {}): IBuilderAPI {
       showGrid: true,
       gridSize: GRID_UNIT_PX,
       snapEnabled: true,
-      snapThreshold: 6,
+      snapThreshold: 10,
       snapToGrid: true,
       snapToComponents: true,
       rulerEnabled: true,

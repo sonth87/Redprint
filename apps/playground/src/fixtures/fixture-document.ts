@@ -3052,7 +3052,7 @@ export const FIXTURE_DOCUMENT: BuilderDocument = {
     snapEnabled: true,
     snapToGrid: true,
     snapToComponents: true,
-    snapThreshold: 6,
+    snapThreshold: 10,
     rulerEnabled: true,
     showHelperLines: true,
   },

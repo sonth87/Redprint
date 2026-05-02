@@ -148,6 +148,24 @@ export class AbsoluteDragStrategy implements DragStrategy {
               }
             }
           }
+
+          // Include parent container boundaries as snap targets so the dragged node
+          // snaps to the section's top/bottom/left/right edges (section start/end snap).
+          // Skip the root node — its edges are already handled by canvas-edge snapping.
+          if (node.parentId !== ctx.rootNodeId) {
+            const parentEl = frameEl.querySelector(
+              `[data-node-id="${node.parentId}"]`,
+            ) as HTMLElement | null;
+            if (parentEl) {
+              const per = parentEl.getBoundingClientRect();
+              snapSiblings.push({
+                x: (per.left - originRect.left) / ctx.zoom,
+                y: (per.top - originRect.top) / ctx.zoom,
+                width: per.width / ctx.zoom,
+                height: per.height / ctx.zoom,
+              });
+            }
+          }
         }
 
         const snapResult = ctx.snapEngine.snap(movingRectInCanvas, snapSiblings);
