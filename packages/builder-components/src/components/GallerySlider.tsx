@@ -1,7 +1,11 @@
-import React, { useCallback, useEffect } from "react";
-import useEmblaCarousel from "embla-carousel-react";
-import Autoplay from "embla-carousel-autoplay";
+import React from "react";
 import type { ComponentDefinition, ComponentRenderer } from "@ui-builder/builder-core";
+import {
+  type GalleryItem,
+  DEFAULT_CAROUSEL_CONFIG,
+} from "@ui-builder/shared";
+import { SwiperSliderRuntime } from "./gallery/SwiperSliderRuntime";
+import { extractProps } from "./gallery/types";
 
 type RendererProps = Parameters<ComponentRenderer>[0];
 
@@ -109,100 +113,49 @@ function EditorRenderer({ node, style }: RendererProps) {
   );
 }
 
-// ── Runtime renderer: fully interactive Embla carousel ─────────────────────
+// ── Runtime renderer: Swiper-based (Embla removed) ─────────────────────────
 function RuntimeRenderer({ node, style }: RendererProps) {
-  const aspect = String(node.props.aspectRatio ?? "16/9");
+  const count = Math.max(1, Math.min(MAX_SLIDES, Number(node.props.slideCount ?? 3)));
+  const slides = getSlides(node.props, count);
   const showArrows = Boolean(node.props.showArrows ?? true);
   const showDots = Boolean(node.props.showDots ?? true);
   const autoPlay = Boolean(node.props.autoPlay ?? false);
   const autoPlaySpeed = Number(node.props.autoPlaySpeed ?? 3000);
   const loop = Boolean(node.props.loop ?? true);
-  const count = Math.max(1, Math.min(MAX_SLIDES, Number(node.props.slideCount ?? 3)));
-  const slides = getSlides(node.props, count);
+  const aspectRatio = String(node.props.aspectRatio ?? "16/9");
 
-  const plugins = autoPlay ? [Autoplay({ delay: autoPlaySpeed, stopOnInteraction: true })] : [];
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop }, plugins);
-  const [current, setCurrent] = React.useState(0);
+  // Convert flat slide schema → GalleryItem[]
+  const items: GalleryItem[] = slides.map((slide, i) => ({
+    id: String(i),
+    src: slide.src,
+    alt: slide.alt,
+    description: slide.caption || undefined,
+    link: slide.linkUrl || undefined,
+  }));
 
-  const onSelect = useCallback(() => {
-    if (!emblaApi) return;
-    setCurrent(emblaApi.selectedScrollSnap());
-  }, [emblaApi]);
+  const cc = {
+    ...DEFAULT_CAROUSEL_CONFIG,
+    aspectRatio,
+    loopMode: (loop ? "loop" : "off") as "loop" | "off",
+    navigation: { ...DEFAULT_CAROUSEL_CONFIG.navigation, enabled: showArrows },
+    pagination: { ...DEFAULT_CAROUSEL_CONFIG.pagination, enabled: showDots },
+    autoplay: {
+      ...DEFAULT_CAROUSEL_CONFIG.autoplay,
+      enabled: autoPlay,
+      delay: autoPlaySpeed,
+      stopOnInteraction: true,
+    },
+  };
 
-  useEffect(() => {
-    if (!emblaApi) return;
-    emblaApi.on("select", onSelect);
-    return () => { emblaApi.off("select", onSelect); };
-  }, [emblaApi, onSelect]);
+  const p = extractProps({
+    aspectRatio,
+    imageFit: "cover",
+    borderRadius: 0,
+    gap: 0,
+    columns: 1,
+  });
 
-  const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
-  const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
-
-  const hasExplicitHeight = !!(style as React.CSSProperties)?.height;
-
-  return (
-    <div style={{ position: "relative", ...(style as React.CSSProperties), overflow: "hidden", ...(!hasExplicitHeight && { aspectRatio: aspect }) }}>
-      {/* Embla viewport */}
-      <div ref={emblaRef} style={{ overflow: "hidden", height: "100%" }}>
-        <div style={{ display: "flex", height: "100%" }}>
-          {slides.map((slide, i) => {
-            const inner = (
-              <div style={{ flex: "0 0 100%", minWidth: 0, height: "100%", position: "relative" }}>
-                {slide.src ? (
-                  <img src={slide.src} alt={slide.alt} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-                ) : (
-                  <div style={{ width: "100%", height: "100%", background: "#94a3b8", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ fontSize: "clamp(28px,12%,56px)", fontWeight: 700, color: "#fff", opacity: 0.9 }}>{i + 1}</span>
-                  </div>
-                )}
-                {slide.caption && (
-                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(0,0,0,0.45)", color: "#fff", fontSize: 13, padding: "8px 12px" }}>
-                    {slide.caption}
-                  </div>
-                )}
-              </div>
-            );
-
-            return slide.linkUrl ? (
-              <a key={i} href={slide.linkUrl} target="_blank" rel="noopener noreferrer" style={{ flex: "0 0 100%", minWidth: 0, textDecoration: "none" }}>
-                {inner}
-              </a>
-            ) : (
-              <div key={i} style={{ flex: "0 0 100%", minWidth: 0 }}>{inner}</div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Arrows */}
-      {showArrows && slides.length > 1 && (
-        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 10px", pointerEvents: "none" }}>
-          {[{ fn: scrollPrev, ch: "‹" }, { fn: scrollNext, ch: "›" }].map(({ fn, ch }) => (
-            <button
-              key={ch}
-              onClick={fn}
-              style={{ pointerEvents: "all", width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.85)", border: "none", fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
-            >
-              {ch}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Dots */}
-      {showDots && slides.length > 1 && (
-        <div style={{ position: "absolute", bottom: 10, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 6 }}>
-          {slides.map((_, i) => (
-            <div
-              key={i}
-              onClick={() => emblaApi?.scrollTo(i)}
-              style={{ width: 8, height: 8, borderRadius: "50%", background: i === current ? "#fff" : "rgba(255,255,255,0.45)", cursor: "pointer", transition: "background 0.2s" }}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
+  return <SwiperSliderRuntime items={items} p={p} cc={cc} isEditor={false} />;
 }
 
 // ── ComponentDefinition ─────────────────────────────────────────────────────
@@ -269,7 +222,7 @@ export const GallerySliderComponent: ComponentDefinition = {
   editorRenderer: (props) => (
     <div data-node-id={props.node.id}>
       <div style={{ background: "#fef3c7", color: "#92400e", fontSize: 9, padding: "2px 8px", fontWeight: 600, letterSpacing: "0.02em" }}>
-        Deprecated — use Gallery Slider
+        Deprecated — use Gallery Slider Pro
       </div>
       <EditorRenderer {...props} />
     </div>

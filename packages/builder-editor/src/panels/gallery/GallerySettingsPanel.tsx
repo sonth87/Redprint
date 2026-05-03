@@ -37,8 +37,7 @@ function GalleryLayoutSettings({ layoutMode, node, onPropChange }: {
   const p = node.props;
 
   const needsColumns = ["grid", "masonry", "honeycomb", "bricks", "collage", "freestyle"].includes(layoutMode);
-  const needsAspect  = ["grid", "collage", "bricks", "slider"].includes(layoutMode);
-  const needsCarousel = ["slider", "slideshow", "carousel-3d"].includes(layoutMode);
+  const needsAspect  = ["grid", "collage", "bricks"].includes(layoutMode);
 
   return (
     <div className="p-3 space-y-3">
@@ -84,59 +83,6 @@ function GalleryLayoutSettings({ layoutMode, node, onPropChange }: {
         </div>
       )}
 
-      {needsCarousel && (
-        <>
-          <div className="flex items-center justify-between">
-            <Label className="text-[10px] text-muted-foreground">Auto Play</Label>
-            <Switch
-              checked={Boolean(p["autoPlay"])}
-              onCheckedChange={(v) => onPropChange({ autoPlay: v })}
-              className="scale-75"
-            />
-          </div>
-          {Boolean(p["autoPlay"]) && (
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <Label className="text-[10px] text-muted-foreground">Speed</Label>
-                <span className="text-[10px] font-medium">{Number(p["autoPlaySpeed"] ?? 3000) / 1000}s</span>
-              </div>
-              <Slider
-                min={1000} max={10000} step={500}
-                value={[Number(p["autoPlaySpeed"] ?? 3000)]}
-                onValueChange={(vals) => onPropChange({ autoPlaySpeed: vals[0] })}
-              />
-            </div>
-          )}
-          <div className="flex items-center justify-between">
-            <Label className="text-[10px] text-muted-foreground">Loop</Label>
-            <Switch
-              checked={p["loop"] !== false}
-              onCheckedChange={(v) => onPropChange({ loop: v })}
-              className="scale-75"
-            />
-          </div>
-          {layoutMode !== "carousel-3d" && (
-            <>
-              <div className="flex items-center justify-between">
-                <Label className="text-[10px] text-muted-foreground">Show Arrows</Label>
-                <Switch
-                  checked={p["showArrows"] !== false}
-                  onCheckedChange={(v) => onPropChange({ showArrows: v })}
-                  className="scale-75"
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label className="text-[10px] text-muted-foreground">Show Dots</Label>
-                <Switch
-                  checked={p["showDots"] !== false}
-                  onCheckedChange={(v) => onPropChange({ showDots: v })}
-                  className="scale-75"
-                />
-              </div>
-            </>
-          )}
-        </>
-      )}
     </div>
   );
 }
@@ -179,24 +125,38 @@ function GalleryDesignSettings({ node, onPropChange }: { node: BuilderNode; onPr
 
 export function GallerySettingsPanel({ node, onPropChange }: GallerySettingsPanelProps) {
   const layoutMode = (node.props["layoutMode"] as GalleryLayoutMode) ?? "grid";
-  const standardModes = GALLERY_LAYOUT_MODES.filter((m) => m.group === "standard");
-  const creativeModes = GALLERY_LAYOUT_MODES.filter((m) => m.group === "creative");
+  const galleryModes   = GALLERY_LAYOUT_MODES.filter((m) => m.group === "gallery");
+  const slideshowModes = GALLERY_LAYOUT_MODES.filter((m) => m.group === "slideshow");
+  const creativeModes  = GALLERY_LAYOUT_MODES.filter((m) => m.group === "creative");
 
   return (
     <Tabs defaultValue="layout" className="w-full">
       <TabsList className="grid grid-cols-3 w-full rounded-none border-b h-8 bg-transparent">
         <TabsTrigger value="layout" className="text-xs h-full rounded-none">Layout</TabsTrigger>
-        <TabsTrigger value="settings" className="text-xs h-full rounded-none">Settings</TabsTrigger>
         <TabsTrigger value="design" className="text-xs h-full rounded-none">Design</TabsTrigger>
+        <TabsTrigger value="settings" className="text-xs h-full rounded-none">Settings</TabsTrigger>
       </TabsList>
 
       <TabsContent value="layout" className="m-0">
         <ScrollArea className="h-[420px]">
           <div className="p-2 space-y-3">
             <div>
-              <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-1.5">Standard</p>
+              <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-1.5">Gallery</p>
               <div className="grid grid-cols-2 gap-1.5">
-                {standardModes.map((mode) => (
+                {galleryModes.map((mode) => (
+                  <LayoutModeCard
+                    key={mode.value}
+                    mode={mode}
+                    selected={layoutMode === mode.value}
+                    onClick={() => onPropChange({ layoutMode: mode.value })}
+                  />
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-1.5">Slideshow</p>
+              <div className="grid grid-cols-2 gap-1.5">
+                {slideshowModes.map((mode) => (
                   <LayoutModeCard
                     key={mode.value}
                     mode={mode}
@@ -226,6 +186,17 @@ export function GallerySettingsPanel({ node, onPropChange }: GallerySettingsPane
       <TabsContent value="settings" className="m-0">
         <ScrollArea className="h-[420px]">
           <GalleryLayoutSettings layoutMode={layoutMode} node={node} onPropChange={onPropChange} />
+          <div className="px-3 py-2.5 border-t flex items-center justify-between gap-3">
+            <div className="leading-tight">
+              <Label className="text-[10px] font-medium">Stretch to full width</Label>
+              <p className="text-[9px] text-muted-foreground mt-0.5">Extends beyond container to viewport edge</p>
+            </div>
+            <Switch
+              checked={Boolean(node.props["stretchFullWidth"])}
+              onCheckedChange={(v) => onPropChange({ stretchFullWidth: v })}
+              className="scale-75 origin-right shrink-0"
+            />
+          </div>
         </ScrollArea>
       </TabsContent>
 
