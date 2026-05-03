@@ -22,6 +22,7 @@ export function renderByMode(
   p: GalleryProps,
   cc: CarouselConfig,
   isEditor: boolean,
+  hasExplicitHeight = false,
 ): React.ReactElement {
   switch (mode) {
     case "grid":
@@ -45,7 +46,7 @@ export function renderByMode(
     case "slider":
     case "slideshow":
     case "carousel-3d":
-      return <SwiperSliderRuntime items={items} p={p} cc={cc} isEditor={isEditor} />;
+      return <SwiperSliderRuntime items={items} p={p} cc={cc} isEditor={isEditor} hasExplicitHeight={hasExplicitHeight} />;
     case "thumbnails":
       return isEditor ? (
         <ThumbnailsEditorPreview items={items} p={p} />

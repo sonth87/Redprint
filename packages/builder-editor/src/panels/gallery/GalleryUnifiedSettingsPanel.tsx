@@ -376,9 +376,10 @@ export function GalleryUnifiedSettingsPanel({ node, onPropChange, onConfigChange
 
   return (
     <Tabs defaultValue="layout" className="w-full">
-      <TabsList className="grid grid-cols-2 w-full rounded-none border-b h-8 bg-transparent">
+      <TabsList className="grid grid-cols-3 w-full rounded-none border-b h-8 bg-transparent">
         <TabsTrigger value="layout" className="text-xs h-full rounded-none">Layout</TabsTrigger>
         <TabsTrigger value="design" className="text-xs h-full rounded-none">Design</TabsTrigger>
+        <TabsTrigger value="settings" className="text-xs h-full rounded-none">Settings</TabsTrigger>
       </TabsList>
 
       {/* ── Layout tab ────────────────────────────────────────────────────── */}
@@ -450,6 +451,25 @@ export function GalleryUnifiedSettingsPanel({ node, onPropChange, onConfigChange
             </div>
 
 
+          </div>
+        </ScrollArea>
+      </TabsContent>
+
+      {/* ── Settings tab ──────────────────────────────────────────────────── */}
+      <TabsContent value="settings" className="m-0">
+        <ScrollArea className="h-[480px]">
+          <div className="p-3 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="leading-tight">
+                <Label className="text-[10px] font-medium">Stretch to full width</Label>
+                <p className="text-[9px] text-muted-foreground mt-0.5">Extends beyond container to viewport edge</p>
+              </div>
+              <Switch
+                checked={Boolean(node.props["stretchFullWidth"])}
+                onCheckedChange={(v) => onPropChange({ stretchFullWidth: v })}
+                className="scale-75 origin-right shrink-0"
+              />
+            </div>
           </div>
         </ScrollArea>
       </TabsContent>

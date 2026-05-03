@@ -30,11 +30,13 @@ export function SwiperSliderRuntime({
   p,
   cc,
   isEditor = false,
+  hasExplicitHeight = false,
 }: {
   items: GalleryItem[];
   p: GalleryProps;
   cc: CarouselConfig;
   isEditor?: boolean;
+  hasExplicitHeight?: boolean;
 }): React.ReactElement {
   useEffect(() => {
     injectSwiperStyles();
@@ -90,8 +92,8 @@ export function SwiperSliderRuntime({
     ? {
         position: "relative",
         width: "100%",
-        height: 0,
-        paddingBottom: `calc(${heightPct}% + ${cardsPad}px)`,
+        height: hasExplicitHeight ? "100%" : 0,
+        paddingBottom: hasExplicitHeight ? undefined : `calc(${heightPct}% + ${cardsPad}px)`,
         overflow: "visible",
         borderRadius: `${p.borderRadius}px`,
         ...(isEditor && { pointerEvents: "none" }),
@@ -100,6 +102,7 @@ export function SwiperSliderRuntime({
     : {
         position: "relative",
         width: "100%",
+        ...(hasExplicitHeight && { height: "100%" }),
         overflow: "visible",
         borderRadius: `${p.borderRadius}px`,
         ...(isCoverflow && { paddingInline: `${coverflowPad}px` }),
@@ -119,7 +122,7 @@ export function SwiperSliderRuntime({
       }
     : {
         width: "100%",
-        aspectRatio: aspectStr,
+        ...(hasExplicitHeight ? { height: "100%" } : { aspectRatio: aspectStr }),
         ...(isCoverflow && { overflow: "hidden" }),
       };
 

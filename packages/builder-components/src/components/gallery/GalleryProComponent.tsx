@@ -81,9 +81,14 @@ export const GalleryProComponent: ComponentDefinition = {
     const cc = normalizeCarouselConfig(node.props["carouselConfig"]);
     const layoutMode = (node.props["layoutMode"] as GalleryLayoutMode) ?? "grid";
     const s = style as React.CSSProperties;
+    const hasExplicitHeight = Boolean(s.height) && s.height !== "auto";
+    const bleedFadeMask = "linear-gradient(to right, transparent, black 200px, black calc(100% - 200px), transparent)";
+    const stretchStyle: React.CSSProperties = p.stretchFullWidth
+      ? { marginLeft: "-250px", marginRight: "-250px", width: "calc(100% + 500px)", WebkitMaskImage: bleedFadeMask, maskImage: bleedFadeMask }
+      : {};
     return (
-      <div data-node-id={node.id} style={{ overflow: "hidden", ...s }}>
-        {renderByMode(layoutMode, items, p, cc, true)}
+      <div data-node-id={node.id} style={{ overflow: "hidden", ...s, ...stretchStyle }}>
+        {renderByMode(layoutMode, items, p, cc, true, hasExplicitHeight)}
       </div>
     );
   },
@@ -94,6 +99,10 @@ export const GalleryProComponent: ComponentDefinition = {
     const cc = normalizeCarouselConfig(node.props["carouselConfig"] as CarouselConfig);
     const layoutMode = (node.props["layoutMode"] as GalleryLayoutMode) ?? "grid";
     const s = style as React.CSSProperties;
-    return <div style={{ ...s }}>{renderByMode(layoutMode, items, p, cc, false)}</div>;
+    const hasExplicitHeight = Boolean(s.height) && s.height !== "auto";
+    const stretchStyle: React.CSSProperties = p.stretchFullWidth
+      ? { width: "100vw", marginLeft: "calc(-50vw + 50%)" }
+      : {};
+    return <div style={{ ...s, ...stretchStyle }}>{renderByMode(layoutMode, items, p, cc, false, hasExplicitHeight)}</div>;
   },
 };

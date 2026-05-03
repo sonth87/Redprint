@@ -11,7 +11,7 @@ import React from "react";
 import type { BuilderNode } from "@ui-builder/builder-core";
 import {
   Tabs, TabsList, TabsTrigger, TabsContent,
-  ScrollArea, Label, Slider,
+  ScrollArea, Label, Slider, Switch,
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@ui-builder/ui";
 import {
@@ -133,8 +133,8 @@ export function GallerySettingsPanel({ node, onPropChange }: GallerySettingsPane
     <Tabs defaultValue="layout" className="w-full">
       <TabsList className="grid grid-cols-3 w-full rounded-none border-b h-8 bg-transparent">
         <TabsTrigger value="layout" className="text-xs h-full rounded-none">Layout</TabsTrigger>
-        <TabsTrigger value="settings" className="text-xs h-full rounded-none">Settings</TabsTrigger>
         <TabsTrigger value="design" className="text-xs h-full rounded-none">Design</TabsTrigger>
+        <TabsTrigger value="settings" className="text-xs h-full rounded-none">Settings</TabsTrigger>
       </TabsList>
 
       <TabsContent value="layout" className="m-0">
@@ -186,6 +186,17 @@ export function GallerySettingsPanel({ node, onPropChange }: GallerySettingsPane
       <TabsContent value="settings" className="m-0">
         <ScrollArea className="h-[420px]">
           <GalleryLayoutSettings layoutMode={layoutMode} node={node} onPropChange={onPropChange} />
+          <div className="px-3 py-2.5 border-t flex items-center justify-between gap-3">
+            <div className="leading-tight">
+              <Label className="text-[10px] font-medium">Stretch to full width</Label>
+              <p className="text-[9px] text-muted-foreground mt-0.5">Extends beyond container to viewport edge</p>
+            </div>
+            <Switch
+              checked={Boolean(node.props["stretchFullWidth"])}
+              onCheckedChange={(v) => onPropChange({ stretchFullWidth: v })}
+              className="scale-75 origin-right shrink-0"
+            />
+          </div>
         </ScrollArea>
       </TabsContent>
 

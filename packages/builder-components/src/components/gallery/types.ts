@@ -9,6 +9,7 @@ export interface GalleryProps {
   loop: boolean;
   imageFit: "cover" | "contain" | "fill";
   borderRadius: number;
+  stretchFullWidth: boolean;
 }
 
 export function extractProps(props: Record<string, unknown>): GalleryProps {
@@ -23,5 +24,6 @@ export function extractProps(props: Record<string, unknown>): GalleryProps {
     loop: props["loop"] !== false,
     imageFit: (props["imageFit"] as GalleryProps["imageFit"]) ?? "cover",
     borderRadius: Number(props["borderRadius"] ?? 4),
+    stretchFullWidth: Boolean(props["stretchFullWidth"]),
   };
 }
