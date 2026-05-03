@@ -8,3 +8,5 @@ export { CarouselSettingsPanel } from "./CarouselSettingsPanel";
 export type { CarouselSettingsPanelProps } from "./CarouselSettingsPanel";
 export { CarouselPresetCard } from "./CarouselPreviewCard";
 export type { CarouselPresetCardProps } from "./CarouselPreviewCard";
+export { GalleryUnifiedSettingsPanel } from "./GalleryUnifiedSettingsPanel";
+export type { GalleryUnifiedSettingsPanelProps } from "./GalleryUnifiedSettingsPanel";

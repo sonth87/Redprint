@@ -40,20 +40,21 @@ export interface GalleryLayoutModeDefinition {
   value: GalleryLayoutMode;
   label: string;
   description: string;
-  group: "standard" | "creative";
+  group: "gallery" | "slideshow" | "creative";
 }
 
 export const GALLERY_LAYOUT_MODES: GalleryLayoutModeDefinition[] = [
-  // Standard
-  { value: "grid",        label: "Grid",        description: "Uniform cells in N columns",          group: "standard" },
-  { value: "masonry",     label: "Masonry",      description: "Pinterest-style varying heights",     group: "standard" },
-  { value: "collage",     label: "Collage",      description: "Featured first image, mosaic style",  group: "standard" },
-  { value: "slider",      label: "Slider",       description: "Horizontal carousel, one at a time",  group: "standard" },
-  { value: "slideshow",   label: "Slideshow",    description: "Full-bleed autoplay presentation",    group: "standard" },
-  { value: "thumbnails",  label: "Thumbnails",   description: "Main image + filmstrip below",        group: "standard" },
-  { value: "strip",       label: "Strip",        description: "Large left image + stacked right",    group: "standard" },
-  { value: "column",      label: "Column",       description: "Single column, stacked full-width",   group: "standard" },
-  { value: "bricks",      label: "Bricks",       description: "Alternating 2-col and 1-col rows",    group: "standard" },
+  // Gallery
+  { value: "grid",        label: "Grid",        description: "Uniform cells in N columns",          group: "gallery" },
+  { value: "masonry",     label: "Masonry",      description: "Pinterest-style varying heights",     group: "gallery" },
+  { value: "collage",     label: "Collage",      description: "Featured first image, mosaic style",  group: "gallery" },
+  { value: "strip",       label: "Strip",        description: "Large left image + stacked right",    group: "gallery" },
+  { value: "column",      label: "Column",       description: "Single column, stacked full-width",   group: "gallery" },
+  { value: "bricks",      label: "Bricks",       description: "Alternating 2-col and 1-col rows",    group: "gallery" },
+  // Slideshow
+  { value: "slider",      label: "Slider",       description: "Horizontal carousel, one at a time",  group: "slideshow" },
+  { value: "slideshow",   label: "Slideshow",    description: "Full-bleed autoplay presentation",    group: "slideshow" },
+  { value: "thumbnails",  label: "Thumbnails",   description: "Main image + filmstrip below",        group: "slideshow" },
   // Creative
   { value: "honeycomb",   label: "Honeycomb",    description: "Hexagonal honeycomb grid layout",     group: "creative" },
   { value: "freestyle",   label: "Freestyle",    description: "Scattered with random rotation",      group: "creative" },
