@@ -145,8 +145,8 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
       {/* Content */}
       <div
         className={cn(
-          "flex flex-col transition-[max-height,opacity] overflow-y-auto flex-1 min-h-0",
-          isExpanded ? "opacity-100" : "max-h-0 opacity-0 overflow-hidden"
+          "flex flex-col transition-[max-height,opacity] flex-1 min-h-0 overflow-hidden",
+          isExpanded ? "opacity-100" : "max-h-0 opacity-0"
         )}
       >
         {children}

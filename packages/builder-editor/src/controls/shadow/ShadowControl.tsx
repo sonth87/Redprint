@@ -87,7 +87,7 @@ export const ShadowControl: React.FC<ShadowControlProps> = ({ value, onChange })
       </div>
 
       {/* Preset grid */}
-      <div className="grid grid-cols-4 gap-1">
+      <div className="grid grid-cols-3 gap-4">
         {SHADOW_PRESETS.map((preset) => (
           <button
             key={preset.value}
@@ -102,7 +102,7 @@ export const ShadowControl: React.FC<ShadowControlProps> = ({ value, onChange })
             )}
           >
             <div
-              className="w-10 h-7 rounded-sm bg-muted flex-shrink-0"
+              className="w-12 h-12 rounded-sm bg-muted flex-shrink-0"
               style={{
                 boxShadow: preset.boxShadow === "none" ? undefined : preset.boxShadow,
                 background: "#e5e7eb",

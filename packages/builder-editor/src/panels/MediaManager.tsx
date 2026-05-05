@@ -23,6 +23,10 @@ import {
   TabsContent,
   ScrollArea,
   Label,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
   cn,
 } from "@ui-builder/ui";
 import {
@@ -330,29 +334,37 @@ export const MediaManager = memo(function MediaManager({
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-          <TabsList className="grid w-full grid-cols-3 h-9">
-            <TabsTrigger value="library" className="text-xs gap-1">
-              <ImageIcon className="h-3.5 w-3.5" />
-              Library
-              {assets.length > 0 && (
-                <span className="ml-1 text-[9px] bg-muted-foreground/20 rounded-full px-1.5 py-0.5 font-medium">
-                  {assets.length}
-                </span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="upload" className="text-xs gap-1">
-              <Upload className="h-3.5 w-3.5" />
-              Upload
-            </TabsTrigger>
-            <TabsTrigger value="url" className="text-xs gap-1">
-              <Link2 className="h-3.5 w-3.5" />
-              URL
-            </TabsTrigger>
+        <TooltipProvider delayDuration={400}>
+        <Tabs orientation="vertical" value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-row min-h-0">
+          <TabsList className="flex flex-col w-10 h-full border-r py-1 px-0.5 gap-0.5 rounded-none bg-muted/30 items-start">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <TabsTrigger value="library" className="w-8 h-8 p-0 flex items-center justify-center rounded-md aria-selected:bg-primary aria-selected:text-primary-foreground">
+                  <ImageIcon className="h-4 w-4" />
+                </TabsTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="right">Library {assets.length > 0 && `(${assets.length})`}</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <TabsTrigger value="upload" className="w-8 h-8 p-0 flex items-center justify-center rounded-md aria-selected:bg-primary aria-selected:text-primary-foreground">
+                  <Upload className="h-4 w-4" />
+                </TabsTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="right">Upload</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <TabsTrigger value="url" className="w-8 h-8 p-0 flex items-center justify-center rounded-md aria-selected:bg-primary aria-selected:text-primary-foreground">
+                  <Link2 className="h-4 w-4" />
+                </TabsTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="right">URL</TooltipContent>
+            </Tooltip>
           </TabsList>
 
           {/* Library tab */}
-          <TabsContent value="library" className="flex-1 flex flex-col min-h-0 mt-2">
+          <TabsContent value="library" className="flex-1 flex flex-col min-h-0 mt-0">
             <div className="flex gap-2 mb-2">
               <div className="relative flex-1">
                 <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
@@ -412,7 +424,7 @@ export const MediaManager = memo(function MediaManager({
           </TabsContent>
 
           {/* Upload tab */}
-          <TabsContent value="upload" className="flex-1 flex flex-col mt-2 min-h-0">
+          <TabsContent value="upload" className="flex-1 flex flex-col mt-0 min-h-0">
             {uploadQueue.length > 0 ? (
               /* Progress list */
               <div className="flex-1 flex flex-col min-h-0">
@@ -488,7 +500,7 @@ export const MediaManager = memo(function MediaManager({
           </TabsContent>
 
           {/* URL tab */}
-          <TabsContent value="url" className="flex-1 mt-2">
+          <TabsContent value="url" className="flex-1 mt-0">
             <div className="space-y-3">
               <div className="grid gap-1.5">
                 <Label className="text-xs">Asset URL</Label>
@@ -519,6 +531,7 @@ export const MediaManager = memo(function MediaManager({
             </div>
           </TabsContent>
         </Tabs>
+        </TooltipProvider>
 
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
