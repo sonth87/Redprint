@@ -99,7 +99,7 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
       ref={panelRef}
       onPointerDownCapture={handlePanelPointerDown}
       className={cn(
-        "fixed flex flex-col overflow-hidden select-none",
+        "fixed flex flex-col overflow-hidden select-none max-h-[50vh]",
         isDragging ? GLASS_PANEL.dragging : GLASS_PANEL.normal,
       )}
       style={{
@@ -145,8 +145,8 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
       {/* Content */}
       <div
         className={cn(
-          "flex flex-col transition-[max-height,opacity]",
-          isExpanded ? "max-h-[72vh] opacity-100 overflow-y-auto" : "max-h-0 opacity-0 overflow-hidden"
+          "flex flex-col transition-[max-height,opacity] overflow-y-auto flex-1 min-h-0",
+          isExpanded ? "opacity-100" : "max-h-0 opacity-0 overflow-hidden"
         )}
       >
         {children}

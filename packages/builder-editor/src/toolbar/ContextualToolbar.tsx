@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Copy, Trash2, ArrowUp, ArrowDown, GripVertical, CornerLeftUp, ImageIcon, Link2, Paintbrush, Frame, Images, Settings2 } from "lucide-react";
 import { useDocument, useBuilder } from "@ui-builder/builder-react";
-import { Button, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider, ScrollArea } from "@ui-builder/ui";
+import { Button, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@ui-builder/ui";
 import { TOOLTIP_DELAY_MS, normalizeCarouselConfig } from "@ui-builder/shared";
 import { AIToolsPopover } from "../ai/ai-tools/AIToolsPopover";
 import { AISectionPopover } from "../ai/ai-section/AISectionPopover";
@@ -283,7 +283,7 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
                     e.stopPropagation();
                     if (filterBtnRef.current) {
                       const r = filterBtnRef.current.getBoundingClientRect();
-                      setFilterPos(getClampedPanelPos(r, 256, 400));
+                      setFilterPos(getClampedPanelPos(r, 380, 450));
                     }
                     setFilterOpen((v) => !v);
                   }}
@@ -300,19 +300,17 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
                 width={256}
                 onClose={() => setFilterOpen(false)}
               >
-                <ScrollArea>
-                  <ImageFilterPicker
-                    previewSrc={String(node.props.src ?? "")}
-                    value={String(node.props.filter ?? "none")}
-                    onChange={(filter) => {
-                      dispatch({
-                        type: "UPDATE_PROPS",
-                        payload: { nodeId, props: { filter } },
-                        description: "Set image filter",
-                      });
-                    }}
-                  />
-                </ScrollArea>
+                <ImageFilterPicker
+                  previewSrc={String(node.props.src ?? "")}
+                  value={String(node.props.filter ?? "none")}
+                  onChange={(filter) => {
+                    dispatch({
+                      type: "UPDATE_PROPS",
+                      payload: { nodeId, props: { filter } },
+                      description: "Set image filter",
+                    });
+                  }}
+                />
               </FloatingPanel>,
               document.body,
             )}
