@@ -25,6 +25,8 @@ export interface PropertyPanelProps {
   assets?: Asset[];
   /** Callback to open MediaManager and get selected asset back */
   onOpenMediaManager?: (onSelect: (asset: Asset) => void) => void;
+  /** Actual rendered size of selected element in CSS pixels (for SpacingVisualizer) */
+  elementSize?: { width: number; height: number };
 }
 
 import { DesignTab } from "./tabs/DesignTab";
@@ -52,6 +54,7 @@ export const PropertyPanel = memo(function PropertyPanel({
   onInteractionsChange,
   assets = [],
   onOpenMediaManager = () => {},
+  elementSize,
 }: PropertyPanelProps) {
   const { t } = useTranslation();
   const mediaCtx: MediaContextValue = useMemo(
@@ -151,6 +154,7 @@ export const PropertyPanel = memo(function PropertyPanel({
             style={style}
             onPropChange={onPropChange}
             onStyleChange={onStyleChange}
+            elementSize={elementSize}
           />
         </TabsContent>
 

@@ -6,6 +6,7 @@ import { PropControl } from "../controls/PropControl";
 import { ImageFilterPicker } from "../../ImageFilterPicker";
 import { GridTemplateEditor } from "../controls/GridTemplateEditor";
 import { NumericPropertyInput } from "../controls/NumericPropertyInput";
+import { SpacingVisualizer } from "../controls/SpacingVisualizer";
 import { ShadowControl } from "../../../controls/shadow/ShadowControl";
 import { ImagePropControl } from "../controls/ImagePropControl";
 import { ColorSwatch } from "../../../controls/color/ColorSwatch";
@@ -19,6 +20,7 @@ export function DesignTab({
   style,
   onPropChange,
   onStyleChange,
+  elementSize,
 }: {
   definition: ComponentDefinition;
   selectedNode: BuilderNode;
@@ -26,6 +28,7 @@ export function DesignTab({
   style: Record<string, any>;
   onPropChange: (key: string, value: unknown) => void;
   onStyleChange: (key: string, value: unknown) => void;
+  elementSize?: { width: number; height: number };
 }) {
   const { t } = useTranslation();
   const isSectionNode = selectedNode.type === "Section";
@@ -318,42 +321,7 @@ export function DesignTab({
 
       {/* Spacing */}
       <CollapsibleSection title={t("design.spacing")}>
-        <div className="grid grid-cols-2 gap-2">
-          {["padding", "paddingTop", "paddingRight", "paddingBottom", "paddingLeft"].map((key) => (
-            <div key={key} className="grid gap-1">
-              <div className="flex items-center">
-                <Label className="text-[10px] text-muted-foreground">
-                  {key === "padding" ? t("design.all") : t(`design.${key.replace("padding", "").toLowerCase()}`)}
-                </Label>
-                <PropInfoTooltip text={t(`design.info.${key}`)} />
-              </div>
-              <NumericPropertyInput
-                value={String(style[key] ?? "")}
-                placeholder="0"
-                min={0}
-                onChange={(val) => onStyleChange(key, val || undefined)}
-              />
-            </div>
-          ))}
-        </div>
-        <Separator className="my-2" />
-        <div className="grid grid-cols-2 gap-2">
-          {["margin", "marginTop", "marginRight", "marginBottom", "marginLeft"].map((key) => (
-            <div key={key} className="grid gap-1">
-              <div className="flex items-center">
-                <Label className="text-[10px] text-muted-foreground">
-                  {key === "margin" ? t("design.all") : t(`design.${key.replace("margin", "").toLowerCase()}`)}
-                </Label>
-                <PropInfoTooltip text={t(`design.info.${key}`)} />
-              </div>
-              <NumericPropertyInput
-                value={String(style[key] ?? "")}
-                placeholder="0"
-                onChange={(val) => onStyleChange(key, val || undefined)}
-              />
-            </div>
-          ))}
-        </div>
+        <SpacingVisualizer style={style} onStyleChange={onStyleChange} elementSize={elementSize} />
       </CollapsibleSection>
 
       {/* Typography */}
