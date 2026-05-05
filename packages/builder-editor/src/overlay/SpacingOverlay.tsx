@@ -1,6 +1,7 @@
 import React, { memo } from "react";
 import type { Rect } from "@ui-builder/shared";
 import type { SpacingStrips } from "../hooks/useSpacingOverlay";
+import { SPACING_MARGIN_COLOR, SPACING_PADDING_COLOR, SPACING_OVERLAY_OPACITY } from "../constants";
 
 interface StripProps {
   rect: Rect;
@@ -36,18 +37,18 @@ export const SpacingOverlay = memo(function SpacingOverlay({ spacingRects }: Spa
     <>
       {margin && (
         <>
-          <Strip rect={margin.top}    color="rgba(255, 165, 0, 0.15)" zIndex={44} />
-          <Strip rect={margin.bottom} color="rgba(255, 165, 0, 0.15)" zIndex={44} />
-          <Strip rect={margin.left}   color="rgba(255, 165, 0, 0.15)" zIndex={44} />
-          <Strip rect={margin.right}  color="rgba(255, 165, 0, 0.15)" zIndex={44} />
+          <Strip rect={margin.top}    color={`hsl(${SPACING_MARGIN_COLOR} / ${SPACING_OVERLAY_OPACITY})`} zIndex={44} />
+          <Strip rect={margin.bottom} color={`hsl(${SPACING_MARGIN_COLOR} / ${SPACING_OVERLAY_OPACITY})`} zIndex={44} />
+          <Strip rect={margin.left}   color={`hsl(${SPACING_MARGIN_COLOR} / ${SPACING_OVERLAY_OPACITY})`} zIndex={44} />
+          <Strip rect={margin.right}  color={`hsl(${SPACING_MARGIN_COLOR} / ${SPACING_OVERLAY_OPACITY})`} zIndex={44} />
         </>
       )}
       {padding && (
         <>
-          <Strip rect={padding.top}    color="rgba(0, 204, 136, 0.15)" zIndex={45} />
-          <Strip rect={padding.bottom} color="rgba(0, 204, 136, 0.15)" zIndex={45} />
-          <Strip rect={padding.left}   color="rgba(0, 204, 136, 0.15)" zIndex={45} />
-          <Strip rect={padding.right}  color="rgba(0, 204, 136, 0.15)" zIndex={45} />
+          <Strip rect={padding.top}    color={`hsl(${SPACING_PADDING_COLOR} / ${SPACING_OVERLAY_OPACITY})`} zIndex={45} />
+          <Strip rect={padding.bottom} color={`hsl(${SPACING_PADDING_COLOR} / ${SPACING_OVERLAY_OPACITY})`} zIndex={45} />
+          <Strip rect={padding.left}   color={`hsl(${SPACING_PADDING_COLOR} / ${SPACING_OVERLAY_OPACITY})`} zIndex={45} />
+          <Strip rect={padding.right}  color={`hsl(${SPACING_PADDING_COLOR} / ${SPACING_OVERLAY_OPACITY})`} zIndex={45} />
         </>
       )}
     </>

@@ -1,6 +1,7 @@
 import React from "react";
 import { cn } from "@ui-builder/ui";
 import { useScrubGesture } from "../../../hooks/useScrubGesture";
+import { SPACING_MARGIN_COLOR, SPACING_PADDING_COLOR, SPACING_PANEL_FILL_OPACITY } from "../../../constants";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -141,8 +142,12 @@ export function SpacingVisualizer({ style, onStyleChange, elementSize }: Spacing
     <div className="w-full select-none font-mono text-[10px]">
       {/* Margin box */}
       <div
-        className="relative bg-[hsl(var(--spacing-margin,35_80%_70%)/0.18)] border border-dashed border-[hsl(var(--spacing-margin,35_80%_70%)/0.5)] rounded"
-        style={{ padding: "18px 14px" }}
+        className="relative border border-dashed rounded"
+        style={{
+          padding: "18px 14px",
+          backgroundColor: `hsl(${SPACING_MARGIN_COLOR} / ${SPACING_PANEL_FILL_OPACITY})`,
+          borderColor: `hsl(${SPACING_MARGIN_COLOR} / 0.5)`,
+        }}
       >
         {/* "margin" label */}
         <span className="absolute top-0.5 left-1.5 text-[9px] text-muted-foreground/50 uppercase tracking-widest">margin</span>
@@ -171,8 +176,12 @@ export function SpacingVisualizer({ style, onStyleChange, elementSize }: Spacing
 
         {/* Padding box */}
         <div
-          className="relative bg-[hsl(var(--spacing-padding,150_60%_60%)/0.18)] border border-dashed border-[hsl(var(--spacing-padding,150_60%_60%)/0.5)] rounded"
-          style={{ padding: "18px 14px" }}
+          className="relative border border-dashed rounded"
+          style={{
+            padding: "18px 14px",
+            backgroundColor: `hsl(${SPACING_PADDING_COLOR} / ${SPACING_PANEL_FILL_OPACITY})`,
+            borderColor: `hsl(${SPACING_PADDING_COLOR} / 0.5)`,
+          }}
         >
           {/* "padding" label */}
           <span className="absolute top-0.5 left-1.5 text-[9px] text-muted-foreground/50 uppercase tracking-widest">padding</span>
