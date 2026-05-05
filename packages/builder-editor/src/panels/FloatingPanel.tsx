@@ -99,7 +99,7 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
       ref={panelRef}
       onPointerDownCapture={handlePanelPointerDown}
       className={cn(
-        "fixed flex flex-col overflow-hidden select-none max-h-[50vh]",
+        "fixed flex flex-col overflow-hidden select-none",
         isDragging ? GLASS_PANEL.dragging : GLASS_PANEL.normal,
       )}
       style={{

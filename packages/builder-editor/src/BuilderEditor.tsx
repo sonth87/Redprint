@@ -562,14 +562,14 @@ function EditorInner({
 
         {/* Properties / Page settings */}
         <FloatingPanel id="properties" title={selectedNode ? "Properties" : "Page Settings"} defaultPosition={DEFAULT_PROPERTIES_PANEL_POS}>
-          <div className="flex h-[75vh] max-h-[800px] min-h-[500px] flex-col overflow-hidden">
+          <div className="flex h-[70vh] max-h-[800px] min-h-[500px] flex-col overflow-hidden">
             {selectedNode ? (
               <PropertyPanel selectedNode={selectedNode} definition={selectedDefinition} breakpoint={breakpoint}
                 onPropChange={handlePropChange} onStyleChange={handleStyleChange}
                 assets={assets}
                 onOpenMediaManager={handleOpenMediaManager} />
             ) : (
-              <div className="flex flex-col h-full">
+              <div className="flex flex-col h-full min-h-0">
                 <PageSettings document={document} onCanvasConfigChange={handleCanvasConfigChange} />
                 <div className="border-t shrink-0">
                   <AIConfigPanel config={aiConfig} onChange={handleAIConfigChange} />
