@@ -408,7 +408,7 @@ function EditorInner({
   }, [highlightedNodeIds, activeFrameRef, canvasFrameRef]);
 
   const { rotating, startRotate } = useRotateGesture({ breakpoint, dispatch });
-  const { sectionResizing, startSectionResize } = useSectionResize({ zoom, showGrid, gridSize: document.canvasConfig.gridSize, breakpoint, dispatch });
+  const { sectionResizing, startSectionResize } = useSectionResize({ zoom, showGrid, gridSize: document.canvasConfig.gridSize, breakpoint, nodes: document.nodes, dispatch });
 
   const snapGuides     = moving ? moveSnapGuides     : resizeSnapGuides;
   const distanceGuides = moving ? moveDistanceGuides : resizeDistanceGuides;

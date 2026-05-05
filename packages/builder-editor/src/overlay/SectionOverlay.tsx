@@ -35,7 +35,7 @@ export interface SectionOverlayProps {
   /** Whether a section resize is in progress (suppresses UI jitter) */
   isResizing: boolean;
   selectedNodeIds?: string[];
-  onOpenPaletteGroup?: (groupId: string) => void;
+  onOpenPaletteGroup?: (groupId: string, sectionId?: string) => void;
   /**
    * Called when user clicks the "Designed Section" button on an empty section.
    * Provides the section node ID so the palette can track the intended target,
@@ -351,7 +351,7 @@ export const SectionOverlay = memo(function SectionOverlay({
                       ) : null}
 
                       <button
-                        onClick={() => onOpenPaletteGroup?.("text")}
+                        onClick={() => onOpenPaletteGroup?.("text", b.nodeId)}
                         style={{
                           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
                           gap: 10, width: 110, height: 110,
@@ -595,9 +595,24 @@ export const SectionOverlay = memo(function SectionOverlay({
                       let maxChildBottom = 100;
                       for (const child of children) {
                         const childRect = child.getBoundingClientRect();
+                        // Track the full extent: from top of section to bottom of child.
+                        // childRect.top may be above sectionRect.top (negative local top) —
+                        // in that case localBottom still reflects the child's local bottom
+                        // relative to the section origin, which is what we care about.
                         const localBottom = (childRect.bottom - sectionRect.top) / zoom;
                         if (localBottom > maxChildBottom) {
-                           maxChildBottom = localBottom;
+                          maxChildBottom = localBottom;
+                        }
+                        // Also ensure section is tall enough to include children above origin
+                        const localTop = (childRect.top - sectionRect.top) / zoom;
+                        if (localTop < 0) {
+                          // Child overflows above; extend minHeight so a future resize can't
+                          // shrink the section to less than childHeight worth of bottom room
+                          const childHeightLocal = (childRect.height) / zoom;
+                          const bottomIfTopClamped = childHeightLocal;
+                          if (bottomIfTopClamped > maxChildBottom) {
+                            maxChildBottom = bottomIfTopClamped;
+                          }
                         }
                       }
                       computedMinHeight = Math.max(100, maxChildBottom);

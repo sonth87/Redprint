@@ -206,18 +206,41 @@ export function useClickToAdd({
             containerRect.top + containerRect.height / 2,
           ));
 
-          // Determine parent section from the hit Y position
-          parentId = getDropTargetSection(targetScreenY, canvasFrameRef.current, nodes, rootNodeId);
+          // Priority 1: section explicitly targeted via "Add element" button
+          if (pendingTargetSectionId && nodes[pendingTargetSectionId]) {
+            parentId = pendingTargetSectionId;
+          }
+          // Priority 2: section containing the currently selected node
+          else if (selectedNodeIds.length > 0) {
+            const firstId = selectedNodeIds[0] as string;
+            const selNode = nodes[firstId];
+            let cursor: string | null = selNode?.parentId ?? null;
+            while (cursor && cursor !== rootNodeId) {
+              const cursorNode = nodes[cursor];
+              if (cursorNode?.type === "Section") { parentId = cursor; break; }
+              cursor = cursorNode?.parentId ?? null;
+            }
+          }
+          // Priority 3: geometric hit-test (viewport center)
+          if (parentId === rootNodeId) {
+            parentId = getDropTargetSection(targetScreenY, canvasFrameRef.current, nodes, rootNodeId);
+          }
 
           const parentEl = parentId !== rootNodeId
             ? (canvasFrameRef.current.querySelector(`[data-node-id="${parentId}"]`) as HTMLElement | null)
             : canvasFrameRef.current;
           const pr = parentEl?.getBoundingClientRect() ?? fr;
 
-          // Convert screen target → parent-local canvas coordinates
-          // (works because all children share the same zoom transform origin)
+          // Use the center of the section's VISIBLE portion so new components land
+          // in the viewport rather than at the bottom of a tall off-screen section.
+          const visibleTop = Math.max(pr.top, containerRect.top);
+          const visibleBottom = Math.min(pr.bottom, containerRect.bottom);
+          const effectiveTargetY = visibleTop < visibleBottom
+            ? (visibleTop + visibleBottom) / 2
+            : targetScreenY;
+
           const localX = (targetScreenX - pr.left) / zoom;
-          const localY = (targetScreenY - pr.top) / zoom;
+          const localY = (effectiveTargetY - pr.top) / zoom;
 
           const componentDef = resolveComponentDefinition?.(item.componentType);
           const measuredSize = measureRenderedSize(item, componentDef, pr.width / zoom);

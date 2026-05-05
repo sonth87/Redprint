@@ -273,7 +273,7 @@ function SectionFrame({
         </div>
       )}
 
-      <div style={{ position: "relative", zIndex: 2 }}>
+      <div style={{ position: "relative", zIndex: 2, width: "100%" }}>
         {children}
       </div>
     </div>
