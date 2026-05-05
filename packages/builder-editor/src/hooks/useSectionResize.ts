@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { snapToGrid } from "@ui-builder/shared";
+import type { BuilderNode } from "@ui-builder/builder-core";
 
 interface SectionResizingState {
   nodeId: string;
@@ -14,6 +15,7 @@ interface UseSectionResizeOptions {
   showGrid: boolean;
   gridSize: number;
   breakpoint?: string;
+  nodes: Record<string, BuilderNode>;
   dispatch: (action: { type: string; payload: unknown; groupId?: string; description?: string }) => void;
 }
 
@@ -27,6 +29,7 @@ export function useSectionResize({
   showGrid,
   gridSize,
   breakpoint,
+  nodes,
   dispatch,
 }: UseSectionResizeOptions): UseSectionResizeReturn {
   const [sectionResizing, setSectionResizing] = useState<SectionResizingState | null>(null);
@@ -77,6 +80,26 @@ export function useSectionResize({
           description: "Resize section props",
         });
       }
+
+      // Clamp absolute children whose top exceeds the new height so they stay inside
+      const children = Object.values(nodes).filter(
+        (n) => n.parentId === state.nodeId && n.style?.position === "absolute",
+      );
+      for (const child of children) {
+        const childTop = parseFloat(String(child.style.top ?? "0")) || 0;
+        if (childTop >= newHeight) {
+          dispatch({
+            type: "UPDATE_STYLE",
+            payload: {
+              nodeId: child.id,
+              style: { top: `${Math.max(0, newHeight - 20)}px` },
+              ...(isMobile ? { breakpoint } : {}),
+            },
+            groupId: state.gestureGroupId,
+            description: "Clamp child on section resize",
+          });
+        }
+      }
     };
 
     const handleMouseUp = () => {
@@ -89,7 +112,7 @@ export function useSectionResize({
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [sectionResizing, zoom, showGrid, gridSize, breakpoint, dispatch]);
+  }, [sectionResizing, zoom, showGrid, gridSize, breakpoint, nodes, dispatch]);
 
   const startSectionResize = (
     nodeId: string,

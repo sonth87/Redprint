@@ -372,6 +372,58 @@ export class AbsoluteDragStrategy implements DragStrategy {
           });
         }
       }
+    } else if (ctx.rootNodeId && isMultiSelect) {
+      // Multi-select: reparent all nodes that landed in a different section
+      const dropSectionId = getDropTargetSection(e.clientY, frameEl, ctx.nodes, ctx.rootNodeId);
+
+      if (dropSectionId && dropSectionId !== ctx.rootNodeId) {
+        const sectionEl = frameEl.querySelector(
+          `[data-node-id="${dropSectionId}"]`,
+        ) as HTMLElement | null;
+
+        if (sectionEl) {
+          const sectionRect = sectionEl.getBoundingClientRect();
+          const targetSiblingCount = Object.values(ctx.nodes).filter(
+            (n) => n.parentId === dropSectionId,
+          ).length;
+
+          let insertOffset = 0;
+          for (const nodeId of ctx.movingNodeIds) {
+            const node = ctx.nodes[nodeId];
+            if (!node || node.parentId === dropSectionId) continue;
+
+            const nodeEl = frameEl.querySelector(
+              `[data-node-id="${nodeId}"]`,
+            ) as HTMLElement | null;
+            if (!nodeEl) continue;
+
+            const nodeRect = nodeEl.getBoundingClientRect();
+            const newLeft = (nodeRect.left - sectionRect.left) / ctx.zoom;
+            const newTop = (nodeRect.top - sectionRect.top) / ctx.zoom;
+
+            ctx.dispatch({
+              type: "UPDATE_STYLE",
+              payload: {
+                nodeId,
+                style: { left: `${Math.round(newLeft)}px`, top: `${Math.round(newTop)}px` },
+                breakpoint: ctx.breakpoint,
+              },
+              description: "Adjust position for new section",
+            });
+            ctx.dispatch({
+              type: "MOVE_NODE",
+              payload: { nodeId, targetParentId: dropSectionId, position: "inside" },
+              description: "Change Section (multi-select)",
+            });
+            ctx.dispatch({
+              type: "REORDER_NODE",
+              payload: { nodeId, insertIndex: targetSiblingCount + insertOffset },
+              description: "Bring to front",
+            });
+            insertOffset++;
+          }
+        }
+      }
     }
 
     this._reset();
