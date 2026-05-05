@@ -41,6 +41,8 @@ import {
 } from "./overlay/EditorOverlay";
 import { SectionOverlay } from "./overlay/SectionOverlay";
 import { SectionToolbar } from "./overlay/SectionToolbar";
+import { SpacingOverlay } from "./overlay/SpacingOverlay";
+import { useSpacingOverlay } from "./hooks/useSpacingOverlay";
 import { EditorToolbar } from "./toolbar/EditorToolbar";
 import { ComponentPalette } from "./panels/left/ComponentPalette";
 import { FloatingPalette } from "./panels/left/FloatingPalette";
@@ -422,6 +424,11 @@ function EditorInner({
     selectedNodeIds, rootNodeId: document.rootNodeId, zoom, panOffset, nodes: document.nodes, canvasFrameRef, nodeQueryRef: activeFrameRef,
   });
 
+  const { spacingRects } = useSpacingOverlay({
+    selectedNodeIds, zoom, panOffset, nodes: document.nodes,
+    canvasContainerRef, canvasFrameRef, nodeQueryRef: activeFrameRef,
+  });
+
   useDimensionCapture({ nodes: document.nodes, breakpoint, canvasFrameRef, dispatch });
 
   // ── Interaction hooks ────────────────────────────────────────────────────
@@ -562,14 +569,15 @@ function EditorInner({
 
         {/* Properties / Page settings */}
         <FloatingPanel id="properties" title={selectedNode ? "Properties" : "Page Settings"} defaultPosition={DEFAULT_PROPERTIES_PANEL_POS}>
-          <div className="flex h-[75vh] max-h-[800px] min-h-[500px] flex-col overflow-hidden">
+          <div className="flex h-[70vh] max-h-[800px] min-h-[500px] flex-col overflow-hidden">
             {selectedNode ? (
               <PropertyPanel selectedNode={selectedNode} definition={selectedDefinition} breakpoint={breakpoint}
                 onPropChange={handlePropChange} onStyleChange={handleStyleChange}
                 assets={assets}
-                onOpenMediaManager={handleOpenMediaManager} />
+                onOpenMediaManager={handleOpenMediaManager}
+                elementSize={spacingRects?.elementSize} />
             ) : (
-              <div className="flex flex-col h-full">
+              <div className="flex flex-col h-full min-h-0">
                 <PageSettings document={document} onCanvasConfigChange={handleCanvasConfigChange} />
                 <div className="border-t shrink-0">
                   <AIConfigPanel config={aiConfig} onChange={handleAIConfigChange} />
@@ -766,6 +774,11 @@ function EditorInner({
               nodes={document.nodes} zoom={zoom}
             />
           </CanvasRoot>
+
+          {/* Spacing overlay (screen-space, outside CanvasRoot to avoid double-scaling) */}
+          {spacingRects && selectedNodeIds.length === 1 && !selectedSectionNode && (
+            <SpacingOverlay spacingRects={spacingRects} />
+          )}
 
           {/* Section toolbar (screen-space) */}
           {selectedSectionNode && (

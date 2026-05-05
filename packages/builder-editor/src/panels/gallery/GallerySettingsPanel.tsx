@@ -8,11 +8,13 @@
  *   Design   → image fit, border radius
  */
 import React from "react";
+import { LayoutGrid, Settings2, Palette } from "lucide-react";
 import type { BuilderNode } from "@ui-builder/builder-core";
 import {
   Tabs, TabsList, TabsTrigger, TabsContent,
   ScrollArea, Label, Slider, Switch,
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Tooltip, TooltipTrigger, TooltipContent, TooltipProvider,
 } from "@ui-builder/ui";
 import {
   GALLERY_LAYOUT_MODES,
@@ -130,14 +132,36 @@ export function GallerySettingsPanel({ node, onPropChange }: GallerySettingsPane
   const creativeModes  = GALLERY_LAYOUT_MODES.filter((m) => m.group === "creative");
 
   return (
-    <Tabs defaultValue="layout" className="w-full">
-      <TabsList className="grid grid-cols-3 w-full rounded-none border-b h-8 bg-transparent">
-        <TabsTrigger value="layout" className="text-xs h-full rounded-none">Layout</TabsTrigger>
-        <TabsTrigger value="design" className="text-xs h-full rounded-none">Design</TabsTrigger>
-        <TabsTrigger value="settings" className="text-xs h-full rounded-none">Settings</TabsTrigger>
+    <TooltipProvider delayDuration={400}>
+    <Tabs orientation="vertical" defaultValue="layout" className="flex flex-row w-full h-full">
+      <TabsList className="flex flex-col w-10 h-full border-r py-1 px-0.5 gap-0.5 rounded-none bg-muted/30 items-start">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <TabsTrigger value="layout" className="w-8 h-8 p-0 flex items-center justify-center rounded-md aria-selected:bg-primary aria-selected:text-primary-foreground">
+              <LayoutGrid className="h-4 w-4" />
+            </TabsTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="right">Layout</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <TabsTrigger value="design" className="w-8 h-8 p-0 flex items-center justify-center rounded-md aria-selected:bg-primary aria-selected:text-primary-foreground">
+              <Palette className="h-4 w-4" />
+            </TabsTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="right">Design</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <TabsTrigger value="settings" className="w-8 h-8 p-0 flex items-center justify-center rounded-md aria-selected:bg-primary aria-selected:text-primary-foreground">
+              <Settings2 className="h-4 w-4" />
+            </TabsTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="right">Settings</TooltipContent>
+        </Tooltip>
       </TabsList>
 
-      <TabsContent value="layout" className="m-0">
+      <TabsContent value="layout" className="m-0 flex-1 overflow-hidden">
         <ScrollArea className="h-[420px]">
           <div className="p-2 space-y-3">
             <div>
@@ -206,5 +230,6 @@ export function GallerySettingsPanel({ node, onPropChange }: GallerySettingsPane
         </ScrollArea>
       </TabsContent>
     </Tabs>
+    </TooltipProvider>
   );
 }

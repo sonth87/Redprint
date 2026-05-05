@@ -1,11 +1,11 @@
 import React, { useCallback, useMemo } from "react";
 import CircularSlider from "@fseehawer/react-circular-slider";
 import { Slider, Switch, Label, cn } from "@ui-builder/ui";
-import { SHADOW_PRESETS } from "@ui-builder/shared";
+import { TEXT_SHADOW_PRESETS } from "@ui-builder/shared";
 import { ColorSwatch } from "../color/ColorSwatch";
-import { parseShadow, serializeShadow, type ShadowParams } from "./shadowUtils";
+import { parseTextShadow, serializeTextShadow, type ShadowParams } from "./shadowUtils";
 
-interface ShadowControlProps {
+interface TextShadowControlProps {
   value: string | undefined;
   onChange: (css: string) => void;
 }
@@ -53,13 +53,13 @@ function SliderRow({
   );
 }
 
-export const ShadowControl: React.FC<ShadowControlProps> = ({ value, onChange }) => {
-  const params = useMemo(() => parseShadow(value), [value]);
+export const TextShadowControl: React.FC<TextShadowControlProps> = ({ value, onChange }) => {
+  const params = useMemo(() => parseTextShadow(value), [value]);
 
   const update = useCallback(
     (partial: Partial<ShadowParams>) => {
       const next = { ...params, ...partial };
-      onChange(serializeShadow(next));
+      onChange(serializeTextShadow(next));
     },
     [params, onChange],
   );
@@ -68,31 +68,30 @@ export const ShadowControl: React.FC<ShadowControlProps> = ({ value, onChange })
     update({ enabled: checked });
   };
 
-  const handlePreset = (boxShadow: string) => {
-    onChange(boxShadow);
+  const handlePreset = (textShadow: string) => {
+    onChange(textShadow);
   };
 
-  // Detect which preset is active
-  const activePreset = SHADOW_PRESETS.find((p) => {
+  const activePreset = TEXT_SHADOW_PRESETS.find((p) => {
     if (p.value === "none") return !params.enabled;
-    return p.boxShadow === value;
+    return p.textShadow === value;
   })?.value ?? (params.enabled ? "custom" : "none");
 
   return (
     <div className="flex flex-col gap-3 p-3">
       {/* Toggle */}
       <div className="flex items-center justify-between">
-        <Label className="text-xs">Apply shadow</Label>
+        <Label className="text-xs">Apply text shadow</Label>
         <Switch checked={params.enabled} onCheckedChange={handleToggle} />
       </div>
 
       {/* Preset grid */}
       <div className="grid grid-cols-3 gap-4">
-        {SHADOW_PRESETS.map((preset) => (
+        {TEXT_SHADOW_PRESETS.map((preset) => (
           <button
             key={preset.value}
             type="button"
-            onClick={() => handlePreset(preset.boxShadow)}
+            onClick={() => handlePreset(preset.textShadow)}
             title={preset.label}
             className={cn(
               "flex flex-col items-center gap-1 p-1 rounded transition-all text-center",
@@ -102,18 +101,23 @@ export const ShadowControl: React.FC<ShadowControlProps> = ({ value, onChange })
             )}
           >
             <div
-              className="w-12 h-12 rounded-sm bg-muted flex-shrink-0"
-              style={{
-                boxShadow: preset.boxShadow === "none" ? undefined : preset.boxShadow,
-                background: "#e5e7eb",
-              }}
-            />
+              className="w-12 h-12 rounded-sm flex-shrink-0 flex items-center justify-center bg-muted"
+            >
+              <span
+                className="text-lg font-bold text-foreground select-none"
+                style={{
+                  textShadow: preset.textShadow === "none" ? undefined : preset.textShadow,
+                }}
+              >
+                Aa
+              </span>
+            </div>
             <span className="text-[9px] text-muted-foreground leading-none truncate w-full">{preset.label}</span>
           </button>
         ))}
       </div>
 
-      {/* Custom controls — only when shadow is enabled */}
+      {/* Custom controls — only when text shadow is enabled */}
       {params.enabled && (
         <div className="flex flex-col gap-3 pt-2 border-t border-border/50">
           {/* Angle dial */}
@@ -152,7 +156,6 @@ export const ShadowControl: React.FC<ShadowControlProps> = ({ value, onChange })
           </div>
 
           <SliderRow label="Distance (px)" value={params.distance} min={0} max={100} unit="px" onChange={(v) => update({ distance: v })} />
-          <SliderRow label="Size (px)" value={params.size} min={-20} max={100} unit="px" onChange={(v) => update({ size: v })} />
           <SliderRow label="Blur" value={params.blur} min={0} max={100} unit="px" onChange={(v) => update({ blur: v })} />
 
           {/* Opacity & color */}

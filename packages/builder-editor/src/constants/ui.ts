@@ -375,3 +375,17 @@ export const SECTION_OVERLAY_TRANSITION_FAST = "0.15s ease" as const;
  */
 export const ROTATABLE_SELECTION_FRAME = true as const;
 
+// ── Spacing Overlay Colors ──────────────────────────────────────────────────
+
+/** HSL color for margin highlights — used in SpacingVisualizer panel and SpacingOverlay canvas. */
+export const SPACING_MARGIN_COLOR = "35 80% 70%" as const;
+
+/** HSL color for padding highlights — used in SpacingVisualizer panel and SpacingOverlay canvas. */
+export const SPACING_PADDING_COLOR = "150 60% 60%" as const;
+
+/** Opacity for the box fill in SpacingVisualizer panel. */
+export const SPACING_PANEL_FILL_OPACITY = 0.18 as const;
+
+/** Opacity for the canvas overlay strips. */
+export const SPACING_OVERLAY_OPACITY = 0.35 as const;
+

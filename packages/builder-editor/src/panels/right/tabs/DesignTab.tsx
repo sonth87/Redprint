@@ -6,7 +6,9 @@ import { PropControl } from "../controls/PropControl";
 import { ImageFilterPicker } from "../../ImageFilterPicker";
 import { GridTemplateEditor } from "../controls/GridTemplateEditor";
 import { NumericPropertyInput } from "../controls/NumericPropertyInput";
+import { SpacingVisualizer } from "../controls/SpacingVisualizer";
 import { ShadowControl } from "../../../controls/shadow/ShadowControl";
+import { TextShadowControl } from "../../../controls/shadow/TextShadowControl";
 import { ImagePropControl } from "../controls/ImagePropControl";
 import { ColorSwatch } from "../../../controls/color/ColorSwatch";
 import type { ComponentDefinition, BuilderNode } from "@ui-builder/builder-core";
@@ -19,6 +21,7 @@ export function DesignTab({
   style,
   onPropChange,
   onStyleChange,
+  elementSize,
 }: {
   definition: ComponentDefinition;
   selectedNode: BuilderNode;
@@ -26,9 +29,11 @@ export function DesignTab({
   style: Record<string, any>;
   onPropChange: (key: string, value: unknown) => void;
   onStyleChange: (key: string, value: unknown) => void;
+  elementSize?: { width: number; height: number };
 }) {
   const { t } = useTranslation();
   const isSectionNode = selectedNode.type === "Section";
+  const isTextNode = ["Text", "CollapsibleText", "TextMarquee", "TextMask", "Button"].includes(selectedNode.type);
 
   const renderBackgroundImageOptions = () => {
     if (!String(style.backgroundImage ?? "").startsWith("url(")) return null;
@@ -318,42 +323,7 @@ export function DesignTab({
 
       {/* Spacing */}
       <CollapsibleSection title={t("design.spacing")}>
-        <div className="grid grid-cols-2 gap-2">
-          {["padding", "paddingTop", "paddingRight", "paddingBottom", "paddingLeft"].map((key) => (
-            <div key={key} className="grid gap-1">
-              <div className="flex items-center">
-                <Label className="text-[10px] text-muted-foreground">
-                  {key === "padding" ? t("design.all") : t(`design.${key.replace("padding", "").toLowerCase()}`)}
-                </Label>
-                <PropInfoTooltip text={t(`design.info.${key}`)} />
-              </div>
-              <NumericPropertyInput
-                value={String(style[key] ?? "")}
-                placeholder="0"
-                min={0}
-                onChange={(val) => onStyleChange(key, val || undefined)}
-              />
-            </div>
-          ))}
-        </div>
-        <Separator className="my-2" />
-        <div className="grid grid-cols-2 gap-2">
-          {["margin", "marginTop", "marginRight", "marginBottom", "marginLeft"].map((key) => (
-            <div key={key} className="grid gap-1">
-              <div className="flex items-center">
-                <Label className="text-[10px] text-muted-foreground">
-                  {key === "margin" ? t("design.all") : t(`design.${key.replace("margin", "").toLowerCase()}`)}
-                </Label>
-                <PropInfoTooltip text={t(`design.info.${key}`)} />
-              </div>
-              <NumericPropertyInput
-                value={String(style[key] ?? "")}
-                placeholder="0"
-                onChange={(val) => onStyleChange(key, val || undefined)}
-              />
-            </div>
-          ))}
-        </div>
+        <SpacingVisualizer style={style} onStyleChange={onStyleChange} elementSize={elementSize} />
       </CollapsibleSection>
 
       {/* Typography */}
@@ -566,6 +536,16 @@ export function DesignTab({
           onChange={(css: string | undefined) => onStyleChange("boxShadow", css === "none" ? undefined : css)}
         />
       </CollapsibleSection>
+
+      {/* Text Shadow — only for text-based components */}
+      {isTextNode && (
+        <CollapsibleSection title={t("design.textShadow")} defaultOpen={false}>
+          <TextShadowControl
+            value={style.textShadow as string | undefined}
+            onChange={(css: string) => onStyleChange("textShadow", css === "none" ? undefined : css)}
+          />
+        </CollapsibleSection>
+      )}
 
       {/* Layout */}
       <CollapsibleSection title={t("design.layout")} defaultOpen={false}>

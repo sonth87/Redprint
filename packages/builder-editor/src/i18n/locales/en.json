@@ -93,6 +93,7 @@
     "background": "Background",
     "border": "Border",
     "shadow": "Shadow",
+    "textShadow": "Text Shadow",
     "layout": "Layout",
     "visual": "Visual",
     "transform": "Transform",

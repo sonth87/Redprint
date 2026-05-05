@@ -13,6 +13,7 @@
  * consumed by both the editor and builder-components renderers.
  */
 import React from "react";
+import { FrameIcon, Lightbulb, Shapes, Square, Sparkles } from "lucide-react";
 import type { BuilderNode } from "@ui-builder/builder-core";
 import type { StyleConfig } from "@ui-builder/builder-core";
 import { cn } from "@ui-builder/ui";
@@ -29,6 +30,10 @@ import {
   SelectValue,
   ScrollArea,
   Label,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
 } from "@ui-builder/ui";
 import {
   FRAME_PRESETS,
@@ -233,17 +238,53 @@ export function ImageFramePanel({ node, onStyleChange, onPropChange }: ImageFram
   })?.value ?? "none";
 
   return (
-    <Tabs defaultValue="frame" className="w-full">
-      <TabsList className="grid grid-cols-5 w-full rounded-none border-b h-8">
-        <TabsTrigger value="frame"   className="text-[10px] px-1 h-7">Frame</TabsTrigger>
-        <TabsTrigger value="shadow"  className="text-[10px] px-1 h-7">Shadow</TabsTrigger>
-        <TabsTrigger value="shape"   className="text-[10px] px-1 h-7">Shape</TabsTrigger>
-        <TabsTrigger value="border"  className="text-[10px] px-1 h-7">Border</TabsTrigger>
-        <TabsTrigger value="special" className="text-[10px] px-1 h-7">Special</TabsTrigger>
+    <TooltipProvider delayDuration={400}>
+    <Tabs orientation="vertical" defaultValue="frame" className="flex flex-row w-full">
+      <TabsList className="flex flex-col w-10 h-full border-r py-1 px-0.5 gap-0.5 rounded-none bg-muted/30 items-start">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <TabsTrigger value="frame" className="w-8 h-8 p-0 flex items-center justify-center rounded-md aria-selected:bg-primary aria-selected:text-primary-foreground">
+              <FrameIcon className="h-4 w-4" />
+            </TabsTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="right">Frame</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <TabsTrigger value="shadow" className="w-8 h-8 p-0 flex items-center justify-center rounded-md aria-selected:bg-primary aria-selected:text-primary-foreground">
+              <Lightbulb className="h-4 w-4" />
+            </TabsTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="right">Shadow</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <TabsTrigger value="shape" className="w-8 h-8 p-0 flex items-center justify-center rounded-md aria-selected:bg-primary aria-selected:text-primary-foreground">
+              <Shapes className="h-4 w-4" />
+            </TabsTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="right">Shape</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <TabsTrigger value="border" className="w-8 h-8 p-0 flex items-center justify-center rounded-md aria-selected:bg-primary aria-selected:text-primary-foreground">
+              <Square className="h-4 w-4" />
+            </TabsTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="right">Border</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <TabsTrigger value="special" className="w-8 h-8 p-0 flex items-center justify-center rounded-md aria-selected:bg-primary aria-selected:text-primary-foreground">
+              <Sparkles className="h-4 w-4" />
+            </TabsTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="right">Special</TooltipContent>
+        </Tooltip>
       </TabsList>
 
       {/* ── Frame Tab ── */}
-      <TabsContent value="frame" className="mt-0">
+      <TabsContent value="frame" className="mt-0 flex-1 overflow-hidden">
         <ScrollArea>
           <div className="grid grid-cols-3 gap-1 p-2">
             {FRAME_PRESETS.map((preset: FramePreset) => (
@@ -272,7 +313,7 @@ export function ImageFramePanel({ node, onStyleChange, onPropChange }: ImageFram
       </TabsContent>
 
       {/* ── Shadow Tab ── */}
-      <TabsContent value="shadow" className="mt-0">
+      <TabsContent value="shadow" className="mt-0 flex-1 overflow-hidden">
         <ShadowControl
           value={style.boxShadow as string | undefined}
           onChange={(css) => onStyleChange({ boxShadow: css })}
@@ -280,7 +321,7 @@ export function ImageFramePanel({ node, onStyleChange, onPropChange }: ImageFram
       </TabsContent>
 
       {/* ── Shape Tab ── */}
-      <TabsContent value="shape" className="mt-0">
+      <TabsContent value="shape" className="mt-0 flex-1 overflow-hidden">
         <ScrollArea>
           <div className="grid grid-cols-3 gap-1 p-2">
             {SHAPE_PRESETS.map((preset: ShapePreset) => (
@@ -299,7 +340,7 @@ export function ImageFramePanel({ node, onStyleChange, onPropChange }: ImageFram
       </TabsContent>
 
       {/* ── Border Tab ── */}
-      <TabsContent value="border" className="mt-0">
+      <TabsContent value="border" className="mt-0 flex-1 overflow-hidden">
         <div className="p-3 space-y-4">
           {/* Border Radius */}
           <div className="space-y-1.5">
@@ -363,7 +404,7 @@ export function ImageFramePanel({ node, onStyleChange, onPropChange }: ImageFram
       </TabsContent>
 
       {/* ── Special Tab ── */}
-      <TabsContent value="special" className="mt-0">
+      <TabsContent value="special" className="mt-0 flex-1 overflow-hidden">
         <ScrollArea>
           <div className="grid grid-cols-2 gap-2 p-2">
             {SPECIAL_PRESETS.map((preset: SpecialPreset) => (
@@ -392,5 +433,6 @@ export function ImageFramePanel({ node, onStyleChange, onPropChange }: ImageFram
         </ScrollArea>
       </TabsContent>
     </Tabs>
+    </TooltipProvider>
   );
 }

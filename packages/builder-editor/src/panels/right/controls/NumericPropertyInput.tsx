@@ -1,6 +1,7 @@
 import React from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { Input, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider, Popover, PopoverContent, PopoverTrigger, cn } from "@ui-builder/ui";
+import { useScrubGesture } from "../../../hooks/useScrubGesture";
 
 const UNIT_DESCRIPTIONS: Record<string, { label: string; description: string }> = {
   px:  { label: "Pixels",          description: "Fixed size — doesn't scale with screen or parent. Best for precise, absolute sizing." },
@@ -38,7 +39,6 @@ export function NumericPropertyInput({
   max?: number;
   step?: number;
 }) {
-  const [isScrubbing, setIsScrubbing] = React.useState(false);
   const [isUnitPopoverOpen, setIsUnitPopoverOpen] = React.useState(false);
 
   const safeUnits = (units && units.length > 0) ? units : ["px"];
@@ -87,48 +87,14 @@ export function NumericPropertyInput({
     setIsUnitPopoverOpen(false);
   };
 
-  const onMouseDown = React.useCallback((e: React.MouseEvent) => {
-    if (isAuto || e.button !== 0) return;
-
-    const startX = e.clientX;
-    const startVal = parseFloat(numPart) || 0;
-    let hasMoved = false;
-
-    const onMouseMove = (moveEvent: MouseEvent) => {
-      const deltaX = moveEvent.clientX - startX;
-      if (Math.abs(deltaX) > 3) {
-        hasMoved = true;
-        setIsScrubbing(true);
-
-        // Base drag rate: step * 0.5 per pixel (half-speed default, prevents jumping on small-range inputs)
-        let rate = step * 0.5;
-        if (moveEvent.shiftKey) rate = step * 5;
-        if (moveEvent.altKey) rate = step * 0.05;
-
-        const rawVal = startVal + (deltaX * rate);
-        const formattedVal = step < 1
-          ? Math.round(rawVal * 100) / 100
-          : step < 0.5
-            ? Math.round(rawVal * 10) / 10
-            : Math.round(rawVal / step) * step;
-
-        onChange(clamp(formattedVal, min, max) + currentUnit);
-      }
-    };
-
-    const onMouseUp = () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-      setTimeout(() => setIsScrubbing(false), 0);
-      if (hasMoved) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    };
-
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-  }, [numPart, currentUnit, isAuto, onChange, step, min, max]);
+  const { onMouseDown, isScrubbing } = useScrubGesture({
+    getValue: () => parseFloat(numPart) || 0,
+    onChange: (v) => onChange(v + currentUnit),
+    min,
+    max,
+    step,
+    disabled: isAuto,
+  });
 
   const unitInfo = UNIT_DESCRIPTIONS[currentUnit];
 

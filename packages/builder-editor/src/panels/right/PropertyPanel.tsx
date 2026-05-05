@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useMemo } from "react";
-import { Tabs, TabsList, TabsTrigger, TabsContent, Badge } from "@ui-builder/ui";
+import { Tabs, TabsList, TabsTrigger, TabsContent, Badge, Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@ui-builder/ui";
 import type { Asset, BuilderNode, Breakpoint, ComponentDefinition, InteractionConfig } from "@ui-builder/builder-core";
 import { resolveStyle, resolveProps } from "@ui-builder/builder-core";
 import {
@@ -25,6 +25,8 @@ export interface PropertyPanelProps {
   assets?: Asset[];
   /** Callback to open MediaManager and get selected asset back */
   onOpenMediaManager?: (onSelect: (asset: Asset) => void) => void;
+  /** Actual rendered size of selected element in CSS pixels (for SpacingVisualizer) */
+  elementSize?: { width: number; height: number };
 }
 
 import { DesignTab } from "./tabs/DesignTab";
@@ -52,6 +54,7 @@ export const PropertyPanel = memo(function PropertyPanel({
   onInteractionsChange,
   assets = [],
   onOpenMediaManager = () => {},
+  elementSize,
 }: PropertyPanelProps) {
   const { t } = useTranslation();
   const mediaCtx: MediaContextValue = useMemo(
@@ -97,28 +100,49 @@ export const PropertyPanel = memo(function PropertyPanel({
         </div>
       </div>
 
-      <Tabs defaultValue="design" className="flex flex-col flex-1 min-h-0">
-        <TabsList className="mx-2 mt-2 h-12 grid grid-cols-5">
-          <TabsTrigger value="design" className="text-[10px] gap-0.5 px-1 flex flex-col">
-            <Paintbrush className="h-3 w-3" />
-            <span className="hidden sm:inline">{t("propertyPanel.design")}</span>
-          </TabsTrigger>
-          <TabsTrigger value="events" className="text-[10px] gap-0.5 px-1 flex flex-col">
-            <Zap className="h-3 w-3" />
-            <span className="hidden sm:inline">{t("propertyPanel.events")}</span>
-          </TabsTrigger>
-          <TabsTrigger value="effects" className="text-[10px] gap-0.5 px-1 flex flex-col">
-            <Sparkles className="h-3 w-3" />
-            <span className="hidden sm:inline">{t("propertyPanel.effects")}</span>
-          </TabsTrigger>
-          <TabsTrigger value="data" className="text-[10px] gap-0.5 px-1 flex flex-col">
-            <Database className="h-3 w-3" />
-            <span className="hidden sm:inline">{t("propertyPanel.data")}</span>
-          </TabsTrigger>
-          <TabsTrigger value="advanced" className="text-[10px] gap-0.5 px-1 flex flex-col">
-            <Settings2 className="h-3 w-3" />
-            <span className="hidden sm:inline">{t("propertyPanel.advanced")}</span>
-          </TabsTrigger>
+      <TooltipProvider delayDuration={400}>
+      <Tabs orientation="vertical" defaultValue="design" className="flex flex-row flex-1 min-h-0">
+        <TabsList className="flex flex-col w-10 h-full border-r py-1 px-0.5 gap-0.5 rounded-none bg-muted/30 justify-start">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <TabsTrigger value="design" className="w-8 h-8 p-0 flex items-center justify-center rounded-md aria-selected:bg-primary aria-selected:text-primary-foreground">
+                <Paintbrush className="h-4 w-4" />
+              </TabsTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="right">{t("propertyPanel.design")}</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <TabsTrigger value="events" className="w-8 h-8 p-0 flex items-center justify-center rounded-md aria-selected:bg-primary aria-selected:text-primary-foreground">
+                <Zap className="h-4 w-4" />
+              </TabsTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="right">{t("propertyPanel.events")}</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <TabsTrigger value="effects" className="w-8 h-8 p-0 flex items-center justify-center rounded-md aria-selected:bg-primary aria-selected:text-primary-foreground">
+                <Sparkles className="h-4 w-4" />
+              </TabsTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="right">{t("propertyPanel.effects")}</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <TabsTrigger value="data" className="w-8 h-8 p-0 flex items-center justify-center rounded-md aria-selected:bg-primary aria-selected:text-primary-foreground">
+                <Database className="h-4 w-4" />
+              </TabsTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="right">{t("propertyPanel.data")}</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <TabsTrigger value="advanced" className="w-8 h-8 p-0 flex items-center justify-center rounded-md aria-selected:bg-primary aria-selected:text-primary-foreground">
+                <Settings2 className="h-4 w-4" />
+              </TabsTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="right">{t("propertyPanel.advanced")}</TooltipContent>
+          </Tooltip>
         </TabsList>
 
         {/* ── Design tab ───────────────────────────────────────────── */}
@@ -130,6 +154,7 @@ export const PropertyPanel = memo(function PropertyPanel({
             style={style}
             onPropChange={onPropChange}
             onStyleChange={onStyleChange}
+            elementSize={elementSize}
           />
         </TabsContent>
 
@@ -167,6 +192,7 @@ export const PropertyPanel = memo(function PropertyPanel({
           />
         </TabsContent>
       </Tabs>
+      </TooltipProvider>
     </div>
     </MediaContext.Provider>
   );
