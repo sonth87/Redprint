@@ -109,3 +109,44 @@ export function serializeShadow(params: ShadowParams): string {
   const { x, y } = angleDistanceToXY(params.angle, params.distance);
   return `${x}px ${y}px ${params.blur}px ${params.size}px ${toRgba(params.color, params.opacity)}`;
 }
+
+/**
+ * Serialize ShadowParams → CSS text-shadow string (no spread).
+ */
+export function serializeTextShadow(params: ShadowParams): string {
+  if (!params.enabled) return "none";
+  const { x, y } = angleDistanceToXY(params.angle, params.distance);
+  return `${x}px ${y}px ${params.blur}px ${toRgba(params.color, params.opacity)}`;
+}
+
+/**
+ * Parse a CSS text-shadow string into ShadowParams.
+ * text-shadow format: offsetX offsetY blur color (no spread).
+ */
+export function parseTextShadow(css: string | undefined): ShadowParams {
+  if (!css || css === "none" || css.trim() === "") return { ...DEFAULT_SHADOW_PARAMS };
+
+  const parts = css.trim();
+  const rgbaColorMatch = parts.match(/rgba?\([^)]+\)/);
+  const hexColorMatch = parts.match(/#[0-9a-fA-F]{6}/);
+  const colorStr = rgbaColorMatch ? rgbaColorMatch[0] : hexColorMatch ? hexColorMatch[0] : "#000000";
+
+  const withoutColor = parts.replace(/rgba?\([^)]+\)/, "").replace(/#[0-9a-fA-F]{6}/, "").trim();
+  const nums = withoutColor.split(/\s+/).map((s) => parseFloat(s)).filter((n) => !isNaN(n));
+
+  const offsetX = nums[0] ?? 0;
+  const offsetY = nums[1] ?? 0;
+  const blur = nums[2] ?? 0;
+  const distance = Math.round(Math.sqrt(offsetX * offsetX + offsetY * offsetY));
+  const angle = distance === 0 ? DEFAULT_SHADOW_PARAMS.angle : xyToAngle(offsetX, offsetY);
+
+  return {
+    enabled: true,
+    angle,
+    distance,
+    blur: Math.round(blur),
+    size: 0,
+    opacity: extractOpacity(colorStr),
+    color: extractHexFromColor(colorStr),
+  };
+}

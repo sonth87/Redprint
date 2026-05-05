@@ -93,6 +93,7 @@
     "background": "Nền",
     "border": "Viền",
     "shadow": "Bóng",
+    "textShadow": "Bóng chữ",
     "layout": "Bố cục",
     "visual": "Hiệu ứng thị giác",
     "transform": "Biến đổi",

@@ -151,6 +151,25 @@ export const SHADOW_PRESETS: ShadowPreset[] = [
   { value: "layered",       label: "Layered",       boxShadow: "0 2px 4px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.16)" },
 ];
 
+export interface TextShadowPreset {
+  value: string;
+  label: string;
+  /** CSS text-shadow value */
+  textShadow: string;
+}
+
+export const TEXT_SHADOW_PRESETS: TextShadowPreset[] = [
+  { value: "none",        label: "No Shadow",   textShadow: "none" },
+  { value: "soft",        label: "Soft",        textShadow: "0 2px 6px rgba(0,0,0,0.20)" },
+  { value: "medium",      label: "Medium",      textShadow: "0 3px 10px rgba(0,0,0,0.35)" },
+  { value: "hard",        label: "Hard",        textShadow: "2px 2px 0px rgba(0,0,0,0.80)" },
+  { value: "retro",       label: "Retro",       textShadow: "3px 3px 0px #000000" },
+  { value: "glow-white",  label: "Glow White",  textShadow: "0 0 12px rgba(255,255,255,0.90)" },
+  { value: "glow-blue",   label: "Glow Blue",   textShadow: "0 0 10px rgba(59,130,246,0.80)" },
+  { value: "glow-pink",   label: "Glow Pink",   textShadow: "0 0 10px rgba(236,72,153,0.70)" },
+  { value: "long",        label: "Long",        textShadow: "4px 4px 2px rgba(0,0,0,0.20), 8px 8px 4px rgba(0,0,0,0.12)" },
+];
+
 // ── Shape Presets ─────────────────────────────────────────────────────────
 
 export const SHAPE_PRESETS: ShapePreset[] = [

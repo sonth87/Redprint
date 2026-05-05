@@ -8,6 +8,7 @@ import { GridTemplateEditor } from "../controls/GridTemplateEditor";
 import { NumericPropertyInput } from "../controls/NumericPropertyInput";
 import { SpacingVisualizer } from "../controls/SpacingVisualizer";
 import { ShadowControl } from "../../../controls/shadow/ShadowControl";
+import { TextShadowControl } from "../../../controls/shadow/TextShadowControl";
 import { ImagePropControl } from "../controls/ImagePropControl";
 import { ColorSwatch } from "../../../controls/color/ColorSwatch";
 import type { ComponentDefinition, BuilderNode } from "@ui-builder/builder-core";
@@ -32,6 +33,7 @@ export function DesignTab({
 }) {
   const { t } = useTranslation();
   const isSectionNode = selectedNode.type === "Section";
+  const isTextNode = ["Text", "CollapsibleText", "TextMarquee", "TextMask", "Button"].includes(selectedNode.type);
 
   const renderBackgroundImageOptions = () => {
     if (!String(style.backgroundImage ?? "").startsWith("url(")) return null;
@@ -534,6 +536,16 @@ export function DesignTab({
           onChange={(css: string | undefined) => onStyleChange("boxShadow", css === "none" ? undefined : css)}
         />
       </CollapsibleSection>
+
+      {/* Text Shadow — only for text-based components */}
+      {isTextNode && (
+        <CollapsibleSection title={t("design.textShadow")} defaultOpen={false}>
+          <TextShadowControl
+            value={style.textShadow as string | undefined}
+            onChange={(css: string) => onStyleChange("textShadow", css === "none" ? undefined : css)}
+          />
+        </CollapsibleSection>
+      )}
 
       {/* Layout */}
       <CollapsibleSection title={t("design.layout")} defaultOpen={false}>
