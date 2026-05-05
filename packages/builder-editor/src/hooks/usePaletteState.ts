@@ -4,7 +4,7 @@ export interface UsePaletteStateReturn {
   paletteMode: "floating" | "docked";
   activePaletteGroupId: string | null;
   setActivePaletteGroupId: (id: string | null) => void;
-  handleGroupSelect: (groupId: string) => void;
+  handleGroupSelect: (groupId: string, sectionId?: string) => void;
   handlePaletteClose: () => void;
   /** The section ID that was explicitly targeted via the DS button on an empty section. */
   pendingTargetSectionId: string | null;
@@ -23,9 +23,10 @@ export function usePaletteState(): UsePaletteStateReturn {
   // Tracks which empty section was targeted via the DS button — independent of selection state
   const [pendingTargetSectionId, setPendingTargetSectionId] = useState<string | null>(null);
 
-  const handleGroupSelect = useCallback((groupId: string) => {
+  const handleGroupSelect = useCallback((groupId: string, sectionId?: string) => {
     setActivePaletteGroupId(groupId);
     setPaletteMode("docked");
+    if (sectionId) setPendingTargetSectionId(sectionId);
   }, []);
 
   const handleDSButtonClick = useCallback((sectionId: string) => {

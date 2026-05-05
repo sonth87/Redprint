@@ -35,7 +35,7 @@ export interface SectionOverlayProps {
   /** Whether a section resize is in progress (suppresses UI jitter) */
   isResizing: boolean;
   selectedNodeIds?: string[];
-  onOpenPaletteGroup?: (groupId: string) => void;
+  onOpenPaletteGroup?: (groupId: string, sectionId?: string) => void;
   /**
    * Called when user clicks the "Designed Section" button on an empty section.
    * Provides the section node ID so the palette can track the intended target,
@@ -351,7 +351,7 @@ export const SectionOverlay = memo(function SectionOverlay({
                       ) : null}
 
                       <button
-                        onClick={() => onOpenPaletteGroup?.("text")}
+                        onClick={() => onOpenPaletteGroup?.("text", b.nodeId)}
                         style={{
                           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
                           gap: 10, width: 110, height: 110,
