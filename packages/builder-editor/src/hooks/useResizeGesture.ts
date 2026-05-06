@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { ResizeHandleType, SnapGuide, DistanceGuide, LiveDimensions } from "../types";
 import { snapToGrid, type Point, type Rect } from "@ui-builder/shared";
 import type { BuilderNode } from "@ui-builder/builder-core";
@@ -22,6 +22,7 @@ interface UseResizeGestureOptions {
   canvasFrameRef: React.RefObject<HTMLDivElement | null>;
   activeFrameRef?: React.RefObject<HTMLDivElement | null>;
   dispatch: (action: { type: string; payload: unknown; groupId?: string; description?: string }) => void;
+  getContainerConfig?: (nodeOrType: BuilderNode | string) => { layoutType?: string } | undefined;
 }
 
 export interface UseResizeGestureReturn {
@@ -43,11 +44,14 @@ export function useResizeGesture({
   canvasFrameRef,
   activeFrameRef,
   dispatch,
+  getContainerConfig,
 }: UseResizeGestureOptions): UseResizeGestureReturn {
   const [resizing, setResizing] = useState<ResizingState | null>(null);
   const [snapGuides, setSnapGuides] = useState<SnapGuide[]>([]);
   const [distanceGuides, setDistanceGuides] = useState<DistanceGuide[]>([]);
   const [liveDimensions, setLiveDimensions] = useState<LiveDimensions | null>(null);
+  // Locked once on first significant move so dominant axis never flips mid-drag
+  const ratioAxisRef = useRef<"width" | "height" | null>(null);
 
   useEffect(() => {
     if (!resizing) return;
@@ -73,25 +77,31 @@ export function useResizeGesture({
         newY += dy; // Move top position when dragging top edge
       }
 
-      // Maintain aspect ratio if Ctrl/Cmd is pressed and dragging a corner
-      if ((e.ctrlKey || e.metaKey) && resizing.handle.length === 2 && resizing.startRect.height > 0) {
+      // Maintain aspect ratio if Shift is pressed and dragging a corner.
+      // Lock the dominant axis on first significant move so it never flips mid-drag.
+      if (e.shiftKey && resizing.handle.length === 2 && resizing.startRect.height > 0) {
         const ratio = resizing.startRect.width / resizing.startRect.height;
-        const wChange = Math.abs(width - resizing.startRect.width);
-        const hChange = Math.abs(height - resizing.startRect.height);
-        
-        if (wChange > hChange) {
+        const absDx = Math.abs(width - resizing.startRect.width);
+        const absDy = Math.abs(height - resizing.startRect.height) * ratio;
+
+        if (!ratioAxisRef.current && (absDx > 2 || absDy > 2)) {
+          ratioAxisRef.current = absDx >= absDy ? "width" : "height";
+        }
+
+        if (ratioAxisRef.current === "width") {
           height = width / ratio;
-        } else {
+        } else if (ratioAxisRef.current === "height") {
           width = height * ratio;
         }
-        
-        // Re-adjust newX/newY based on the corrected width/height
+
         if (resizing.handle.includes("w")) {
-          newX = x - (width - resizing.startRect.width);
+          newX = x + resizing.startRect.width - width;
         }
         if (resizing.handle.includes("n")) {
-          newY = y - (height - resizing.startRect.height);
+          newY = y + resizing.startRect.height - height;
         }
+      } else {
+        ratioAxisRef.current = null;
       }
 
       width = Math.max(10, Math.round(width));
@@ -105,9 +115,6 @@ export function useResizeGesture({
         newX = snapToGrid(newX, gridSize);
         newY = snapToGrid(newY, gridSize);
       }
-
-      // Update live dimensions for display
-      setLiveDimensions({ width, height });
 
       // Compute distance guides to sibling elements
       const node = nodes[resizing.nodeId];
@@ -137,13 +144,17 @@ export function useResizeGesture({
         const currentRect: Rect = { x: newX, y: newY, width, height };
         setDistanceGuides(snapEngine.distanceGuides(currentRect, siblings));
 
-        // Cross-container alignment guides — newX/newY are canvas-relative (from selectionRect)
+        // Collect cross-canvas alignment + snap candidates — skip containers (noisy guides)
+        // and the resizing node itself. Full frameEl scope enables cross-section guides.
         const allOtherRects: Rect[] = [];
         const allNodeEls = Array.from(
           frameEl.querySelectorAll("[data-node-id]")
         ) as HTMLElement[];
         for (const el of allNodeEls) {
-          if (el.getAttribute("data-node-id") === resizing.nodeId) continue;
+          const elId = el.getAttribute("data-node-id");
+          if (!elId || elId === resizing.nodeId) continue;
+          const elNode = nodes[elId];
+          if (elNode && getContainerConfig?.(elNode)?.layoutType) continue;
           const er = el.getBoundingClientRect();
           allOtherRects.push({
             x: (er.left - originRect.left) / zoom,
@@ -152,10 +163,27 @@ export function useResizeGesture({
             height: er.height / zoom,
           });
         }
-        setSnapGuides(snapEngine.alignmentGuides(currentRect, allOtherRects));
+
+        // snapResize: snap the active resize edge to nearby component edges + show guides
+        const snapResult = snapEngine.snapResize(currentRect, resizing.handle, allOtherRects);
+        const snapped = snapResult.snappedRect;
+
+        // Apply snapped dimensions back — only update the axis controlled by the handle
+        if (resizing.handle.includes("e") || resizing.handle.includes("w")) {
+          width = snapped.width;
+          newX = snapped.x;
+        }
+        if (resizing.handle.includes("n") || resizing.handle.includes("s")) {
+          height = snapped.height;
+          newY = snapped.y;
+        }
+        setSnapGuides(snapResult.guides);
+        // Update live dimensions after snap so the label shows snapped size
+        setLiveDimensions({ width, height });
       } else {
         setDistanceGuides([]);
         setSnapGuides([]);
+        setLiveDimensions({ width, height });
       }
 
       const style: Record<string, string> = {
@@ -179,6 +207,7 @@ export function useResizeGesture({
       });
     };
     const handleGlobalMouseUp = () => {
+      ratioAxisRef.current = null;
       setResizing(null);
       setSnapGuides([]);
       setDistanceGuides([]);
@@ -190,7 +219,7 @@ export function useResizeGesture({
       window.removeEventListener("mousemove", handleGlobalMouseMove);
       window.removeEventListener("mouseup", handleGlobalMouseUp);
     };
-  }, [resizing, zoom, breakpoint, dispatch, showGrid, gridSize, snapEngine, nodes, canvasFrameRef, activeFrameRef]);
+  }, [resizing, zoom, breakpoint, dispatch, showGrid, gridSize, snapEngine, nodes, canvasFrameRef, activeFrameRef, getContainerConfig]);
 
   return { resizing, setResizing, snapGuides, setSnapGuides, distanceGuides, liveDimensions };
 }

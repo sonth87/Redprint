@@ -204,6 +204,7 @@ function EditorInner({
       url,
       type,
       name: url.split("/").pop() ?? url,
+      source: "url",
     };
     handleMediaSelect(asset);
   }, [handleMediaSelect]);
@@ -388,8 +389,8 @@ function EditorInner({
 
 
   // ── Gesture hooks ────────────────────────────────────────────────────────
-  const { setResizing, snapGuides: resizeSnapGuides, distanceGuides: resizeDistanceGuides, liveDimensions: resizeLiveDimensions } =
-    useResizeGesture({ zoom, breakpoint, showGrid, gridSize: document.canvasConfig.gridSize, snapEngine, nodes: document.nodes, canvasFrameRef, activeFrameRef, dispatch });
+  const { resizing, setResizing, snapGuides: resizeSnapGuides, distanceGuides: resizeDistanceGuides, liveDimensions: resizeLiveDimensions } =
+    useResizeGesture({ zoom, breakpoint, showGrid, gridSize: document.canvasConfig.gridSize, snapEngine, nodes: document.nodes, canvasFrameRef, activeFrameRef, dispatch, getContainerConfig });
 
   const { rubberBanding, setRubberBanding, rubberBandRect } = useRubberBand({ zoom, canvasFrameRef, onSelectionEnd: handleRubberBandSelect });
 
@@ -869,6 +870,13 @@ function EditorInner({
               }}
             >
               {currentRotation}&#176;
+            </div>
+          )}
+
+          {/* Shift-to-lock-ratio hint — shown while dragging a corner handle */}
+          {resizing && resizing.handle.length === 2 && (
+            <div className="pointer-events-none absolute bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-md bg-background/90 border px-3 py-1.5 font-mono text-xs text-muted-foreground shadow-sm">
+              Hold <kbd className="rounded border bg-muted px-1 py-0.5 font-mono text-[10px]">Shift</kbd> to lock ratio
             </div>
           )}
 

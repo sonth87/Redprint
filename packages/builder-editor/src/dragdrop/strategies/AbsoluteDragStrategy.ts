@@ -174,7 +174,8 @@ export class AbsoluteDragStrategy implements DragStrategy {
         finalTop = Math.round(snapResult.snappedPoint.y - this.canvasOffset.y - frameOffsetY);
         const snappedRect: Rect = { x: snapResult.snappedPoint.x, y: snapResult.snappedPoint.y, width: w, height: h };
 
-        // Alignment guide candidates — ancestors excluded, scope to same section
+        // Alignment guide candidates — ancestors excluded, container nodes excluded,
+        // cross-section (full frameEl) so components near section boundaries align.
         const ancestorIds = new Set<string>();
         let ancestorCursor: string | null | undefined = node?.parentId;
         while (ancestorCursor) {
@@ -182,30 +183,17 @@ export class AbsoluteDragStrategy implements DragStrategy {
           ancestorCursor = ctx.nodes[ancestorCursor]?.parentId;
         }
 
-        let sectionSearchRoot: HTMLElement = frameEl;
-        if (ctx.rootNodeId) {
-          let cursor: string | null | undefined = ctx.nodeId;
-          while (cursor && cursor !== ctx.rootNodeId) {
-            const cursorNode: BuilderNode | undefined = ctx.nodes[cursor];
-            if (cursorNode?.parentId === ctx.rootNodeId) {
-              const sectionEl = frameEl.querySelector(
-                `[data-node-id="${cursor}"]`,
-              ) as HTMLElement | null;
-              if (sectionEl) sectionSearchRoot = sectionEl;
-              break;
-            }
-            cursor = cursorNode?.parentId;
-          }
-        }
-
         const allOtherRects: Rect[] = [];
         const allOtherIds: string[] = [];
         const allNodeEls = Array.from(
-          sectionSearchRoot.querySelectorAll("[data-node-id]"),
+          frameEl.querySelectorAll("[data-node-id]"),
         ) as HTMLElement[];
         for (const el of allNodeEls) {
           const elId = el.getAttribute("data-node-id");
           if (!elId || elId === ctx.nodeId || ancestorIds.has(elId)) continue;
+          // Skip container nodes — they span large areas and produce noisy guides
+          const elNode = ctx.nodes[elId];
+          if (elNode && ctx.getContainerConfig(elNode)?.layoutType) continue;
           const er = el.getBoundingClientRect();
           allOtherRects.push({
             x: (er.left - originRect.left) / ctx.zoom,

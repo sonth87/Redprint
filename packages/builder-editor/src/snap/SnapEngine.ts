@@ -297,9 +297,10 @@ export class SnapEngine {
   alignmentGuides(draggingRect: Rect, otherRects: Rect[]): SnapGuide[] {
     if (!this.config.snapToComponents || otherRects.length === 0) return [];
 
-    // Alignment guides use a looser threshold than position snapping so that
-    // visual lines appear slightly before (and after) the snap kicks in.
-    const t = this.config.alignmentGuideThreshold ?? this.config.threshold * 3;
+    // Alignment guides use a slightly looser threshold than snapping so guides
+    // appear just before snap kicks in. Kept tight (1.5×) to avoid flooding
+    // the canvas with lines when many nodes are present.
+    const t = this.config.alignmentGuideThreshold ?? this.config.threshold * 1.5;
 
     const guides: SnapGuide[] = [];
     const seen = new Set<string>();
@@ -362,5 +363,114 @@ export class SnapEngine {
     }
 
     return guides;
+  }
+
+  /**
+   * Compute snap and visual guides for a resize operation.
+   *
+   * Only the edge(s) being dragged (determined by `handle`) are snapped.
+   * The opposite edges remain fixed. Returns an updated rect with snapped
+   * dimensions/position and the corresponding visual guide lines.
+   *
+   * @param resizingRect  Current bounding rect of the element being resized (canvas coords)
+   * @param handle        Which resize handle is active (n/s/e/w/ne/nw/se/sw)
+   * @param otherRects    Other visible node rects to snap against (canvas coords, containers excluded)
+   */
+  snapResize(
+    resizingRect: Rect,
+    handle: string,
+    otherRects: Rect[],
+  ): { snappedRect: Rect; guides: SnapGuide[] } {
+    if (!this.config.snapEnabled) {
+      return { snappedRect: { ...resizingRect }, guides: [] };
+    }
+
+    const t = this.config.threshold;
+    const guides: SnapGuide[] = [];
+    const seen = new Set<string>();
+    const addGuide = (guide: SnapGuide) => {
+      const key = `${guide.type}:${guide.position}`;
+      if (!seen.has(key)) { seen.add(key); guides.push(guide); }
+    };
+
+    let { x, y, width, height } = resizingRect;
+    const right  = x + width;
+    const bottom = y + height;
+
+    const snapH = handle.includes("e") || handle.includes("w");
+    const snapV = handle.includes("n") || handle.includes("s");
+    const snapRight  = handle.includes("e");
+    const snapLeft   = handle.includes("w");
+    const snapBottom = handle.includes("s");
+    const snapTop    = handle.includes("n");
+
+    for (const other of otherRects) {
+      const oRight  = other.x + other.width;
+      const oBottom = other.y + other.height;
+      const oCX = other.x + other.width / 2;
+      const oCY = other.y + other.height / 2;
+
+      if (snapH) {
+        if (snapRight) {
+          // Right edge → left/right/center of other
+          if (Math.abs(right - other.x)  <= t) { width = other.x  - x; addGuide({ type: "vertical", position: other.x,  source: "component-edge" }); }
+          if (Math.abs(right - oRight)   <= t) { width = oRight   - x; addGuide({ type: "vertical", position: oRight,   source: "component-edge" }); }
+          if (Math.abs(right - oCX)      <= t) { width = oCX      - x; addGuide({ type: "vertical", position: oCX,      source: "component-center" }); }
+        }
+        if (snapLeft) {
+          // Left edge → left/right/center of other
+          if (Math.abs(x - other.x) <= t) { width += x - other.x; x = other.x; addGuide({ type: "vertical", position: other.x, source: "component-edge" }); }
+          if (Math.abs(x - oRight)  <= t) { width += x - oRight;  x = oRight;  addGuide({ type: "vertical", position: oRight,  source: "component-edge" }); }
+          if (Math.abs(x - oCX)     <= t) { width += x - oCX;     x = oCX;     addGuide({ type: "vertical", position: oCX,     source: "component-center" }); }
+        }
+      }
+
+      if (snapV) {
+        if (snapBottom) {
+          // Bottom edge → top/bottom/center of other
+          if (Math.abs(bottom - other.y)  <= t) { height = other.y  - y; addGuide({ type: "horizontal", position: other.y,  source: "component-edge" }); }
+          if (Math.abs(bottom - oBottom)  <= t) { height = oBottom  - y; addGuide({ type: "horizontal", position: oBottom,  source: "component-edge" }); }
+          if (Math.abs(bottom - oCY)      <= t) { height = oCY      - y; addGuide({ type: "horizontal", position: oCY,      source: "component-center" }); }
+        }
+        if (snapTop) {
+          // Top edge → top/bottom/center of other
+          if (Math.abs(y - other.y)  <= t) { height += y - other.y;  y = other.y;  addGuide({ type: "horizontal", position: other.y,  source: "component-edge" }); }
+          if (Math.abs(y - oBottom)  <= t) { height += y - oBottom;  y = oBottom;  addGuide({ type: "horizontal", position: oBottom,  source: "component-edge" }); }
+          if (Math.abs(y - oCY)      <= t) { height += y - oCY;      y = oCY;      addGuide({ type: "horizontal", position: oCY,      source: "component-center" }); }
+        }
+      }
+    }
+
+    // Canvas-edge snapping
+    if (this.config.canvasWidth != null) {
+      const cw = this.config.canvasWidth;
+      const canvasCX = cw / 2;
+      if (snapRight) {
+        if (Math.abs(right - cw)       <= t) { width = cw - x;       addGuide({ type: "vertical", position: cw,       source: "canvas-edge" }); }
+        if (Math.abs(right - canvasCX) <= t) { width = canvasCX - x; addGuide({ type: "vertical", position: canvasCX, source: "canvas-center" }); }
+      }
+      if (snapLeft) {
+        if (Math.abs(x) <= t)              { width += x; x = 0;        addGuide({ type: "vertical", position: 0,        source: "canvas-edge" }); }
+        if (Math.abs(x - canvasCX) <= t)   { width += x - canvasCX; x = canvasCX; addGuide({ type: "vertical", position: canvasCX, source: "canvas-center" }); }
+      }
+    }
+
+    if (this.config.canvasHeight != null) {
+      const ch = this.config.canvasHeight;
+      const canvasCY = ch / 2;
+      if (snapBottom) {
+        if (Math.abs(bottom - ch)       <= t) { height = ch - y;       addGuide({ type: "horizontal", position: ch,       source: "canvas-edge" }); }
+        if (Math.abs(bottom - canvasCY) <= t) { height = canvasCY - y; addGuide({ type: "horizontal", position: canvasCY, source: "canvas-center" }); }
+      }
+      if (snapTop) {
+        if (Math.abs(y) <= t)             { height += y; y = 0;        addGuide({ type: "horizontal", position: 0,        source: "canvas-edge" }); }
+        if (Math.abs(y - canvasCY) <= t)  { height += y - canvasCY; y = canvasCY; addGuide({ type: "horizontal", position: canvasCY, source: "canvas-center" }); }
+      }
+    }
+
+    width  = Math.max(10, width);
+    height = Math.max(10, height);
+
+    return { snappedRect: { x, y, width, height }, guides };
   }
 }
