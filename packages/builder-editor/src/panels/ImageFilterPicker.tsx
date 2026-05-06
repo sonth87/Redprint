@@ -75,7 +75,7 @@ function FilterSwatch({
       className={cn(
         "flex flex-col items-center gap-1 p-1 rounded-lg transition-all focus:outline-none",
         selected
-          ? "ring-2 ring-primary ring-offset-1 bg-primary/5"
+          ? "ring-1 ring-primary/20 ring-offset-1 bg-primary/5"
           : "ring-1 ring-transparent hover:ring-border"
       )}
     >

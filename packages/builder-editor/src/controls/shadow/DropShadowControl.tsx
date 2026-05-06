@@ -1,15 +1,18 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { Slider, cn } from "@ui-builder/ui";
 import { AnglePicker } from "./AnglePicker";
-import { SHADOW_PRESETS } from "@ui-builder/shared";
+import { DROP_SHADOW_PRESETS } from "@ui-builder/shared";
 import { ColorSwatch } from "../color/ColorSwatch";
-import { parseShadow, serializeShadow, type ShadowParams } from "./shadowUtils";
+import { parseDropShadow, serializeDropShadow, type ShadowParams } from "./shadowUtils";
 
-interface ShadowControlProps {
+interface DropShadowControlProps {
   value: string | undefined;
   onChange: (css: string | undefined) => void;
-  showInsetToggle?: boolean;
 }
+
+// Small transparent star SVG as data URI — shows shape-following drop-shadow behavior
+const STAR_SVG =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpolygon points='20,4 24.9,14.5 36.6,15.5 27.5,23.4 30.5,35.1 20,28.8 9.5,35.1 12.5,23.4 3.4,15.5 15.1,14.5' fill='%23374151'/%3E%3C/svg%3E";
 
 function SliderRow({
   label,
@@ -54,42 +57,42 @@ function SliderRow({
   );
 }
 
-export const ShadowControl: React.FC<ShadowControlProps> = ({ value, onChange, showInsetToggle }) => {
+export const DropShadowControl: React.FC<DropShadowControlProps> = ({ value, onChange }) => {
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
   const isActive = !!value && value !== "none";
-  const params = useMemo(() => parseShadow(value), [value]);
+  const params = useMemo(() => parseDropShadow(value), [value]);
 
   const update = useCallback(
     (partial: Partial<ShadowParams>) => {
       const next = { ...params, ...partial };
-      onChange(serializeShadow(next));
+      onChange(serializeDropShadow(next));
     },
     [params, onChange],
   );
 
-  const handlePreset = (boxShadow: string) => {
-    if (boxShadow === "none") {
+  const handlePreset = (dropShadow: string) => {
+    if (dropShadow === "none") {
       onChange(undefined);
     } else {
-      onChange(boxShadow);
+      onChange(dropShadow);
     }
   };
 
   const activePreset = useMemo(() => {
     if (!isActive) return "none";
-    return SHADOW_PRESETS.find((p) => p.boxShadow === value)?.value ?? "custom";
+    return DROP_SHADOW_PRESETS.find((p) => p.dropShadow === value)?.value ?? "custom";
   }, [value, isActive]);
 
   return (
     <div className="flex flex-col gap-3">
       {/* Preset grid */}
-      <div className="grid grid-cols-3 gap-4 p-2">
-        {SHADOW_PRESETS.map((preset) => (
+      <div className="grid grid-cols-3 gap-4">
+        {DROP_SHADOW_PRESETS.map((preset) => (
           <button
             key={preset.value}
             type="button"
-            onClick={() => handlePreset(preset.boxShadow)}
+            onClick={() => handlePreset(preset.dropShadow)}
             title={preset.label}
             className={cn(
               "flex flex-col items-center gap-1 p-1 rounded transition-all text-center",
@@ -98,43 +101,22 @@ export const ShadowControl: React.FC<ShadowControlProps> = ({ value, onChange, s
                 : "ring-1 ring-transparent hover:ring-border hover:bg-accent/50",
             )}
           >
-            <div
-              className="w-12 h-12 rounded-sm bg-muted flex-shrink-0"
-              style={{
-                boxShadow: preset.boxShadow === "none" ? undefined : preset.boxShadow,
-                background: "#e5e7eb",
-              }}
-            />
+            <div className="w-12 h-12 rounded-sm flex-shrink-0 flex items-center justify-center bg-muted/60">
+              <img
+                src={STAR_SVG}
+                alt=""
+                draggable={false}
+                style={{
+                  width: 28,
+                  height: 28,
+                  filter: preset.dropShadow === "none" ? undefined : preset.dropShadow,
+                }}
+              />
+            </div>
             <span className="text-[9px] text-muted-foreground leading-none truncate w-full">{preset.label}</span>
           </button>
         ))}
       </div>
-
-      {/* Outside / Inside toggle — only when a shadow is active and inset is supported */}
-      {isActive && showInsetToggle && (
-        <div className="flex rounded overflow-hidden border border-border/60 self-start text-[11px]">
-          <button
-            type="button"
-            onClick={() => update({ inset: false })}
-            className={cn(
-              "px-3 py-1 transition-colors",
-              !params.inset ? "bg-primary text-primary-foreground" : "hover:bg-accent/50 text-muted-foreground",
-            )}
-          >
-            Outside
-          </button>
-          <button
-            type="button"
-            onClick={() => update({ inset: true })}
-            className={cn(
-              "px-3 py-1 transition-colors border-l border-border/60",
-              params.inset ? "bg-primary text-primary-foreground" : "hover:bg-accent/50 text-muted-foreground",
-            )}
-          >
-            Inside
-          </button>
-        </div>
-      )}
 
       {/* Advanced section — only when a shadow is active */}
       {isActive && (
@@ -153,7 +135,6 @@ export const ShadowControl: React.FC<ShadowControlProps> = ({ value, onChange, s
                 <AnglePicker value={params.angle} onChange={(deg) => update({ angle: deg })} className="flex-shrink-0" />
                 <div className="flex flex-col gap-2 flex-1 min-w-0">
                   <SliderRow label="Distance (px)" value={params.distance} min={0} max={100} unit="px" onChange={(v) => update({ distance: v })} />
-                  <SliderRow label="Size (px)" value={params.size} min={-20} max={100} unit="px" onChange={(v) => update({ size: v })} />
                   <SliderRow label="Blur" value={params.blur} min={0} max={100} unit="px" onChange={(v) => update({ blur: v })} />
                   <div className="flex flex-col gap-1" onPointerDown={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-between">

@@ -21,6 +21,8 @@ export interface FloatingPanelProps {
    * The panel is always fully expanded — no collapse state.
    */
   onClose?: () => void;
+  /** Add overflow-y-auto + max-h-[50vh] to the content area. Use for panels whose children don't manage their own scroll. */
+  scrollable?: boolean;
 }
 
 export const FloatingPanel: React.FC<FloatingPanelProps> = ({
@@ -31,6 +33,7 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
   defaultExpanded = true,
   icon,
   onClose,
+  scrollable = false,
 }) => {
   // Compute initial position synchronously so the panel renders at the correct
   // location on the very first paint — no flash from x:0 → x:right-anchored.
@@ -145,8 +148,9 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
       {/* Content */}
       <div
         className={cn(
-          "flex flex-col transition-[max-height,opacity] flex-1 min-h-0 overflow-hidden",
-          isExpanded ? "opacity-100" : "max-h-0 opacity-0"
+          "flex flex-col transition-[max-height,opacity]",
+          isExpanded ? "opacity-100" : "max-h-0 opacity-0",
+          isExpanded && scrollable ? "overflow-y-auto max-h-[50vh]" : "overflow-hidden",
         )}
       >
         {children}

@@ -149,6 +149,9 @@ export const SHADOW_PRESETS: ShadowPreset[] = [
   { value: "glow-pink",     label: "Glow Pink",     boxShadow: "0 0 20px 6px rgba(236,72,153,0.50)" },
   { value: "retro-hard",    label: "Retro",         boxShadow: "5px 5px 0px #000000" },
   { value: "layered",       label: "Layered",       boxShadow: "0 2px 4px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.16)" },
+  { value: "inset-soft",    label: "Inner Soft",    boxShadow: "inset 0 2px 8px rgba(0,0,0,0.15)" },
+  { value: "inset-hard",    label: "Inner Hard",    boxShadow: "inset 0 3px 6px rgba(0,0,0,0.40)" },
+  { value: "inset-deep",    label: "Inner Deep",    boxShadow: "inset 0 6px 20px rgba(0,0,0,0.30)" },
 ];
 
 export interface TextShadowPreset {
@@ -168,6 +171,25 @@ export const TEXT_SHADOW_PRESETS: TextShadowPreset[] = [
   { value: "glow-blue",   label: "Glow Blue",   textShadow: "0 0 10px rgba(59,130,246,0.80)" },
   { value: "glow-pink",   label: "Glow Pink",   textShadow: "0 0 10px rgba(236,72,153,0.70)" },
   { value: "long",        label: "Long",        textShadow: "4px 4px 2px rgba(0,0,0,0.20), 8px 8px 4px rgba(0,0,0,0.12)" },
+];
+
+export interface DropShadowPreset {
+  value: string;
+  label: string;
+  /** CSS filter drop-shadow() token, or "none" */
+  dropShadow: string;
+}
+
+export const DROP_SHADOW_PRESETS: DropShadowPreset[] = [
+  { value: "none",       label: "No Shadow",  dropShadow: "none" },
+  { value: "soft",       label: "Soft",       dropShadow: "drop-shadow(0 2px 6px rgba(0,0,0,0.20))" },
+  { value: "medium",     label: "Medium",     dropShadow: "drop-shadow(0 4px 12px rgba(0,0,0,0.32))" },
+  { value: "hard",       label: "Hard",       dropShadow: "drop-shadow(3px 3px 0px rgba(0,0,0,0.80))" },
+  { value: "deep",       label: "Deep",       dropShadow: "drop-shadow(0 8px 24px rgba(0,0,0,0.45))" },
+  { value: "glow-white", label: "Glow White", dropShadow: "drop-shadow(0 0 14px rgba(255,255,255,0.80))" },
+  { value: "glow-blue",  label: "Glow Blue",  dropShadow: "drop-shadow(0 0 12px rgba(59,130,246,0.70))" },
+  { value: "glow-pink",  label: "Glow Pink",  dropShadow: "drop-shadow(0 0 12px rgba(236,72,153,0.65))" },
+  { value: "float",      label: "Float",      dropShadow: "drop-shadow(0 12px 8px rgba(0,0,0,0.18))" },
 ];
 
 // ── Shape Presets ─────────────────────────────────────────────────────────

@@ -23,9 +23,6 @@ import {
   TabsContent,
   ScrollArea,
   Label,
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
   TooltipProvider,
   cn,
 } from "@ui-builder/ui";
@@ -335,36 +332,24 @@ export const MediaManager = memo(function MediaManager({
         </DialogHeader>
 
         <TooltipProvider delayDuration={400}>
-        <Tabs orientation="vertical" value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-row min-h-0">
-          <TabsList className="flex flex-col w-10 h-full border-r py-1 px-0.5 gap-0.5 rounded-none bg-muted/30 items-start">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <TabsTrigger value="library" className="w-8 h-8 p-0 flex items-center justify-center rounded-md aria-selected:bg-primary aria-selected:text-primary-foreground">
-                  <ImageIcon className="h-4 w-4" />
-                </TabsTrigger>
-              </TooltipTrigger>
-              <TooltipContent side="right">Library {assets.length > 0 && `(${assets.length})`}</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <TabsTrigger value="upload" className="w-8 h-8 p-0 flex items-center justify-center rounded-md aria-selected:bg-primary aria-selected:text-primary-foreground">
-                  <Upload className="h-4 w-4" />
-                </TabsTrigger>
-              </TooltipTrigger>
-              <TooltipContent side="right">Upload</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <TabsTrigger value="url" className="w-8 h-8 p-0 flex items-center justify-center rounded-md aria-selected:bg-primary aria-selected:text-primary-foreground">
-                  <Link2 className="h-4 w-4" />
-                </TabsTrigger>
-              </TooltipTrigger>
-              <TooltipContent side="right">URL</TooltipContent>
-            </Tooltip>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+          <TabsList className="flex flex-row w-full border-b rounded-none bg-muted/30 h-auto p-1 gap-0.5 shrink-0">
+            <TabsTrigger value="library" className="flex-1 flex flex-col items-center gap-0.5 py-1.5 px-2 h-auto rounded-md text-[10px] aria-selected:bg-primary aria-selected:text-primary-foreground">
+              <ImageIcon className="h-3.5 w-3.5" />
+              <span>Library{assets.length > 0 ? ` (${assets.length})` : ""}</span>
+            </TabsTrigger>
+            <TabsTrigger value="upload" className="flex-1 flex flex-col items-center gap-0.5 py-1.5 px-2 h-auto rounded-md text-[10px] aria-selected:bg-primary aria-selected:text-primary-foreground">
+              <Upload className="h-3.5 w-3.5" />
+              <span>Upload</span>
+            </TabsTrigger>
+            <TabsTrigger value="url" className="flex-1 flex flex-col items-center gap-0.5 py-1.5 px-2 h-auto rounded-md text-[10px] aria-selected:bg-primary aria-selected:text-primary-foreground">
+              <Link2 className="h-3.5 w-3.5" />
+              <span>URL</span>
+            </TabsTrigger>
           </TabsList>
 
           {/* Library tab */}
-          <TabsContent value="library" className="flex-1 flex flex-col min-h-0 mt-0">
+          <TabsContent value="library" className="flex-1 flex flex-col min-h-0 mt-2">
             <div className="flex gap-2 mb-2">
               <div className="relative flex-1">
                 <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />

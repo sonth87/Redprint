@@ -17,21 +17,16 @@ import { GalleryUnifiedSettingsPanel } from "../panels/gallery";
 function getClampedPanelPos(
   rect: DOMRect,
   panelWidth: number,
-  panelHeight: number,
+  _panelHeight?: number,
 ) {
   const margin = 8;
   let x = rect.left;
-  let y = rect.bottom + 6;
+  const y = rect.bottom + 6;
 
   if (x + panelWidth + margin > window.innerWidth) {
     x = window.innerWidth - panelWidth - margin;
   }
   if (x < margin) x = margin;
-
-  if (y + panelHeight + margin > window.innerHeight) {
-    y = rect.top - panelHeight - 6;
-  }
-  if (y < margin) y = margin;
 
   return { x, y };
 }
@@ -298,6 +293,7 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
                 title="Image Filter"
                 defaultPosition={{ x: filterPos.x, y: filterPos.y }}
                 width={256}
+                scrollable
                 onClose={() => setFilterOpen(false)}
               >
                 <ImageFilterPicker
@@ -342,6 +338,7 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
                 title="Frame Design"
                 defaultPosition={{ x: framePos.x, y: framePos.y }}
                 width={320}
+                scrollable
                 onClose={() => setFrameOpen(false)}
               >
                 <ImageFramePanel

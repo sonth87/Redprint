@@ -74,7 +74,7 @@ function PreviewBox({ style, selected, onClick, label }: {
       className={cn(
         "flex flex-col items-center gap-1 p-1 rounded transition-all focus:outline-none",
         selected
-          ? "ring-2 ring-primary ring-offset-1 bg-primary/5"
+          ? "ring-1 ring-primary/20 ring-offset-1 bg-primary/5"
           : "ring-1 ring-transparent hover:ring-border hover:bg-accent/50",
       )}
     >
@@ -111,7 +111,7 @@ function ShapeBox({ preset, selected, onClick }: {
       className={cn(
         "flex flex-col items-center gap-1 p-1.5 rounded transition-all focus:outline-none",
         selected
-          ? "ring-2 ring-primary ring-offset-1 bg-primary/5"
+          ? "ring-1 ring-primary/20 ring-offset-1 bg-primary/5"
           : "ring-1 ring-transparent hover:ring-border hover:bg-accent/50",
       )}
     >

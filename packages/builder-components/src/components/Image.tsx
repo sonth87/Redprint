@@ -97,6 +97,7 @@ export const ImageComponent: ComponentDefinition = {
       options: IMAGE_FILTERS.map((f) => ({ value: f.value, label: f.label })),
       default: "none",
     },
+    { key: "dropShadow", label: "Drop Shadow", type: "string", default: "" },
     { key: "overlayColor", label: "Overlay Color", type: "color", allowTransparent: true, default: "#000000" },
     { key: "overlayOpacity", label: "Overlay Opacity (%)", type: "slider", min: 0, max: 100, default: 0 },
     {
@@ -125,6 +126,7 @@ export const ImageComponent: ComponentDefinition = {
     focalX: 50,
     focalY: 50,
     filter: "none",
+    dropShadow: "",
     overlayColor: "#000000",
     overlayOpacity: 0,
     linkUrl: "",
@@ -139,6 +141,7 @@ export const ImageComponent: ComponentDefinition = {
     const focalX = Number(node.props.focalX ?? 50);
     const focalY = Number(node.props.focalY ?? 50);
     const filterKey = String(node.props.filter ?? "none");
+    const dropShadow = String(node.props.dropShadow ?? "");
     const overlayColor = String(node.props.overlayColor ?? "#000000");
     const overlayOpacity = Number(node.props.overlayOpacity ?? 0);
     const frameStyle = String(node.props.frameStyle ?? "none") as SpecialFrameStyle;
@@ -147,6 +150,7 @@ export const ImageComponent: ComponentDefinition = {
 
     const filterDef = getFilterDef(filterKey);
     const cssFilter = buildCssFilter(filterDef);
+    const combinedFilter = [cssFilter, dropShadow].filter(Boolean).join(" ") || undefined;
     const hasSvgFilter = filterDef?.mode === "svg";
     const hasColorOverlay = filterDef?.mode === "overlay" && !!filterDef.overlayColor;
 
@@ -176,7 +180,7 @@ export const ImageComponent: ComponentDefinition = {
             objectFit,
             objectPosition: `${focalX}% ${focalY}%`,
             display: "block",
-            filter: cssFilter,
+            filter: combinedFilter,
           }}
         />
         {/* Image filter color overlay */}
@@ -217,6 +221,7 @@ export const ImageComponent: ComponentDefinition = {
     const focalX = Number(node.props.focalX ?? 50);
     const focalY = Number(node.props.focalY ?? 50);
     const filterKey = String(node.props.filter ?? "none");
+    const dropShadow = String(node.props.dropShadow ?? "");
     const overlayColor = String(node.props.overlayColor ?? "#000000");
     const overlayOpacity = Number(node.props.overlayOpacity ?? 0);
     const linkUrl = String(node.props.linkUrl ?? "");
@@ -227,6 +232,7 @@ export const ImageComponent: ComponentDefinition = {
 
     const filterDef = getFilterDef(filterKey);
     const cssFilter = buildCssFilter(filterDef);
+    const combinedFilter = [cssFilter, dropShadow].filter(Boolean).join(" ") || undefined;
     const hasSvgFilter = filterDef?.mode === "svg";
     const hasColorOverlay = filterDef?.mode === "overlay" && !!filterDef.overlayColor;
 
@@ -255,7 +261,7 @@ export const ImageComponent: ComponentDefinition = {
             objectFit,
             objectPosition: `${focalX}% ${focalY}%`,
             display: "block",
-            filter: cssFilter,
+            filter: combinedFilter,
           }}
         />
         {hasColorOverlay && (

@@ -1,15 +1,15 @@
 export interface ShadowParams {
-  enabled: boolean;
+  inset: boolean;   // true → prepend "inset" (box-shadow only)
   angle: number;    // 0–360 degrees
   distance: number; // px
   blur: number;     // px
-  size: number;     // spread px
+  size: number;     // spread px (box-shadow only; 0 for text/drop-shadow)
   opacity: number;  // 0–100
   color: string;    // hex (no alpha — opacity is separate)
 }
 
 export const DEFAULT_SHADOW_PARAMS: ShadowParams = {
-  enabled: false,
+  inset: false,
   angle: 315,
   distance: 4,
   blur: 8,
@@ -74,6 +74,8 @@ export function parseShadow(css: string | undefined): ShadowParams {
   // Color can be rgba(...) or hex
   const parts = css.trim();
 
+  const inset = parts.includes("inset");
+
   // Extract color (rgba or hex)
   const rgbaColorMatch = parts.match(/rgba?\([^)]+\)/);
   const hexColorMatch = parts.match(/#[0-9a-fA-F]{6}/);
@@ -91,7 +93,7 @@ export function parseShadow(css: string | undefined): ShadowParams {
   const angle = distance === 0 ? DEFAULT_SHADOW_PARAMS.angle : xyToAngle(offsetX, offsetY);
 
   return {
-    enabled: true,
+    inset,
     angle,
     distance,
     blur: Math.round(blur),
@@ -105,16 +107,15 @@ export function parseShadow(css: string | undefined): ShadowParams {
  * Serialize ShadowParams → CSS box-shadow string.
  */
 export function serializeShadow(params: ShadowParams): string {
-  if (!params.enabled) return "none";
   const { x, y } = angleDistanceToXY(params.angle, params.distance);
-  return `${x}px ${y}px ${params.blur}px ${params.size}px ${toRgba(params.color, params.opacity)}`;
+  const shadow = `${x}px ${y}px ${params.blur}px ${params.size}px ${toRgba(params.color, params.opacity)}`;
+  return params.inset ? `inset ${shadow}` : shadow;
 }
 
 /**
  * Serialize ShadowParams → CSS text-shadow string (no spread).
  */
 export function serializeTextShadow(params: ShadowParams): string {
-  if (!params.enabled) return "none";
   const { x, y } = angleDistanceToXY(params.angle, params.distance);
   return `${x}px ${y}px ${params.blur}px ${toRgba(params.color, params.opacity)}`;
 }
@@ -141,7 +142,7 @@ export function parseTextShadow(css: string | undefined): ShadowParams {
   const angle = distance === 0 ? DEFAULT_SHADOW_PARAMS.angle : xyToAngle(offsetX, offsetY);
 
   return {
-    enabled: true,
+    inset: false,
     angle,
     distance,
     blur: Math.round(blur),
@@ -149,4 +150,23 @@ export function parseTextShadow(css: string | undefined): ShadowParams {
     opacity: extractOpacity(colorStr),
     color: extractHexFromColor(colorStr),
   };
+}
+
+/**
+ * Parse a CSS filter drop-shadow() token into ShadowParams.
+ * Accepts either the full token "drop-shadow(...)" or just the inner value.
+ */
+export function parseDropShadow(filterCss: string | undefined): ShadowParams {
+  if (!filterCss || filterCss === "none") return { ...DEFAULT_SHADOW_PARAMS };
+  const match = filterCss.match(/drop-shadow\(([^)]+)\)/);
+  if (!match) return { ...DEFAULT_SHADOW_PARAMS };
+  return parseTextShadow(match[1]);
+}
+
+/**
+ * Serialize ShadowParams → CSS filter drop-shadow() token (no spread, no inset).
+ */
+export function serializeDropShadow(params: ShadowParams): string {
+  const { x, y } = angleDistanceToXY(params.angle, params.distance);
+  return `drop-shadow(${x}px ${y}px ${params.blur}px ${toRgba(params.color, params.opacity)})`;
 }
