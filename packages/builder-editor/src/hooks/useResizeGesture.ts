@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import type { ResizeHandleType, SnapGuide, DistanceGuide, LiveDimensions } from "../types";
 import { snapToGrid, type Point, type Rect } from "@ui-builder/shared";
 import type { BuilderNode } from "@ui-builder/builder-core";
@@ -50,8 +50,6 @@ export function useResizeGesture({
   const [snapGuides, setSnapGuides] = useState<SnapGuide[]>([]);
   const [distanceGuides, setDistanceGuides] = useState<DistanceGuide[]>([]);
   const [liveDimensions, setLiveDimensions] = useState<LiveDimensions | null>(null);
-  // Locked once on first significant move so dominant axis never flips mid-drag
-  const ratioAxisRef = useRef<"width" | "height" | null>(null);
 
   useEffect(() => {
     if (!resizing) return;
@@ -78,20 +76,18 @@ export function useResizeGesture({
       }
 
       // Maintain aspect ratio if Shift is pressed and dragging a corner.
-      // Lock the dominant axis on first significant move so it never flips mid-drag.
+      // Follow Figma behavior: pick whichever axis produces the larger resulting size.
       if (e.shiftKey && resizing.handle.length === 2 && resizing.startRect.height > 0) {
         const ratio = resizing.startRect.width / resizing.startRect.height;
-        const absDx = Math.abs(width - resizing.startRect.width);
-        const absDy = Math.abs(height - resizing.startRect.height) * ratio;
-
-        if (!ratioAxisRef.current && (absDx > 2 || absDy > 2)) {
-          ratioAxisRef.current = absDx >= absDy ? "width" : "height";
-        }
-
-        if (ratioAxisRef.current === "width") {
-          height = width / ratio;
-        } else if (ratioAxisRef.current === "height") {
-          width = height * ratio;
+        // If width dominates: height follows width
+        const heightFromWidth = width / ratio;
+        // If height dominates: width follows height
+        const widthFromHeight = height * ratio;
+        // Choose the axis that produces the larger element
+        if (width >= widthFromHeight) {
+          height = heightFromWidth;
+        } else {
+          width = widthFromHeight;
         }
 
         if (resizing.handle.includes("w")) {
@@ -100,8 +96,6 @@ export function useResizeGesture({
         if (resizing.handle.includes("n")) {
           newY = y + resizing.startRect.height - height;
         }
-      } else {
-        ratioAxisRef.current = null;
       }
 
       width = Math.max(10, Math.round(width));
@@ -207,7 +201,6 @@ export function useResizeGesture({
       });
     };
     const handleGlobalMouseUp = () => {
-      ratioAxisRef.current = null;
       setResizing(null);
       setSnapGuides([]);
       setDistanceGuides([]);
