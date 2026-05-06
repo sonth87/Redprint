@@ -304,10 +304,13 @@ export class AbsoluteDragStrategy implements DragStrategy {
         description: "Reorder in flow container",
       });
     } else if (ctx.rootNodeId && !isMultiSelect) {
-      // Section reparenting geometric check
+      // When dragging from toolbar, the cursor is on the toolbar (above the component),
+      // so use the component's top-left corner to determine which section it belongs to.
       let sectionHitY = e.clientY;
-      // movingSnapshots carry fromToolbar info implicitly — check if node came from toolbar
-      // (In the new architecture this is carried via ctx; for now we rely on mouse Y position)
+      if (ctx.fromToolbar) {
+        const nodeEl = frameEl.querySelector(`[data-node-id="${ctx.nodeId}"]`) as HTMLElement | null;
+        if (nodeEl) sectionHitY = nodeEl.getBoundingClientRect().top;
+      }
       const dropSectionId = getDropTargetSection(sectionHitY, frameEl, ctx.nodes, ctx.rootNodeId);
 
       if (

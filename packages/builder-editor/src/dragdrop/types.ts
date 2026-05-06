@@ -62,6 +62,8 @@ export interface DragContext {
   /** Per-node drag start snapshots (position, dimensions, wasAbsolute flag) */
   movingSnapshots: NodeMovingSnapshot[];
   snapEnabled: boolean;
+  /** True when the drag was initiated from the ContextualToolbar drag handle */
+  fromToolbar: boolean;
 }
 
 // ── DragVisualState ────────────────────────────────────────────────────────────

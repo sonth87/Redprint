@@ -104,6 +104,7 @@ function buildContext(
     movingNodeIds: moving.nodes.map((n) => n.nodeId),
     movingSnapshots: moving.nodes,
     snapEnabled: options.snapEnabled,
+    fromToolbar: moving.fromToolbar ?? false,
   };
 }
 
