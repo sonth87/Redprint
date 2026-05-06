@@ -198,10 +198,15 @@ function EditorInner({
     setAssets((prev) => prev.filter((a) => a.id !== assetId));
   }, [assetProvider]);
 
-  const handleMediaUrlAdd = React.useCallback((_url: string, _type: AssetType) => {
-    // URL-based assets are passed directly to the picker callback without persisting
-    // The ImageControl already handles raw URL input via its text field
-  }, []);
+  const handleMediaUrlAdd = React.useCallback((url: string, type: AssetType) => {
+    const asset: Asset = {
+      id: url,
+      url,
+      type,
+      name: url.split("/").pop() ?? url,
+    };
+    handleMediaSelect(asset);
+  }, [handleMediaSelect]);
 
   // ── Gallery media manager state ──────────────────────────────────────────
   const [galleryManagerOpen, setGalleryManagerOpen] = React.useState(false);

@@ -3,12 +3,23 @@ import { Slider, cn } from "@ui-builder/ui";
 import { AnglePicker } from "./AnglePicker";
 import { SHADOW_PRESETS } from "@ui-builder/shared";
 import { ColorSwatch } from "../color/ColorSwatch";
-import { parseShadow, serializeShadow, type ShadowParams } from "./shadowUtils";
+import {
+  parseShadow,
+  serializeShadow,
+  parseDropShadow,
+  serializeDropShadow,
+  type ShadowParams,
+} from "./shadowUtils";
+
+type ShadowMode = "outside" | "inside" | "filter";
 
 interface ShadowControlProps {
+  /** CSS box-shadow value */
   value: string | undefined;
   onChange: (css: string | undefined) => void;
-  showInsetToggle?: boolean;
+  /** CSS filter drop-shadow value — when provided, enables the Filter mode option */
+  filterValue?: string | undefined;
+  onFilterChange?: (css: string | undefined) => void;
 }
 
 function SliderRow({
@@ -54,25 +65,67 @@ function SliderRow({
   );
 }
 
-export const ShadowControl: React.FC<ShadowControlProps> = ({ value, onChange, showInsetToggle }) => {
+export const ShadowControl: React.FC<ShadowControlProps> = ({
+  value,
+  onChange,
+  filterValue,
+  onFilterChange,
+}) => {
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
-  const isActive = !!value && value !== "none";
-  const params = useMemo(() => parseShadow(value), [value]);
+  // Detect current mode from active values
+  const mode: ShadowMode = useMemo(() => {
+    if (filterValue && filterValue !== "none" && filterValue !== "") return "filter";
+    if (value && value !== "none" && value !== "") {
+      return parseShadow(value).inset ? "inside" : "outside";
+    }
+    return "outside";
+  }, [value, filterValue]);
+
+  const isActive = (value && value !== "none" && value !== "") ||
+    (filterValue && filterValue !== "none" && filterValue !== "");
+
+  // Parse params from whichever mode is active
+  const params = useMemo(() => {
+    if (mode === "filter") return parseDropShadow(filterValue);
+    return parseShadow(value);
+  }, [mode, value, filterValue]);
 
   const update = useCallback(
     (partial: Partial<ShadowParams>) => {
       const next = { ...params, ...partial };
-      onChange(serializeShadow(next));
+      if (mode === "filter") {
+        onFilterChange?.(serializeDropShadow(next));
+      } else {
+        onChange(serializeShadow({ ...next, inset: mode === "inside" }));
+      }
     },
-    [params, onChange],
+    [params, mode, onChange, onFilterChange],
   );
 
   const handlePreset = (boxShadow: string) => {
     if (boxShadow === "none") {
       onChange(undefined);
+      onFilterChange?.(undefined);
     } else {
+      // Apply preset as box-shadow outside mode
       onChange(boxShadow);
+      onFilterChange?.(undefined);
+    }
+  };
+
+  const handleModeChange = (newMode: ShadowMode) => {
+    if (newMode === mode) return;
+    // Migrate current params to new mode
+    if (newMode === "filter") {
+      onFilterChange?.(serializeDropShadow({ ...params, inset: false }));
+      onChange(undefined);
+    } else if (newMode === "inside") {
+      onChange(serializeShadow({ ...params, inset: true }));
+      onFilterChange?.(undefined);
+    } else {
+      onChange(serializeShadow({ ...params, inset: false }));
+      onFilterChange?.(undefined);
     }
   };
 
@@ -81,8 +134,10 @@ export const ShadowControl: React.FC<ShadowControlProps> = ({ value, onChange, s
     return SHADOW_PRESETS.find((p) => p.boxShadow === value)?.value ?? "custom";
   }, [value, isActive]);
 
+  const showFilterMode = !!onFilterChange;
+
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 pb-4">
       {/* Preset grid */}
       <div className="grid grid-cols-3 gap-4 p-2">
         {SHADOW_PRESETS.map((preset) => (
@@ -110,91 +165,108 @@ export const ShadowControl: React.FC<ShadowControlProps> = ({ value, onChange, s
         ))}
       </div>
 
-      {/* Outside / Inside toggle — only when a shadow is active and inset is supported */}
-      {isActive && showInsetToggle && (
-        <div className="flex rounded overflow-hidden border border-border/60 self-start text-[11px]">
-          <button
-            type="button"
-            onClick={() => update({ inset: false })}
-            className={cn(
-              "px-3 py-1 transition-colors",
-              !params.inset ? "bg-primary text-primary-foreground" : "hover:bg-accent/50 text-muted-foreground",
-            )}
-          >
-            Outside
-          </button>
-          <button
-            type="button"
-            onClick={() => update({ inset: true })}
-            className={cn(
-              "px-3 py-1 transition-colors border-l border-border/60",
-              params.inset ? "bg-primary text-primary-foreground" : "hover:bg-accent/50 text-muted-foreground",
-            )}
-          >
-            Inside
-          </button>
-        </div>
-      )}
+      {/* Advanced */}
+      <div>
+        <button
+          type="button"
+          onClick={() => setAdvancedOpen((v) => !v)}
+          className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <span>{advancedOpen ? "▾" : "▸"}</span>
+          <span>Advanced</span>
+        </button>
+        {advancedOpen && (
+          <div className="flex flex-col gap-3 pt-2 mt-2 border-t border-border/50">
+            {/* Mode toggle — Outside / Inside / Filter */}
+            <div className="flex rounded overflow-hidden border border-border/60 self-start text-[11px]">
+              <button
+                type="button"
+                onClick={() => handleModeChange("outside")}
+                className={cn(
+                  "px-3 py-1 transition-colors",
+                  mode === "outside"
+                    ? "bg-primary text-primary-foreground"
+                    : "hover:bg-accent/50 text-muted-foreground",
+                )}
+              >
+                Outside
+              </button>
+              <button
+                type="button"
+                onClick={() => handleModeChange("inside")}
+                className={cn(
+                  "px-3 py-1 transition-colors border-l border-border/60",
+                  mode === "inside"
+                    ? "bg-primary text-primary-foreground"
+                    : "hover:bg-accent/50 text-muted-foreground",
+                )}
+              >
+                Inside
+              </button>
+              {showFilterMode && (
+                <button
+                  type="button"
+                  onClick={() => handleModeChange("filter")}
+                  className={cn(
+                    "px-3 py-1 transition-colors border-l border-border/60",
+                    mode === "filter"
+                      ? "bg-primary text-primary-foreground"
+                      : "hover:bg-accent/50 text-muted-foreground",
+                  )}
+                >
+                  Filter
+                </button>
+              )}
+            </div>
 
-      {/* Advanced section — only when a shadow is active */}
-      {isActive && (
-        <div>
-          <button
-            type="button"
-            onClick={() => setAdvancedOpen((v) => !v)}
-            className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <span>{advancedOpen ? "▾" : "▸"}</span>
-            <span>Advanced</span>
-          </button>
-          {advancedOpen && (
-            <div className="flex flex-col gap-3 pt-2 mt-2 border-t border-border/50">
-              <div className="flex items-start gap-3" onPointerDown={(e) => e.stopPropagation()}>
-                <AnglePicker value={params.angle} onChange={(deg) => update({ angle: deg })} className="flex-shrink-0" />
-                <div className="flex flex-col gap-2 flex-1 min-w-0">
-                  <SliderRow label="Distance (px)" value={params.distance} min={0} max={100} unit="px" onChange={(v) => update({ distance: v })} />
+            {/* Sliders + angle */}
+            <div className="flex items-start gap-3" onPointerDown={(e) => e.stopPropagation()}>
+              <AnglePicker value={params.angle} onChange={(deg) => update({ angle: deg })} className="flex-shrink-0" />
+              <div className="flex flex-col gap-2 flex-1 min-w-0">
+                <SliderRow label="Distance (px)" value={params.distance} min={0} max={100} unit="px" onChange={(v) => update({ distance: v })} />
+                {mode !== "filter" && (
                   <SliderRow label="Size (px)" value={params.size} min={-20} max={100} unit="px" onChange={(v) => update({ size: v })} />
-                  <SliderRow label="Blur" value={params.blur} min={0} max={100} unit="px" onChange={(v) => update({ blur: v })} />
-                  <div className="flex flex-col gap-1" onPointerDown={(e) => e.stopPropagation()}>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] text-muted-foreground">Opacity & color</span>
-                      <ColorSwatch
-                        value={params.color}
-                        onChange={(c) => update({ color: c })}
-                        label="Shadow color"
-                        size="md"
+                )}
+                <SliderRow label="Blur" value={params.blur} min={0} max={100} unit="px" onChange={(v) => update({ blur: v })} />
+                <div className="flex flex-col gap-1" onPointerDown={(e) => e.stopPropagation()}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-muted-foreground">Opacity & color</span>
+                    <ColorSwatch
+                      value={params.color}
+                      onChange={(c) => update({ color: c })}
+                      label="Shadow color"
+                      size="md"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1">
+                      <Slider
+                        min={0}
+                        max={100}
+                        step={1}
+                        value={[params.opacity]}
+                        onValueChange={([v]) => update({ opacity: v })}
+                        className="h-1"
                       />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1">
-                        <Slider
-                          min={0}
-                          max={100}
-                          step={1}
-                          value={[params.opacity]}
-                          onValueChange={([v]) => update({ opacity: v })}
-                          className="h-1"
-                        />
-                      </div>
-                      <div className="flex items-center gap-0.5 bg-muted/50 rounded px-1.5 py-0.5 border border-border/40">
-                        <input
-                          type="number"
-                          value={params.opacity}
-                          min={0}
-                          max={100}
-                          onChange={(e) => update({ opacity: Math.min(100, Math.max(0, Number(e.target.value))) })}
-                          className="w-8 text-right text-[11px] bg-transparent outline-none cursor-text"
-                        />
-                        <span className="text-[10px] text-muted-foreground">%</span>
-                      </div>
+                    <div className="flex items-center gap-0.5 bg-muted/50 rounded px-1.5 py-0.5 border border-border/40">
+                      <input
+                        type="number"
+                        value={params.opacity}
+                        min={0}
+                        max={100}
+                        onChange={(e) => update({ opacity: Math.min(100, Math.max(0, Number(e.target.value))) })}
+                        className="w-8 text-right text-[11px] bg-transparent outline-none cursor-text"
+                      />
+                      <span className="text-[10px] text-muted-foreground">%</span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

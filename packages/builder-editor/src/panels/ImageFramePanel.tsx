@@ -317,6 +317,8 @@ export function ImageFramePanel({ node, onStyleChange, onPropChange }: ImageFram
         <ShadowControl
           value={style.boxShadow as string | undefined}
           onChange={(css) => onStyleChange({ boxShadow: css })}
+          filterValue={String(node.props.dropShadow ?? "") || undefined}
+          onFilterChange={(css) => onPropChange({ dropShadow: css ?? "" })}
         />
       </TabsContent>
 

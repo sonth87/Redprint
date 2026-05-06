@@ -334,22 +334,22 @@ export const MediaManager = memo(function MediaManager({
         <TooltipProvider delayDuration={400}>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
           <TabsList className="flex flex-row w-full border-b rounded-none bg-muted/30 h-auto p-1 gap-0.5 shrink-0">
-            <TabsTrigger value="library" className="flex-1 flex flex-col items-center gap-0.5 py-1.5 px-2 h-auto rounded-md text-[10px] aria-selected:bg-primary aria-selected:text-primary-foreground">
+            <TabsTrigger value="library" className="flex-1 flex justify-center items-center gap-0.5 py-2 px-2 h-auto rounded-md text-[10px] aria-selected:bg-primary aria-selected:text-primary-foreground">
               <ImageIcon className="h-3.5 w-3.5" />
               <span>Library{assets.length > 0 ? ` (${assets.length})` : ""}</span>
             </TabsTrigger>
-            <TabsTrigger value="upload" className="flex-1 flex flex-col items-center gap-0.5 py-1.5 px-2 h-auto rounded-md text-[10px] aria-selected:bg-primary aria-selected:text-primary-foreground">
+            <TabsTrigger value="upload" className="flex-1 flex justify-center items-center gap-0.5 py-2 px-2 h-auto rounded-md text-[10px] aria-selected:bg-primary aria-selected:text-primary-foreground">
               <Upload className="h-3.5 w-3.5" />
               <span>Upload</span>
             </TabsTrigger>
-            <TabsTrigger value="url" className="flex-1 flex flex-col items-center gap-0.5 py-1.5 px-2 h-auto rounded-md text-[10px] aria-selected:bg-primary aria-selected:text-primary-foreground">
+            <TabsTrigger value="url" className="flex-1 flex justify-center items-center gap-0.5 py-2 px-2 h-auto rounded-md text-[10px] aria-selected:bg-primary aria-selected:text-primary-foreground">
               <Link2 className="h-3.5 w-3.5" />
               <span>URL</span>
             </TabsTrigger>
           </TabsList>
 
           {/* Library tab */}
-          <TabsContent value="library" className="flex-1 flex flex-col min-h-0 mt-2">
+          <TabsContent value="library" className="flex-1 flex flex-col min-h-0 mt-4">
             <div className="flex gap-2 mb-2">
               <div className="relative flex-1">
                 <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />

@@ -9,7 +9,6 @@ import { NumericPropertyInput } from "../controls/NumericPropertyInput";
 import { SpacingVisualizer } from "../controls/SpacingVisualizer";
 import { ShadowControl } from "../../../controls/shadow/ShadowControl";
 import { TextShadowControl } from "../../../controls/shadow/TextShadowControl";
-import { DropShadowControl } from "../../../controls/shadow/DropShadowControl";
 import { ImagePropControl } from "../controls/ImagePropControl";
 import { ColorSwatch } from "../../../controls/color/ColorSwatch";
 import type { ComponentDefinition, BuilderNode } from "@ui-builder/builder-core";
@@ -536,19 +535,10 @@ export function DesignTab({
         <ShadowControl
           value={style.boxShadow as string | undefined}
           onChange={(css: string | undefined) => onStyleChange("boxShadow", css === "none" ? undefined : css)}
-          showInsetToggle={!isTextNode}
+          filterValue={isImageNode ? (String(resolvedPropsMap["dropShadow"] ?? "") || undefined) : undefined}
+          onFilterChange={isImageNode ? (css) => onPropChange("dropShadow", css ?? "") : undefined}
         />
       </CollapsibleSection>
-
-      {/* Drop Shadow — only for Image components (filter: drop-shadow, follows image shape) */}
-      {isImageNode && (
-        <CollapsibleSection title="Drop Shadow" defaultOpen={false}>
-          <DropShadowControl
-            value={String(resolvedPropsMap["dropShadow"] ?? "") || undefined}
-            onChange={(css) => onPropChange("dropShadow", css ?? "")}
-          />
-        </CollapsibleSection>
-      )}
 
       {/* Text Shadow — only for text-based components */}
       {isTextNode && (

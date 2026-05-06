@@ -118,8 +118,7 @@ export const DropShadowControl: React.FC<DropShadowControlProps> = ({ value, onC
         ))}
       </div>
 
-      {/* Advanced section — only when a shadow is active */}
-      {isActive && (
+      {/* {isActive && ( */}
         <div>
           <button
             type="button"
@@ -175,7 +174,7 @@ export const DropShadowControl: React.FC<DropShadowControlProps> = ({ value, onC
             </div>
           )}
         </div>
-      )}
+      {/* )} */}
     </div>
   );
 };
