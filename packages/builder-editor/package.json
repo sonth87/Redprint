@@ -24,8 +24,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@fseehawer/react-circular-slider": "^3.3.3",
-    "@tiptap/core": "^3.22.2",
+"@tiptap/core": "^3.22.2",
     "@tiptap/extension-color": "^3.22.2",
     "@tiptap/extension-highlight": "^3.22.2",
     "@tiptap/extension-link": "^3.22.2",

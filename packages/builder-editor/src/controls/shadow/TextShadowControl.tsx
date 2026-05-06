@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from "react";
-import CircularSlider from "@fseehawer/react-circular-slider";
 import { Slider, Switch, Label, cn } from "@ui-builder/ui";
+import { AnglePicker } from "./AnglePicker";
 import { TEXT_SHADOW_PRESETS } from "@ui-builder/shared";
 import { ColorSwatch } from "../color/ColorSwatch";
 import { parseTextShadow, serializeTextShadow, type ShadowParams } from "./shadowUtils";
@@ -78,7 +78,7 @@ export const TextShadowControl: React.FC<TextShadowControlProps> = ({ value, onC
   })?.value ?? (params.enabled ? "custom" : "none");
 
   return (
-    <div className="flex flex-col gap-3 p-3">
+    <div className="flex flex-col gap-3">
       {/* Toggle */}
       <div className="flex items-center justify-between">
         <Label className="text-xs">Apply text shadow</Label>
@@ -120,75 +120,47 @@ export const TextShadowControl: React.FC<TextShadowControlProps> = ({ value, onC
       {/* Custom controls — only when text shadow is enabled */}
       {params.enabled && (
         <div className="flex flex-col gap-3 pt-2 border-t border-border/50">
-          {/* Angle dial */}
-          <div className="flex flex-col gap-1">
-            <span className="text-[11px] text-muted-foreground">Angle</span>
-            <div className="flex items-center gap-3" onPointerDown={(e) => e.stopPropagation()}>
-              <div className="flex-shrink-0">
-                <CircularSlider
-                  min={0}
-                  max={359}
-                  value={params.angle}
-                  width={80}
-                  knobColor="#3b82f6"
-                  knobSize={14}
-                  progressColorFrom="#3b82f6"
-                  progressColorTo="#3b82f6"
-                  progressSize={4}
-                  trackColor="#e5e7eb"
-                  trackSize={4}
-                  hideLabelValue
-                  onChange={(v) => update({ angle: Number(v) })}
-                />
+          {/* Angle + sliders side by side */}
+          <div className="flex items-start gap-3" onPointerDown={(e) => e.stopPropagation()}>
+            <AnglePicker value={params.angle} onChange={(deg) => update({ angle: deg })} className="flex-shrink-0" />
+            <div className="flex flex-col gap-2 flex-1 min-w-0">
+              <SliderRow label="Distance (px)" value={params.distance} min={0} max={100} unit="px" onChange={(v) => update({ distance: v })} />
+              <SliderRow label="Blur" value={params.blur} min={0} max={100} unit="px" onChange={(v) => update({ blur: v })} />
+              {/* Opacity & color */}
+              <div className="flex flex-col gap-1" onPointerDown={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-muted-foreground">Opacity & color</span>
+                  <ColorSwatch
+                    value={params.color}
+                    onChange={(c) => update({ color: c })}
+                    label="Shadow color"
+                    size="md"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <Slider
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={[params.opacity]}
+                      onValueChange={([v]) => update({ opacity: v })}
+                      className="h-1"
+                    />
+                  </div>
+                  <div className="flex items-center gap-0.5 bg-muted/50 rounded px-1.5 py-0.5 border border-border/40">
+                    <input
+                      type="number"
+                      value={params.opacity}
+                      min={0}
+                      max={100}
+                      onChange={(e) => update({ opacity: Math.min(100, Math.max(0, Number(e.target.value))) })}
+                      className="w-8 text-right text-[11px] bg-transparent outline-none cursor-text"
+                    />
+                    <span className="text-[10px] text-muted-foreground">%</span>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-0.5 bg-muted/50 rounded px-1.5 py-0.5 border border-border/40">
-                <input
-                  type="number"
-                  value={params.angle}
-                  min={0}
-                  max={359}
-                  onChange={(e) => update({ angle: ((Number(e.target.value) % 360) + 360) % 360 })}
-                  className="w-8 text-right text-[11px] bg-transparent outline-none cursor-text"
-                />
-                <span className="text-[10px] text-muted-foreground">°</span>
-              </div>
-            </div>
-          </div>
-
-          <SliderRow label="Distance (px)" value={params.distance} min={0} max={100} unit="px" onChange={(v) => update({ distance: v })} />
-          <SliderRow label="Blur" value={params.blur} min={0} max={100} unit="px" onChange={(v) => update({ blur: v })} />
-
-          {/* Opacity & color */}
-          <div className="flex flex-col gap-1">
-            <span className="text-[11px] text-muted-foreground">Opacity & color</span>
-            <div className="flex items-center gap-2" onPointerDown={(e) => e.stopPropagation()}>
-              <div className="flex-1">
-                <Slider
-                  min={0}
-                  max={100}
-                  step={1}
-                  value={[params.opacity]}
-                  onValueChange={([v]) => update({ opacity: v })}
-                  className="h-1"
-                />
-              </div>
-              <div className="flex items-center gap-0.5 bg-muted/50 rounded px-1.5 py-0.5 border border-border/40">
-                <input
-                  type="number"
-                  value={params.opacity}
-                  min={0}
-                  max={100}
-                  onChange={(e) => update({ opacity: Math.min(100, Math.max(0, Number(e.target.value))) })}
-                  className="w-8 text-right text-[11px] bg-transparent outline-none cursor-text"
-                />
-                <span className="text-[10px] text-muted-foreground">%</span>
-              </div>
-              <ColorSwatch
-                value={params.color}
-                onChange={(c) => update({ color: c })}
-                label="Shadow color"
-                size="md"
-              />
             </div>
           </div>
         </div>

@@ -387,5 +387,5 @@ export const SPACING_PADDING_COLOR = "150 60% 60%" as const;
 export const SPACING_PANEL_FILL_OPACITY = 0.18 as const;
 
 /** Opacity for the canvas overlay strips. */
-export const SPACING_OVERLAY_OPACITY = 0.35 as const;
+export const SPACING_OVERLAY_OPACITY = 0.15 as const;
 
