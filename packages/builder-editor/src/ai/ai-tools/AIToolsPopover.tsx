@@ -19,6 +19,7 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
+  Textarea,
 } from "@ui-builder/ui";
 import {
   Sparkles,
@@ -423,7 +424,7 @@ function TransformView({
     <div className="p-3 flex flex-col gap-3">
       {/* Textarea */}
       <div className="relative">
-        <textarea
+        <Textarea
           ref={textareaRef}
           value={customPrompt}
           onChange={(e) => onPromptChange(e.target.value)}
@@ -432,7 +433,7 @@ function TransformView({
           rows={4}
           disabled={isLoading || !isConfigured}
           className={[
-            "w-full resize-none rounded-md border bg-background px-3 py-2 text-[12px]",
+            "w-full resize-none rounded-md border bg-transparent px-3 py-2 text-[12px]",
             "placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary",
             "disabled:opacity-50 disabled:cursor-not-allowed",
           ].join(" ")}

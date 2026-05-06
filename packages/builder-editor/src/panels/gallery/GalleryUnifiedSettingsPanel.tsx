@@ -15,6 +15,7 @@ import {
   ScrollArea, Label, Slider, Switch,
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
   Tooltip, TooltipTrigger, TooltipContent, TooltipProvider,
+  Popover, PopoverTrigger, PopoverContent,
   cn,
 } from "@ui-builder/ui";
 import {
@@ -25,6 +26,7 @@ import {
   normalizeCarouselConfig,
   mergeCarouselConfig,
   type CarouselConfig,
+  type CarouselNavConfig,
 } from "@ui-builder/shared";
 import { LayoutModeCard } from "./LayoutMiniPreview";
 import { CarouselPresetCard } from "./CarouselPreviewCard";
@@ -45,6 +47,95 @@ export interface GalleryUnifiedSettingsPanelProps {
 const CAROUSEL_MODES = new Set<GalleryLayoutMode>(["slider", "slideshow", "carousel-3d"]);
 // Chỉ các slideshow mode mới hiện Slide Style preset (carousel-3d tự xử lý effect riêng)
 const SLIDE_STYLE_MODES = new Set<GalleryLayoutMode>(["slider", "slideshow"]);
+
+// ── Nav Icon Picker ───────────────────────────────────────────────────────────
+
+type IconStyle = CarouselNavConfig["iconStyle"];
+
+// All paths are "next" (right-pointing) direction for consistent preview
+const NAV_ICON_DEFS: { style: IconStyle; path: string; filled?: boolean }[] = [
+  { style: "chevron",          path: "M9 18l6-6-6-6" },
+  { style: "chevron-thin",     path: "M8.5 19l7-7-7-7" },
+  { style: "chevron-double",   path: "M6 18l6-6-6-6M12 18l6-6-6-6" },
+  { style: "arrow",            path: "M5 12h14M12 19l7-7-7-7" },
+  { style: "arrow-fat",        path: "M12 4l10 8-10 8V4z", filled: true },
+  { style: "arrow-outline",    path: "M12 4l10 8-10 8V4z" },
+  { style: "caret",            path: "M10 17l5-5-5-5" },
+  { style: "triangle",         path: "M16 12L8 6v12z", filled: true },
+  { style: "triangle-outline", path: "M16 12L8 5.5v13z" },
+  { style: "circle-arrow",     path: "M5 12h14M12 19l7-7-7-7" },
+  { style: "circle-chevron",   path: "M10 16l4-4-4-4" },
+  { style: "play",             path: "M18 12L7 5v14l11-7z", filled: true },
+];
+
+function NavIconSvg({ style, path, filled, active }: { style: IconStyle; path: string; filled?: boolean; active?: boolean }) {
+  const isCircleChevron = style === "circle-chevron";
+  const isCircleArrow = style === "circle-arrow";
+  const strokeColor = (isCircleChevron && active) ? "#fff" : "currentColor";
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      fill={filled ? "currentColor" : "none"}
+      stroke={strokeColor}
+      strokeWidth={style === "chevron-thin" || style === "caret" ? 1.5 : 2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {isCircleArrow && <circle cx="12" cy="12" r="9" strokeWidth="1.5" fill="none" />}
+      {isCircleChevron && (
+        <circle cx="12" cy="12" r="9"
+          fill={active ? "currentColor" : "none"}
+          stroke="currentColor" strokeWidth="1.5"
+        />
+      )}
+      <path d={path} stroke={isCircleChevron && active ? "#fff" : "currentColor"} />
+    </svg>
+  );
+}
+
+function NavIconPicker({ value, onChange }: { value: IconStyle; onChange: (v: IconStyle) => void }) {
+  const current = NAV_ICON_DEFS.find(d => d.style === value) ?? NAV_ICON_DEFS[0]!;
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          className="flex items-center gap-1.5 h-6 px-2 rounded border bg-background hover:bg-muted text-foreground transition-colors"
+          title={value}
+        >
+          <NavIconSvg style={current.style} path={current.path} filled={current.filled} />
+          <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent side="bottom" align="end" className="w-auto p-1.5">
+        <div className="grid grid-cols-4 gap-0.5">
+          {NAV_ICON_DEFS.map(({ style, path, filled }) => {
+            const isSelected = value === style;
+            return (
+              <button
+                key={style}
+                onClick={() => onChange(style)}
+                title={style}
+                className={cn(
+                  "flex items-center justify-center w-8 h-8 rounded transition-colors",
+                  isSelected
+                    ? "bg-primary text-primary-foreground"
+                    : "hover:bg-muted text-foreground",
+                )}
+              >
+                <NavIconSvg style={style} path={path} filled={filled} active={isSelected} />
+              </button>
+            );
+          })}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 // ── Carousel Design tab ───────────────────────────────────────────────────────
 
@@ -134,7 +225,7 @@ function CarouselDesign({ node, onConfigChange }: { node: BuilderNode; onConfigC
           <Select value={String(cc.slidesPerView)} onValueChange={v => set({ slidesPerView: parseFloat(v) })}>
             <SelectTrigger className="h-6 text-[10px] w-20"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {["1", "1.2", "1.5", "2", "2.5", "3", "4"].map(v => (
+              {["1", "1.25", "1.5", "1.75", "2", "2.25", "2.5", "2.75", "3", "3.5", "4"].map(v => (
                 <SelectItem key={v} value={v} className="text-xs">{v}</SelectItem>
               ))}
             </SelectContent>
@@ -156,7 +247,7 @@ function CarouselDesign({ node, onConfigChange }: { node: BuilderNode; onConfigC
             </SelectContent>
           </Select>
         </Row>
-        <SliderRow label="Space between" value={cc.spaceBetween} min={0} max={80} unit="px" onChange={v => set({ spaceBetween: v })} />
+        <SliderRow label="Space between" value={cc.spaceBetween} min={0} max={80} step={2} unit="px" onChange={v => set({ spaceBetween: v })} />
         <Row label="Aspect ratio">
           <Select value={cc.aspectRatio} onValueChange={v => set({ aspectRatio: v })}>
             <SelectTrigger className="h-6 text-[10px] w-24"><SelectValue /></SelectTrigger>
@@ -167,7 +258,7 @@ function CarouselDesign({ node, onConfigChange }: { node: BuilderNode; onConfigC
             </SelectContent>
           </Select>
         </Row>
-        <SliderRow label="Slide border radius" value={cc.slideRadius} min={0} max={48} unit="px" onChange={v => set({ slideRadius: v })} />
+        <SliderRow label="Slide border radius" value={cc.slideRadius} min={0} max={48} step={2} unit="px" onChange={v => set({ slideRadius: v })} />
         <Row label="Loop">
           <Seg
             options={[{ label: "Off", value: "off" }, { label: "Loop", value: "loop" }, { label: "Rewind", value: "rewind" }]}
@@ -222,13 +313,16 @@ function CarouselDesign({ node, onConfigChange }: { node: BuilderNode; onConfigC
       {/* Navigation */}
       <Section title="Navigation">
         <ModuleRow label="Navigation arrows" checked={cc.navigation.enabled} onChange={v => setNav({ enabled: v })}>
+          <Row label="Icon">
+            <NavIconPicker value={cc.navigation.iconStyle} onChange={v => setNav({ iconStyle: v })} />
+          </Row>
           <Row label="Color">
             <ColorSwatch value={cc.navigation.color} onChange={v => setNav({ color: v })} />
           </Row>
           <Row label="Placement">
             <Seg options={[{ label: "Inside", value: "inside" }, { label: "Outside", value: "outside" }]} value={cc.navigation.placement} onChange={v => setNav({ placement: v as "inside" | "outside" })} />
           </Row>
-          <SliderRow label="Size" value={cc.navigation.size} min={24} max={80} unit="px" onChange={v => setNav({ size: v })} />
+          <SliderRow label="Size" value={cc.navigation.size} min={24} max={160} unit="px" onChange={v => setNav({ size: v })} />
           <SliderRow label="Offset" value={cc.navigation.offset} min={0} max={40} unit="px" onChange={v => setNav({ offset: v })} />
           <Row label="Hide on click"><Switch checked={cc.navigation.hideOnClick} onCheckedChange={v => setNav({ hideOnClick: v })} className="scale-75 origin-right" /></Row>
         </ModuleRow>
@@ -499,7 +593,7 @@ export function GalleryUnifiedSettingsPanel({ node, onPropChange, onConfigChange
       </TabsContent>
 
       {/* ── Design tab — nội dung thay đổi theo loại mode ─────────────────── */}
-      <TabsContent value="design" className="m-0">
+      <TabsContent value="design" className="m-0 w-[70%] max-w-full">
         <ScrollArea className="h-[480px]">
           {isCarouselMode ? (
             <CarouselDesign node={node} onConfigChange={onConfigChange} />

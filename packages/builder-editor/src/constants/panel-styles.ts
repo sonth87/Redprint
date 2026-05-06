@@ -7,7 +7,7 @@
  *   dragging — while the panel is being repositioned by pointer drag
  */
 export const GLASS_PANEL = {
-  normal:   "bg-background/50 backdrop-blur-md border border-border/50 rounded-xl shadow-xl",
+  normal:   "bg-background/65 backdrop-blur-md border border-border/50 rounded-xl shadow-xl",
   dragging: "bg-background/10 backdrop-blur-lg border border-border/30 rounded-xl shadow-2xl",
 } as const;
 

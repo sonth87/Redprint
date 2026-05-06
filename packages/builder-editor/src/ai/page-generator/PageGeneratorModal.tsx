@@ -16,6 +16,7 @@ import {
   Badge,
   Checkbox,
   Label,
+  Textarea,
 } from "@ui-builder/ui";
 import { useTranslation } from "react-i18next";
 import { Sparkles, CheckCircle2, XCircle, Loader2, LayoutTemplate } from "lucide-react";
@@ -190,7 +191,7 @@ export function PageGeneratorModal({
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {t("ai.pageGenerator.description")}
                 </p>
-                <textarea
+                <Textarea
                   ref={textareaRef}
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}

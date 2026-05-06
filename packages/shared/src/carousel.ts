@@ -9,7 +9,19 @@
 export interface CarouselNavConfig {
   enabled: boolean;
   /** Arrow icon style shown on navigation buttons */
-  iconStyle: "chevron" | "arrow" | "arrow-filled" | "arrow-outlined" | "caret" | "play";
+  iconStyle:
+    | "chevron"          // thick angle bracket
+    | "chevron-thin"     // thin angle bracket
+    | "chevron-double"   // double angle ≪≫
+    | "arrow"            // line + arrowhead
+    | "arrow-fat"        // thick filled arrow
+    | "arrow-outline"    // hollow outlined arrow
+    | "caret"            // small caret ‹›
+    | "triangle"         // filled triangle ►
+    | "triangle-outline" // hollow triangle ▷
+    | "circle-arrow"     // arrow inside circle
+    | "circle-chevron"   // chevron inside filled circle
+    | "play";            // play button style
   color: string;
   placement: "inside" | "outside";
   position: "start" | "center" | "end";

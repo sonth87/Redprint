@@ -19,6 +19,7 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
+  Textarea,
 } from "@ui-builder/ui";
 import {
   Sparkles,
@@ -358,8 +359,7 @@ function CustomView({ value, isLoading, isConfigured, onChange, onSubmit, t }: C
 
   return (
     <div className="p-3 flex flex-col gap-2">
-      <textarea
-        className="w-full rounded-md border bg-background px-3 py-2 text-[12px] placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+      <Textarea
         rows={4}
         placeholder={t("aiSection.customPlaceholder")}
         value={value}

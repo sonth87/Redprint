@@ -4,7 +4,7 @@
  * Allows editing document-level settings: canvas config, variables, metadata.
  */
 import React, { memo, useState } from "react";
-import { ScrollArea, Label, Input, Switch, Slider, Separator } from "@ui-builder/ui";
+import { ScrollArea, Label, Input, Switch, Slider, Separator, Textarea } from "@ui-builder/ui";
 import type { BuilderDocument, CanvasConfig } from "@ui-builder/builder-core";
 import { FileText, Grid3X3, Ruler, Settings2, ChevronDown, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -72,8 +72,8 @@ export const PageSettings = memo(function PageSettings({
             </div>
             <div className="grid gap-1">
               <Label className="text-[10px] text-muted-foreground">{t("pageSettings.description")}</Label>
-              <textarea
-                className="flex min-h-[50px] w-full rounded-md border border-input bg-background px-3 py-2 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
+              <Textarea
+                className="flex min-h-[50px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
                 value={doc.description ?? ""}
                 placeholder="Page description..."
                 onChange={(e) => onDocumentMetaChange?.("description", e.target.value)}

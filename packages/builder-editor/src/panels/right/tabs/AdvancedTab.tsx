@@ -1,5 +1,5 @@
 import React from "react";
-import { ScrollArea, Label, Input, Switch, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Badge } from "@ui-builder/ui";
+import { ScrollArea, Label, Input, Switch, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Badge, Textarea } from "@ui-builder/ui";
 import { CollapsibleSection } from "../components/CollapsibleSection";
 import type { BuilderNode } from "@ui-builder/builder-core";
 import { useTranslation } from "react-i18next";
@@ -50,8 +50,8 @@ export function AdvancedTab({
           </div>
           <div className="grid gap-1">
             <Label className="text-[10px] text-muted-foreground">Custom Attributes (JSON)</Label>
-            <textarea
-              className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-xs font-mono ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
+            <Textarea
+              className="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-xs font-mono ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
               value={String(selectedNode.props._customAttributes ?? "{}")}
               placeholder='{"data-testid": "my-component"}'
               onChange={(e) => onPropChange("_customAttributes", e.target.value)}

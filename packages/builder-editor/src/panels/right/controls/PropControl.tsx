@@ -1,5 +1,5 @@
 import React from "react";
-import { Label, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, Switch } from "@ui-builder/ui";
+import { Label, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, Switch, Textarea } from "@ui-builder/ui";
 import type { PropSchema } from "@ui-builder/builder-core";
 import { NumericPropertyInput } from "./NumericPropertyInput";
 import { ImagePropControl } from "./ImagePropControl";
@@ -20,8 +20,8 @@ export function PropControl({
         <div className="grid gap-1.5">
           <Label className="text-xs">{schema.label}</Label>
           {schema.multiline ? (
-            <textarea
-              className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+            <Textarea
+              className="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
               value={String(value ?? "")}
               placeholder={schema.placeholder}
               onChange={(e) => onChange(e.target.value)}

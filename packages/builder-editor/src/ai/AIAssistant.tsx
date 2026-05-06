@@ -16,6 +16,7 @@ import {
   Badge,
   Label,
   Checkbox,
+  Textarea,
 } from "@ui-builder/ui";
 import { Sparkles, Zap, Loader2 } from "lucide-react";
 import { useBuilder } from "@ui-builder/builder-react";
@@ -292,14 +293,13 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
                 <label className="text-sm font-medium text-foreground">
                   {t("ai.yourPrompt")}
                 </label>
-                <textarea
+                <Textarea
                   ref={textareaRef}
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder={t("ai.placeholder")}
                   rows={5}
-                  className="w-full rounded-lg border bg-background px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
                 />
               </div>
 
