@@ -302,6 +302,14 @@ export class SnapEngine {
     // the canvas with lines when many nodes are present.
     const t = this.config.alignmentGuideThreshold ?? this.config.threshold * 1.5;
 
+    // Proximity radius: only show a vertical guide with a node if the two elements
+    // overlap or are within this distance along the Y axis (and vice-versa for
+    // horizontal guides along X). This prevents guides from firing with nodes
+    // that are hundreds of pixels away in another section.
+    const cw = this.config.canvasWidth ?? Infinity;
+    const proximityY = draggingRect.height * 2 + 100; // generous but bounded
+    const proximityX = cw;                             // full width — X proximity not needed
+
     const guides: SnapGuide[] = [];
     const seen = new Set<string>();
     const add = (guide: SnapGuide) => {
@@ -324,19 +332,30 @@ export class SnapEngine {
       const oRight = other.x + other.width;
       const oBottom = other.y + other.height;
 
+      // Vertical guides (shared X): only fire if the two nodes are vertically close.
+      // "Vertically close" = their Y ranges overlap OR gap < proximityY.
+      const verticallyClose = oBottom + proximityY >= y && other.y - proximityY <= dragBottom;
+
+      // Horizontal guides (shared Y): only fire if horizontally close (X ranges overlap or near).
+      const horizontallyClose = oRight + proximityX >= x && other.x - proximityX <= dragRight;
+
       // ── Horizontal alignment guides (shared Y positions) ──────────────
-      if (Math.abs(y - other.y)           < t) add({ type: "horizontal", position: other.y,  source: "component-edge" });
-      if (Math.abs(y - oBottom)           < t) add({ type: "horizontal", position: oBottom,  source: "component-edge" });
-      if (Math.abs(dragBottom - other.y)  < t) add({ type: "horizontal", position: other.y,  source: "component-edge" });
-      if (Math.abs(dragBottom - oBottom)  < t) add({ type: "horizontal", position: oBottom,  source: "component-edge" });
-      if (Math.abs(dragCY - oCY)          < t) add({ type: "horizontal", position: oCY,      source: "component-center" });
+      if (horizontallyClose) {
+        if (Math.abs(y - other.y)           < t) add({ type: "horizontal", position: other.y,  source: "component-edge" });
+        if (Math.abs(y - oBottom)           < t) add({ type: "horizontal", position: oBottom,  source: "component-edge" });
+        if (Math.abs(dragBottom - other.y)  < t) add({ type: "horizontal", position: other.y,  source: "component-edge" });
+        if (Math.abs(dragBottom - oBottom)  < t) add({ type: "horizontal", position: oBottom,  source: "component-edge" });
+        if (Math.abs(dragCY - oCY)          < t) add({ type: "horizontal", position: oCY,      source: "component-center" });
+      }
 
       // ── Vertical alignment guides (shared X positions) ────────────────
-      if (Math.abs(x - other.x)          < t) add({ type: "vertical", position: other.x,  source: "component-edge" });
-      if (Math.abs(x - oRight)           < t) add({ type: "vertical", position: oRight,   source: "component-edge" });
-      if (Math.abs(dragRight - other.x)  < t) add({ type: "vertical", position: other.x,  source: "component-edge" });
-      if (Math.abs(dragRight - oRight)   < t) add({ type: "vertical", position: oRight,   source: "component-edge" });
-      if (Math.abs(dragCX - oCX)         < t) add({ type: "vertical", position: oCX,      source: "component-center" });
+      if (verticallyClose) {
+        if (Math.abs(x - other.x)          < t) add({ type: "vertical", position: other.x,  source: "component-edge" });
+        if (Math.abs(x - oRight)           < t) add({ type: "vertical", position: oRight,   source: "component-edge" });
+        if (Math.abs(dragRight - other.x)  < t) add({ type: "vertical", position: other.x,  source: "component-edge" });
+        if (Math.abs(dragRight - oRight)   < t) add({ type: "vertical", position: oRight,   source: "component-edge" });
+        if (Math.abs(dragCX - oCX)         < t) add({ type: "vertical", position: oCX,      source: "component-center" });
+      }
     }
 
     // ── Canvas axis alignment guides ───────────────────────────────────
