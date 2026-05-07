@@ -1,6 +1,6 @@
 import React, { useRef, useState, useLayoutEffect, useEffect, useCallback } from "react";
 import type { GalleryItem } from "@ui-builder/shared";
-import { seededRandom } from "@ui-builder/shared";
+import { seededRandom, poissonDiskPositions } from "@ui-builder/shared";
 import type { GalleryProps } from "./types";
 import { GalleryLightbox } from "./GalleryLightbox";
 
@@ -33,19 +33,22 @@ function computeLayouts(
   seed: string,
   rotate: boolean,
 ): Record<string, ImageLayout> {
+  const useSeed = seed === "__random__" ? String(Math.random()) : seed;
+  const spaceW = Math.max(0, available - cellW);
+  const spaceH = Math.max(0, containerH - cellH);
+  const minDist = Math.min(spaceW, spaceH) * 0.35;
+  const positions = poissonDiskPositions(items.length, spaceW, spaceH, minDist, useSeed);
+
   const result: Record<string, ImageLayout> = {};
-  const maxZ = items.length;
   items.forEach((img, i) => {
-    const useSeed = seed === "__random__" ? `${img.id}_${Math.random()}` : seed;
-    const rX    = seededRandom(`${img.id}_x_${useSeed}`);
-    const rY    = seededRandom(`${img.id}_y_${useSeed}`);
+    const pos = positions[i] ?? { x: 0, y: 0 };
     const rAngle = seededRandom(`${img.id}_angle_${useSeed}`);
     const rZ     = seededRandom(`${img.id}_z`);
     result[img.id] = {
-      left: rX * Math.max(0, available - cellW),
-      top: containerH <= cellH ? 0 : rY * (containerH - cellH),
-      rotation: rotate ? (rAngle - 0.5) * 40 : 0, // ±20°
-      zIndex: Math.floor(rZ * maxZ) + 1,
+      left: pos.x,
+      top: pos.y,
+      rotation: rotate ? (rAngle - 0.5) * 40 : 0,
+      zIndex: Math.floor(rZ * items.length) + 1,
     };
   });
   return result;

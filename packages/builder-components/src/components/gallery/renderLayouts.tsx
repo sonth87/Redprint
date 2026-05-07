@@ -1,6 +1,5 @@
 import React from "react";
-import type { GalleryItem } from "@ui-builder/shared";
-import { seededRandom } from "@ui-builder/shared";
+import { type GalleryItem, seededRandom, poissonDiskPositions } from "@ui-builder/shared";
 import type { GalleryProps } from "./types";
 
 export function renderGrid(items: GalleryItem[], p: GalleryProps): React.ReactElement {
@@ -396,30 +395,31 @@ export function renderFreestyle(items: GalleryItem[], p: GalleryProps, hasExplic
   const rotate = p.freestyleRotate !== false;
   const seed = p.freestyleRandomSeed ?? "default";
 
-  // If container has an explicit height (user dragged it), use 100% — items scatter within it.
-  // Otherwise compute a natural height based on item count.
   const rows = Math.ceil(items.length / 3);
   const naturalH = Math.max(cellH + 40, rows * cellH * 0.85 + cellH * 0.6);
   const containerH = hasExplicitHeight ? undefined : naturalH;
+  const effectiveH = containerH ?? naturalH;
+
+  const spaceW = Math.max(0, available - cellW);
+  const spaceH = Math.max(0, effectiveH - cellH);
+  const minDist = Math.min(spaceW, spaceH) * 0.35;
+  const positions = poissonDiskPositions(items.length, spaceW, spaceH, minDist, seed);
 
   return (
     <div style={{ position: "relative", width: "100%", height: containerH ?? "100%", overflow: "hidden" }}>
       {items.map((img, i) => {
-        const rX    = seededRandom(`${img.id}_x_${seed}`);
-        const rY    = seededRandom(`${img.id}_y_${seed}`);
+        const pos = positions[i] ?? { x: 0, y: 0 };
         const rAngle = seededRandom(`${img.id}_angle_${seed}`);
         const rZ     = seededRandom(`${img.id}_z`);
-        const left = rX * Math.max(0, available - cellW);
-        const top  = rY * Math.max(0, (containerH ?? naturalH) - cellH);
-        const rotation = rotate ? (rAngle - 0.5) * 60 : 0; // ±30°
+        const rotation = rotate ? (rAngle - 0.5) * 60 : 0;
         const zIndex = Math.floor(rZ * items.length) + 1;
         return (
           <div
             key={img.id ?? i}
             style={{
               position: "absolute",
-              left,
-              top,
+              left: pos.x,
+              top: pos.y,
               width: cellW,
               height: cellH,
               transform: `rotate(${rotation}deg)`,

@@ -122,3 +122,62 @@ export function seededRandom(seed: string): number {
   }
   return Math.abs(hash & 0x7fffffff) / 0x7fffffff;
 }
+
+// ── Seeded PRNG (mulberry32) — stateful, for sequences ───────────────────────
+
+function mulberry32(seed: number): () => number {
+  let s = seed;
+  return () => {
+    s |= 0; s = s + 0x6d2b79f5 | 0;
+    let z = Math.imul(s ^ (s >>> 15), 1 | s);
+    z = z + Math.imul(z ^ (z >>> 7), 61 | z) ^ z;
+    return ((z ^ (z >>> 14)) >>> 0) / 0x100000000;
+  };
+}
+
+// ── poissonDiskPositions — evenly-spread positions, no clustering ─────────────
+
+export interface PoissonPoint { x: number; y: number }
+
+/**
+ * Poisson Disk Sampling adapted for a fixed number of items.
+ * Returns `count` positions spread across [0, w] × [0, h] such that
+ * no two points are closer than `minDist` to each other.
+ *
+ * Algorithm: dart-throwing with candidate selection (30 attempts per point).
+ * Falls back to best-effort when the space is too crowded.
+ */
+export function poissonDiskPositions(
+  count: number,
+  w: number,
+  h: number,
+  minDist: number,
+  seed: string,
+): PoissonPoint[] {
+  const rand = mulberry32(Math.abs(seededRandom(seed) * 0x7fffffff | 0) || 1);
+  const MAX_ATTEMPTS = 30;
+  const points: PoissonPoint[] = [];
+
+  for (let i = 0; i < count; i++) {
+    let best: PoissonPoint | null = null;
+    let bestMinSep = -1;
+
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+      const candidate: PoissonPoint = { x: rand() * w, y: rand() * h };
+      let minSep = Infinity;
+      for (const p of points) {
+        const dx = candidate.x - p.x;
+        const dy = candidate.y - p.y;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d < minSep) minSep = d;
+      }
+      // Accept immediately if constraint satisfied; otherwise keep the best candidate
+      if (minSep >= minDist) { best = candidate; break; }
+      if (minSep > bestMinSep) { bestMinSep = minSep; best = candidate; }
+    }
+
+    points.push(best!);
+  }
+
+  return points;
+}
