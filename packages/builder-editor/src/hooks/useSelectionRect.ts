@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import type { Rect } from "@ui-builder/shared";
 import { resolveStyle, type BuilderNode, type Breakpoint } from "@ui-builder/builder-core";
 import { ROTATABLE_SELECTION_FRAME } from "../constants";
@@ -30,6 +30,7 @@ export function useSelectionRect({
   nodeQueryRef,
 }: UseSelectionRectOptions): UseSelectionRectReturn {
   const [selectionRect, setSelectionRect] = useState<Rect | null>(null);
+  const rafRef = useRef<number | null>(null);
 
   const selectedNode = selectedNodeIds[0] ? (nodes[selectedNodeIds[0]] ?? null) : null;
 
@@ -59,7 +60,7 @@ export function useSelectionRect({
   }, [selectedNode, breakpoint]);
 
 
-  useEffect(() => {
+  const measureRect = useCallback(() => {
     if (selectedNodeIds.length === 0 || !canvasFrameRef.current) {
       setSelectionRect(null);
       return;
@@ -82,17 +83,17 @@ export function useSelectionRect({
       if (!el) return;
 
       const elRect = el.getBoundingClientRect();
-      
+
       if (useUnrotatedRect) {
         // Calculate the center of the elements rotated bounding box
         const centerX = (elRect.left + elRect.width / 2 - frameRect.left) / zoom;
         const centerY = (elRect.top + elRect.height / 2 - frameRect.top) / zoom;
-        
+
         // Offset from center by half-width/height to get the "unrotated" top-left
         // Note: this assumes transform-origin is center (default for our builder components)
         const left = centerX - el.offsetWidth / 2;
         const top = centerY - el.offsetHeight / 2;
-        
+
         minX = left;
         minY = top;
         maxX = left + el.offsetWidth;
@@ -123,7 +124,44 @@ export function useSelectionRect({
       width: maxX - minX,
       height: maxY - minY,
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedNodeIds, zoom, panOffset, nodes, canvasFrameRef, nodeQueryRef, breakpoint]);
+
+  useEffect(() => {
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    // Defer by one rAF so the browser has a chance to finish layout for newly
+    // added nodes (e.g. gallery) before we read getBoundingClientRect().
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      measureRect();
+    });
+    return () => {
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+  }, [measureRect]);
+
+  // Keep the selection rect in sync while the selected node resizes itself
+  // after initial paint (e.g. images loading, dynamic content expanding).
+  useEffect(() => {
+    if (selectedNodeIds.length !== 1 || !canvasFrameRef.current) return;
+
+    const queryRoot = nodeQueryRef?.current ?? canvasFrameRef.current;
+    const el = queryRoot.querySelector(`[data-node-id="${selectedNodeIds[0]}"]`) as HTMLElement | null;
+    if (!el) return;
+
+    const observer = new ResizeObserver(() => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = null;
+        measureRect();
+      });
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [selectedNodeIds, canvasFrameRef, nodeQueryRef, measureRect]);
 
 
   return { selectionRect, currentRotation };
