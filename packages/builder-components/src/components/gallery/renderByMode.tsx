@@ -55,7 +55,7 @@ export function renderByMode(
         : <HoneycombRuntime mode="honeycomb-triangle" items={items} p={p} />;
     case "freestyle":
       return isEditor
-        ? renderFreestyle(items, p)
+        ? renderFreestyle(items, p, hasExplicitHeight)
         : <FreestyleRuntime items={items} p={p} />;
     case "stacked":
       return renderStacked(items, p);

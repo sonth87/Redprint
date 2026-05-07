@@ -444,8 +444,9 @@ function GalleryDesign({ node, layoutMode, onPropChange }: { node: BuilderNode; 
   const p = node.props;
   const isHoneycomb = ["honeycomb", "honeycomb-diamond", "honeycomb-triangle"].includes(layoutMode);
   const isFreestyle = layoutMode === "freestyle";
-  const needsColumns = ["grid", "masonry", "honeycomb", "honeycomb-diamond", "honeycomb-triangle", "bricks", "collage", "freestyle"].includes(layoutMode);
+  const needsColumns = ["grid", "masonry", "honeycomb", "honeycomb-diamond", "honeycomb-triangle", "bricks", "collage"].includes(layoutMode);
   const needsAspect  = ["grid", "collage", "bricks"].includes(layoutMode);
+  const freestyleSize = Number(p["freestyleSize"] ?? 5);
   const freestyleRotate = p["freestyleRotate"] !== false;
   const freestyleRandomLayout = Boolean(p["freestyleRandomLayout"] ?? false);
 
@@ -459,9 +460,20 @@ function GalleryDesign({ node, layoutMode, onPropChange }: { node: BuilderNode; 
         />
       )}
 
-      {/* Freestyle rotate + random layout switches */}
+      {/* Freestyle controls */}
       {isFreestyle && (
         <>
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <Label className="text-[10px] text-muted-foreground">Size</Label>
+              <span className="text-[10px] font-medium">{freestyleSize}</span>
+            </div>
+            <Slider
+              min={1} max={10} step={1}
+              value={[freestyleSize]}
+              onValueChange={(vals) => onPropChange({ freestyleSize: vals[0] })}
+            />
+          </div>
           <div className="flex items-center justify-between gap-3">
             <Label className="text-[10px] font-medium">Rotated</Label>
             <Switch
@@ -483,7 +495,7 @@ function GalleryDesign({ node, layoutMode, onPropChange }: { node: BuilderNode; 
           </div>
           {!freestyleRandomLayout && (
             <button
-              onClick={() => onPropChange({ freestyleRandomSeed: Date.now().toString(36) })}
+              onClick={() => onPropChange({ freestyleRandomSeed: Date.now().toString(36) + Math.random().toString(36).slice(2) })}
               className="w-full h-8 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
             >
               Randomize Layout
@@ -506,17 +518,19 @@ function GalleryDesign({ node, layoutMode, onPropChange }: { node: BuilderNode; 
         </div>
       )}
 
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between">
-          <Label className="text-[10px] text-muted-foreground">Gap</Label>
-          <span className="text-[10px] font-medium">{Number(p["gap"] ?? 12)}px</span>
+      {!isFreestyle && (
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <Label className="text-[10px] text-muted-foreground">Gap</Label>
+            <span className="text-[10px] font-medium">{Number(p["gap"] ?? 12)}px</span>
+          </div>
+          <Slider
+            min={0} max={60} step={2}
+            value={[Number(p["gap"] ?? 12)]}
+            onValueChange={(vals) => onPropChange({ gap: vals[0] })}
+          />
         </div>
-        <Slider
-          min={0} max={60} step={2}
-          value={[Number(p["gap"] ?? 12)]}
-          onValueChange={(vals) => onPropChange({ gap: vals[0] })}
-        />
-      </div>
+      )}
 
       {needsAspect && (
         <div className="space-y-1">
@@ -532,7 +546,7 @@ function GalleryDesign({ node, layoutMode, onPropChange }: { node: BuilderNode; 
         </div>
       )}
 
-      {!isHoneycomb && (
+      {!isHoneycomb && !isFreestyle && (
         <div className="space-y-1">
           <Label className="text-[10px] text-muted-foreground">Image Fit</Label>
           <Select value={String(p["imageFit"] ?? "cover")} onValueChange={(v) => onPropChange({ imageFit: v })}>

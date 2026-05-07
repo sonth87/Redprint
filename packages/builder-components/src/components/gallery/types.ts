@@ -15,6 +15,7 @@ export interface GalleryProps {
   honeycombClickBehavior: "none" | "open-preview" | "open-link";
   freestyleRotate: boolean;
   freestyleRandomLayout: boolean;
+  freestyleSize: number;
 }
 
 export function extractProps(props: Record<string, unknown>): GalleryProps {
@@ -35,5 +36,6 @@ export function extractProps(props: Record<string, unknown>): GalleryProps {
     honeycombClickBehavior: (props["honeycombClickBehavior"] as GalleryProps["honeycombClickBehavior"]) ?? "none",
     freestyleRotate: props["freestyleRotate"] !== false,
     freestyleRandomLayout: Boolean(props["freestyleRandomLayout"] ?? false),
+    freestyleSize: Math.max(1, Math.min(10, Number(props["freestyleSize"] ?? 5))),
   };
 }

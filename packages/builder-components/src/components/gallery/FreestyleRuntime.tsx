@@ -37,15 +37,14 @@ function computeLayouts(
   const maxZ = items.length;
   items.forEach((img, i) => {
     const useSeed = seed === "__random__" ? `${img.id}_${Math.random()}` : seed;
-    const rX = seededRandom(`${img.id}_x_${useSeed}`);
-    const rY = seededRandom(`${img.id}_y_${useSeed}`);
-    const rRot = seededRandom(`${img.id}_rot`);
-    const rZ = seededRandom(`${img.id}_z`);
-    const rawRot = (rRot - 0.5) * 30;
+    const rX    = seededRandom(`${img.id}_x_${useSeed}`);
+    const rY    = seededRandom(`${img.id}_y_${useSeed}`);
+    const rAngle = seededRandom(`${img.id}_angle_${useSeed}`);
+    const rZ     = seededRandom(`${img.id}_z`);
     result[img.id] = {
       left: rX * Math.max(0, available - cellW),
       top: containerH <= cellH ? 0 : rY * (containerH - cellH),
-      rotation: rotate ? (i % 2 === 0 ? rawRot : -rawRot) : 0,
+      rotation: rotate ? (rAngle - 0.5) * 40 : 0, // ±20°
       zIndex: Math.floor(rZ * maxZ) + 1,
     };
   });
@@ -81,13 +80,14 @@ export function FreestyleRuntime({ items, p }: FreestyleRuntimeProps) {
     return () => ro.disconnect();
   }, []);
 
-  const cellW = Math.floor(containerWidth * 0.42);
+  const size = p.freestyleSize ?? 5;
+  const cellW = Math.floor(containerWidth * (0.13 + (size - 1) * (0.40 / 9)));
   const cellH = Math.floor(cellW * 0.68);
-  const rows = Math.ceil(items.length / Math.max(1, p.columns));
+  const rows = Math.ceil(items.length / 3);
   const containerH = Math.max(cellH + 40, rows * cellH * 0.85 + cellH * 0.6);
 
   const initialLayouts = useRef<Record<string, ImageLayout>>({});
-  const layoutKey = `${items.map((i) => i.id).join(",")}_${containerWidth}_${runtimeSeed.current}_${rotate}`;
+  const layoutKey = `${items.map((i) => i.id).join(",")}_${containerWidth}_${runtimeSeed.current}_${rotate}_${size}`;
   const layoutKeyRef = useRef<string>("");
   if (layoutKeyRef.current !== layoutKey) {
     layoutKeyRef.current = layoutKey;

@@ -381,28 +381,37 @@ export function renderHoneycombTriangle(items: GalleryItem[], p: GalleryProps): 
   );
 }
 
-export function renderFreestyle(items: GalleryItem[], p: GalleryProps): React.ReactElement {
+// freestyleSize 1-10: size 5 = 33% of container width, linear scale ±4% per step
+function freestyleCellWidth(available: number, size: number): number {
+  // size=5 → 33%, size=1 → 13%, size=10 → 53%
+  const pct = 0.13 + (size - 1) * (0.40 / 9);
+  return Math.floor(available * pct);
+}
+
+export function renderFreestyle(items: GalleryItem[], p: GalleryProps, hasExplicitHeight = false): React.ReactElement {
   const available = p.containerWidth ?? 600;
-  const cellW = Math.floor(available * 0.42);
+  const size = p.freestyleSize ?? 5;
+  const cellW = freestyleCellWidth(available, size);
   const cellH = Math.floor(cellW * 0.68);
-  const rows = Math.ceil(items.length / Math.max(1, p.columns));
-  const containerH = Math.max(cellH + 40, rows * cellH * 0.85 + cellH * 0.6);
   const rotate = p.freestyleRotate !== false;
-  // Editor always uses the stable seed (freestyleRandomLayout only affects runtime)
   const seed = p.freestyleRandomSeed ?? "default";
 
+  // If container has an explicit height (user dragged it), use 100% — items scatter within it.
+  // Otherwise compute a natural height based on item count.
+  const rows = Math.ceil(items.length / 3);
+  const naturalH = Math.max(cellH + 40, rows * cellH * 0.85 + cellH * 0.6);
+  const containerH = hasExplicitHeight ? undefined : naturalH;
+
   return (
-    <div style={{ position: "relative", width: "100%", height: containerH, overflow: "hidden" }}>
+    <div style={{ position: "relative", width: "100%", height: containerH ?? "100%", overflow: "hidden" }}>
       {items.map((img, i) => {
-        const rX = seededRandom(`${img.id}_x_${seed}`);
-        const rY = seededRandom(`${img.id}_y_${seed}`);
-        const rRot = seededRandom(`${img.id}_rot`);
-        const rZ = seededRandom(`${img.id}_z`);
+        const rX    = seededRandom(`${img.id}_x_${seed}`);
+        const rY    = seededRandom(`${img.id}_y_${seed}`);
+        const rAngle = seededRandom(`${img.id}_angle_${seed}`);
+        const rZ     = seededRandom(`${img.id}_z`);
         const left = rX * Math.max(0, available - cellW);
-        const top = containerH <= cellH ? 0 : rY * (containerH - cellH);
-        // Use index parity to ensure rotation spreads in both directions regardless of hash
-        const rawRot = (rRot - 0.5) * 30;
-        const rotation = rotate ? (i % 2 === 0 ? rawRot : -rawRot) : 0;
+        const top  = rY * Math.max(0, (containerH ?? naturalH) - cellH);
+        const rotation = rotate ? (rAngle - 0.5) * 60 : 0; // ±30°
         const zIndex = Math.floor(rZ * items.length) + 1;
         return (
           <div
