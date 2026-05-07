@@ -827,11 +827,7 @@
                 "color": "#374151",
                 "lineHeight": "1.7"
               },
-              "tags": [
-                "paragraph",
-                "body",
-                "large"
-              ]
+              "tags": ["paragraph", "body", "large"]
             },
             {
               "id": "text-body-medium",
@@ -855,11 +851,7 @@
                 "color": "#374151",
                 "lineHeight": "1.6"
               },
-              "tags": [
-                "paragraph",
-                "body",
-                "medium"
-              ]
+              "tags": ["paragraph", "body", "medium"]
             },
             {
               "id": "text-body-small",
@@ -883,12 +875,7 @@
                 "color": "#6b7280",
                 "lineHeight": "1.5"
               },
-              "tags": [
-                "paragraph",
-                "body",
-                "small",
-                "caption"
-              ]
+              "tags": ["paragraph", "body", "small", "caption"]
             },
             {
               "id": "text-lead",
@@ -918,11 +905,7 @@
                   "fontSize": "16px"
                 }
               },
-              "tags": [
-                "paragraph",
-                "lead",
-                "intro"
-              ]
+              "tags": ["paragraph", "lead", "intro"]
             },
             {
               "id": "text-quote",
@@ -950,11 +933,7 @@
                 "paddingLeft": "20px",
                 "marginLeft": "0"
               },
-              "tags": [
-                "quote",
-                "blockquote",
-                "citation"
-              ]
+              "tags": ["quote", "blockquote", "citation"]
             }
           ]
         },
@@ -992,11 +971,7 @@
                 "color": "#374151",
                 "lineHeight": "1.6"
               },
-              "tags": [
-                "collapsible",
-                "read-more",
-                "expandable"
-              ]
+              "tags": ["collapsible", "read-more", "expandable"]
             },
             {
               "id": "collapsible-show-more",
@@ -1022,10 +997,7 @@
                 "color": "#6b7280",
                 "lineHeight": "1.7"
               },
-              "tags": [
-                "collapsible",
-                "show-more"
-              ]
+              "tags": ["collapsible", "show-more"]
             },
             {
               "id": "collapsible-link",
@@ -1051,11 +1023,7 @@
                 "color": "#374151",
                 "lineHeight": "1.6"
               },
-              "tags": [
-                "collapsible",
-                "link",
-                "article"
-              ]
+              "tags": ["collapsible", "link", "article"]
             }
           ]
         },
@@ -1094,11 +1062,7 @@
                 "color": "#111827",
                 "padding": "12px 0"
               },
-              "tags": [
-                "marquee",
-                "ticker",
-                "scrolling"
-              ]
+              "tags": ["marquee", "ticker", "scrolling"]
             },
             {
               "id": "marquee-promo",
@@ -1128,12 +1092,7 @@
                 "textTransform": "uppercase",
                 "letterSpacing": "0.05em"
               },
-              "tags": [
-                "marquee",
-                "promo",
-                "banner",
-                "shipping"
-              ]
+              "tags": ["marquee", "promo", "banner", "shipping"]
             },
             {
               "id": "marquee-new-arrivals",
@@ -1160,11 +1119,7 @@
                 "color": "#111827",
                 "padding": "16px 0"
               },
-              "tags": [
-                "marquee",
-                "new-arrivals",
-                "fashion"
-              ]
+              "tags": ["marquee", "new-arrivals", "fashion"]
             },
             {
               "id": "marquee-hello",
@@ -1192,11 +1147,7 @@
                 "color": "#7c3aed",
                 "padding": "14px 0"
               },
-              "tags": [
-                "marquee",
-                "elegant",
-                "italic"
-              ]
+              "tags": ["marquee", "elegant", "italic"]
             }
           ]
         },
@@ -1229,11 +1180,7 @@
                 "fontSize": "100px",
                 "fontWeight": "900"
               },
-              "tags": [
-                "text-mask",
-                "gradient",
-                "purple"
-              ]
+              "tags": ["text-mask", "gradient", "purple"]
             },
             {
               "id": "textmask-sunset",
@@ -1254,11 +1201,7 @@
                 "fontSize": "90px",
                 "fontWeight": "900"
               },
-              "tags": [
-                "text-mask",
-                "gradient",
-                "warm"
-              ]
+              "tags": ["text-mask", "gradient", "warm"]
             },
             {
               "id": "textmask-ocean",
@@ -1279,12 +1222,7 @@
                 "fontSize": "100px",
                 "fontWeight": "900"
               },
-              "tags": [
-                "text-mask",
-                "gradient",
-                "blue",
-                "teal"
-              ]
+              "tags": ["text-mask", "gradient", "blue", "teal"]
             }
           ]
         }
@@ -1337,11 +1275,7 @@
                   "height": "200px"
                 }
               },
-              "tags": [
-                "image",
-                "full-width",
-                "hero"
-              ]
+              "tags": ["image", "full-width", "hero"]
             },
             {
               "id": "image-card",
@@ -1366,11 +1300,7 @@
                 "height": "220px",
                 "borderRadius": "12px"
               },
-              "tags": [
-                "image",
-                "card",
-                "rounded"
-              ]
+              "tags": ["image", "card", "rounded"]
             },
             {
               "id": "image-circle",
@@ -1395,12 +1325,7 @@
                 "height": "120px",
                 "borderRadius": "50%"
               },
-              "tags": [
-                "image",
-                "circle",
-                "avatar",
-                "profile"
-              ]
+              "tags": ["image", "circle", "avatar", "profile"]
             },
             {
               "id": "image-polaroid",
@@ -1429,12 +1354,7 @@
                 "backgroundColor": "#ffffff",
                 "boxShadow": "0 4px 16px rgba(0,0,0,0.15)"
               },
-              "tags": [
-                "image",
-                "polaroid",
-                "vintage",
-                "photo"
-              ]
+              "tags": ["image", "polaroid", "vintage", "photo"]
             },
             {
               "id": "image-banner",
@@ -1464,11 +1384,7 @@
                   "height": "160px"
                 }
               },
-              "tags": [
-                "image",
-                "banner",
-                "landscape"
-              ]
+              "tags": ["image", "banner", "landscape"]
             }
           ]
         }
@@ -2336,12 +2252,7 @@
                 "width": "100%",
                 "minHeight": "80px"
               },
-              "tags": [
-                "grid",
-                "2-column",
-                "layout",
-                "equal"
-              ]
+              "tags": ["grid", "2-column", "layout", "equal"]
             },
             {
               "id": "grid-3-col",
@@ -2373,12 +2284,7 @@
                 "width": "100%",
                 "minHeight": "80px"
               },
-              "tags": [
-                "grid",
-                "3-column",
-                "layout",
-                "equal"
-              ]
+              "tags": ["grid", "3-column", "layout", "equal"]
             },
             {
               "id": "grid-4-col",
@@ -2410,12 +2316,7 @@
                 "width": "100%",
                 "minHeight": "80px"
               },
-              "tags": [
-                "grid",
-                "4-column",
-                "layout",
-                "equal"
-              ]
+              "tags": ["grid", "4-column", "layout", "equal"]
             },
             {
               "id": "grid-sidebar-left",
@@ -2447,13 +2348,7 @@
                 "width": "100%",
                 "minHeight": "80px"
               },
-              "tags": [
-                "grid",
-                "sidebar",
-                "left",
-                "layout",
-                "1-2"
-              ]
+              "tags": ["grid", "sidebar", "left", "layout", "1-2"]
             },
             {
               "id": "grid-sidebar-right",
@@ -2485,13 +2380,7 @@
                 "width": "100%",
                 "minHeight": "80px"
               },
-              "tags": [
-                "grid",
-                "sidebar",
-                "right",
-                "layout",
-                "2-1"
-              ]
+              "tags": ["grid", "sidebar", "right", "layout", "2-1"]
             },
             {
               "id": "grid-2-col-gap-sm",
@@ -2523,12 +2412,7 @@
                 "width": "100%",
                 "minHeight": "80px"
               },
-              "tags": [
-                "grid",
-                "2-column",
-                "tight",
-                "no-padding"
-              ]
+              "tags": ["grid", "2-column", "tight", "no-padding"]
             },
             {
               "id": "grid-3-col-gap-sm",
@@ -2560,12 +2444,7 @@
                 "width": "100%",
                 "minHeight": "80px"
               },
-              "tags": [
-                "grid",
-                "3-column",
-                "tight",
-                "no-padding"
-              ]
+              "tags": ["grid", "3-column", "tight", "no-padding"]
             },
             {
               "id": "grid-1-3",
@@ -2598,12 +2477,7 @@
                 "width": "100%",
                 "minHeight": "80px"
               },
-              "tags": [
-                "grid",
-                "asymmetric",
-                "1-2",
-                "layout"
-              ]
+              "tags": ["grid", "asymmetric", "1-2", "layout"]
             },
             {
               "id": "grid-2-3",
@@ -2636,12 +2510,7 @@
                 "width": "100%",
                 "minHeight": "80px"
               },
-              "tags": [
-                "grid",
-                "asymmetric",
-                "2-1",
-                "layout"
-              ]
+              "tags": ["grid", "asymmetric", "2-1", "layout"]
             }
           ]
         },
@@ -2682,12 +2551,7 @@
                 "width": "100%",
                 "minHeight": "48px"
               },
-              "tags": [
-                "row",
-                "flex",
-                "horizontal",
-                "layout"
-              ]
+              "tags": ["row", "flex", "horizontal", "layout"]
             },
             {
               "id": "row-space-between",
@@ -2718,13 +2582,7 @@
                 "width": "100%",
                 "minHeight": "48px"
               },
-              "tags": [
-                "row",
-                "flex",
-                "space-between",
-                "navbar",
-                "header"
-              ]
+              "tags": ["row", "flex", "space-between", "navbar", "header"]
             },
             {
               "id": "row-centered",
@@ -2756,12 +2614,7 @@
                 "width": "100%",
                 "minHeight": "48px"
               },
-              "tags": [
-                "row",
-                "flex",
-                "center",
-                "layout"
-              ]
+              "tags": ["row", "flex", "center", "layout"]
             },
             {
               "id": "row-wrap",
@@ -2792,12 +2645,7 @@
                 "width": "100%",
                 "minHeight": "48px"
               },
-              "tags": [
-                "row",
-                "flex",
-                "wrap",
-                "layout"
-              ]
+              "tags": ["row", "flex", "wrap", "layout"]
             },
             {
               "id": "column-default",
@@ -2827,12 +2675,7 @@
                 "width": "100%",
                 "minHeight": "80px"
               },
-              "tags": [
-                "column",
-                "flex",
-                "vertical",
-                "layout"
-              ]
+              "tags": ["column", "flex", "vertical", "layout"]
             },
             {
               "id": "column-centered",
@@ -2864,12 +2707,7 @@
                 "width": "100%",
                 "minHeight": "80px"
               },
-              "tags": [
-                "column",
-                "flex",
-                "center",
-                "layout"
-              ]
+              "tags": ["column", "flex", "center", "layout"]
             },
             {
               "id": "column-card",
@@ -2902,12 +2740,7 @@
                 "backgroundColor": "#ffffff",
                 "boxShadow": "0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06)"
               },
-              "tags": [
-                "column",
-                "card",
-                "flex",
-                "shadow"
-              ]
+              "tags": ["column", "card", "flex", "shadow"]
             }
           ]
         },
@@ -2947,12 +2780,7 @@
                 "width": "100%",
                 "minHeight": "80px"
               },
-              "tags": [
-                "container",
-                "flex",
-                "column",
-                "layout"
-              ]
+              "tags": ["container", "flex", "column", "layout"]
             },
             {
               "id": "box-flex-row",
@@ -2986,12 +2814,7 @@
                   "flexDirection": "column"
                 }
               },
-              "tags": [
-                "container",
-                "flex",
-                "row",
-                "horizontal"
-              ]
+              "tags": ["container", "flex", "row", "horizontal"]
             },
             {
               "id": "box-card",
@@ -3023,12 +2846,7 @@
                 "boxShadow": "0 2px 8px rgba(0,0,0,0.08)",
                 "border": "1px solid #f3f4f6"
               },
-              "tags": [
-                "container",
-                "card",
-                "shadow",
-                "rounded"
-              ]
+              "tags": ["container", "card", "shadow", "rounded"]
             },
             {
               "id": "box-centered",
@@ -3065,12 +2883,7 @@
                   "padding": "24px"
                 }
               },
-              "tags": [
-                "container",
-                "centered",
-                "hero",
-                "column"
-              ]
+              "tags": ["container", "centered", "hero", "column"]
             },
             {
               "id": "box-sidebar",
@@ -3103,12 +2916,7 @@
                   "flexDirection": "column"
                 }
               },
-              "tags": [
-                "container",
-                "sidebar",
-                "two-column",
-                "row"
-              ]
+              "tags": ["container", "sidebar", "two-column", "row"]
             }
           ]
         },
@@ -3151,13 +2959,7 @@
                 "border": "1px solid rgba(255,255,255,0.3)",
                 "boxShadow": "0 8px 32px rgba(0,0,0,0.1)"
               },
-              "tags": [
-                "container",
-                "glass",
-                "glassmorphism",
-                "blur",
-                "transparent"
-              ]
+              "tags": ["container", "glass", "glassmorphism", "blur", "transparent"]
             },
             {
               "id": "box-gradient",
@@ -3187,11 +2989,7 @@
                 "background": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                 "color": "#ffffff"
               },
-              "tags": [
-                "container",
-                "gradient",
-                "colorful"
-              ]
+              "tags": ["container", "gradient", "colorful"]
             },
             {
               "id": "box-bordered",
@@ -3221,12 +3019,7 @@
                 "border": "2px solid #e5e7eb",
                 "backgroundColor": "#ffffff"
               },
-              "tags": [
-                "container",
-                "bordered",
-                "outline",
-                "white"
-              ]
+              "tags": ["container", "bordered", "outline", "white"]
             },
             {
               "id": "box-dark",
@@ -3256,12 +3049,7 @@
                 "backgroundColor": "#111827",
                 "color": "#f9fafb"
               },
-              "tags": [
-                "container",
-                "dark",
-                "black",
-                "contrast"
-              ]
+              "tags": ["container", "dark", "black", "contrast"]
             }
           ]
         },
@@ -3293,12 +3081,7 @@
                 "columns": 3,
                 "gap": 16
               },
-              "tags": [
-                "repeater",
-                "card",
-                "grid",
-                "list"
-              ]
+              "tags": ["repeater", "card", "grid", "list"]
             },
             {
               "id": "repeater-2col",
@@ -3323,11 +3106,7 @@
                   "columns": 1
                 }
               },
-              "tags": [
-                "repeater",
-                "2-column",
-                "list"
-              ]
+              "tags": ["repeater", "2-column", "list"]
             },
             {
               "id": "repeater-horizontal-row",
@@ -3352,11 +3131,7 @@
                   "columns": 2
                 }
               },
-              "tags": [
-                "repeater",
-                "horizontal",
-                "row"
-              ]
+              "tags": ["repeater", "horizontal", "row"]
             },
             {
               "id": "repeater-testimonials",
@@ -3381,11 +3156,7 @@
                   "columns": 1
                 }
               },
-              "tags": [
-                "repeater",
-                "testimonials",
-                "reviews"
-              ]
+              "tags": ["repeater", "testimonials", "reviews"]
             },
             {
               "id": "repeater-team",
@@ -3413,11 +3184,7 @@
                   "columns": 2
                 }
               },
-              "tags": [
-                "repeater",
-                "team",
-                "profiles"
-              ]
+              "tags": ["repeater", "team", "profiles"]
             }
           ]
         }
@@ -3430,304 +3197,176 @@
       "order": 3,
       "i18n": {
         "en": "Gallery",
-        "vi": "Th\u01b0 vi\u1ec7n \u1ea3nh"
+        "vi": "Thư viện ảnh"
       },
       "types": [
         {
-          "id": "grid-galleries",
-          "label": "Grid Galleries",
+          "id": "standard-galleries",
+          "label": "Standard",
           "order": 0,
           "layout": "preview",
-          "i18n": {
-            "en": "Grid Galleries",
-            "vi": "B\u1ed9 s\u01b0u t\u1eadp l\u01b0\u1edbi"
-          },
+          "i18n": { "en": "Standard", "vi": "Tiêu chuẩn" },
           "items": [
             {
-              "id": "gallery-grid-3col",
-              "componentType": "GalleryGrid",
-              "name": "3-Column Grid",
+              "id": "gallery-grid",
+              "componentType": "GalleryPro",
+              "name": "Grid",
               "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "3-Column Grid"
-                },
-                "vi": {
-                  "name": "L\u01b0\u1edbi 3 c\u1ed9t"
-                }
-              },
-              "props": {
-                "columns": 3,
-                "gap": 8,
-                "aspectRatio": "1/1"
-              },
-              "tags": [
-                "gallery",
-                "grid",
-                "3-column"
-              ]
+              "i18n": { "en": { "name": "Grid" }, "vi": { "name": "Lưới" } },
+              "props": { "layoutMode": "grid", "columns": 3, "gap": 12, "aspectRatio": "1/1" },
+              "tags": ["gallery", "grid"]
             },
             {
-              "id": "gallery-grid-2col",
-              "componentType": "GalleryGrid",
-              "name": "2-Column Grid",
+              "id": "gallery-masonry",
+              "componentType": "GalleryPro",
+              "name": "Masonry",
               "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "2-Column Grid"
-                },
-                "vi": {
-                  "name": "L\u01b0\u1edbi 2 c\u1ed9t"
-                }
-              },
-              "props": {
-                "columns": 2,
-                "gap": 12,
-                "aspectRatio": "4/3"
-              },
-              "tags": [
-                "gallery",
-                "grid",
-                "2-column"
-              ]
+              "i18n": { "en": { "name": "Masonry" }, "vi": { "name": "Masonry" } },
+              "props": { "layoutMode": "masonry", "columns": 3, "gap": 12 },
+              "tags": ["gallery", "masonry", "pinterest"]
             },
             {
-              "id": "gallery-grid-4col",
-              "componentType": "GalleryGrid",
-              "name": "4-Column Grid",
+              "id": "gallery-collage",
+              "componentType": "GalleryPro",
+              "name": "Collage",
               "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "4-Column Grid"
-                },
-                "vi": {
-                  "name": "L\u01b0\u1edbi 4 c\u1ed9t"
-                }
-              },
-              "props": {
-                "columns": 4,
-                "gap": 4,
-                "aspectRatio": "1/1"
-              },
-              "tags": [
-                "gallery",
-                "grid",
-                "4-column"
-              ]
+              "i18n": { "en": { "name": "Collage" }, "vi": { "name": "Ghép ảnh" } },
+              "props": { "layoutMode": "collage", "gap": 8 },
+              "tags": ["gallery", "collage", "mosaic"]
             },
             {
-              "id": "gallery-grid-portrait",
-              "componentType": "GalleryGrid",
-              "name": "Portrait Grid",
+              "id": "gallery-thumbnails",
+              "componentType": "GalleryPro",
+              "name": "Thumbnails",
               "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Portrait Grid"
-                },
-                "vi": {
-                  "name": "L\u01b0\u1edbi d\u1ecdc"
-                }
-              },
-              "props": {
-                "columns": 3,
-                "gap": 8,
-                "aspectRatio": "3/4"
-              },
-              "tags": [
-                "gallery",
-                "grid",
-                "portrait"
-              ]
+              "i18n": { "en": { "name": "Thumbnails" }, "vi": { "name": "Xem nhanh" } },
+              "props": { "layoutMode": "thumbnails", "gap": 8 },
+              "tags": ["gallery", "thumbnails", "filmstrip"]
             },
             {
-              "id": "gallery-grid-widescreen",
-              "componentType": "GalleryGrid",
-              "name": "Widescreen Grid",
+              "id": "gallery-strip",
+              "componentType": "GalleryPro",
+              "name": "Strip",
               "thumbnail": null,
-              "i18n": {
-                "en": {
-                  "name": "Widescreen Grid"
-                },
-                "vi": {
-                  "name": "L\u01b0\u1edbi m\u00e0n h\u00ecnh r\u1ed9ng"
-                }
-              },
-              "props": {
-                "columns": 2,
-                "gap": 16,
-                "aspectRatio": "16/9"
-              },
-              "tags": [
-                "gallery",
-                "grid",
-                "widescreen"
-              ]
+              "i18n": { "en": { "name": "Strip" }, "vi": { "name": "Dải ngang" } },
+              "props": { "layoutMode": "strip", "gap": 8 },
+              "tags": ["gallery", "strip", "editorial"]
             },
             {
-              "id": "gallery-masonry-3",
-              "componentType": "GalleryGrid",
-              "name": "Masonry 3-Col",
+              "id": "gallery-column",
+              "componentType": "GalleryPro",
+              "name": "Column",
               "thumbnail": null,
-              "props": {
-                "columns": 3,
-                "gap": 8,
-                "layout": "masonry"
-              },
-              "tags": [
-                "masonry",
-                "gallery",
-                "3-col"
-              ]
+              "i18n": { "en": { "name": "Column" }, "vi": { "name": "Cột" } },
+              "props": { "layoutMode": "column", "gap": 12 },
+              "tags": ["gallery", "column"]
             },
             {
-              "id": "gallery-masonry-2",
-              "componentType": "GalleryGrid",
-              "name": "Masonry 2-Col",
+              "id": "gallery-bricks",
+              "componentType": "GalleryPro",
+              "name": "Bricks",
               "thumbnail": null,
-              "props": {
-                "columns": 2,
-                "gap": 12,
-                "layout": "masonry"
-              },
-              "tags": [
-                "masonry",
-                "gallery",
-                "2-col"
-              ]
+              "i18n": { "en": { "name": "Bricks" }, "vi": { "name": "Gạch" } },
+              "props": { "layoutMode": "bricks", "gap": 8, "aspectRatio": "4/3" },
+              "tags": ["gallery", "bricks", "metro"]
             }
           ]
         },
         {
-          "id": "pro-galleries",
-          "label": "Pro Galleries",
+          "id": "slide-galleries",
+          "label": "Slides & Carousel",
           "order": 1,
           "layout": "preview",
-          "i18n": {
-            "en": "Pro Galleries",
-            "vi": "Th\u01b0 vi\u1ec7n chuy\u00ean nghi\u1ec7p"
-          },
+          "i18n": { "en": "Slides & Carousel", "vi": "Trình chiếu" },
           "items": [
             {
-              "id": "pro-mosaic",
+              "id": "gallery-slider",
               "componentType": "GalleryPro",
-              "name": "Mosaic Large",
+              "name": "Slider",
+              "thumbnail": null,
+              "i18n": { "en": { "name": "Slider" }, "vi": { "name": "Slider" } },
               "props": {
-                "layout": "mosaic",
-                "gap": 8
-              }
+                "layoutMode": "slider",
+                "aspectRatio": "16/9",
+                "showArrows": true,
+                "showDots": true,
+                "loop": true
+              },
+              "tags": ["gallery", "slider", "carousel"]
             },
             {
-              "id": "pro-magazine",
+              "id": "gallery-slider-square",
               "componentType": "GalleryPro",
-              "name": "Magazine Grid",
+              "name": "Slider Square",
+              "thumbnail": null,
+              "i18n": { "en": { "name": "Slider Square" }, "vi": { "name": "Slider vuông" } },
               "props": {
-                "layout": "magazine",
-                "gap": 12
-              }
+                "layoutMode": "slider",
+                "aspectRatio": "1/1",
+                "showArrows": true,
+                "showDots": true,
+                "loop": true
+              },
+              "tags": ["gallery", "slider", "square"]
             },
             {
-              "id": "pro-strip",
+              "id": "gallery-slideshow",
               "componentType": "GalleryPro",
-              "name": "Strip Layout",
+              "name": "Slideshow",
+              "thumbnail": null,
+              "i18n": { "en": { "name": "Slideshow" }, "vi": { "name": "Trình chiếu tự động" } },
               "props": {
-                "layout": "strip",
-                "gap": 8
-              }
-            },
-            {
-              "id": "pro-editorial",
-              "componentType": "GalleryPro",
-              "name": "Editorial",
-              "props": {
-                "layout": "editorial",
-                "gap": 12
-              }
-            },
-            {
-              "id": "pro-showcase",
-              "componentType": "GalleryPro",
-              "name": "Showcase",
-              "props": {
-                "layout": "showcase",
-                "gap": 8
-              }
+                "layoutMode": "slideshow",
+                "autoPlay": true,
+                "autoPlaySpeed": 4000,
+                "loop": true
+              },
+              "tags": ["gallery", "slideshow", "autoplay", "fullscreen"]
             }
           ]
         },
         {
-          "id": "slider-galleries",
-          "label": "Slider Galleries",
+          "id": "creative-galleries",
+          "label": "Creative",
           "order": 2,
           "layout": "preview",
-          "i18n": {
-            "en": "Slider Galleries",
-            "vi": "B\u1ed9 s\u01b0u t\u1eadp tr\u00ecnh chi\u1ebfu"
-          },
+          "i18n": { "en": "Creative", "vi": "Sáng tạo" },
           "items": [
             {
-              "id": "slider-basic",
-              "componentType": "GallerySlider",
-              "name": "Basic Slider",
-              "props": {
-                "slideCount": 5,
-                "showArrows": true,
-                "showDots": true,
-                "loop": true,
-                "aspectRatio": "16/9",
-                "shape": "rectangle"
-              }
+              "id": "gallery-honeycomb",
+              "componentType": "GalleryPro",
+              "name": "Honeycomb",
+              "thumbnail": null,
+              "i18n": { "en": { "name": "Honeycomb" }, "vi": { "name": "Tổ ong" } },
+              "props": { "layoutMode": "honeycomb", "columns": 4, "gap": 8 },
+              "tags": ["gallery", "honeycomb", "hexagon", "creative"]
             },
             {
-              "id": "slider-square",
-              "componentType": "GallerySlider",
-              "name": "Square Slider",
-              "props": {
-                "slideCount": 5,
-                "showArrows": true,
-                "showDots": true,
-                "loop": true,
-                "aspectRatio": "1/1",
-                "shape": "rectangle"
-              }
+              "id": "gallery-freestyle",
+              "componentType": "GalleryPro",
+              "name": "Freestyle",
+              "thumbnail": null,
+              "i18n": { "en": { "name": "Freestyle" }, "vi": { "name": "Ngẫu nhiên" } },
+              "props": { "layoutMode": "freestyle", "columns": 3 },
+              "tags": ["gallery", "freestyle", "scattered", "creative"]
             },
             {
-              "id": "slider-circle",
-              "componentType": "GallerySlider",
-              "name": "Circle Slider",
-              "props": {
-                "slideCount": 5,
-                "showArrows": true,
-                "showDots": true,
-                "loop": true,
-                "aspectRatio": "1/1",
-                "shape": "circle"
-              }
+              "id": "gallery-3d-carousel",
+              "componentType": "GalleryPro",
+              "name": "3D Carousel",
+              "thumbnail": null,
+              "i18n": { "en": { "name": "3D Carousel" }, "vi": { "name": "Carousel 3D" } },
+              "props": { "layoutMode": "carousel-3d" },
+              "tags": ["gallery", "3d", "carousel", "coverflow", "creative"]
             },
             {
-              "id": "slider-oval",
-              "componentType": "GallerySlider",
-              "name": "Oval Slider",
-              "props": {
-                "slideCount": 5,
-                "showArrows": true,
-                "showDots": true,
-                "loop": true,
-                "aspectRatio": "4/3",
-                "shape": "oval"
-              }
-            },
-            {
-              "id": "slider-portrait",
-              "componentType": "GallerySlider",
-              "name": "Portrait Slider",
-              "props": {
-                "slideCount": 5,
-                "showArrows": true,
-                "showDots": false,
-                "loop": true,
-                "aspectRatio": "3/4",
-                "shape": "rectangle"
-              }
+              "id": "gallery-stacked",
+              "componentType": "GalleryPro",
+              "name": "Stacked",
+              "thumbnail": null,
+              "i18n": { "en": { "name": "Stacked" }, "vi": { "name": "Xếp chồng" } },
+              "props": { "layoutMode": "stacked" },
+              "tags": ["gallery", "stacked", "cards", "depth", "creative"]
             }
           ]
         }
@@ -3773,11 +3412,7 @@
                 "width": "120px",
                 "height": "80px"
               },
-              "tags": [
-                "shape",
-                "rectangle",
-                "box"
-              ]
+              "tags": ["shape", "rectangle", "box"]
             },
             {
               "id": "shape-circle",
@@ -3800,11 +3435,7 @@
                 "width": "100px",
                 "height": "100px"
               },
-              "tags": [
-                "shape",
-                "circle",
-                "round"
-              ]
+              "tags": ["shape", "circle", "round"]
             },
             {
               "id": "shape-triangle",
@@ -3827,10 +3458,7 @@
                 "width": "100px",
                 "height": "100px"
               },
-              "tags": [
-                "shape",
-                "triangle"
-              ]
+              "tags": ["shape", "triangle"]
             },
             {
               "id": "shape-star",
@@ -3853,11 +3481,7 @@
                 "width": "100px",
                 "height": "100px"
               },
-              "tags": [
-                "shape",
-                "star",
-                "favorite"
-              ]
+              "tags": ["shape", "star", "favorite"]
             },
             {
               "id": "shape-heart",
@@ -3880,11 +3504,7 @@
                 "width": "100px",
                 "height": "100px"
               },
-              "tags": [
-                "shape",
-                "heart",
-                "love"
-              ]
+              "tags": ["shape", "heart", "love"]
             },
             {
               "id": "shape-hexagon",
@@ -3907,10 +3527,7 @@
                 "width": "100px",
                 "height": "100px"
               },
-              "tags": [
-                "shape",
-                "hexagon"
-              ]
+              "tags": ["shape", "hexagon"]
             },
             {
               "id": "shape-diamond",
@@ -3933,10 +3550,7 @@
                 "width": "80px",
                 "height": "80px"
               },
-              "tags": [
-                "shape",
-                "diamond"
-              ]
+              "tags": ["shape", "diamond"]
             },
             {
               "id": "shape-blob",
@@ -3959,12 +3573,7 @@
                 "width": "150px",
                 "height": "150px"
               },
-              "tags": [
-                "shape",
-                "blob",
-                "organic",
-                "decorative"
-              ]
+              "tags": ["shape", "blob", "organic", "decorative"]
             }
           ]
         },
@@ -3998,11 +3607,7 @@
                 "width": "80px",
                 "height": "50px"
               },
-              "tags": [
-                "arrow",
-                "right",
-                "direction"
-              ]
+              "tags": ["arrow", "right", "direction"]
             },
             {
               "id": "shape-arrow-left",
@@ -4025,11 +3630,7 @@
                 "width": "80px",
                 "height": "50px"
               },
-              "tags": [
-                "arrow",
-                "left",
-                "direction"
-              ]
+              "tags": ["arrow", "left", "direction"]
             },
             {
               "id": "shape-arrow-up",
@@ -4052,11 +3653,7 @@
                 "width": "50px",
                 "height": "80px"
               },
-              "tags": [
-                "arrow",
-                "up",
-                "direction"
-              ]
+              "tags": ["arrow", "up", "direction"]
             },
             {
               "id": "shape-arrow-down",
@@ -4079,11 +3676,7 @@
                 "width": "50px",
                 "height": "80px"
               },
-              "tags": [
-                "arrow",
-                "down",
-                "direction"
-              ]
+              "tags": ["arrow", "down", "direction"]
             }
           ]
         },
@@ -4117,11 +3710,7 @@
               "style": {
                 "width": "100%"
               },
-              "tags": [
-                "divider",
-                "line",
-                "solid"
-              ]
+              "tags": ["divider", "line", "solid"]
             },
             {
               "id": "divider-thick",
@@ -4144,12 +3733,7 @@
               "style": {
                 "width": "80px"
               },
-              "tags": [
-                "divider",
-                "line",
-                "thick",
-                "accent"
-              ]
+              "tags": ["divider", "line", "thick", "accent"]
             },
             {
               "id": "divider-accent",
@@ -4172,12 +3756,7 @@
               "style": {
                 "width": "60px"
               },
-              "tags": [
-                "divider",
-                "line",
-                "accent",
-                "color"
-              ]
+              "tags": ["divider", "line", "accent", "color"]
             },
             {
               "id": "divider-vertical",
@@ -4201,11 +3780,7 @@
                 "height": "80px",
                 "width": "1px"
               },
-              "tags": [
-                "divider",
-                "line",
-                "vertical"
-              ]
+              "tags": ["divider", "line", "vertical"]
             }
           ]
         }
@@ -4275,13 +3850,7 @@
                 "activeIndex": 0,
                 "itemStyle": "plain"
               },
-              "tags": [
-                "menu",
-                "horizontal",
-                "plain",
-                "navigation",
-                "themed"
-              ]
+              "tags": ["menu", "horizontal", "plain", "navigation", "themed"]
             },
             {
               "id": "menu-themed-underline-all",
@@ -4327,13 +3896,7 @@
                 "activeIndex": 0,
                 "itemStyle": "underline-all"
               },
-              "tags": [
-                "menu",
-                "horizontal",
-                "underline",
-                "navigation",
-                "themed"
-              ]
+              "tags": ["menu", "horizontal", "underline", "navigation", "themed"]
             },
             {
               "id": "menu-themed-boxed-all",
@@ -4379,13 +3942,7 @@
                 "activeIndex": 0,
                 "itemStyle": "boxed-all"
               },
-              "tags": [
-                "menu",
-                "horizontal",
-                "boxed",
-                "navigation",
-                "themed"
-              ]
+              "tags": ["menu", "horizontal", "boxed", "navigation", "themed"]
             }
           ]
         },
@@ -4443,12 +4000,7 @@
                 "activeIndex": 1,
                 "itemStyle": "plain"
               },
-              "tags": [
-                "menu",
-                "horizontal",
-                "classic",
-                "navigation"
-              ]
+              "tags": ["menu", "horizontal", "classic", "navigation"]
             },
             {
               "id": "menu-horizontal-pill-outlined",
@@ -4496,13 +4048,7 @@
                 "activeIndex": 1,
                 "itemStyle": "pill-outlined"
               },
-              "tags": [
-                "menu",
-                "horizontal",
-                "pill",
-                "outlined",
-                "green"
-              ]
+              "tags": ["menu", "horizontal", "pill", "outlined", "green"]
             },
             {
               "id": "menu-horizontal-dark-active",
@@ -4550,13 +4096,7 @@
                 "activeIndex": 1,
                 "itemStyle": "filled"
               },
-              "tags": [
-                "menu",
-                "horizontal",
-                "dark",
-                "filled",
-                "bordered"
-              ]
+              "tags": ["menu", "horizontal", "dark", "filled", "bordered"]
             },
             {
               "id": "menu-horizontal-underline-spaced",
@@ -4603,13 +4143,7 @@
                 "activeIndex": 1,
                 "itemStyle": "underline"
               },
-              "tags": [
-                "menu",
-                "horizontal",
-                "underline",
-                "spaced",
-                "purple"
-              ]
+              "tags": ["menu", "horizontal", "underline", "spaced", "purple"]
             },
             {
               "id": "menu-horizontal-pill-all-coral",
@@ -4655,13 +4189,7 @@
                 "activeIndex": 1,
                 "itemStyle": "pill-all"
               },
-              "tags": [
-                "menu",
-                "horizontal",
-                "pill",
-                "coral",
-                "orange"
-              ]
+              "tags": ["menu", "horizontal", "pill", "coral", "orange"]
             },
             {
               "id": "menu-horizontal-button-all",
@@ -4707,13 +4235,7 @@
                 "activeIndex": 1,
                 "itemStyle": "button-all"
               },
-              "tags": [
-                "menu",
-                "horizontal",
-                "button",
-                "blue",
-                "solid"
-              ]
+              "tags": ["menu", "horizontal", "button", "blue", "solid"]
             }
           ]
         },
@@ -4767,12 +4289,7 @@
                 "activeColor": "#4f46e5",
                 "itemStyle": "plain"
               },
-              "tags": [
-                "menu",
-                "hamburger",
-                "responsive",
-                "mobile"
-              ]
+              "tags": ["menu", "hamburger", "responsive", "mobile"]
             }
           ]
         },
@@ -4804,12 +4321,7 @@
                 "anchorId": "section-1",
                 "label": "Section 1"
               },
-              "tags": [
-                "anchor",
-                "scroll",
-                "navigation",
-                "target"
-              ]
+              "tags": ["anchor", "scroll", "navigation", "target"]
             },
             {
               "id": "anchor-top",
@@ -4828,11 +4340,7 @@
                 "anchorId": "top",
                 "label": "Top of Page"
               },
-              "tags": [
-                "anchor",
-                "scroll",
-                "top"
-              ]
+              "tags": ["anchor", "scroll", "top"]
             }
           ]
         }
@@ -4885,11 +4393,7 @@
                 "padding": "24px",
                 "borderRadius": "12px"
               },
-              "tags": [
-                "testimonial",
-                "quote",
-                "review"
-              ]
+              "tags": ["testimonial", "quote", "review"]
             },
             {
               "id": "testimonial-emerald",
@@ -4918,11 +4422,7 @@
                 "padding": "24px",
                 "borderRadius": "12px"
               },
-              "tags": [
-                "testimonial",
-                "quote",
-                "green"
-              ]
+              "tags": ["testimonial", "quote", "green"]
             },
             {
               "id": "testimonial-rose",
@@ -4951,11 +4451,7 @@
                 "padding": "24px",
                 "borderRadius": "12px"
               },
-              "tags": [
-                "testimonial",
-                "quote",
-                "rose"
-              ]
+              "tags": ["testimonial", "quote", "rose"]
             }
           ]
         },
@@ -4998,11 +4494,7 @@
                 "padding": "28px 24px",
                 "borderRadius": "16px"
               },
-              "tags": [
-                "pricing",
-                "plan",
-                "starter"
-              ]
+              "tags": ["pricing", "plan", "starter"]
             },
             {
               "id": "pricing-pro",
@@ -5033,12 +4525,7 @@
                 "padding": "28px 24px",
                 "borderRadius": "16px"
               },
-              "tags": [
-                "pricing",
-                "plan",
-                "pro",
-                "popular"
-              ]
+              "tags": ["pricing", "plan", "pro", "popular"]
             },
             {
               "id": "pricing-enterprise",
@@ -5069,11 +4556,7 @@
                 "padding": "28px 24px",
                 "borderRadius": "16px"
               },
-              "tags": [
-                "pricing",
-                "plan",
-                "enterprise"
-              ]
+              "tags": ["pricing", "plan", "enterprise"]
             }
           ]
         },
@@ -5114,12 +4597,7 @@
                 "width": "100%",
                 "padding": "80px 40px"
               },
-              "tags": [
-                "hero",
-                "gradient",
-                "heading",
-                "indigo"
-              ]
+              "tags": ["hero", "gradient", "heading", "indigo"]
             },
             {
               "id": "hero-rose-orange",
@@ -5148,12 +4626,7 @@
                 "width": "100%",
                 "padding": "80px 40px"
               },
-              "tags": [
-                "hero",
-                "gradient",
-                "heading",
-                "warm"
-              ]
+              "tags": ["hero", "gradient", "heading", "warm"]
             },
             {
               "id": "hero-dark",
@@ -5182,11 +4655,7 @@
                 "width": "100%",
                 "padding": "80px 40px"
               },
-              "tags": [
-                "hero",
-                "dark",
-                "heading"
-              ]
+              "tags": ["hero", "dark", "heading"]
             }
           ]
         }

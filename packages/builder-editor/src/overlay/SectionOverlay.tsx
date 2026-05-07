@@ -249,14 +249,25 @@ export const SectionOverlay = memo(function SectionOverlay({
                   onMouseEnter={() => setHovered(b.nodeId)}
                   onMouseLeave={() => setHovered(null)}
                 >
-                  <div style={{ 
-                    pointerEvents: "auto", 
-                    display: "flex", 
-                    flexDirection: "column", 
-                    alignItems: "center", 
+                  {(() => {
+                    // Natural canvas-space size of the button group at zoom=1
+                    const NATURAL_H = 160; // 110px button + 20px gap + ~30px label
+
+                    // Scale up to compensate zoom-out, but cap so group fits within section
+                    const inverseZoom = 1 / zoom;
+                    const maxBySection = (b.height * 0.9) / NATURAL_H;
+                    // Only scale up (≥1), never shrink below natural size
+                    const effectiveScale = Math.min(Math.max(inverseZoom, 1), Math.max(maxBySection, 1));
+
+                    return (
+                  <div style={{
+                    pointerEvents: "auto",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
                     gap: 20,
-                    // The container naturally scales with zoom because it is inside the CanvasRoot transform layer.
-                    // We ensure no "1 / zoom" adjustments are applied to the middle buttons.
+                    transform: `scale(${effectiveScale})`,
+                    transformOrigin: "center center",
                   }}>
                     <p style={{ 
                       fontSize: 14, 
@@ -280,6 +291,7 @@ export const SectionOverlay = memo(function SectionOverlay({
                           cursor: "pointer", 
                           transition: "transform 0.2s, border-color 0.2s, box-shadow 0.2s",
                           boxShadow: `0 4px 12px rgba(0,0,0,0.03)`,
+                          padding: "4px"
                         }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.borderColor = "#6366f1";
@@ -323,6 +335,7 @@ export const SectionOverlay = memo(function SectionOverlay({
                                 cursor: "pointer", 
                                 transition: "transform 0.2s, border-color 0.2s, box-shadow 0.2s",
                                 boxShadow: `0 4px 12px rgba(0,0,0,0.03)`,
+                                padding: "4px"
                               }}
                               onMouseEnter={(e) => {
                                 e.currentTarget.style.borderColor = "#8b5cf6";
@@ -361,6 +374,7 @@ export const SectionOverlay = memo(function SectionOverlay({
                           cursor: "pointer", 
                           transition: "transform 0.2s, border-color 0.2s, box-shadow 0.2s",
                           boxShadow: `0 4px 12px rgba(0,0,0,0.03)`,
+                          padding: "4px"
                         }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.borderColor = "#64748b";
@@ -386,6 +400,8 @@ export const SectionOverlay = memo(function SectionOverlay({
                       </button>
                     </div>
                   </div>
+                    );
+                  })()}
                 </div>
               </>
             )}
