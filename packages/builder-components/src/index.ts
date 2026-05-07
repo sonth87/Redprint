@@ -112,6 +112,24 @@ export const GalleryHoneycombComponent: ComponentDefinition = extendComponent(Ga
   defaultProps: { ...GalleryProComponent.defaultProps, layoutMode: "honeycomb", columns: 4 },
 });
 
+export const GalleryHoneycombDiamondComponent: ComponentDefinition = extendComponent(GalleryProComponent, {
+  type: "GalleryHoneycombDiamond",
+  name: "Gallery Diamond",
+  subGroup: "gallery-creative",
+  description: "Diamond-clipped images in an offset geometric grid.",
+  tags: ["gallery", "honeycomb", "diamond", "creative"],
+  defaultProps: { ...GalleryProComponent.defaultProps, layoutMode: "honeycomb-diamond", columns: 4 },
+});
+
+export const GalleryHoneycombTriangleComponent: ComponentDefinition = extendComponent(GalleryProComponent, {
+  type: "GalleryHoneycombTriangle",
+  name: "Gallery Triangle",
+  subGroup: "gallery-creative",
+  description: "Alternating up/down triangle clips tessellated into a grid.",
+  tags: ["gallery", "honeycomb", "triangle", "creative"],
+  defaultProps: { ...GalleryProComponent.defaultProps, layoutMode: "honeycomb-triangle", columns: 4 },
+});
+
 export const GalleryFreestyleComponent: ComponentDefinition = extendComponent(GalleryProComponent, {
   type: "GalleryFreestyle",
   name: "Gallery Freestyle",
@@ -160,6 +178,8 @@ export const BASE_COMPONENTS: ComponentDefinition[] = [
   GallerySlideshowComponent,
   GalleryThumbnailsComponent,
   GalleryHoneycombComponent,
+  GalleryHoneycombDiamondComponent,
+  GalleryHoneycombTriangleComponent,
   GalleryFreestyleComponent,
   Gallery3DCarouselComponent,
   GalleryStackedComponent,

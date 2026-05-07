@@ -9,12 +9,16 @@ import {
   renderColumn,
   renderBricks,
   renderHoneycomb,
+  renderHoneycombDiamond,
+  renderHoneycombTriangle,
   renderFreestyle,
   renderStacked,
 } from "./renderLayouts";
 import { SwiperSliderRuntime } from "./SwiperSliderRuntime";
 import { ThumbnailsEditorPreview } from "./ThumbnailsEditorPreview";
 import { ThumbnailsRuntime } from "./ThumbnailsRuntime";
+import { FreestyleRuntime } from "./FreestyleRuntime";
+import { HoneycombRuntime } from "./HoneycombRuntime";
 
 export function renderByMode(
   mode: GalleryLayoutMode,
@@ -38,9 +42,21 @@ export function renderByMode(
     case "bricks":
       return renderBricks(items, p);
     case "honeycomb":
-      return renderHoneycomb(items, p);
+      return isEditor
+        ? renderHoneycomb(items, p)
+        : <HoneycombRuntime mode="honeycomb" items={items} p={p} />;
+    case "honeycomb-diamond":
+      return isEditor
+        ? renderHoneycombDiamond(items, p)
+        : <HoneycombRuntime mode="honeycomb-diamond" items={items} p={p} />;
+    case "honeycomb-triangle":
+      return isEditor
+        ? renderHoneycombTriangle(items, p)
+        : <HoneycombRuntime mode="honeycomb-triangle" items={items} p={p} />;
     case "freestyle":
-      return renderFreestyle(items, p);
+      return isEditor
+        ? renderFreestyle(items, p)
+        : <FreestyleRuntime items={items} p={p} />;
     case "stacked":
       return renderStacked(items, p);
     case "slider":

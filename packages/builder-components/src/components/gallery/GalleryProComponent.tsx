@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useState, useLayoutEffect } from "react";
 import type { ComponentDefinition } from "@ui-builder/builder-core";
 import {
   type GalleryLayoutMode,
@@ -34,6 +34,59 @@ const PROP_SCHEMA = [
   },
 ];
 
+interface GalleryRendererProps {
+  node: { id: string; props: Record<string, unknown> };
+  style: React.CSSProperties;
+  isEditor: boolean;
+}
+
+function GalleryRenderer({ node, style, isEditor }: GalleryRendererProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(600);
+
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect.width;
+      if (w && w > 0) setContainerWidth(Math.floor(w));
+    });
+    ro.observe(el);
+    // measure immediately
+    const initialW = el.getBoundingClientRect().width;
+    if (initialW > 0) setContainerWidth(Math.floor(initialW));
+    return () => ro.disconnect();
+  }, []);
+
+  const items = normalizeGalleryItems(node.props["items"]);
+  const p = { ...extractProps(node.props), containerWidth };
+  const cc = normalizeCarouselConfig(node.props["carouselConfig"] as CarouselConfig);
+  const layoutMode = (node.props["layoutMode"] as GalleryLayoutMode) ?? "grid";
+  const s = style as React.CSSProperties;
+  const hasExplicitHeight = Boolean(s.height) && s.height !== "auto";
+
+  if (isEditor) {
+    const bleedFadeMask = "linear-gradient(to right, transparent, black 200px, black calc(100% - 200px), transparent)";
+    const stretchStyle: React.CSSProperties = p.stretchFullWidth
+      ? { marginLeft: "-250px", marginRight: "-250px", width: "calc(100% + 500px)", WebkitMaskImage: bleedFadeMask, maskImage: bleedFadeMask }
+      : {};
+    return (
+      <div ref={containerRef} data-node-id={node.id} style={{ overflow: "hidden", ...s, ...stretchStyle }}>
+        {renderByMode(layoutMode, items, p, cc, true, hasExplicitHeight)}
+      </div>
+    );
+  }
+
+  const stretchStyle: React.CSSProperties = p.stretchFullWidth
+    ? { width: "100vw", marginLeft: "calc(-50vw + 50%)" }
+    : {};
+  return (
+    <div ref={containerRef} style={{ ...s, ...stretchStyle }}>
+      {renderByMode(layoutMode, items, p, cc, false, hasExplicitHeight)}
+    </div>
+  );
+}
+
 export const GalleryProComponent: ComponentDefinition = {
   type: "GalleryPro",
   name: "Gallery Pro",
@@ -41,7 +94,7 @@ export const GalleryProComponent: ComponentDefinition = {
   group: "gallery",
   subGroup: "gallery-standard",
   description:
-    "Advanced gallery with 13 layout modes. Click 'Manage Media' to add/reorder images, 'Settings' to change layout.",
+    "Advanced gallery with 15 layout modes. Click 'Manage Media' to add/reorder images, 'Settings' to change layout.",
   version: "3.0.0",
   tags: [
     "gallery",
@@ -76,33 +129,10 @@ export const GalleryProComponent: ComponentDefinition = {
   defaultStyle: { width: "100%", padding: "0px" },
 
   editorRenderer: ({ node, style }) => {
-    const items = normalizeGalleryItems(node.props["items"]);
-    const p = extractProps(node.props);
-    const cc = normalizeCarouselConfig(node.props["carouselConfig"]);
-    const layoutMode = (node.props["layoutMode"] as GalleryLayoutMode) ?? "grid";
-    const s = style as React.CSSProperties;
-    const hasExplicitHeight = Boolean(s.height) && s.height !== "auto";
-    const bleedFadeMask = "linear-gradient(to right, transparent, black 200px, black calc(100% - 200px), transparent)";
-    const stretchStyle: React.CSSProperties = p.stretchFullWidth
-      ? { marginLeft: "-250px", marginRight: "-250px", width: "calc(100% + 500px)", WebkitMaskImage: bleedFadeMask, maskImage: bleedFadeMask }
-      : {};
-    return (
-      <div data-node-id={node.id} style={{ overflow: "hidden", ...s, ...stretchStyle }}>
-        {renderByMode(layoutMode, items, p, cc, true, hasExplicitHeight)}
-      </div>
-    );
+    return <GalleryRenderer node={node} style={style as React.CSSProperties} isEditor={true} />;
   },
 
   runtimeRenderer: ({ node, style }) => {
-    const items = normalizeGalleryItems(node.props["items"]);
-    const p = extractProps(node.props);
-    const cc = normalizeCarouselConfig(node.props["carouselConfig"] as CarouselConfig);
-    const layoutMode = (node.props["layoutMode"] as GalleryLayoutMode) ?? "grid";
-    const s = style as React.CSSProperties;
-    const hasExplicitHeight = Boolean(s.height) && s.height !== "auto";
-    const stretchStyle: React.CSSProperties = p.stretchFullWidth
-      ? { width: "100vw", marginLeft: "calc(-50vw + 50%)" }
-      : {};
-    return <div style={{ ...s, ...stretchStyle }}>{renderByMode(layoutMode, items, p, cc, false, hasExplicitHeight)}</div>;
+    return <GalleryRenderer node={node} style={style as React.CSSProperties} isEditor={false} />;
   },
 };

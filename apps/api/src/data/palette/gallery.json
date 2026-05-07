@@ -133,6 +133,24 @@
           "tags": ["gallery", "honeycomb", "hexagon", "creative"]
         },
         {
+          "id": "gallery-honeycomb-diamond",
+          "componentType": "GalleryPro",
+          "name": "Diamond",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Diamond" }, "vi": { "name": "Kim cương" } },
+          "props": { "layoutMode": "honeycomb-diamond", "columns": 4, "gap": 6 },
+          "tags": ["gallery", "honeycomb", "diamond", "creative"]
+        },
+        {
+          "id": "gallery-honeycomb-triangle",
+          "componentType": "GalleryPro",
+          "name": "Triangle",
+          "thumbnail": null,
+          "i18n": { "en": { "name": "Triangle" }, "vi": { "name": "Tam giác" } },
+          "props": { "layoutMode": "honeycomb-triangle", "columns": 4, "gap": 4 },
+          "tags": ["gallery", "honeycomb", "triangle", "creative"]
+        },
+        {
           "id": "gallery-freestyle",
           "componentType": "GalleryPro",
           "name": "Freestyle",

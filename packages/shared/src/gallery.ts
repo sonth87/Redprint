@@ -32,6 +32,8 @@ export type GalleryLayoutMode =
   | "column"
   | "bricks"
   | "honeycomb"
+  | "honeycomb-diamond"
+  | "honeycomb-triangle"
   | "freestyle"
   | "carousel-3d"
   | "stacked";
@@ -56,8 +58,10 @@ export const GALLERY_LAYOUT_MODES: GalleryLayoutModeDefinition[] = [
   { value: "slideshow",   label: "Slideshow",    description: "Full-bleed autoplay presentation",    group: "slideshow" },
   { value: "thumbnails",  label: "Thumbnails",   description: "Main image + filmstrip below",        group: "slideshow" },
   // Creative
-  { value: "honeycomb",   label: "Honeycomb",    description: "Hexagonal honeycomb grid layout",     group: "creative" },
-  { value: "freestyle",   label: "Freestyle",    description: "Scattered with random rotation",      group: "creative" },
+  { value: "honeycomb",          label: "Honeycomb",  description: "Hexagonal honeycomb grid layout",             group: "creative" },
+  { value: "honeycomb-diamond",  label: "Diamond",    description: "Diamond-clipped images in an offset grid",    group: "creative" },
+  { value: "honeycomb-triangle", label: "Triangle",   description: "Alternating up/down triangle clips tessellated", group: "creative" },
+  { value: "freestyle",          label: "Freestyle",  description: "Scattered with random rotation",              group: "creative" },
   { value: "carousel-3d", label: "3D Carousel",  description: "3D perspective coverflow effect",     group: "creative" },
   { value: "stacked",     label: "Stacked",      description: "Card stack with depth and rotation",  group: "creative" },
 ];
@@ -65,12 +69,18 @@ export const GALLERY_LAYOUT_MODES: GalleryLayoutModeDefinition[] = [
 // ── Default items ─────────────────────────────────────────────────────────────
 
 export const DEFAULT_GALLERY_ITEMS: GalleryItem[] = [
-  { id: "gi-0", src: "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=600&q=80", alt: "Mountain lake" },
-  { id: "gi-1", src: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80", alt: "Mountain peaks" },
-  { id: "gi-2", src: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=600&q=80", alt: "Sunrise valley" },
-  { id: "gi-3", src: "https://images.unsplash.com/photo-1433086966358-54859d0ed716?w=600&q=80", alt: "Waterfall" },
-  { id: "gi-4", src: "https://images.unsplash.com/photo-1440342359743-84fcb8c21f21?w=600&q=80", alt: "Coast road" },
-  { id: "gi-5", src: "https://images.unsplash.com/photo-1501854140801-50d01698950b?w=600&q=80", alt: "Aerial forest" },
+  { id: "gi-0",  src: "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=600&q=80", alt: "Mountain lake" },
+  { id: "gi-1",  src: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80", alt: "Mountain peaks" },
+  { id: "gi-2",  src: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=600&q=80", alt: "Sunrise valley" },
+  { id: "gi-3",  src: "https://images.unsplash.com/photo-1433086966358-54859d0ed716?w=600&q=80", alt: "Waterfall" },
+  { id: "gi-4",  src: "https://images.unsplash.com/photo-1440342359743-84fcb8c21f21?w=600&q=80", alt: "Coast road" },
+  { id: "gi-5",  src: "https://images.unsplash.com/photo-1501854140801-50d01698950b?w=600&q=80", alt: "Aerial forest" },
+  { id: "gi-6",  src: "https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?w=600&q=80", alt: "Forest path" },
+  { id: "gi-7",  src: "https://images.unsplash.com/photo-1475924156734-496f6cac6ec1?w=600&q=80", alt: "Desert dunes" },
+  { id: "gi-8",  src: "https://images.unsplash.com/photo-1504701954957-2010ec3bcec1?w=600&q=80", alt: "Ocean cliff" },
+  { id: "gi-9",  src: "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=600&q=80", alt: "Snowy mountain" },
+  { id: "gi-10", src: "https://images.unsplash.com/photo-1511884642898-4c92249e20b6?w=600&q=80", alt: "Green valley" },
+  { id: "gi-11", src: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&q=80", alt: "Rocky peaks" },
 ];
 
 // ── normalizeItems (shared logic) ─────────────────────────────────────────────

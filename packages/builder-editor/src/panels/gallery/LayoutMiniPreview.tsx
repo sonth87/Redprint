@@ -185,27 +185,89 @@ function BricksPreview({ animated }: { animated: boolean }) {
 }
 
 function HoneycombPreview({ animated }: { animated: boolean }) {
+  // Pointy-top hex, same geometry as renderHoneycomb: 3 cols, rows offset
+  // Preview area ≈ 80×52px. Use 3 cols to show the pattern clearly.
   const hexClip = "polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)";
-  const positions = [
-    { x: 2, y: 4, c: 0 }, { x: 18, y: 4, c: 1 }, { x: 34, y: 4, c: 2 },
-    { x: 10, y: 16, c: 3 }, { x: 26, y: 16, c: 4 },
+  const W = 80; const cols = 3; const gap = 3;
+  const cellSize = Math.floor((W - (cols - 1) * gap) / cols); // ≈24px
+  const rowStep = Math.floor(cellSize * 0.75) + gap;
+  // 3 cols even rows, 2 cols odd rows — show 2 rows
+  const cells = [
+    { col: 0, row: 0, ci: 0 }, { col: 1, row: 0, ci: 1 }, { col: 2, row: 0, ci: 2 },
+    { col: 0, row: 1, ci: 3 }, { col: 1, row: 1, ci: 4 },
   ];
   return (
     <div className="relative w-full h-full overflow-hidden">
-      {positions.map((pos, i) => (
-        <div
-          key={i}
-          className={cn("absolute transition-all duration-300", c(pos.c))}
-          style={{
-            left: pos.x * 1.6 + 2, top: pos.y * 1.5 + 2,
-            width: 16, height: 16,
-            clipPath: hexClip,
-            opacity: animated ? 1 : 0.65,
-            transform: animated ? `scale(1.1)` : "scale(1)",
-            transitionDelay: animated ? `${i * 40}ms` : "0ms",
-          }}
-        />
-      ))}
+      {cells.map(({ col, row, ci }, i) => {
+        const isOdd = row % 2 === 1;
+        const x = col * (cellSize + gap) + (isOdd ? Math.floor((cellSize + gap) / 2) : 0) + 2;
+        const y = row * rowStep + 2;
+        return (
+          <div key={i} className={cn("absolute transition-all duration-300", c(ci))}
+            style={{ left: x, top: y, width: cellSize, height: cellSize, clipPath: hexClip,
+              opacity: animated ? 1 : 0.65, transform: animated ? "scale(1.06)" : "scale(1)",
+              transitionDelay: animated ? `${i * 40}ms` : "0ms" }} />
+        );
+      })}
+    </div>
+  );
+}
+
+function HoneycombDiamondPreview({ animated }: { animated: boolean }) {
+  // Same geometry as renderHoneycombDiamond: 3 cols, rowStep = cellSize/2 + gap
+  const diamondClip = "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)";
+  const W = 80; const cols = 3; const gap = 3;
+  const cellSize = Math.floor((W - (cols - 1) * gap) / cols);
+  const rowStep = Math.floor(cellSize / 2) + gap;
+  const cells = [
+    { col: 0, row: 0, ci: 0 }, { col: 1, row: 0, ci: 1 }, { col: 2, row: 0, ci: 2 },
+    { col: 0, row: 1, ci: 3 }, { col: 1, row: 1, ci: 4 },
+    { col: 0, row: 2, ci: 5 }, { col: 1, row: 2, ci: 6 }, { col: 2, row: 2, ci: 7 },
+  ];
+  return (
+    <div className="relative w-full h-full overflow-hidden">
+      {cells.map(({ col, row, ci }, i) => {
+        const isOdd = row % 2 === 1;
+        const x = col * (cellSize + gap) + (isOdd ? Math.floor((cellSize + gap) / 2) : 0) + 2;
+        const y = row * rowStep + 2;
+        return (
+          <div key={i} className={cn("absolute transition-all duration-300", c(ci))}
+            style={{ left: x, top: y, width: cellSize, height: cellSize, clipPath: diamondClip,
+              opacity: animated ? 1 : 0.65, transform: animated ? "scale(1.06)" : "scale(1)",
+              transitionDelay: animated ? `${i * 40}ms` : "0ms" }} />
+        );
+      })}
+    </div>
+  );
+}
+
+function HoneycombTrianglePreview({ animated }: { animated: boolean }) {
+  // Same geometry as renderHoneycombTriangle: triPerRow cols, rowStep = cellH/2 + gap
+  const rightClip = "polygon(0% 0%, 100% 50%, 0% 100%)";
+  const leftClip  = "polygon(100% 0%, 0% 50%, 100% 100%)";
+  const W = 80; const triPerRow = 4; const gap = 2;
+  const cellW = Math.floor((W - (triPerRow - 1) * gap) / triPerRow);
+  const cellH = Math.floor(cellW * 1.2);
+  const rowStep = Math.floor(cellH / 2) + gap;
+  // 2 rows of triangles
+  const tris: { col: number; row: number; ci: number }[] = [];
+  for (let row = 0; row < 3; row++)
+    for (let col = 0; col < triPerRow; col++)
+      tris.push({ col, row, ci: row * triPerRow + col });
+  return (
+    <div className="relative w-full h-full overflow-hidden">
+      {tris.map(({ col, row, ci }, i) => {
+        const isLeft = (row + col) % 2 === 0;
+        const x = col * (cellW + gap) + 2;
+        const y = row * rowStep + 2;
+        return (
+          <div key={i} className={cn("absolute transition-all duration-300", c(ci))}
+            style={{ left: x, top: y, width: cellW, height: cellH,
+              clipPath: isLeft ? leftClip : rightClip,
+              opacity: animated ? 1 : 0.65, transform: animated ? "scale(1.04)" : "scale(1)",
+              transitionDelay: animated ? `${i * 25}ms` : "0ms" }} />
+        );
+      })}
     </div>
   );
 }
@@ -294,8 +356,10 @@ export function LayoutMiniPreview({ mode, animated }: { mode: GalleryLayoutMode;
     case "strip":      return <StripPreview animated={animated} />;
     case "column":     return <ColumnPreview animated={animated} />;
     case "bricks":     return <BricksPreview animated={animated} />;
-    case "honeycomb":  return <HoneycombPreview animated={animated} />;
-    case "freestyle":  return <FreestylePreview animated={animated} />;
+    case "honeycomb":          return <HoneycombPreview animated={animated} />;
+    case "honeycomb-diamond":  return <HoneycombDiamondPreview animated={animated} />;
+    case "honeycomb-triangle": return <HoneycombTrianglePreview animated={animated} />;
+    case "freestyle":          return <FreestylePreview animated={animated} />;
     case "carousel-3d": return <Carousel3DPreview animated={animated} />;
     case "stacked":    return <StackedPreview animated={animated} />;
     default:           return <GridPreview animated={animated} />;

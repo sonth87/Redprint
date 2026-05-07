@@ -217,23 +217,40 @@ export function renderBricks(items: GalleryItem[], p: GalleryProps): React.React
 }
 
 export function renderHoneycomb(items: GalleryItem[], p: GalleryProps): React.ReactElement {
+  // Pointy-top hexagon: đỉnh nhọn ở trên/dưới
   const hexClip = "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)";
-  const cellSize = 110;
-  const rowH = cellSize * 0.866;
-  const rows = Math.ceil(items.length / p.columns);
-  const containerH = rows * (rowH + p.gap) + cellSize * 0.134;
+  const available = p.containerWidth ?? 600;
+  const cols = Math.max(1, p.columns);
+  const cellSize = Math.max(40, Math.floor((available - (cols - 1) * p.gap) / cols));
+  const rowStep = Math.floor(cellSize * 0.75) + p.gap;
+
+  // Build per-row layout: even rows = cols items, odd rows = cols-1 items (offset right)
+  type HexCell = { img: GalleryItem; row: number; col: number };
+  const cells: HexCell[] = [];
+  let idx = 0;
+  let row = 0;
+  while (idx < items.length) {
+    const isOddRow = row % 2 === 1;
+    const rowCols = isOddRow ? cols - 1 : cols;
+    for (let col = 0; col < rowCols && idx < items.length; col++) {
+      cells.push({ img: items[idx]!, row, col });
+      idx++;
+    }
+    row++;
+  }
+  const totalRows = row;
+  const containerH = totalRows * rowStep + Math.floor(cellSize * 0.25);
 
   return (
     <div style={{ position: "relative", width: "100%", height: containerH }}>
-      {items.map((img, i) => {
-        const col = i % p.columns;
-        const row = Math.floor(i / p.columns);
-        const isOdd = row % 2 === 1;
-        const x = col * (cellSize + p.gap) + (isOdd ? (cellSize + p.gap) / 2 : 0);
-        const y = row * (rowH + p.gap);
+      {cells.map(({ img, row: r, col: c }) => {
+        const isOddRow = r % 2 === 1;
+        // Odd rows shift right by half a cell+gap so they sit between even-row cells
+        const x = c * (cellSize + p.gap) + (isOddRow ? Math.floor((cellSize + p.gap) / 2) : 0);
+        const y = r * rowStep;
         return (
           <div
-            key={img.id ?? i}
+            key={img.id}
             style={{
               position: "absolute",
               left: x,
@@ -258,36 +275,146 @@ export function renderHoneycomb(items: GalleryItem[], p: GalleryProps): React.Re
   );
 }
 
-export function renderFreestyle(items: GalleryItem[], p: GalleryProps): React.ReactElement {
-  const cellW = 160;
-  const cellH = 120;
-  const rowCount = Math.ceil(items.length / p.columns);
-  const containerH = rowCount * (cellH + 40) + 60;
+export function renderHoneycombDiamond(items: GalleryItem[], p: GalleryProps): React.ReactElement {
+  const diamondClip = "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)";
+  const available = p.containerWidth ?? 600;
+  const cols = Math.max(1, p.columns);
+  const cellSize = Math.max(40, Math.floor((available - (cols - 1) * p.gap) / cols));
+  const rowStep = Math.floor(cellSize / 2) + p.gap;
+
+  // Even rows = cols items, odd rows = cols-1 items (offset right by half cell)
+  type Cell = { img: GalleryItem; row: number; col: number };
+  const cells: Cell[] = [];
+  let idx = 0;
+  let row = 0;
+  while (idx < items.length) {
+    const rowCols = row % 2 === 1 ? cols - 1 : cols;
+    for (let col = 0; col < rowCols && idx < items.length; col++) {
+      cells.push({ img: items[idx]!, row, col });
+      idx++;
+    }
+    row++;
+  }
+  const containerH = row * rowStep + Math.floor(cellSize / 2);
 
   return (
-    <div style={{ position: "relative", width: "100%", height: containerH, overflow: "hidden" }}>
+    <div style={{ position: "relative", width: "100%", height: containerH }}>
+      {cells.map(({ img, row: r, col: c }) => {
+        const isOddRow = r % 2 === 1;
+        const x = c * (cellSize + p.gap) + (isOddRow ? Math.floor((cellSize + p.gap) / 2) : 0);
+        const y = r * rowStep;
+        return (
+          <div
+            key={img.id}
+            style={{
+              position: "absolute",
+              left: x,
+              top: y,
+              width: cellSize,
+              height: cellSize,
+              clipPath: diamondClip,
+              overflow: "hidden",
+              background: "#f3f4f6",
+            }}
+          >
+            <img
+              src={img.src}
+              alt={img.alt ?? ""}
+              draggable={false}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export function renderHoneycombTriangle(items: GalleryItem[], p: GalleryProps): React.ReactElement {
+  // Isoceles triangles pointing LEFT or RIGHT, arranged in pairs filling a rectangle.
+  // Each pair: right-pointing ▷ + left-pointing ◁ = one rectangular cell.
+  const rightClip = "polygon(0% 0%, 100% 50%, 0% 100%)"; // đỉnh phải
+  const leftClip  = "polygon(100% 0%, 0% 50%, 100% 100%)"; // đỉnh trái
+
+  const available = p.containerWidth ?? 600;
+  const triPerRow = Math.max(2, p.columns);
+  const cellW = Math.max(20, Math.floor((available - (triPerRow - 1) * p.gap) / triPerRow));
+  const cellH = Math.floor(cellW * 1.2);
+  // Rows interlock: odd rows offset right by half cell, vertical step = cellH/2 + gap
+  const rowStep = Math.floor(cellH / 2) + p.gap;
+
+  const rowCount = Math.ceil(items.length / triPerRow);
+  const containerH = rowCount * rowStep + Math.floor(cellH / 2);
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: containerH }}>
       {items.map((img, i) => {
-        const col = i % p.columns;
-        const row = Math.floor(i / p.columns);
-        const rPos = seededRandom(`${img.id}_pos`);
-        const rY = seededRandom(`${img.id}_y`);
-        const rRot = seededRandom(`${img.id}_rot`);
-        const rZ = seededRandom(`${img.id}_z`);
-        const baseX = (col / p.columns) * (100 - 20);
-        const offsetX = (rPos - 0.5) * 32;
-        const offsetY = (rY - 0.5) * 24;
-        const rotation = (rRot - 0.5) * 16;
+        const triCol = i % triPerRow;
+        const triRow = Math.floor(i / triPerRow);
+        const x = triCol * (cellW + p.gap);
+        const y = triRow * rowStep;
+        const isLeft = (triRow + triCol) % 2 === 0;
         return (
           <div
             key={img.id ?? i}
             style={{
               position: "absolute",
-              left: `calc(${baseX}% + ${offsetX}px)`,
-              top: row * (cellH + 40) + offsetY + 20,
+              left: x,
+              top: y,
+              width: cellW,
+              height: cellH,
+              clipPath: isLeft ? leftClip : rightClip,
+              overflow: "hidden",
+              background: "#f3f4f6",
+            }}
+          >
+            <img
+              src={img.src}
+              alt={img.alt ?? ""}
+              draggable={false}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export function renderFreestyle(items: GalleryItem[], p: GalleryProps): React.ReactElement {
+  const available = p.containerWidth ?? 600;
+  const cellW = Math.floor(available * 0.42);
+  const cellH = Math.floor(cellW * 0.68);
+  const rows = Math.ceil(items.length / Math.max(1, p.columns));
+  const containerH = Math.max(cellH + 40, rows * cellH * 0.85 + cellH * 0.6);
+  const rotate = p.freestyleRotate !== false;
+  // Editor always uses the stable seed (freestyleRandomLayout only affects runtime)
+  const seed = p.freestyleRandomSeed ?? "default";
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: containerH, overflow: "hidden" }}>
+      {items.map((img, i) => {
+        const rX = seededRandom(`${img.id}_x_${seed}`);
+        const rY = seededRandom(`${img.id}_y_${seed}`);
+        const rRot = seededRandom(`${img.id}_rot`);
+        const rZ = seededRandom(`${img.id}_z`);
+        const left = rX * Math.max(0, available - cellW);
+        const top = containerH <= cellH ? 0 : rY * (containerH - cellH);
+        // Use index parity to ensure rotation spreads in both directions regardless of hash
+        const rawRot = (rRot - 0.5) * 30;
+        const rotation = rotate ? (i % 2 === 0 ? rawRot : -rawRot) : 0;
+        const zIndex = Math.floor(rZ * items.length) + 1;
+        return (
+          <div
+            key={img.id ?? i}
+            style={{
+              position: "absolute",
+              left,
+              top,
               width: cellW,
               height: cellH,
               transform: `rotate(${rotation}deg)`,
-              zIndex: Math.floor(rZ * 10) + 1,
+              zIndex,
               overflow: "hidden",
               borderRadius: p.borderRadius + 2,
               background: "#f3f4f6",

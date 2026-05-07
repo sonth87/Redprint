@@ -385,15 +385,113 @@ function CarouselDesign({ node, onConfigChange }: { node: BuilderNode; onConfigC
   );
 }
 
+// ── Honeycomb shape picker ────────────────────────────────────────────────────
+
+const HONEYCOMB_SHAPES: { mode: GalleryLayoutMode; label: string; svgPath: string; viewBox: string }[] = [
+  {
+    mode: "honeycomb-diamond",
+    label: "Diamond",
+    svgPath: "M12 2L22 12L12 22L2 12Z",
+    viewBox: "0 0 24 24",
+  },
+  {
+    mode: "honeycomb-triangle",
+    label: "Triangle",
+    svgPath: "M12 3L22 21H2Z",
+    viewBox: "0 0 24 24",
+  },
+  {
+    mode: "honeycomb",
+    label: "Hexagon",
+    svgPath: "M12 2l7 4v8l-7 4-7-4V6z",
+    viewBox: "0 0 24 24",
+  },
+];
+
+function HoneycombShapePicker({ current, onChange }: { current: GalleryLayoutMode; onChange: (mode: GalleryLayoutMode) => void }) {
+  return (
+    <div className="space-y-1">
+      <Label className="text-[10px] text-muted-foreground">Shape</Label>
+      <div className="flex gap-1.5">
+        {HONEYCOMB_SHAPES.map((shape) => {
+          const isActive = current === shape.mode;
+          return (
+            <button
+              key={shape.mode}
+              title={shape.label}
+              onClick={() => onChange(shape.mode)}
+              className={cn(
+                "flex items-center justify-center w-10 h-10 rounded-md border transition-all",
+                isActive
+                  ? "bg-primary border-primary text-primary-foreground"
+                  : "border-border bg-background text-muted-foreground hover:border-primary/50 hover:text-foreground",
+              )}
+            >
+              <svg viewBox={shape.viewBox} width="20" height="20" fill="currentColor">
+                <path d={shape.svgPath} />
+              </svg>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Gallery Design tab ────────────────────────────────────────────────────────
 
 function GalleryDesign({ node, layoutMode, onPropChange }: { node: BuilderNode; layoutMode: GalleryLayoutMode; onPropChange: GalleryUnifiedSettingsPanelProps["onPropChange"] }) {
   const p = node.props;
-  const needsColumns = ["grid", "masonry", "honeycomb", "bricks", "collage", "freestyle"].includes(layoutMode);
+  const isHoneycomb = ["honeycomb", "honeycomb-diamond", "honeycomb-triangle"].includes(layoutMode);
+  const isFreestyle = layoutMode === "freestyle";
+  const needsColumns = ["grid", "masonry", "honeycomb", "honeycomb-diamond", "honeycomb-triangle", "bricks", "collage", "freestyle"].includes(layoutMode);
   const needsAspect  = ["grid", "collage", "bricks"].includes(layoutMode);
+  const freestyleRotate = p["freestyleRotate"] !== false;
+  const freestyleRandomLayout = Boolean(p["freestyleRandomLayout"] ?? false);
 
   return (
     <div className="p-3 space-y-3">
+      {/* Honeycomb shape picker */}
+      {isHoneycomb && (
+        <HoneycombShapePicker
+          current={layoutMode}
+          onChange={(mode) => onPropChange({ layoutMode: mode })}
+        />
+      )}
+
+      {/* Freestyle rotate + random layout switches */}
+      {isFreestyle && (
+        <>
+          <div className="flex items-center justify-between gap-3">
+            <Label className="text-[10px] font-medium">Rotated</Label>
+            <Switch
+              checked={freestyleRotate}
+              onCheckedChange={(v) => onPropChange({ freestyleRotate: v })}
+              className="scale-75 origin-right shrink-0"
+            />
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <div className="leading-tight">
+              <Label className="text-[10px] font-medium">Random layout</Label>
+              <p className="text-[9px] text-muted-foreground mt-0.5">Different on each page load</p>
+            </div>
+            <Switch
+              checked={freestyleRandomLayout}
+              onCheckedChange={(v) => onPropChange({ freestyleRandomLayout: v })}
+              className="scale-75 origin-right shrink-0"
+            />
+          </div>
+          {!freestyleRandomLayout && (
+            <button
+              onClick={() => onPropChange({ freestyleRandomSeed: Date.now().toString(36) })}
+              className="w-full h-8 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
+            >
+              Randomize Layout
+            </button>
+          )}
+        </>
+      )}
+
       {needsColumns && (
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
@@ -434,29 +532,51 @@ function GalleryDesign({ node, layoutMode, onPropChange }: { node: BuilderNode; 
         </div>
       )}
 
-      <div className="space-y-1">
-        <Label className="text-[10px] text-muted-foreground">Image Fit</Label>
-        <Select value={String(p["imageFit"] ?? "cover")} onValueChange={(v) => onPropChange({ imageFit: v })}>
-          <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="cover" className="text-xs">Cover (crop to fill)</SelectItem>
-            <SelectItem value="contain" className="text-xs">Contain (letterbox)</SelectItem>
-            <SelectItem value="fill" className="text-xs">Fill (stretch)</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between">
-          <Label className="text-[10px] text-muted-foreground">Border Radius</Label>
-          <span className="text-[10px] font-medium">{Number(p["borderRadius"] ?? 4)}px</span>
+      {!isHoneycomb && (
+        <div className="space-y-1">
+          <Label className="text-[10px] text-muted-foreground">Image Fit</Label>
+          <Select value={String(p["imageFit"] ?? "cover")} onValueChange={(v) => onPropChange({ imageFit: v })}>
+            <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="cover" className="text-xs">Cover (crop to fill)</SelectItem>
+              <SelectItem value="contain" className="text-xs">Contain (letterbox)</SelectItem>
+              <SelectItem value="fill" className="text-xs">Fill (stretch)</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <Slider
-          min={0} max={32} step={1}
-          value={[Number(p["borderRadius"] ?? 4)]}
-          onValueChange={(vals) => onPropChange({ borderRadius: vals[0] })}
-        />
-      </div>
+      )}
+
+      {!isHoneycomb && (
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <Label className="text-[10px] text-muted-foreground">Border Radius</Label>
+            <span className="text-[10px] font-medium">{Number(p["borderRadius"] ?? 4)}px</span>
+          </div>
+          <Slider
+            min={0} max={32} step={1}
+            value={[Number(p["borderRadius"] ?? 4)]}
+            onValueChange={(vals) => onPropChange({ borderRadius: vals[0] })}
+          />
+        </div>
+      )}
+
+      {/* Honeycomb click behavior */}
+      {isHoneycomb && (
+        <div className="space-y-1">
+          <Label className="text-[10px] text-muted-foreground">On click</Label>
+          <Select
+            value={String(p["honeycombClickBehavior"] ?? "none")}
+            onValueChange={(v) => onPropChange({ honeycombClickBehavior: v })}
+          >
+            <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none" className="text-xs">Do nothing</SelectItem>
+              <SelectItem value="open-preview" className="text-xs">Open preview</SelectItem>
+              <SelectItem value="open-link" className="text-xs">Open link (if set)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
     </div>
   );
 }

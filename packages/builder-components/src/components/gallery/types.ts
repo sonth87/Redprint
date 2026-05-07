@@ -10,6 +10,11 @@ export interface GalleryProps {
   imageFit: "cover" | "contain" | "fill";
   borderRadius: number;
   stretchFullWidth: boolean;
+  containerWidth?: number;
+  freestyleRandomSeed?: string;
+  honeycombClickBehavior: "none" | "open-preview" | "open-link";
+  freestyleRotate: boolean;
+  freestyleRandomLayout: boolean;
 }
 
 export function extractProps(props: Record<string, unknown>): GalleryProps {
@@ -25,5 +30,10 @@ export function extractProps(props: Record<string, unknown>): GalleryProps {
     imageFit: (props["imageFit"] as GalleryProps["imageFit"]) ?? "cover",
     borderRadius: Number(props["borderRadius"] ?? 4),
     stretchFullWidth: Boolean(props["stretchFullWidth"]),
+    containerWidth: undefined,
+    freestyleRandomSeed: String(props["freestyleRandomSeed"] ?? "default"),
+    honeycombClickBehavior: (props["honeycombClickBehavior"] as GalleryProps["honeycombClickBehavior"]) ?? "none",
+    freestyleRotate: props["freestyleRotate"] !== false,
+    freestyleRandomLayout: Boolean(props["freestyleRandomLayout"] ?? false),
   };
 }
