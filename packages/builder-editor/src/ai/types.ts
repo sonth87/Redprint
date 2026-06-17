@@ -79,6 +79,65 @@ export interface DesignTokens {
   textColor?: string;
 }
 
+export interface PageGenerationOptions {
+  colorPalette?: {
+    name?: string;
+    primary: string;
+    secondary: string;
+    accent: string;
+  };
+  tone?: {
+    id: string;
+    label: string;
+    description?: string;
+  };
+  complexity?: "simple" | "standard" | "comprehensive";
+  locale?: string;
+}
+
+export interface PagePlanSection {
+  id: string;
+  index: number;
+  type: string;
+  title: string;
+  purpose: string;
+  priority: "required" | "recommended" | "optional";
+  layoutIntent: string;
+  contentRequirements: string[];
+}
+
+export interface PagePlan {
+  jobId: string;
+  complexity: "simple" | "standard" | "comprehensive";
+  brief: {
+    rawPrompt: string;
+    inferredIndustry: string;
+    inferredPageType: string;
+    primaryGoal: string;
+    targetAudience: string;
+    tone: string;
+    styleDirection: string;
+    assumedBusinessDetails: string[];
+    requiredContentAreas: string[];
+  };
+  sections: PagePlanSection[];
+}
+
+export interface AIPropSchemaEntry {
+  key: string;
+  label: string;
+  type: string;
+  required?: boolean;
+  default?: unknown;
+  options?: Array<{ value: string; label: string }>;
+  min?: number;
+  max?: number;
+  step?: number;
+  unit?: string;
+  multiple?: boolean;
+  children?: AIPropSchemaEntry[];
+}
+
 /** Context passed to AI to understand current builder state */
 export interface AIBuilderContext {
   document: {
@@ -93,14 +152,15 @@ export interface AIBuilderContext {
     props: Record<string, unknown>;
     style: Record<string, unknown>;
     capabilities?: string[];
-    propSchema?: Array<{ key: string; label: string; type: string }>;
+    propSchema?: AIPropSchemaEntry[];
   } | null;
   availableComponents: {
     type: string;
     name: string;
     category: string;
-    propSchema?: Array<{ key: string; label: string; type: string }>;
+    propSchema?: AIPropSchemaEntry[];
     capabilities?: string[];
+    defaultProps?: Record<string, unknown>;
   }[];
   activeBreakpoint: string;
   /** Full page node map. Only present when config.includePageContext is enabled. */

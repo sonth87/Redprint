@@ -43,6 +43,28 @@ function getApiKey(provider: LLMProvider): string {
   }
 }
 
+function getTimeoutMs(): number {
+  const configured = Number(process.env.LLM_TIMEOUT_MS);
+  if (Number.isFinite(configured) && configured > 0) return configured;
+  return 60_000;
+}
+
+async function fetchWithTimeout(url: string, init: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), getTimeoutMs());
+
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error(`LLM request timed out after ${getTimeoutMs()}ms`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 // ── OpenAI ───────────────────────────────────────────────────────────────
 
 async function callOpenAI(messages: LLMMessage[], jsonMode: boolean): Promise<string> {
@@ -60,7 +82,7 @@ async function callOpenAI(messages: LLMMessage[], jsonMode: boolean): Promise<st
     body.response_format = { type: "json_object" };
   }
 
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+  const res = await fetchWithTimeout("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -106,7 +128,7 @@ async function callGemini(messages: LLMMessage[], jsonMode: boolean): Promise<st
     })),
   ];
 
-  const res = await fetch(url, {
+  const res = await fetchWithTimeout(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -141,7 +163,7 @@ async function callClaude(messages: LLMMessage[], _jsonMode: boolean): Promise<s
     .filter((m) => m.role !== "system")
     .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetchWithTimeout("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

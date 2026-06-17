@@ -401,6 +401,9 @@
       "building": "Đang xây dựng…",
       "done": "Xong",
       "success": "Đã tạo trang thành công! Đang đóng…",
+      "retrying": "Đang thử lại",
+      "partial": "Trang đã được tạo với một số nội dung dự phòng",
+      "failedSections": "section lỗi",
       "cancel": "Hủy",
       "tryAgain": "Thử lại"
     }

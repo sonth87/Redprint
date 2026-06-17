@@ -3,15 +3,15 @@
  *
  * Flow:
  *  1. POST /api/ai/generate-page with user prompt + canvas context
- *  2. Receive SSE "outline_ready"  → show outline preview to user
- *  3. Receive SSE "section_ready"  → apply commands to canvas in real-time
- *  4. Receive SSE "complete"       → done
+ *  2. Receive SSE "plan_ready"     → apply page skeleton immediately
+ *  3. Receive per-section events   → fill sections or fallback gracefully
+ *  4. Receive SSE "complete"       → done/partial/failed summary
  */
 import { useCallback, useRef, useState } from "react";
 import { useBuilder } from "@ui-builder/builder-react";
 import { normalizeAICommands } from "../normalizeAICommands";
 import { applyAICommandsProgressive } from "../applyAICommandsProgressive";
-import type { AIConfig, AIBuilderContext, AICommandSuggestion } from "../types";
+import type { AIConfig, AIBuilderContext, AICommandSuggestion, DesignTokens, PageGenerationOptions, PagePlan } from "../types";
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -23,6 +23,8 @@ export interface SectionOutlineView {
   layoutHint: string;
   keyContent: string[];
   done: boolean;
+  status?: "pending" | "generating" | "retrying" | "done" | "failed";
+  attempt?: number;
   error?: string;
 }
 
@@ -33,6 +35,10 @@ export interface PageGeneratorState {
   outline: SectionOutlineView[];
   completedCount: number;
   totalCount: number;
+  failedCount: number;
+  jobId: string | null;
+  plan: PagePlan | null;
+  completionStatus: "success" | "partial" | "failed" | null;
   error: string | null;
 }
 
@@ -62,11 +68,15 @@ export function usePageGenerator(config: AIConfig, context: AIBuilderContext) {
     outline: [],
     completedCount: 0,
     totalCount: 0,
+    failedCount: 0,
+    jobId: null,
+    plan: null,
+    completionStatus: null,
     error: null,
   });
 
   const applyCommands = useCallback(
-    (commands: AICommandSuggestion[], rootNodeId: string) => {
+    (commands: AICommandSuggestion[], rootNodeId: string, preserveOrder = false) => {
       const normalized = normalizeAICommands(commands, rootNodeId);
       // fire-and-forget: sections arrive seconds apart (one LLM call each),
       // so phase 2 of section N always completes before section N+1 arrives.
@@ -74,13 +84,17 @@ export function usePageGenerator(config: AIConfig, context: AIBuilderContext) {
         normalized,
         (cmd) => dispatch({ type: cmd.type, payload: cmd.payload } as never),
         (cmd) => ALLOWED_COMMANDS.has(cmd.type),
+        { preserveOrder },
       );
     },
     [dispatch],
   );
 
   const generate = useCallback(
-    async (prompt: string, options?: { fullPageMode?: boolean }) => {
+    async (
+      prompt: string,
+      options?: { fullPageMode?: boolean; generationOptions?: PageGenerationOptions; designTokens?: DesignTokens },
+    ) => {
       if (!prompt.trim()) return;
 
       // Cancel any ongoing generation
@@ -93,6 +107,10 @@ export function usePageGenerator(config: AIConfig, context: AIBuilderContext) {
         outline: [],
         completedCount: 0,
         totalCount: 0,
+        failedCount: 0,
+        jobId: null,
+        plan: null,
+        completionStatus: null,
         error: null,
       });
 
@@ -106,30 +124,19 @@ export function usePageGenerator(config: AIConfig, context: AIBuilderContext) {
         return;
       }
 
-      // Clear existing nodes if fullPageMode is enabled
-      if (options?.fullPageMode && context.pageNodes) {
-        const childrenToRemove = Object.values(context.pageNodes).filter(
-          (node) => node.parentId === context.document.rootNodeId
-        );
-        for (const node of childrenToRemove) {
-          try {
-            dispatch({ type: "REMOVE_NODE", payload: { id: node.id } } as never);
-          } catch (err) {
-            console.warn("[PageGenerator] REMOVE_NODE failed for:", node.id, err);
-          }
-        }
-      }
-
       // Phase 1B/1C: send compact manifest + presets instead of full versions
       const requestBody = {
         prompt,
         fullPageMode: options?.fullPageMode ?? false,
+        rootNodeId: context.document.rootNodeId,
         availableComponents: context.availableComponents,
         availablePresetsCompact: context.availablePresetsCompact,
         nestingRules: context.nestingRules,
         // Keep full presets for backward compat (phase may still need them)
         availablePresets: context.availablePresets,
-        designTokens: config.designTokens ?? {},
+        designTokens: options?.designTokens ?? config.designTokens ?? {},
+        generationOptions: options?.generationOptions,
+        pageNodes: context.pageNodes,
       };
 
       // Timeout logic
@@ -185,13 +192,62 @@ export function usePageGenerator(config: AIConfig, context: AIBuilderContext) {
         const handleSSEEvent = (event: string, data: Record<string, unknown>) => {
           if (controller.signal.aborted) return;
 
-          if (event === "outline_ready") {
+          if (event === "job_started") {
+            setState((prev) => ({
+              ...prev,
+              jobId: (data.jobId as string) ?? prev.jobId,
+            }));
+          } else if (event === "plan_ready") {
+            const plan = data.plan as PagePlan;
+            const skeletonCommands = (data.skeletonCommands as AICommandSuggestion[]) ?? [];
+            applyCommands(skeletonCommands, context.document.rootNodeId);
+            setState((prev) => ({
+              ...prev,
+              phase: "generating",
+              jobId: (data.jobId as string) ?? plan.jobId,
+              plan,
+              outline: plan.sections.map((s) => ({
+                index: s.index,
+                sectionId: s.id,
+                sectionType: s.type,
+                purpose: s.purpose,
+                layoutHint: s.layoutIntent,
+                keyContent: s.contentRequirements,
+                done: false,
+                status: "pending",
+              })),
+              totalCount: plan.sections.length,
+            }));
+          } else if (event === "outline_ready") {
             const sections = data.sections as SectionOutlineView[];
             setState((prev) => ({
               ...prev,
               phase: "generating",
-              outline: sections.map((s) => ({ ...s, done: false })),
+              outline: sections.map((s) => ({ ...s, done: false, status: "pending" })),
               totalCount: sections.length,
+            }));
+          } else if (event === "section_started") {
+            const { index, sectionId } = data as { index: number; sectionId: string };
+            setState((prev) => ({
+              ...prev,
+              outline: prev.outline.map((s) =>
+                s.sectionId === sectionId || s.index === index ? { ...s, status: "generating" } : s,
+              ),
+            }));
+          } else if (event === "section_retrying") {
+            const { index, sectionId, attempt, reason } = data as {
+              index: number;
+              sectionId: string;
+              attempt: number;
+              reason: string;
+            };
+            setState((prev) => ({
+              ...prev,
+              outline: prev.outline.map((s) =>
+                s.sectionId === sectionId || s.index === index
+                  ? { ...s, status: "retrying", attempt, error: reason }
+                  : s,
+              ),
             }));
           } else if (event === "section_ready") {
             const { index, sectionId, commands } = data as {
@@ -201,13 +257,33 @@ export function usePageGenerator(config: AIConfig, context: AIBuilderContext) {
             };
 
             // Apply commands to canvas in real-time
-            applyCommands(commands, context.document.rootNodeId);
+            applyCommands(commands, context.document.rootNodeId, true);
 
             setState((prev) => ({
               ...prev,
               completedCount: prev.completedCount + 1,
               outline: prev.outline.map((s) =>
-                s.sectionId === sectionId || s.index === index ? { ...s, done: true } : s,
+                s.sectionId === sectionId || s.index === index ? { ...s, done: true, status: "done", error: undefined } : s,
+              ),
+            }));
+          } else if (event === "section_failed") {
+            const { index, sectionId, error, fallbackCommands } = data as {
+              index: number;
+              sectionId: string;
+              error: string;
+              fallbackCommands?: AICommandSuggestion[];
+            };
+            if (fallbackCommands?.length) {
+              applyCommands(fallbackCommands, context.document.rootNodeId, true);
+            }
+            setState((prev) => ({
+              ...prev,
+              completedCount: prev.completedCount + 1,
+              failedCount: prev.failedCount + 1,
+              outline: prev.outline.map((s) =>
+                s.sectionId === sectionId || s.index === index
+                  ? { ...s, done: true, status: "failed", error }
+                  : s,
               ),
             }));
           } else if (event === "section_error") {
@@ -219,14 +295,19 @@ export function usePageGenerator(config: AIConfig, context: AIBuilderContext) {
             setState((prev) => ({
               ...prev,
               completedCount: prev.completedCount + 1,
+              failedCount: prev.failedCount + 1,
               outline: prev.outline.map((s) =>
                 s.sectionId === sectionId || s.index === index
-                  ? { ...s, done: true, error }
+                  ? { ...s, done: true, status: "failed", error }
                   : s,
               ),
             }));
           } else if (event === "complete") {
-            setState((prev) => ({ ...prev, phase: "done" }));
+            setState((prev) => ({
+              ...prev,
+              phase: "done",
+              completionStatus: (data.status as "success" | "partial" | "failed" | undefined) ?? "success",
+            }));
           } else if (event === "error") {
             setState((prev) => ({
               ...prev,
@@ -259,17 +340,27 @@ export function usePageGenerator(config: AIConfig, context: AIBuilderContext) {
         }));
       }
     },
-    [config, context, applyCommands],
+    [config, context, applyCommands, dispatch],
   );
 
   const cancel = useCallback(() => {
     abortRef.current?.abort();
-    setState((prev) => ({ ...prev, phase: "idle", error: null }));
+    setState((prev) => ({ ...prev, phase: "idle", error: null, completionStatus: null }));
   }, []);
 
   const reset = useCallback(() => {
     abortRef.current?.abort();
-    setState({ phase: "idle", outline: [], completedCount: 0, totalCount: 0, error: null });
+    setState({
+      phase: "idle",
+      outline: [],
+      completedCount: 0,
+      totalCount: 0,
+      failedCount: 0,
+      jobId: null,
+      plan: null,
+      completionStatus: null,
+      error: null,
+    });
   }, []);
 
   return { state, generate, cancel, reset };

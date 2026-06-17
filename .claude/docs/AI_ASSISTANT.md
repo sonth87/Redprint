@@ -24,11 +24,17 @@ BuilderEditor
   └── PageGeneratorModal             ← Full-page generation via SSE
   └── AISectionPopover               ← Section-level regeneration
 
-All three share the same command application pipeline:
+All three end in the same command application pipeline, but full-page generation now has a
+planner/compiler stage before commands reach the client:
 
-  LLM response (JSON or SSE)
-    → normalizeAICommands()          ← resolve temp IDs, remap fields
+  Page Generator
+    → CreativeBrief + PagePlan       ← Zod-validated planning contract
+    → plan_ready skeleton commands   ← deterministic Section ADD_NODEs
+    → SectionPlan per section        ← generated independently with retry/fallback
+    → deterministic compiler         ← SectionPlan → builder commands
+    → normalizeAICommands()          ← preserves backend-stable ai-* IDs
     → applyAICommandsProgressive()   ← batch-by-depth rendering
+          Prelude:         REMOVE_NODE clears old full-page content
           Phase 1 (sync):  containers → layout skeleton appears
           Phase 2 (rAF):   leaves    → content fills in
     → dispatch()                     ← builder CommandEngine
@@ -56,23 +62,116 @@ Each AI entry point uses a different transport but the **same client-side applic
 
 | Entry point | Backend transport | Client application |
 |-------------|------------------|--------------------|
-| **generate-page** | SSE: `outline_ready` → N × `section_ready` → `complete` | `applyAICommandsProgressive` per section (fire-and-forget) |
+| **generate-page** | SSE: `job_started` → `plan_ready` → N × section events → `complete` | Skeleton first, then `applyAICommandsProgressive` per section |
 | **ai-section** | Single JSON response (`POST /api/ai/chat`) | `applyAICommandsProgressive` (awaited) |
 | **chat assistant** | Single JSON response (`POST /api/ai/chat`) | `applyAICommandsProgressive` (awaited) |
+
+When `AIAssistant` is used with full-page mode enabled, the editor routes that request through the
+same `generate-page` SSE pipeline instead of the legacy chat endpoint.
 
 ### generate-page SSE Events
 
 ```
-outline_ready   { sections: SectionOutline[] }
-section_ready   { index, sectionId, commands: AICommandSuggestion[] }
-section_error   { index, sectionId, error: string }
-complete        {}
-error           { message: string }
+job_started      { jobId }
+plan_ready       { jobId, plan: PagePlan, skeletonCommands: AICommandSuggestion[] }
+section_started  { jobId, index, sectionId }
+section_retrying { jobId, index, sectionId, attempt, reason }
+section_ready    { jobId, index, sectionId, commands: AICommandSuggestion[] }
+section_failed   { jobId, index, sectionId, error, fallbackCommands?: AICommandSuggestion[] }
+complete         { jobId, status: "success" | "partial" | "failed", completed, failed, failedSections }
+error            { jobId, message: string }
 ```
 
-Sections are generated sequentially (default) or in parallel batches (`AI_GENERATION_MODE=parallel`,
-batch size via `AI_BATCH_SIZE` env var). Design context (colors, fonts, button styles) flows from
-each completed section to the next for visual consistency.
+`plan_ready` is the first renderable milestone. The client applies skeleton commands immediately so
+users see the full page structure before section content finishes. Section failures are isolated:
+after retry, the backend emits fallback commands for that section and completes with partial status.
+
+---
+
+## Rich Component Awareness
+
+Full-page generation v2 uses a hybrid backend-side component contract layer. The editor sends
+`availableComponents` with `propSchema`, `capabilities`, and `defaultProps`; the backend derives a
+compact catalog summary for all available components and merges curated guidance for complex
+components.
+
+The manifest intentionally does not include full raw `propSchema`. Each component entry contains:
+
+- `type`
+- `purpose`
+- `bestFor`
+- `requiredProps`
+- `keyProps`
+- `variants`
+- `fallbackTo`
+
+Known rich components such as `NavigationMenu`, `GalleryPro`, `GalleryGrid`, `GallerySlider`,
+`CollapsibleText`, `TextMarquee`, `TextMask`, `Shape`, `Row`, `Column`, and `Repeater` get curated
+purpose/fallback/variant guidance. Unknown or custom registered components still receive
+propSchema-driven summaries, so they can appear in AI context without code changes.
+
+### On-Demand Component Contracts
+
+Section prompts receive detailed `ComponentContract` entries only for components relevant to that
+section. A contract contains required/optional props, defaults, variants, constraints, fallback
+chain, examples, and `contractSource` (`propSchema`, `curated`, or `merged`).
+
+This avoids sending every component's full schema to every prompt while still letting the model make
+better section-level component choices.
+
+### SectionPlan Intent Fields
+
+The LLM still returns content intent only. It may request richer rendering through these fields:
+
+```ts
+interface SectionPlan {
+  sectionId: string;
+  type: PageSectionType;
+  layoutVariant?: string;
+  preferredComponents?: string[];
+  componentIntents?: Array<{
+    role: string;
+    componentType: string;
+    variant?: string;
+    contentSource?: string;
+    priority?: "required" | "preferred" | "optional";
+    reason?: string;
+  }>;
+  interactionIntent?: "static" | "carousel" | "expandable" | "marquee" | "gallery";
+  mediaItems?: Array<{ src?: string; alt: string; caption?: string; link?: string }>;
+  navItems?: Array<{ label: string; href: string }>;
+  visualEmphasis?: "copy" | "media" | "balanced" | "proof" | "conversion";
+  eyebrow?: string;
+  heading: string;
+  body: string;
+  items: Array<{ title: string; body: string; meta?: string }>;
+}
+```
+
+`preferredComponents` and `componentIntents` are filtered against available component contracts
+before compilation. `null` arrays normalize to empty arrays, invalid component choices are dropped,
+and missing media URLs are replaced by deterministic industry-aware fallback images.
+
+### Compiler Strategy
+
+The compiler owns all final props and command generation. Component intents act as deterministic
+adapter preferences; adapters map intent/content into safe props, then schema validation checks the
+payload before commands are streamed:
+
+| Section | Preferred rich path | Fallback path |
+|---------|---------------------|---------------|
+| `header` | `NavigationMenu` | Text nav row + button |
+| `hero` | `TextMask`, `TextMarquee`, `Image`, optional `Shape` | Standard hero grid |
+| `services` | `GalleryPro`/`GalleryGrid` plus cards | Grid cards |
+| `gallery` | `GalleryPro` → `GallerySlider` → `GalleryGrid` | Grid + Image |
+| `testimonials` | `GalleryPro`/`GallerySlider` plus proof cards | Testimonial cards |
+| `faq` | `CollapsibleText` | FAQ cards |
+| `cta` | `TextMarquee` + Image + Button | CTA text/button block |
+| `footer` | `NavigationMenu` + text + divider | Footer cards |
+
+Every compiled command is validated before streaming: registered component type, known parent ID,
+no leaf nodes as parents, no non-Section leaf directly under root, required props present, selected
+enum values allowed, no duplicate node IDs, and prop-schema validation where a contract is available.
 
 ---
 
@@ -82,6 +181,10 @@ each completed section to the next for visual consistency.
 
 When a section's commands arrive, they are applied in **two phases** to create a progressive
 "build-up" effect instead of all nodes appearing simultaneously:
+
+**Prelude — Removal commands (synchronous)**
+`REMOVE_NODE` commands generated by full-page regeneration are dispatched before new containers so
+old page content is cleared before the new skeleton appears.
 
 **Phase 1 — Containers (synchronous)**
 ADD_NODE commands for layout container types are dispatched immediately:
@@ -119,19 +222,20 @@ await applyAICommandsProgressive(normalized, dispatch, filter);
 
 ```ts
 interface AIConfig {
-  provider: AIProvider;       // "openai" | "gemini" | "claude"
-  apiKey: string;
-  model?: string;             // e.g. "gpt-4o", "gemini-2.0-flash", "claude-sonnet-4-6"
+  backendUrl: string;         // apps/api URL, e.g. http://localhost:3002
+  provider?: AIProvider;      // deprecated client hint, ignored by backend
+  apiKey?: string;            // deprecated, provider keys live on backend env
+  model?: string;
   temperature?: number;       // 0–2, default 0.7
-  maxTokens?: number;         // default 2048
-  systemPrompt?: string;      // overrides the default system prompt
-  streamingEnabled?: boolean; // stream tokens in real-time, default false
+  maxTokens?: number;         // default 8192
+  streamingEnabled?: boolean; // chat compatibility flag; page generation always uses SSE
   includePageContext?: boolean; // include full page node tree in context
+  designTokens?: DesignTokens;
 }
 ```
 
-Config is **persisted in `localStorage`** under key `"ui-builder:ai-config"`. API keys are stored
-client-side only — never sent to our own servers.
+Config is **persisted in `localStorage`** under key `"ui-builder:ai-config"`. API keys are configured
+on the backend via environment variables and are not stored in the editor.
 
 ### `AIBuilderContext`
 
@@ -293,21 +397,28 @@ before applying the AI-generated commands.
 **How it works:**
 
 1. User checks "Generate full page" checkbox
-2. Frontend passes `fullPageMode: true` in the context to the backend
-3. Backend identifies all children of the root node
-4. Backend generates a `REMOVE_NODE` command for each child
-5. These removal commands are prepended before AI-generated commands
-6. All commands execute via `applyAICommandsProgressive`: REMOVE_NODEs first (phase 2, as non-ADD_NODE),
-   then new containers (phase 1 of the subsequent section commands)
+2. Frontend sends `fullPageMode`, `rootNodeId`, and `pageNodes` in the `generate-page` request
+3. Backend identifies all root children and adds `REMOVE_NODE` commands using `payload.nodeId`
+4. Removal commands are included in `plan_ready.skeletonCommands` before new Section skeletons
+5. Section content arrives later through `section_ready` or `section_failed.fallbackCommands`
 
 **Logging:**
 
-When `fullPageMode` is active, the following debug information is logged (when `AI_DEBUG=true`):
-- Whether fullPageMode is enabled
-- Count of page nodes available
-- Count of nodes being removed
-- Node IDs and types being removed
-- Total command count after clear
+When `AI_DEBUG=true`, generation logs structured job/section events with `jobId`, `sectionId`,
+attempt, stage, elapsed time, status, fallback usage, `manifestComponents`, `sectionType`,
+`preferredComponents`, `selectedComponent`, `fallbackComponent`, `fallbackReason`,
+`componentIntents`, `adapterUsed`, `contractSource`, `richComponentUsed`, `mediaItemCount`,
+`propValidationErrors`, and `validationErrorCode` when available. Full prompts are truncated unless
+`AI_PROMPT_DEBUG=true`.
+
+Provider calls are guarded by `LLM_TIMEOUT_MS` to prevent long-running plan or section requests from
+blocking the SSE job indefinitely. The default timeout is `60000` milliseconds.
+
+Section generation runs with bounded concurrency via `AI_SECTION_CONCURRENCY` (default `2`) and
+`AI_MAX_SECTION_ATTEMPTS` (default `2`). Repairable JSON/schema/compiler errors may retry; timeout,
+rate-limit, and overloaded-provider errors bypass retry and emit fallback commands so the rest of the
+page can continue. If the planner provider call fails before `plan_ready`, the backend uses a
+deterministic PagePlan fallback and still emits skeleton commands.
 
 ---
 
@@ -331,9 +442,9 @@ const ALLOWED_AI_COMMANDS = new Set([
 ]);
 ```
 
-**Note:** `REMOVE_NODE` is only generated internally by the backend when `fullPageMode=true` to clear
-existing content before regenerating the entire page. The AI itself cannot generate `REMOVE_NODE`
-commands. `MOVE_NODE` is excluded.
+**Note:** `REMOVE_NODE` is generated internally by the backend when `fullPageMode=true` to clear
+existing content before regenerating the entire page. The page-generation compiler, not the LLM,
+creates final builder commands for full-page generation. `MOVE_NODE` is excluded.
 
 ---
 

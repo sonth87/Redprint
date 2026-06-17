@@ -65,6 +65,21 @@ export interface AIPresetGroup {
   types: AIPresetType[];
 }
 
+export interface AIPropSchemaEntry {
+  key: string;
+  label: string;
+  type: string;
+  required?: boolean;
+  default?: unknown;
+  options?: Array<{ value: string; label: string }>;
+  min?: number;
+  max?: number;
+  step?: number;
+  unit?: string;
+  multiple?: boolean;
+  children?: AIPropSchemaEntry[];
+}
+
 export interface AIPageNode {
   id: string;
   type: string;
@@ -98,11 +113,16 @@ export interface GeneratePageRequest {
   prompt: string;
   /** If true, client will clear existing nodes before applying new sections */
   fullPageMode?: boolean;
+  /** Real root node ID from the current builder document. */
+  rootNodeId?: string;
   /** Available components the AI can use */
   availableComponents: Array<{
     type: string;
     name: string;
     category: string;
+    propSchema?: AIPropSchemaEntry[];
+    capabilities?: string[];
+    defaultProps?: Record<string, unknown>;
   }>;
   /** Palette presets for layout suggestions */
   availablePresets?: AIPresetGroup[];
@@ -110,6 +130,8 @@ export interface GeneratePageRequest {
   availablePresetsCompact?: string;
   /** Canvas-level design tokens for consistency across sections */
   designTokens?: DesignTokens;
+  /** First-class generation controls selected in the UI. */
+  generationOptions?: PageGenerationOptions;
   /** Derived nesting rules — deriveNestingRules() output. Phase 1B. */
   nestingRules?: string;
   /** Current page nodes (used for edit context) */
@@ -122,7 +144,14 @@ export interface ChatRequest {
   builderContext: {
     document: { name: string; nodeCount: number; rootNodeId: string };
     selectedNode: AIPageNode | null;
-    availableComponents: Array<{ type: string; name: string; category: string }>;
+    availableComponents: Array<{
+      type: string;
+      name: string;
+      category: string;
+      propSchema?: AIPropSchemaEntry[];
+      capabilities?: string[];
+      defaultProps?: Record<string, unknown>;
+    }>;
     activeBreakpoint: string;
     pageNodes?: Record<string, AIPageNode>;
     pageNodesSummary?: AIPageNodeSummary;
@@ -156,14 +185,160 @@ export interface DesignTokens {
   textColor?: string;
 }
 
+export interface PageGenerationOptions {
+  colorPalette?: {
+    name?: string;
+    primary: string;
+    secondary: string;
+    accent: string;
+  };
+  tone?: {
+    id: string;
+    label: string;
+    description?: string;
+  };
+  complexity?: "simple" | "standard" | "comprehensive";
+  locale?: string;
+}
+
+export type PageGoal =
+  | "sell_service"
+  | "sell_product"
+  | "collect_leads"
+  | "showcase"
+  | "inform";
+
+export interface CreativeBrief {
+  rawPrompt: string;
+  inferredIndustry: string;
+  inferredPageType: string;
+  primaryGoal: PageGoal;
+  targetAudience: string;
+  tone: string;
+  styleDirection: string;
+  assumedBusinessDetails: string[];
+  requiredContentAreas: string[];
+}
+
+export type PageSectionType =
+  | "header"
+  | "hero"
+  | "services"
+  | "features"
+  | "trust"
+  | "process"
+  | "stats"
+  | "gallery"
+  | "testimonials"
+  | "pricing"
+  | "faq"
+  | "cta"
+  | "footer"
+  | "custom";
+
+export interface PagePlanSection {
+  id: string;
+  index: number;
+  type: PageSectionType;
+  title: string;
+  purpose: string;
+  priority: "required" | "recommended" | "optional";
+  layoutIntent: string;
+  contentRequirements: string[];
+}
+
+export interface PagePlan {
+  jobId: string;
+  complexity: "simple" | "standard" | "comprehensive";
+  brief: CreativeBrief;
+  sections: PagePlanSection[];
+}
+
+export interface SectionPlanItem {
+  title: string;
+  body: string;
+  meta?: string;
+}
+
+export type SectionInteractionIntent =
+  | "static"
+  | "carousel"
+  | "expandable"
+  | "marquee"
+  | "gallery";
+
+export type SectionVisualEmphasis =
+  | "copy"
+  | "media"
+  | "balanced"
+  | "proof"
+  | "conversion";
+
+export interface SectionPlanMediaItem {
+  src?: string;
+  alt: string;
+  caption?: string;
+  link?: string;
+}
+
+export interface SectionPlanNavItem {
+  label: string;
+  href: string;
+}
+
+export interface SectionComponentIntent {
+  role: string;
+  componentType: string;
+  variant?: string;
+  contentSource?: string;
+  priority?: "required" | "preferred" | "optional";
+  reason?: string;
+}
+
+export interface SectionPlan {
+  sectionId: string;
+  type: PageSectionType;
+  layoutVariant?: string;
+  preferredComponents?: string[];
+  componentIntents?: SectionComponentIntent[];
+  interactionIntent?: SectionInteractionIntent;
+  mediaItems?: SectionPlanMediaItem[];
+  navItems?: SectionPlanNavItem[];
+  visualEmphasis?: SectionVisualEmphasis;
+  eyebrow?: string;
+  heading: string;
+  body: string;
+  ctaLabel?: string;
+  secondaryCtaLabel?: string;
+  items: SectionPlanItem[];
+  faqs?: SectionPlanItem[];
+  stats?: SectionPlanItem[];
+  testimonials?: SectionPlanItem[];
+  mediaPrompt?: string;
+}
+
 // ── SSE Event payloads ──────────────────────────────────────────────────
 
 export type SSEEventType =
+  | { event: "job_started"; data: { jobId: string } }
+  | { event: "plan_ready"; data: { jobId: string; plan: PagePlan; skeletonCommands: AICommandSuggestion[] } }
+  | { event: "section_started"; data: { jobId: string; index: number; sectionId: string } }
+  | { event: "section_retrying"; data: { jobId: string; index: number; sectionId: string; attempt: number; reason: string } }
   | { event: "outline_ready"; data: { sections: SectionOutline[] } }
   | { event: "section_ready"; data: { index: number; sectionId: string; commands: AICommandSuggestion[] } }
   | { event: "section_error"; data: { index: number; sectionId: string; error: string } }
+  | { event: "section_failed"; data: { jobId: string; index: number; sectionId: string; error: string; fallbackCommands?: AICommandSuggestion[] } }
   | { event: "error"; data: { message: string } }
-  | { event: "complete"; data: Record<string, never> };
+  | {
+      event: "complete";
+      data: {
+        jobId?: string;
+        status?: "success" | "partial" | "failed";
+        completed?: number;
+        failed?: number;
+        failedSections?: Array<{ sectionId: string; index: number; error: string }>;
+      };
+    };
 
 // ── Design context sent to section generator ─────────────────────────────
 

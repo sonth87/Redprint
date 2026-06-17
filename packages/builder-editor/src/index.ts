@@ -103,6 +103,7 @@ export type { SupportedLocale } from "./i18n";
 // AI Assistant
 export { AIAssistant } from "./ai/AIAssistant";
 export type { AIAssistantProps } from "./ai/AIAssistant";
+export { PageGeneratorModal, usePageGenerator } from "./ai/page-generator";
 export { AIConfigPanel } from "./ai/AIConfig";
 export type { AIConfigPanelProps } from "./ai/AIConfig";
 export { sendAIMessage, getAIAdapter } from "./ai/AIService";

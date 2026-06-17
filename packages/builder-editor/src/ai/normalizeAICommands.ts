@@ -64,8 +64,9 @@ export function normalizeAICommands(
       }
 
       // ── Assign real UUID, track temp → real mapping ──
-      const realId = crypto.randomUUID();
       const tempId = payload.nodeId as string | undefined;
+      const shouldPreserveStableId = typeof tempId === "string" && tempId.startsWith("ai-");
+      const realId = shouldPreserveStableId ? tempId : crypto.randomUUID();
       if (tempId) {
         idMap.set(tempId, realId);
       } else if (CONTAINER_COMPONENT_TYPES.has(String(payload.componentType))) {

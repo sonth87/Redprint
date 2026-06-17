@@ -387,6 +387,9 @@
       "building": "Building…",
       "done": "Done",
       "success": "Page generated successfully! Closing…",
+      "retrying": "Retrying",
+      "partial": "Page generated with partial fallback",
+      "failedSections": "failed sections",
       "cancel": "Cancel",
       "tryAgain": "Try Again"
     }

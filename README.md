@@ -131,6 +131,8 @@ Complete technical reference organized by domain:
 - **Fully undoable** — all AI output dispatched as standard builder commands
 - **Design token enforcement** — AI respects your brand colors and typography
 - **Progressive rendering** — containers appear first, content fills in next frame
+- **Rich component awareness** — page generation can use menus, galleries, marquees, masked text,
+  collapsible FAQ blocks, and safe component fallbacks when those components are registered
 
 ### Production Ready
 - **Optimized runtime renderer** for deployment
@@ -158,18 +160,34 @@ edits — meaning every AI action is **undoable** and **schema-validated**.
 ### How It Works
 
 ```
-User prompt
-  → Backend (apps/api) calls LLM (OpenAI / Gemini / Claude)
-  → LLM returns ADD_NODE / UPDATE_STYLE / ... commands as JSON
-  → Client: normalizeAICommands() resolves temp IDs to real UUIDs
-  → Client: applyAICommandsProgressive() dispatches in two phases:
-        Phase 1 (sync):  Section, Grid, Column  → layout skeleton
-        Phase 2 (rAF):   Text, Button, Image    → content fills in
-  → Builder CommandEngine applies — fully undoable
+User prompt + selected palette/tone
+  → Backend planner creates a CreativeBrief + PagePlan
+  → Backend validates/normalizes section count, order, and required sections
+  → SSE plan_ready sends deterministic Section skeleton commands
+  → Backend sends a compact component capability manifest to each SectionPlan prompt
+  → Backend generates each SectionPlan independently as intent, not commands
+  → Deterministic compiler selects registered components and props
+  → Client applies skeleton/content progressively through CommandEngine
 ```
 
-**Page generation** uses an SSE pipeline: the backend first generates a structural outline, then
-generates each section in parallel, streaming results to the client as sections complete.
+**Page generation** uses a provider-neutral SSE pipeline. The backend streams `job_started`,
+`plan_ready`, per-section progress, retry/failure events, and `complete`. If one section fails after
+retry, the backend sends fallback commands for that section and completes with partial status instead
+of discarding the whole page.
+
+For richer landing pages, the backend builds a compact capability manifest from the
+`availableComponents` sent by the editor. The LLM may request components such as
+`NavigationMenu`, `GalleryPro`, `GalleryGrid`, `GallerySlider`, `CollapsibleText`, `TextMarquee`,
+`TextMask`, `Shape`, `Row`, `Column`, and `Repeater`, but it never emits final props or commands for
+them. The compiler owns the final command shape, validates the component exists, fills missing media
+with deterministic industry-aware images, and falls back to basic `Grid`/`Image`/`Text` layouts when
+rich components are unavailable.
+
+Generation also includes a hybrid component contract layer. The editor sends `propSchema`,
+`capabilities`, and `defaultProps` for registered components; the backend turns that into a compact
+catalog summary plus on-demand `ComponentContract` details for the components relevant to each
+section. The model can return `componentIntents`, but deterministic adapters and prop validation own
+the final builder command payloads.
 
 ### Backend Setup
 
@@ -184,6 +202,18 @@ LLM_PROVIDER=gemini   LLM_API_KEY=AIza...      pnpm dev
 LLM_PROVIDER=claude   LLM_API_KEY=sk-ant-...   pnpm dev
 ```
 
+Set `LLM_TIMEOUT_MS` to cap slow provider calls; the default is `60000` milliseconds. Full-page
+generation also supports `AI_SECTION_CONCURRENCY` (default `2`) and `AI_MAX_SECTION_ATTEMPTS`
+(default `2`). Timeout, rate-limit, and provider-overloaded errors bypass retries and use fallback
+section content so one slow provider call does not block the whole page. If the initial page planner
+provider call fails, the backend falls back to a deterministic PagePlan and still streams skeleton
+sections.
+
+Enable `AI_DEBUG=true` for structured generation logs. Full prompts/responses stay redacted unless
+`AI_PROMPT_DEBUG=true`; logs include section type, preferred components, selected rich component,
+fallback reason, media item count, component intents, adapter usage, contract source, and validation
+error codes where available.
+
 The backend runs on `http://localhost:3002` by default. Set the URL in the editor's AI config panel.
 
 ### Provider & Model Defaults
@@ -192,7 +222,7 @@ The backend runs on `http://localhost:3002` by default. Set the URL in the edito
 |----------|--------------|-----------|
 | OpenAI | `gpt-4o` | `response_format: json_object` |
 | Gemini | `gemini-2.0-flash` | `responseMimeType: application/json` |
-| Claude | `claude-sonnet-4-6` | Prompt-based |
+| Claude | `claude-sonnet-4-5` | Prompt-based |
 
 Override via `LLM_MODEL` env var. All providers support the same request/response shape — switching
 providers requires only an env change, no code changes.
@@ -215,7 +245,9 @@ Pass canvas-level design tokens to keep AI output consistent with your brand:
 />
 ```
 
-The AI is instructed to use **only** these values for colors and typography — no arbitrary CSS values.
+The page generator passes selected palette and tone as first-class generation options. The compiler
+uses design tokens when creating commands, so the generated page is constrained by the builder's
+component model instead of free-form HTML/CSS.
 
 > Full reference: **[AI_ASSISTANT.md](./.claude/docs/AI_ASSISTANT.md)**
 

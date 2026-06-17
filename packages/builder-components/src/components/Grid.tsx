@@ -78,8 +78,8 @@ export const GridComponent: ComponentDefinition = {
       boxSizing: "border-box",
     };
 
-    // Always render placeholder cells behind real children so all rows/cols are visible
-    const placeholders = Array.from({ length: columns * rows }, (_, i) => {
+    const shouldShowPlaceholders = node.props.showPlaceholder !== false && React.Children.count(children as React.ReactNode) === 0;
+    const placeholders = shouldShowPlaceholders ? Array.from({ length: columns * rows }, (_, i) => {
       const col = (i % columns) + 1;
       const row = Math.floor(i / columns) + 1;
       return (
@@ -102,7 +102,7 @@ export const GridComponent: ComponentDefinition = {
           }}
         />
       );
-    });
+    }) : [];
 
     return (
       <div data-node-id={node.id} data-layout-type="grid" style={gridStyle}>

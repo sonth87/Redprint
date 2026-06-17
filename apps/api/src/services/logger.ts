@@ -6,6 +6,16 @@
  */
 
 const DEBUG = process.env.AI_DEBUG === "true";
+const PROMPT_DEBUG = process.env.AI_PROMPT_DEBUG === "true";
+
+function safePreview(value: unknown): unknown {
+  if (!value || typeof value !== "object") return value;
+  const clone = JSON.parse(JSON.stringify(value)) as Record<string, unknown>;
+  if (typeof clone.prompt === "string") clone.prompt = `${clone.prompt.slice(0, 120)}${clone.prompt.length > 120 ? "…" : ""}`;
+  if (typeof clone.messages === "object") clone.messages = "[redacted]";
+  if (typeof clone.LLM_API_KEY === "string") clone.LLM_API_KEY = "[redacted]";
+  return clone;
+}
 
 export const logger = {
   debug: (section: string, message: string, data?: unknown) => {
@@ -21,7 +31,7 @@ export const logger = {
   request: (method: string, path: string, body: unknown) => {
     if (!DEBUG) return;
     console.log(`\n[REQUEST] ${method} ${path}`);
-    console.log(`Body:`, JSON.stringify(body, null, 2));
+    console.log(`Body:`, JSON.stringify(safePreview(body), null, 2));
   },
 
   designTokens: (tokens: Record<string, unknown>) => {
@@ -33,14 +43,14 @@ export const logger = {
   prompt: (title: string, prompt: string) => {
     if (!DEBUG) return;
     console.log(`\n[PROMPT: ${title}]`);
-    console.log(prompt);
+    console.log(PROMPT_DEBUG ? prompt : `${prompt.slice(0, 500)}${prompt.length > 500 ? "\n[truncated: enable AI_PROMPT_DEBUG=true for full prompt]" : ""}`);
     console.log(`\n[PROMPT_LENGTH: ${prompt.length} chars]`);
   },
 
   systemMessage: (message: string) => {
     if (!DEBUG) return;
     console.log(`\n[SYSTEM_MESSAGE]`);
-    console.log(message);
+    console.log(PROMPT_DEBUG ? message : `${message.slice(0, 500)}${message.length > 500 ? "\n[truncated: enable AI_PROMPT_DEBUG=true for full system prompt]" : ""}`);
     console.log(`\n[MESSAGE_LENGTH: ${message.length} chars]`);
   },
 
@@ -59,6 +69,40 @@ export const logger = {
   section: (index: number, sectionType: string, tone?: string, layoutHint?: string) => {
     if (!DEBUG) return;
     console.log(`\n[SECTION #${index}] type=${sectionType} tone=${tone} layout=${layoutHint}`);
+  },
+
+  jobEvent: (
+    event: string,
+    data: {
+      jobId?: string;
+      sectionId?: string;
+      attempt?: number;
+      stage?: string;
+      elapsedMs?: number;
+      provider?: string;
+      status?: string;
+      errorCode?: string;
+      fallbackUsed?: boolean;
+      manifestComponents?: string[];
+      sectionType?: string;
+      preferredComponents?: string[];
+      selectedComponent?: string;
+      fallbackComponent?: string;
+      fallbackReason?: string;
+      richComponentUsed?: boolean;
+      mediaItemCount?: number;
+      validationErrorCode?: string;
+      contractComponents?: string[];
+      componentIntents?: string[];
+      adapterUsed?: string;
+      adapterFallbackReason?: string;
+      propValidationErrors?: string[];
+      contractSource?: string;
+    },
+  ) => {
+    if (!DEBUG) return;
+    console.log(`\n[AI_JOB:${event}]`);
+    console.log(JSON.stringify(data, null, 2));
   },
 
   error: (stage: string, error: unknown) => {

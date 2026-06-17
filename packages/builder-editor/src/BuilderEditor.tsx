@@ -57,6 +57,7 @@ import { ContextualToolbar } from "./toolbar/ContextualToolbar";
 import { MultiSelectToolbar } from "./toolbar/MultiSelectToolbar";
 import { DeleteConfirmDialog } from "./panels/DeleteConfirmDialog";
 import { AIAssistant } from "./ai/AIAssistant";
+import { PageGeneratorModal } from "./ai/page-generator";
 import { AIConfigPanel } from "./ai/AIConfig";
 import { buildAIContext } from "./ai/buildAIContext";
 import { AIConfigProvider } from "./ai/AIConfigContext";
@@ -248,6 +249,7 @@ function EditorInner({
   } = usePaletteState();
   const { layersOpen, layersPanelPos, handleLayersToggle } = useLayersPanel();
   const { aiOpen, setAiOpen, aiConfig, handleAIConfigChange } = useAIConfig();
+  const [pageGeneratorOpen, setPageGeneratorOpen] = React.useState(false);
   const [figmaOpen, setFigmaOpen] = React.useState(false);
 
   const [remoteCatalog, setRemoteCatalog] = React.useState<PaletteCatalog | undefined>();
@@ -594,6 +596,7 @@ function EditorInner({
         </FloatingPanel>
 
         <AIAssistant open={aiOpen} onOpenChange={setAiOpen} config={aiConfig} context={aiContext} />
+        <PageGeneratorModal open={pageGeneratorOpen} onOpenChange={setPageGeneratorOpen} config={aiConfig} context={aiContext} />
         <FigmaImportDialog open={figmaOpen} onOpenChange={setFigmaOpen} />
 
         {/* Canvas area */}
@@ -677,7 +680,7 @@ function EditorInner({
                             </p>
                           </div>
                           <button
-                            onClick={() => setAiOpen(true)}
+                            onClick={() => setPageGeneratorOpen(true)}
                             className="flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 active:scale-95 transition-all"
                           >
                             <Sparkles className="h-3 w-3" />

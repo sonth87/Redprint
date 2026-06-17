@@ -24,6 +24,7 @@ import type { AIConfig, AIMessage, AIBuilderContext, AIResponse, DesignTokens } 
 import { sendAIMessage, streamAIMessage, parseAIResponse } from "./AIService";
 import { normalizeAICommands } from "./normalizeAICommands";
 import { applyAICommandsProgressive } from "./applyAICommandsProgressive";
+import { usePageGenerator } from "./page-generator";
 import { useTranslation } from "react-i18next";
 import { PROMPT_TEMPLATES, COLOR_PALETTES, TONE_STYLES, TEMPLATE_CATEGORIES } from "./ai-prompt-templates";
 
@@ -55,6 +56,7 @@ export interface AIAssistantProps {
 export function AIAssistant({ open, onOpenChange, config, context }: AIAssistantProps) {
   const { t, i18n } = useTranslation();
   const { dispatch } = useBuilder();
+  const pageGenerator = usePageGenerator(config, context);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef(false);
   const streamScrollRef = useRef<HTMLPreElement>(null);
@@ -165,6 +167,29 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
     }
 
     try {
+      if (fullPageMode) {
+        await pageGenerator.generate(text, {
+          fullPageMode: true,
+          designTokens: contextWithMode.designTokens,
+          generationOptions: {
+            tone: selectedToneStyle
+              ? {
+                  id: selectedToneStyle.id,
+                  label: selectedToneStyle.label,
+                  description: selectedToneStyle.description,
+                }
+              : undefined,
+            colorPalette: selectedPalette,
+            complexity: "standard",
+          },
+        });
+        if (!abortRef.current) {
+          setIsLoading(false);
+          onOpenChange(false);
+        }
+        return;
+      }
+
       if (config.streamingEnabled === true) {
         // ── Streaming mode ──
         await streamAIMessage([userMessage], contextWithMode, config, {
@@ -199,7 +224,7 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
         setError(err instanceof Error ? err.message : "Unknown error");
       }
     }
-  }, [prompt, isLoading, config, context, applyAndClose, fullPageMode, selectedColorPalette, selectedTone]);
+  }, [prompt, isLoading, config, context, applyAndClose, fullPageMode, selectedColorPalette, selectedTone, pageGenerator, onOpenChange]);
 
   const handleCancel = useCallback(() => {
     abortRef.current = true;

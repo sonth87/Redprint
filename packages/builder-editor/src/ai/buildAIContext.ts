@@ -3,7 +3,7 @@
  * for the AI assistant to reason about.
  */
 import type { BuilderState, ComponentDefinition, PaletteCatalog } from "@ui-builder/builder-core";
-import type { AIBuilderContext, AIPageNode, AIPageNodeSlim, AIPageNodeSummary, AIPresetGroup } from "./types";
+import type { AIBuilderContext, AIPageNode, AIPageNodeSlim, AIPageNodeSummary, AIPropSchemaEntry, AIPresetGroup } from "./types";
 import { serializeComponentsCompact, deriveNestingRules } from "./serializeComponents";
 import { serializePresetsCompact } from "./serializePresets";
 
@@ -25,6 +25,35 @@ export interface BuildAIContextOptions {
   paletteCatalog?: PaletteCatalog;
   /** Design tokens for consistent styling across AI-generated sections. Phase 2A. */
   designTokens?: AIBuilderContext["designTokens"];
+}
+
+function serializeAIPropSchemaEntry(schema: ComponentDefinition["propSchema"][number]): AIPropSchemaEntry {
+  const base: AIPropSchemaEntry = {
+    key: schema.key,
+    label: "label" in schema ? schema.label : schema.key,
+    type: schema.type,
+  };
+
+  if ("required" in schema && schema.required !== undefined) base.required = schema.required;
+  if ("default" in schema && schema.default !== undefined) base.default = schema.default;
+  if ("min" in schema && schema.min !== undefined) base.min = schema.min;
+  if ("max" in schema && schema.max !== undefined) base.max = schema.max;
+  if ("step" in schema && schema.step !== undefined) base.step = schema.step;
+  if ("unit" in schema && schema.unit !== undefined) base.unit = schema.unit;
+  if ("multiple" in schema && schema.multiple !== undefined) base.multiple = schema.multiple;
+  if ("options" in schema && Array.isArray(schema.options)) {
+    base.options = schema.options.map((option) => ({ value: option.value, label: option.label }));
+  }
+  if ("children" in schema && Array.isArray(schema.children)) {
+    base.children = schema.children.map(serializeAIPropSchemaEntry);
+  }
+
+  return base;
+}
+
+function serializeAIPropSchema(schema: ComponentDefinition["propSchema"] | undefined): AIPropSchemaEntry[] | undefined {
+  if (!schema) return undefined;
+  return schema.map(serializeAIPropSchemaEntry);
 }
 
 export function buildAIContext(
@@ -151,9 +180,7 @@ export function buildAIContext(
                 .filter(([, v]) => Boolean(v))
                 .map(([k]) => k)
             : undefined,
-          propSchema: selectedDef?.propSchema
-            .filter((s) => s.type !== "group" && s.type !== "row")
-            .map((s) => ({ key: s.key, label: (s as { label?: string }).label ?? s.key, type: s.type })),
+          propSchema: serializeAIPropSchema(selectedDef?.propSchema),
         }
       : null,
     availableComponents: components.map((c) => ({
@@ -163,9 +190,8 @@ export function buildAIContext(
       capabilities: Object.entries(c.capabilities)
         .filter(([, v]) => Boolean(v))
         .map(([k]) => k),
-      propSchema: c.propSchema
-        .filter((s) => s.type !== "group" && s.type !== "row")
-        .map((s) => ({ key: s.key, label: (s as { label?: string }).label ?? s.key, type: s.type })),
+      propSchema: serializeAIPropSchema(c.propSchema),
+      defaultProps: c.defaultProps,
     })),
     activeBreakpoint: state.editor.activeBreakpoint,
     pageNodes,

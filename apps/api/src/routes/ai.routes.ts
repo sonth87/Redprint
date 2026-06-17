@@ -5,19 +5,36 @@
  * POST /api/ai/chat           — Single chat/edit turn (returns JSON)
  */
 import { Router, type IRouter, type Request, type Response } from "express";
-import { generatePageOutline } from "../services/outline-generator.js";
-import { generateSectionCommands, extractStyleSummary } from "../services/section-generator.js";
+import { randomUUID } from "node:crypto";
+import { classifyAIError } from "../services/ai-error-classifier.js";
+import { buildComponentCapabilityManifest } from "../services/component-capability-manifest.js";
+import { buildDeterministicPagePlan, generatePagePlan } from "../services/page-plan-generator.js";
+import { generateSectionPlan } from "../services/section-plan-generator.js";
+import { buildSkeletonCommands, compileFallbackSection, compileSection } from "../services/section-plan-compiler.js";
 import { callLLM } from "../services/llm-client.js";
 import { COMMAND_REFERENCE } from "../services/command-reference.js";
 import { logger } from "../services/logger.js";
 import type {
   ChatRequest,
   GeneratePageRequest,
-  SectionDesignContext,
   AICommandSuggestion,
 } from "../types/ai.types.js";
 
 export const aiRouter: IRouter = Router();
+
+const RICH_COMPONENT_TYPES = new Set([
+  "NavigationMenu",
+  "GalleryPro",
+  "GallerySlider",
+  "GalleryGrid",
+  "CollapsibleText",
+  "TextMarquee",
+  "TextMask",
+  "Shape",
+  "Row",
+  "Column",
+  "Repeater",
+]);
 
 // ── Utility: write SSE event ─────────────────────────────────────────────
 
@@ -35,14 +52,48 @@ function initSSE(res: Response) {
   res.flushHeaders();
 }
 
-// ── Generation mode from env ─────────────────────────────────────────────
-
-function isParallelMode(): boolean {
-  return (process.env.AI_GENERATION_MODE ?? "sequential") === "parallel";
+function getPositiveIntEnv(name: string, fallback: number): number {
+  const value = Number(process.env[name]);
+  if (Number.isFinite(value) && value > 0) return Math.floor(value);
+  return fallback;
 }
 
-function getBatchSize(): number {
-  return parseInt(process.env.AI_BATCH_SIZE ?? "3", 10);
+function sectionPriority(type: string): number {
+  const order = ["header", "hero", "services", "features", "pricing", "cta", "trust", "process", "testimonials", "faq", "footer"];
+  const index = order.indexOf(type);
+  return index === -1 ? order.length : index;
+}
+
+function commandComponentTypes(commands: AICommandSuggestion[]): string[] {
+  return commands
+    .filter((cmd) => cmd.type === "ADD_NODE")
+    .map((cmd) => String(cmd.payload.componentType ?? ""))
+    .filter(Boolean);
+}
+
+function richCommandSummary(commands: AICommandSuggestion[]) {
+  const componentTypes = commandComponentTypes(commands);
+  const richTypes = componentTypes.filter((type) => RICH_COMPONENT_TYPES.has(type));
+  return {
+    selectedComponent: richTypes[0],
+    richComponentUsed: richTypes.length > 0,
+    fallbackComponent: richTypes[0] ?? componentTypes[0],
+    adapterUsed: richTypes[0] ?? componentTypes[0],
+  };
+}
+
+async function runWithConcurrency<T>(items: T[], concurrency: number, worker: (item: T) => Promise<void>): Promise<void> {
+  let nextIndex = 0;
+  const workerCount = Math.max(1, Math.min(concurrency, items.length));
+
+  await Promise.all(
+    Array.from({ length: workerCount }, async () => {
+      while (nextIndex < items.length) {
+        const item = items[nextIndex++];
+        if (item) await worker(item);
+      }
+    }),
+  );
 }
 
 // ── POST /api/ai/generate-page ──────────────────────────────────────────
@@ -61,114 +112,174 @@ aiRouter.post("/generate-page", async (req: Request, res: Response) => {
     hasDesignTokens: !!body.designTokens && Object.keys(body.designTokens).length > 0,
     designTokens: body.designTokens,
     componentCount: body.availableComponents?.length ?? 0,
+    manifestComponents: buildComponentCapabilityManifest(body.availableComponents ?? []).map((component) => component.type),
   });
 
   initSSE(res);
 
+  const jobId = randomUUID();
+  const startedAt = Date.now();
+  const failedSections: Array<{ sectionId: string; index: number; error: string }> = [];
+  let completed = 0;
+
   try {
-    // ── Step 1: Generate page outline ──────────────────────────────────────
-    console.log(`[AI] Generating outline for: "${body.prompt.slice(0, 80)}..."`);
-    logger.debug("OUTLINE", "Starting page outline generation", { prompt: body.prompt.slice(0, 100) });
+    logger.jobEvent("started", { jobId, stage: "planner", status: "running" });
+    sendSSE(res, "job_started", { jobId });
 
-    const outline = await generatePageOutline(body);
-    console.log(`[AI] Outline ready: ${outline.sections.length} sections`);
-    logger.response("outline_ready", { sections: outline.sections });
+    const pagePlan = await generatePagePlan(body, jobId);
+    const skeletonCommands = buildSkeletonCommands(pagePlan, body);
+    const manifestComponents = buildComponentCapabilityManifest(body.availableComponents ?? []).map((component) => component.type);
 
-    sendSSE(res, "outline_ready", { sections: outline.sections });
-
-    // ── Step 2: Generate each section ─────────────────────────────────────
-    const designContext: SectionDesignContext = {
-      designTokens: body.designTokens ?? {},
-      previousSections: [],
-      originalPrompt: body.prompt,
-    };
-
-    logger.designTokens(designContext.designTokens as Record<string, unknown>);
-    logger.debug("DESIGN_CONTEXT", "Design context prepared", {
-      hasTokens: Object.keys(designContext.designTokens).length > 0,
-      tokens: designContext.designTokens,
+    logger.jobEvent("plan_ready", {
+      jobId,
+      stage: "planner",
+      status: "success",
+      elapsedMs: Date.now() - startedAt,
+      manifestComponents,
+    });
+    logger.response("plan_ready", {
+      jobId,
+      sectionCount: pagePlan.sections.length,
+      sections: pagePlan.sections.map((section) => ({ id: section.id, type: section.type, title: section.title })),
     });
 
-    if (isParallelMode()) {
-      // ── Parallel mode (batched) ──────────────────────────────────────────
-      const batchSize = getBatchSize();
-      for (let start = 0; start < outline.sections.length; start += batchSize) {
-        const batch = outline.sections.slice(start, start + batchSize);
-        console.log(`[AI] Parallel batch: sections ${start}–${start + batch.length - 1}`);
+    sendSSE(res, "plan_ready", { jobId, plan: pagePlan, skeletonCommands });
 
-        // Capture current design context for this batch (before any of them run)
-        const batchDesignContext: SectionDesignContext = {
-          ...designContext,
-          previousSections: [...designContext.previousSections],
-        };
+    const maxAttempts = getPositiveIntEnv("AI_MAX_SECTION_ATTEMPTS", 2);
+    const sectionConcurrency = getPositiveIntEnv("AI_SECTION_CONCURRENCY", 2);
+    const prioritizedSections = [...pagePlan.sections].sort(
+      (a, b) => sectionPriority(a.type) - sectionPriority(b.type) || a.index - b.index,
+    );
 
-        const batchResults = await Promise.allSettled(
-          batch.map((sectionOutline) =>
-            generateSectionCommands(sectionOutline, body, batchDesignContext)
-          )
-        );
+    await runWithConcurrency(prioritizedSections, sectionConcurrency, async (section) => {
+      const sectionStart = Date.now();
+      logger.jobEvent("section_started", { jobId, sectionId: section.id, stage: "section", status: "running" });
+      sendSSE(res, "section_started", { jobId, index: section.index, sectionId: section.id });
 
-        for (let i = 0; i < batchResults.length; i++) {
-          const result = batchResults[i];
-          const sectionOutline = batch[i];
+      let sectionDone = false;
+      let lastError = "";
+      let lastErrorKind = "unknown";
 
-          if (result.status === "fulfilled") {
-            const commands: AICommandSuggestion[] = result.value;
-            sendSSE(res, "section_ready", {
-              index: sectionOutline.index,
-              sectionId: sectionOutline.sectionId,
-              commands,
-            });
-            // Update design context for subsequent batches
-            const summary = extractStyleSummary(commands);
-            designContext.previousSections.push({
-              type: sectionOutline.sectionType,
-              ...summary,
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          const sectionPlan = await generateSectionPlan(
+            pagePlan,
+            section,
+            body,
+            attempt > 1 ? lastError : undefined,
+          );
+          const commands = compileSection(sectionPlan, section, pagePlan, body);
+          if (commands.length === 0) {
+            throw new Error("Compiler produced no valid commands");
+          }
+
+          const richSummary = richCommandSummary(commands);
+          completed++;
+          sectionDone = true;
+          logger.jobEvent("section_ready", {
+            jobId,
+            sectionId: section.id,
+            attempt,
+            stage: "section",
+            status: "success",
+            elapsedMs: Date.now() - sectionStart,
+            sectionType: section.type,
+            preferredComponents: sectionPlan.preferredComponents,
+            componentIntents: sectionPlan.componentIntents?.map((intent) => `${intent.role}:${intent.componentType}`),
+            selectedComponent: richSummary.selectedComponent,
+            adapterUsed: richSummary.adapterUsed,
+            richComponentUsed: richSummary.richComponentUsed,
+            mediaItemCount: sectionPlan.mediaItems?.length ?? 0,
+          });
+          sendSSE(res, "section_ready", {
+            jobId,
+            index: section.index,
+            sectionId: section.id,
+            commands,
+          });
+          break;
+        } catch (err) {
+          const classified = classifyAIError(err);
+          lastError = classified.message;
+          lastErrorKind = classified.kind;
+          logger.jobEvent("section_error", {
+            jobId,
+            sectionId: section.id,
+            attempt,
+            stage: "section",
+            status: classified.retryable && attempt < maxAttempts ? "retryable_error" : "fallback",
+            errorCode: classified.kind,
+          });
+          if (attempt < maxAttempts && classified.retryable) {
+            sendSSE(res, "section_retrying", {
+              jobId,
+              index: section.index,
+              sectionId: section.id,
+              attempt: attempt + 1,
+              reason: lastError,
             });
           } else {
-            console.error(`[AI] Section ${sectionOutline.index} failed:`, result.reason);
-            sendSSE(res, "section_error", {
-              index: sectionOutline.index,
-              sectionId: sectionOutline.sectionId,
-              error: result.reason instanceof Error ? result.reason.message : "Generation failed",
-            });
+            break;
           }
         }
       }
-    } else {
-      // ── Sequential mode ──────────────────────────────────────────────────
-      for (const sectionOutline of outline.sections) {
-        console.log(`[AI] Generating section ${sectionOutline.index}: ${sectionOutline.sectionType}`);
-        try {
-          const commands = await generateSectionCommands(sectionOutline, body, designContext);
-          sendSSE(res, "section_ready", {
-            index: sectionOutline.index,
-            sectionId: sectionOutline.sectionId,
-            commands,
-          });
-          // Update design context for next section
-          const summary = extractStyleSummary(commands);
-          designContext.previousSections.push({
-            type: sectionOutline.sectionType,
-            ...summary,
-          });
-        } catch (err) {
-          console.error(`[AI] Section ${sectionOutline.index} failed:`, err);
-          sendSSE(res, "section_error", {
-            index: sectionOutline.index,
-            sectionId: sectionOutline.sectionId,
-            error: err instanceof Error ? err.message : "Generation failed",
-          });
-          // Continue with next section — don't abort the whole generation
-        }
-      }
-    }
 
-    sendSSE(res, "complete", {});
+      if (!sectionDone) {
+        const fallbackCommands = compileFallbackSection(section, pagePlan, body);
+        const richSummary = richCommandSummary(fallbackCommands);
+        failedSections.push({ sectionId: section.id, index: section.index, error: lastError || "Section generation failed" });
+        logger.jobEvent("section_failed", {
+          jobId,
+          sectionId: section.id,
+          stage: "section",
+          status: "fallback",
+          fallbackUsed: fallbackCommands.length > 0,
+          elapsedMs: Date.now() - sectionStart,
+          errorCode: lastErrorKind,
+          sectionType: section.type,
+          fallbackComponent: richSummary.fallbackComponent,
+          fallbackReason: lastError || "Section generation failed",
+          adapterUsed: richSummary.adapterUsed,
+          adapterFallbackReason: lastError || "Section generation failed",
+          richComponentUsed: richSummary.richComponentUsed,
+        });
+        sendSSE(res, "section_failed", {
+          jobId,
+          index: section.index,
+          sectionId: section.id,
+          error: lastError || "Section generation failed",
+          fallbackCommands,
+        });
+      }
+    });
+
+    const status = failedSections.length === 0 ? "success" : completed > 0 ? "partial" : "failed";
+    logger.jobEvent("complete", {
+      jobId,
+      stage: "complete",
+      status,
+      elapsedMs: Date.now() - startedAt,
+      fallbackUsed: failedSections.length > 0,
+    });
+    sendSSE(res, "complete", {
+      jobId,
+      status,
+      completed,
+      failed: failedSections.length,
+      failedSections,
+    });
     res.end();
   } catch (err) {
     console.error("[AI] generate-page fatal error:", err);
+    logger.jobEvent("fatal_error", {
+      jobId,
+      stage: "planner",
+      status: "failed",
+      elapsedMs: Date.now() - startedAt,
+      errorCode: err instanceof Error ? err.message.slice(0, 120) : String(err).slice(0, 120),
+    });
     sendSSE(res, "error", {
+      jobId,
       message: err instanceof Error ? err.message : "Internal server error",
     });
     res.end();
@@ -247,6 +358,32 @@ ${nestingRules}${pageContextBlock}${presetsBlock}${designTokensBlock}
 ${COMMAND_REFERENCE}`;
 }
 
+function buildFullPageChatFallback(body: ChatRequest): { message: string; commands: AICommandSuggestion[] } {
+  const prompt = body.messages.filter((message) => message.role === "user").at(-1)?.content ?? "Generate a full page";
+  const jobId = `chat-${randomUUID().slice(0, 8)}`;
+  const request: GeneratePageRequest = {
+    prompt,
+    fullPageMode: true,
+    rootNodeId: body.builderContext.document.rootNodeId,
+    availableComponents: body.builderContext.availableComponents,
+    availablePresets: body.builderContext.availablePresets,
+    availablePresetsCompact: body.builderContext.availablePresetsCompact,
+    nestingRules: body.builderContext.nestingRules,
+    designTokens: body.builderContext.designTokens,
+    pageNodes: body.builderContext.pageNodes,
+  };
+  const pagePlan = buildDeterministicPagePlan(request, jobId);
+  const commands = [
+    ...buildSkeletonCommands(pagePlan, request),
+    ...pagePlan.sections.flatMap((section) => compileFallbackSection(section, pagePlan, request)),
+  ];
+
+  return {
+    message: "The AI provider timed out, so a deterministic full-page fallback was generated instead.",
+    commands,
+  };
+}
+
 // ── POST /api/ai/chat ────────────────────────────────────────────────────
 
 aiRouter.post("/chat", async (req: Request, res: Response) => {
@@ -312,7 +449,7 @@ aiRouter.post("/chat", async (req: Request, res: Response) => {
         if (childrenToRemove.length > 0) {
           const removeCommands: AICommandSuggestion[] = childrenToRemove.map((node) => ({
             type: "REMOVE_NODE",
-            payload: { id: node.id },
+            payload: { nodeId: node.id },
             description: `Remove ${node.type} node`,
           }));
 
@@ -341,6 +478,11 @@ aiRouter.post("/chat", async (req: Request, res: Response) => {
     res.json({ message: obj.message ?? "", commands });
   } catch (err) {
     console.error("[AI] chat error:", err);
+    if (body.builderContext?.fullPageMode) {
+      const fallback = buildFullPageChatFallback(body);
+      res.json(fallback);
+      return;
+    }
     res.status(500).json({
       error: err instanceof Error ? err.message : "Internal server error",
     });

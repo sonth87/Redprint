@@ -22,12 +22,17 @@ import { useTranslation } from "react-i18next";
 import { Sparkles, CheckCircle2, XCircle, Loader2, LayoutTemplate } from "lucide-react";
 import type { AIConfig, AIBuilderContext } from "../types";
 import { usePageGenerator, type SectionOutlineView } from "./usePageGenerator";
+import { COLOR_PALETTES, TONE_STYLES } from "../ai-prompt-templates";
 
 // ── Section type → icon label map ─────────────────────────────────────────
 
 const SECTION_TYPE_LABELS: Record<string, string> = {
   hero: "🦸 Hero",
   header: "🧭 Header",
+  services: "Services",
+  trust: "Trust",
+  process: "Process",
+  gallery: "Gallery",
   features: "✨ Features",
   stats: "📊 Stats",
   testimonials: "💬 Testimonials",
@@ -47,7 +52,8 @@ function sectionLabel(type: string): string {
 function SectionRow({ section }: { section: SectionOutlineView }) {
   const { t } = useTranslation();
   const isGenerating = !section.done;
-  const hasError = Boolean(section.error);
+  const isRetrying = section.status === "retrying";
+  const hasError = section.status === "failed" && Boolean(section.error);
 
   return (
     <div
@@ -55,7 +61,9 @@ function SectionRow({ section }: { section: SectionOutlineView }) {
         "flex items-start gap-3 rounded-lg border px-3 py-2.5 transition-all text-sm " +
         (hasError
           ? "border-destructive/40 bg-destructive/5"
-          : section.done
+            : isRetrying
+              ? "border-amber-400/50 bg-amber-50/60"
+              : section.done
             ? "border-border bg-muted/30 opacity-80"
             : "border-primary/40 bg-primary/5")
       }
@@ -80,7 +88,10 @@ function SectionRow({ section }: { section: SectionOutlineView }) {
           )}
         </div>
         <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{section.purpose}</p>
-        {hasError && (
+        {isRetrying && (
+          <p className="text-[10px] text-amber-600 mt-0.5">{t("ai.pageGenerator.retrying")} {section.attempt ?? ""}</p>
+        )}
+        {hasError && !isRetrying && (
           <p className="text-[10px] text-destructive mt-0.5">{section.error}</p>
         )}
       </div>
@@ -108,6 +119,8 @@ export function PageGeneratorModal({
   const { t } = useTranslation();
   const [prompt, setPrompt] = useState("");
   const [fullPageMode, setFullPageMode] = useState(false);
+  const [selectedColorPalette, setSelectedColorPalette] = useState(COLOR_PALETTES[0]?.name ?? "");
+  const [selectedTone, setSelectedTone] = useState(TONE_STYLES[0]?.id ?? "");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { state, generate, cancel, reset } = usePageGenerator(config, context);
 
@@ -128,12 +141,12 @@ export function PageGeneratorModal({
 
   // Auto-close after done (2 seconds)
   useEffect(() => {
-    if (isDone) {
+    if (isDone && state.completionStatus !== "partial" && state.completionStatus !== "failed") {
       const t = setTimeout(() => onOpenChange(false), 1800);
       return () => clearTimeout(t);
     }
     return undefined;
-  }, [isDone, onOpenChange]);
+  }, [isDone, state.completionStatus, onOpenChange]);
 
   // Focus textarea on open
   useEffect(() => {
@@ -144,8 +157,19 @@ export function PageGeneratorModal({
 
   const handleGenerate = useCallback(async () => {
     if (!prompt.trim() || isBusy) return;
-    await generate(prompt.trim(), { fullPageMode });
-  }, [prompt, isBusy, generate, fullPageMode]);
+    const palette = COLOR_PALETTES.find((p) => p.name === selectedColorPalette);
+    const tone = TONE_STYLES.find((item) => item.id === selectedTone);
+    await generate(prompt.trim(), {
+      fullPageMode,
+      generationOptions: {
+        colorPalette: palette
+          ? { name: palette.name, primary: palette.primary, secondary: palette.secondary, accent: palette.accent }
+          : undefined,
+        tone: tone ? { id: tone.id, label: tone.label, description: tone.description } : undefined,
+        complexity: "standard",
+      },
+    });
+  }, [prompt, isBusy, generate, fullPageMode, selectedColorPalette, selectedTone]);
 
   const handleCancel = useCallback(() => {
     if (isBusy) {
@@ -205,6 +229,54 @@ export function PageGeneratorModal({
                   rows={4}
                   className="w-full rounded-md border bg-transparent px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
                 />
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">{t("ai.colorPalette")}</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {COLOR_PALETTES.slice(0, 6).map((palette) => (
+                      <button
+                        key={palette.name}
+                        type="button"
+                        onClick={() => setSelectedColorPalette(palette.name)}
+                        className={
+                          "flex h-9 items-center justify-center rounded-md border-2 transition-all " +
+                          (selectedColorPalette === palette.name
+                            ? "border-primary ring-2 ring-primary/20"
+                            : "border-border hover:border-primary/50")
+                        }
+                        title={palette.name}
+                      >
+                        <span className="flex gap-1">
+                          <span className="h-3 w-3 rounded-sm" style={{ backgroundColor: palette.primary }} />
+                          <span className="h-3 w-3 rounded-sm" style={{ backgroundColor: palette.secondary }} />
+                          <span className="h-3 w-3 rounded-sm" style={{ backgroundColor: palette.accent }} />
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">{t("ai.toneStyle")}</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {TONE_STYLES.slice(0, 4).map((tone) => (
+                      <button
+                        key={tone.id}
+                        type="button"
+                        onClick={() => setSelectedTone(tone.id)}
+                        className={
+                          "truncate rounded-md border px-2.5 py-2 text-left text-xs font-medium transition-all " +
+                          (selectedTone === tone.id
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border hover:border-primary/50")
+                        }
+                        title={tone.description}
+                      >
+                        {tone.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
               {/* Full page mode checkbox */}
               <div className="flex items-center gap-3 px-3 py-2.5 bg-muted/40 rounded-lg border border-border">
@@ -275,9 +347,11 @@ export function PageGeneratorModal({
 
           {/* ── Done state ────────────────────────────────────────────── */}
           {isDone && (
-            <div className="flex items-center gap-2 text-emerald-600 text-sm font-medium">
+            <div className={"flex items-center gap-2 text-sm font-medium " + (state.completionStatus === "partial" ? "text-amber-600" : "text-emerald-600")}>
               <CheckCircle2 className="h-4 w-4" />
-              {t("ai.pageGenerator.success")}
+              {state.completionStatus === "partial"
+                ? `${t("ai.pageGenerator.partial")} (${state.failedCount} ${t("ai.pageGenerator.failedSections")})`
+                : t("ai.pageGenerator.success")}
             </div>
           )}
         </div>
