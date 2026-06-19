@@ -61,6 +61,25 @@ interface CanvasKeyboardNav {
 }
 ```
 
+### Editor Interaction Shield
+
+In editor mode, component DOM is visual by default. `builder-react` resolves each
+component's `editorConfig.interactionPolicy` and applies an interaction shield at
+`NodeRenderer` so native runtime behavior does not compete with canvas selection,
+move, resize, or inline edit.
+
+- `shielded` and normal `inline-edit` nodes suppress descendant pointer events,
+  native text selection, link/image dragging, runtime clicks, and runtime
+  focus/key activation.
+- `inline-edit` nodes still allow canvas double-click handling to enter the rich-text
+  editor for components such as Text and Button.
+- `container` nodes such as Section, Container, Grid, Column, Row, and Repeater do
+  not shield their subtree, so children remain selectable through `data-node-id`.
+- `component-managed` nodes keep their own editor interactions. `GalleryPro`
+  Freestyle currently uses this mode to preserve direct image dragging until that
+  UX is redesigned as a separate edit mode.
+- Runtime and preview modes do not receive shield attributes or shield event handlers.
+
 ### Resize & Drag Keyboard Alternative
 
 For users unable to use mouse drag:
@@ -81,6 +100,14 @@ Hamburger menus must expose `aria-expanded` and `aria-controls`, close with Esca
 or backdrop/close button, restore focus to the trigger when closed, and lock body
 scroll for fullscreen/drawer modes. Mobile submenu children render as expandable
 groups instead of hover-only flyouts.
+
+On the editor canvas, `NavigationMenu` uses the general Editor Interaction Shield
+and also keeps component-level guards as defense in depth. Hover, click, overflow
+scroll buttons, dropdown submenus, and hamburger overlays are runtime behaviors
+only. Native link dragging is disabled on editor-rendered menu links so drag
+gestures belong to the editor selection system. Editor canvas interaction should
+select, move, and resize the component; menu item and submenu edits happen in
+Manage Menu.
 
 Editor Manage Menu keeps hidden menu items visible in the management tree so they
 can be reordered, nested, restored, or deleted without losing state. Dragging menu

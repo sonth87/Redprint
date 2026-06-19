@@ -285,7 +285,16 @@ interface ComponentCapabilities {
   isRootEligible?: boolean;
   isDragDisabled?: boolean;
   isDropDisabled?: boolean;
+  inlineEditable?: boolean; // double-click enters inline editor when a richtext prop exists
 }
+
+type EditorInteractionPolicy =
+  | "auto"
+  | "shielded"
+  | "container"
+  | "inline-edit"
+  | "component-managed"
+  | "native";
 
 interface ComponentEditorConfig {
   minWidth?: number; // px, resize constraint
@@ -296,6 +305,7 @@ interface ComponentEditorConfig {
   showBoundingBox?: boolean; // default true
   selectionColor?: string;
   showQuickActions?: boolean; // default true
+  interactionPolicy?: EditorInteractionPolicy; // default "auto"
 }
 
 interface ComponentLifecycle {
@@ -314,6 +324,26 @@ interface ComponentA11yConfig {
   focusable?: boolean;
 }
 ```
+
+### EditorInteractionPolicy
+
+`interactionPolicy` controls how `builder-react` shields runtime DOM behavior on the editor canvas.
+It is an editor hint only; runtime and preview renderers remain interactive.
+
+- `"auto"`: resolver default. Containers (`canContainChildren`) become `"container"`;
+  inline editable leaves become `"inline-edit"`; other leaves become `"shielded"`.
+- `"shielded"`: component subtree is visual-only in editor mode. Descendant pointer
+  events, native text selection, link/image dragging, runtime clicks, and runtime
+  focus/key activation are suppressed so selection, move, and resize belong to the editor.
+- `"container"`: subtree is not shielded, allowing child nodes inside `Section`,
+  `Container`, `Grid`, `Column`, `Row`, and `Repeater` to remain selectable.
+- `"inline-edit"`: normal editor mode is shielded like a leaf component, but double-click
+  can enter the component's inline rich-text editor when `inlineEditable` is true.
+- `"component-managed"`: component owns special editor interactions internally. Use
+  sparingly for components such as `GalleryPro` Freestyle until their direct manipulation
+  is moved into a dedicated edit mode or settings panel.
+- `"native"`: no editor shield is applied. This is reserved for advanced integrations
+  that intentionally need native DOM interaction on the canvas.
 
 ---
 
@@ -558,8 +588,13 @@ render nested children inline within the column instead of as detached flyouts.
 `widthMode` controls the menu container width only: `fullWidth` stretches the
 menu to the available container/page width, while `wrap` returns the menu to
 content-sized width. It must not imply `fillItems`; item distribution is controlled
-only by `fillItems`. `overflowMode: "scroll"` uses click scroll controls instead
-of exposing a native horizontal scrollbar.
+only by `fillItems`. Vertical menus in `wrap` mode ignore the component default
+`width: 100%` and render at intrinsic content width unless the user resizes them
+or switches to `fullWidth`. `overflowMode: "scroll"` uses click scroll controls
+instead of exposing a native horizontal scrollbar.
+When `overflowMode: "wrap"` is used on a horizontal menu, the menu keeps an
+intrinsic content height so the editor selection frame expands and contracts with
+the actual wrapped rows while side-resizing changes width.
 
 Every `Section` is also a valid anchor target. Its runtime DOM `id` resolves from
 `props.anchorId`, `props.htmlId`, `props.slug`, then the node id. Manage Menu

@@ -153,6 +153,14 @@ export interface ComponentCapabilities {
 
 export type ResizeHandle = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
 
+export type EditorInteractionPolicy =
+  | "auto"
+  | "shielded"
+  | "container"
+  | "inline-edit"
+  | "component-managed"
+  | "native";
+
 export interface ComponentEditorConfig {
   minWidth?: number;
   minHeight?: number;
@@ -162,6 +170,7 @@ export interface ComponentEditorConfig {
   showBoundingBox?: boolean;
   selectionColor?: string;
   showQuickActions?: boolean;
+  interactionPolicy?: EditorInteractionPolicy;
 }
 
 // ── Lifecycle ─────────────────────────────────────────────────────────────

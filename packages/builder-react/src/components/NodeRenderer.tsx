@@ -1,9 +1,18 @@
 import React, { useState, useEffect, useRef } from "react";
-import type { BuilderNode, ComponentDefinition } from "@ui-builder/builder-core";
-import { resolveStyle, resolveProps, resolveVisibility } from "@ui-builder/builder-core";
+import {
+  resolveStyle,
+  resolveProps,
+  resolveVisibility,
+  type BuilderNode,
+  type ComponentDefinition,
+} from "@ui-builder/builder-core";
 import { ANIMATION_KEYFRAMES_CSS, PRESET_KEYFRAME } from "@ui-builder/shared";
 import { useBuilder } from "../hooks/useBuilder";
 import { useResolvedBreakpoint } from "../hooks/useResolvedBreakpoint";
+import {
+  createEditorInteractionShieldProps,
+  resolveEditorInteractionPolicy,
+} from "./editorInteractionPolicy";
 
 // Singleton: inject keyframes into <head> once, lazily when first preview fires
 let _keyframesInjected = false;
@@ -13,6 +22,33 @@ function ensureKeyframesInjected() {
   const el = document.createElement("style");
   el.setAttribute("data-rb-animations", "1");
   el.textContent = ANIMATION_KEYFRAMES_CSS;
+  document.head.appendChild(el);
+}
+
+const EDITOR_INTERACTION_SHIELD_CSS = `
+[data-editor-interaction="shielded"],
+[data-editor-interaction="inline-edit"] {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+}
+
+[data-editor-interaction="shielded"] *,
+[data-editor-interaction="inline-edit"] * {
+  pointer-events: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -webkit-user-drag: none !important;
+}
+`;
+
+let _editorShieldStylesInjected = false;
+function ensureEditorShieldStylesInjected() {
+  if (_editorShieldStylesInjected || typeof document === "undefined") return;
+  _editorShieldStylesInjected = true;
+  const el = document.createElement("style");
+  el.setAttribute("data-rb-editor-interaction-shield", "1");
+  el.textContent = EDITOR_INTERACTION_SHIELD_CSS;
   document.head.appendChild(el);
 }
 
@@ -40,12 +76,21 @@ export function NodeRenderer({ nodeId, mode = "editor" }: NodeRendererProps) {
   // ── Animation preview (editor only) ─────────────────────────────
   const animPreset = node?.props._animation as string | undefined;
   const previewKey = node?.props._animationPreviewKey as number | undefined;
+  const animationDuration = Number(node?.props._animationDuration ?? 600);
+  const animationDelay = Number(node?.props._animationDelay ?? 0);
+  const animationEasing = String(node?.props._animationEasing ?? "ease");
 
   const [previewActive, setPreviewActive] = useState(false);
   const prevAnimRef = useRef<string | undefined>(animPreset);
   const prevKeyRef  = useRef<number | undefined>(previewKey);
   const rafIdRef    = useRef<number | undefined>(undefined);
   const timerIdRef  = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  useEffect(() => {
+    if (mode === "editor") {
+      ensureEditorShieldStylesInjected();
+    }
+  }, [mode]);
 
   useEffect(() => {
     if (mode !== "editor") return;
@@ -70,10 +115,7 @@ export function NodeRenderer({ nodeId, mode = "editor" }: NodeRendererProps) {
     rafIdRef.current = requestAnimationFrame(() => {
       rafIdRef.current = undefined;
       setPreviewActive(true);
-      const duration =
-        Number(node?.props._animationDuration ?? 600) +
-        Number(node?.props._animationDelay    ?? 0)   +
-        200;
+      const duration = animationDuration + animationDelay + 200;
       timerIdRef.current = setTimeout(() => {
         timerIdRef.current = undefined;
         setPreviewActive(false);
@@ -90,7 +132,7 @@ export function NodeRenderer({ nodeId, mode = "editor" }: NodeRendererProps) {
         timerIdRef.current = undefined;
       }
     };
-  }, [mode, animPreset, previewKey]);
+  }, [mode, animPreset, previewKey, animationDuration, animationDelay]);
 
   // ── Render-error reporting ──────────────────────────────────────
   const renderErrorRef = useRef<string | null>(null);
@@ -139,6 +181,9 @@ export function NodeRenderer({ nodeId, mode = "editor" }: NodeRendererProps) {
   ));
 
   const renderer = mode === "editor" ? def.editorRenderer : def.runtimeRenderer;
+  const interactionPolicy =
+    mode === "editor" ? resolveEditorInteractionPolicy(def, node) : null;
+  const shieldProps = createEditorInteractionShieldProps(interactionPolicy);
 
   // ── Render ───────────────────────────────────────────────────────
   try {
@@ -152,6 +197,15 @@ export function NodeRenderer({ nodeId, mode = "editor" }: NodeRendererProps) {
 
     if (React.isValidElement(rendered)) {
       const extraProps: Record<string, unknown> = { "data-node-id": nodeId };
+
+      if (mode === "editor" && interactionPolicy) {
+        extraProps["data-editor-interaction"] = interactionPolicy;
+        extraProps["data-editor-node-type"] = node.type;
+      }
+
+      if (shieldProps) {
+        Object.assign(extraProps, shieldProps);
+      }
 
       // Dim hidden nodes in editor so they're still selectable
       if (!visible && mode === "editor") {
@@ -172,7 +226,7 @@ export function NodeRenderer({ nodeId, mode = "editor" }: NodeRendererProps) {
         ) as React.CSSProperties | undefined;
         extraProps.style = {
           ...existingStyle,
-          animation: `${PRESET_KEYFRAME[animPreset]} ${Number(node.props._animationDuration ?? 600)}ms ${String(node.props._animationEasing ?? "ease")} ${Number(node.props._animationDelay ?? 0)}ms both`,
+          animation: `${PRESET_KEYFRAME[animPreset]} ${animationDuration}ms ${animationEasing} ${animationDelay}ms both`,
         };
       }
 

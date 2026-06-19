@@ -1,8 +1,15 @@
-import React, { type MouseEvent as RMouseEvent, useRef, useCallback, useEffect, useLayoutEffect, useState } from "react";
+import React, {
+  type MouseEvent as RMouseEvent,
+  useRef,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useState,
+} from "react";
 import { cn } from "@ui-builder/ui";
 import type { CanvasConfig } from "@ui-builder/builder-core";
 import type { Point } from "@ui-builder/shared";
-import { CANVAS_MIN_ZOOM, CANVAS_MAX_ZOOM, CANVAS_ZOOM_SENSITIVITY } from "../constants";
+import { CANVAS_MIN_ZOOM, CANVAS_MAX_ZOOM } from "../constants";
 
 export interface CanvasRootProps {
   canvasConfig: CanvasConfig;
@@ -106,7 +113,10 @@ export function CanvasRoot({
           zoomMultiplier = Math.exp(-e.deltaY * 0.01);
         }
 
-        const nextZoom = Math.min(CANVAS_MAX_ZOOM, Math.max(CANVAS_MIN_ZOOM, zoom * zoomMultiplier));
+        const nextZoom = Math.min(
+          CANVAS_MAX_ZOOM,
+          Math.max(CANVAS_MIN_ZOOM, zoom * zoomMultiplier),
+        );
 
         // Adjust pan so the canvas point stays under the cursor
         const newPanX = mouseX - canvasX * nextZoom;
@@ -168,10 +178,10 @@ export function CanvasRoot({
   // Calculate dynamic grid opacity to prevent moire patterns when zoomed out
   const apparentGridSize = canvasConfig.gridSize * zoom;
   // Fade out small grid when apparent size drops below 15px, completely hide below 4px
-  const smallGridAlpha = Math.max(0, Math.min(0.4, (apparentGridSize - 4) / 10 * 0.4));
+  const smallGridAlpha = Math.max(0, Math.min(0.4, ((apparentGridSize - 4) / 10) * 0.4));
   // Large grid is 10x larger and fades out if it gets too small
   const largeGridVisualSize = apparentGridSize * 10;
-  const largeGridAlpha = Math.max(0, Math.min(0.4, (largeGridVisualSize - 4) / 10 * 0.4));
+  const largeGridAlpha = Math.max(0, Math.min(0.4, ((largeGridVisualSize - 4) / 10) * 0.4));
 
   const gridPattern = canvasConfig.showGrid ? (
     <defs>
@@ -212,6 +222,7 @@ export function CanvasRoot({
   return (
     <div
       ref={containerRef}
+      data-canvas-root="true"
       className={cn(
         "relative flex-1 overflow-hidden",
         "bg-[hsl(var(--canvas-bg))]",
@@ -227,7 +238,7 @@ export function CanvasRoot({
     >
       {/* SVG background grid */}
       {canvasConfig.showGrid && (
-        <svg className="absolute inset-0 w-full h-full pointer-events-none">
+        <svg className="pointer-events-none absolute inset-0 h-full w-full">
           {gridPattern}
           <rect width="100%" height="100%" fill="url(#canvas-grid-large)" />
         </svg>

@@ -1,8 +1,7 @@
 // Phase 2 tests — FlowDragStrategy
 import { describe, it, expect, afterEach } from "vitest";
 import { FlowDragStrategy } from "../strategies/FlowDragStrategy";
-import type { DragContext, DragVisualState } from "../types";
-import { EMPTY_VISUAL_STATE } from "../types";
+import { EMPTY_VISUAL_STATE, type DragContext, type DragVisualState } from "../types";
 import type { BuilderNode } from "@ui-builder/builder-core";
 import type { ContainerConfigResolver } from "../../hooks/dragUtils";
 
@@ -45,6 +44,7 @@ function makeCtx(overrides: Partial<DragContext> & { nodeId: string }): DragCont
     movingNodeIds: overrides.movingNodeIds ?? [overrides.nodeId],
     movingSnapshots: overrides.movingSnapshots ?? [],
     snapEnabled: overrides.snapEnabled ?? false,
+    fromToolbar: overrides.fromToolbar ?? false,
   };
 }
 

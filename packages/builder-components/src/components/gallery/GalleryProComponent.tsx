@@ -127,6 +127,9 @@ export const GalleryProComponent: ComponentDefinition = {
     carouselConfig: DEFAULT_CAROUSEL_CONFIG,
   },
   defaultStyle: { width: "100%", padding: "0px" },
+  editorConfig: {
+    interactionPolicy: "component-managed",
+  },
 
   editorRenderer: ({ node, style }) => {
     return <GalleryRenderer node={node} style={style as React.CSSProperties} isEditor={true} />;

@@ -184,9 +184,17 @@ export function useResizeGesture({
         setLiveDimensions({ width, height });
       }
 
+      const isHorizontalOnlyResize =
+        (resizing.handle.includes("e") || resizing.handle.includes("w")) &&
+        !resizing.handle.includes("n") &&
+        !resizing.handle.includes("s");
+      const isWrappingMenu =
+        node?.type === "NavigationMenu" &&
+        node.props?.overflowMode === "wrap" &&
+        node.props?.orientation !== "vertical";
       const style: Record<string, string> = {
         width: `${width}px`,
-        height: `${height}px`,
+        height: isWrappingMenu && isHorizontalOnlyResize ? "auto" : `${height}px`,
       };
       if (resizing.handle.includes("w") || resizing.handle.includes("n")) {
         if (resizing.handle.includes("w")) style.left = `${newX}px`;

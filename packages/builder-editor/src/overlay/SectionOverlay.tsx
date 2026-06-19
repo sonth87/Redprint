@@ -1,4 +1,13 @@
-import React, { useState, useEffect, useLayoutEffect, useRef, memo, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  memo,
+  useCallback,
+  useMemo,
+} from "react";
+import { createPortal } from "react-dom";
 import { Plus, UnfoldVertical, LayoutTemplate, Sparkles, PlusSquare } from "lucide-react";
 import type { BuilderNode } from "@ui-builder/builder-core";
 import type { Point } from "@ui-builder/shared";
@@ -30,7 +39,13 @@ export interface SectionOverlayProps {
   /** Called when user wants to add a new section after the given order */
   onAddSection: (afterOrder: number) => void;
   /** Called when user starts resizing a section */
-  onResizeStart: (nodeId: string, clientY: number, currentHeight: number, gestureGroupId: string, minAllowedHeight: number) => void;
+  onResizeStart: (
+    nodeId: string,
+    clientY: number,
+    currentHeight: number,
+    gestureGroupId: string,
+    minAllowedHeight: number,
+  ) => void;
   /** Called to select a section */
   onSelect?: (nodeId: string) => void;
   /** Whether a section resize is in progress (suppresses UI jitter) */
@@ -46,7 +61,12 @@ export interface SectionOverlayProps {
   /** True while a Designed Section item is being dragged from the palette. Enables drop-zone highlighting. */
   isDSDragging?: boolean;
   aiConfig?: AIConfig;
-  dispatch?: (action: { type: string; payload: unknown; groupId?: string; description?: string }) => unknown;
+  dispatch?: (action: {
+    type: string;
+    payload: unknown;
+    groupId?: string;
+    description?: string;
+  }) => unknown;
   undo?: () => void;
   availableComponentTypes?: string[];
 }
@@ -66,7 +86,6 @@ export const SectionOverlay = memo(function SectionOverlay({
   onResizeStart,
   onSelect,
   isResizing,
-  selectedNodeIds,
   onOpenPaletteGroup,
   onDSButtonClick,
   isDSDragging,
@@ -153,18 +172,28 @@ export const SectionOverlay = memo(function SectionOverlay({
     <>
       {boundaries.map((b) => {
         const isHov = hovered === b.nodeId;
-        const isSel = selectedNodeIds?.includes(b.nodeId);
         const sectionChildren = Object.values(nodes).filter((n) => n.parentId === b.nodeId);
         const isEmpty = sectionChildren.length === 0;
 
         const isDSDropTarget = dsDragTarget === b.nodeId;
+        const clearHoverUnlessSectionPortal = (event: React.MouseEvent<HTMLElement>) => {
+          const nextTarget = event.relatedTarget as HTMLElement | null;
+          if (nextTarget?.closest(`[data-section-overlay-portal="${b.nodeId}"]`)) {
+            return;
+          }
+          setHovered(null);
+        };
         const startResize = (clientY: number) => {
           const id = b.nodeId + "-resize-" + Date.now();
-          const sectionEl = canvasFrameRef.current?.querySelector(`[data-node-id="${b.nodeId}"]`) as HTMLElement | null;
+          const sectionEl = canvasFrameRef.current?.querySelector(
+            `[data-node-id="${b.nodeId}"]`,
+          ) as HTMLElement | null;
           let computedMinHeight = 100;
           if (sectionEl) {
             const sectionRect = sectionEl.getBoundingClientRect();
-            const children = Array.from(sectionEl.querySelectorAll("[data-node-id]")) as HTMLElement[];
+            const children = Array.from(
+              sectionEl.querySelectorAll("[data-node-id]"),
+            ) as HTMLElement[];
             let maxChildBottom = 100;
             for (const child of children) {
               const childRect = child.getBoundingClientRect();
@@ -181,7 +210,7 @@ export const SectionOverlay = memo(function SectionOverlay({
               if (localTop < 0) {
                 // Child overflows above; extend minHeight so a future resize can't
                 // shrink the section to less than childHeight worth of bottom room
-                const childHeightLocal = (childRect.height) / zoom;
+                const childHeightLocal = childRect.height / zoom;
                 const bottomIfTopClamped = childHeightLocal;
                 if (bottomIfTopClamped > maxChildBottom) {
                   maxChildBottom = bottomIfTopClamped;
@@ -210,25 +239,32 @@ export const SectionOverlay = memo(function SectionOverlay({
                   pointerEvents: isDSDragging ? "auto" : "none",
                   zIndex: 52,
                   background: isDSDropTarget ? "rgba(99,102,241,0.08)" : "transparent",
-                  border: isDSDropTarget ? `2px dashed rgba(99,102,241,0.6)` : "2px dashed transparent",
+                  border: isDSDropTarget
+                    ? `2px dashed rgba(99,102,241,0.6)`
+                    : "2px dashed transparent",
                   borderRadius: 4,
                   transition: "background 0.15s, border-color 0.15s",
                   boxSizing: "border-box",
                 }}
                 onDragEnter={(e) => {
-                  if (!e.dataTransfer.types.includes("application/builder-designed-section")) return;
+                  if (!e.dataTransfer.types.includes("application/builder-designed-section"))
+                    return;
                   e.preventDefault();
-                  dsDragCounterRef.current[b.nodeId] = (dsDragCounterRef.current[b.nodeId] ?? 0) + 1;
+                  dsDragCounterRef.current[b.nodeId] =
+                    (dsDragCounterRef.current[b.nodeId] ?? 0) + 1;
                   setDsDragTarget(b.nodeId);
                 }}
                 onDragOver={(e) => {
-                  if (!e.dataTransfer.types.includes("application/builder-designed-section")) return;
+                  if (!e.dataTransfer.types.includes("application/builder-designed-section"))
+                    return;
                   e.preventDefault();
                   e.dataTransfer.dropEffect = "copy";
                 }}
                 onDragLeave={(e) => {
-                  if (!e.dataTransfer.types.includes("application/builder-designed-section")) return;
-                  dsDragCounterRef.current[b.nodeId] = (dsDragCounterRef.current[b.nodeId] ?? 1) - 1;
+                  if (!e.dataTransfer.types.includes("application/builder-designed-section"))
+                    return;
+                  dsDragCounterRef.current[b.nodeId] =
+                    (dsDragCounterRef.current[b.nodeId] ?? 1) - 1;
                   if ((dsDragCounterRef.current[b.nodeId] ?? 0) <= 0) {
                     dsDragCounterRef.current[b.nodeId] = 0;
                     setDsDragTarget(null);
@@ -246,7 +282,7 @@ export const SectionOverlay = memo(function SectionOverlay({
             )}
 
             {/* ── Empty State UI ── */}
-            {isEmpty && (isHov || isSel) && (
+            {isEmpty && (
               <>
                 {/* Main Section Hover Zone (only active when empty to avoid blocking components) */}
                 <div
@@ -260,185 +296,201 @@ export const SectionOverlay = memo(function SectionOverlay({
                     zIndex: 48,
                   }}
                   onMouseEnter={() => setHovered(b.nodeId)}
-                  onMouseLeave={() => setHovered(null)}
+                  onMouseLeave={clearHoverUnlessSectionPortal}
                   onClick={(e) => {
                     if (e.target === e.currentTarget) {
                       onSelect?.(b.nodeId);
                     }
                   }}
                 />
-                
-                <div
-                  style={{
-                    position: "absolute",
-                    top: b.top,
-                    left: 0,
-                    width: "100%",
-                    height: b.height,
+
+                {(() => {
+                  const frame = canvasFrameRef.current;
+                  const frameRect = frame?.getBoundingClientRect();
+                  if (!frame || !frameRect || typeof document === "undefined") return null;
+
+                  const portalRoot =
+                    frame.closest<HTMLElement>("[data-canvas-root]") ?? document.body;
+                  const centerX = frameRect.left + frameRect.width / 2;
+                  const centerY = frameRect.top + (b.top + b.height / 2) * zoom;
+                  const showAI = Boolean(aiConfig && dispatch && undo);
+                  const cardCount = showAI ? 3 : 2;
+                  const naturalGap = 20;
+                  const naturalCardWidth = 110;
+                  const naturalGroupWidth =
+                    cardCount * naturalCardWidth + (cardCount - 1) * naturalGap;
+                  const naturalGroupHeight = 14 + naturalGap + 110;
+                  const availableWidth = Math.max(0, frameRect.width - 24);
+                  const availableHeight = Math.max(0, b.height * zoom - 24);
+                  const visualScale = Math.min(
+                    1,
+                    availableWidth / naturalGroupWidth,
+                    availableHeight / naturalGroupHeight,
+                  );
+                  const ui = (value: number) => Math.max(1, value * visualScale);
+                  const cardBaseStyle: React.CSSProperties = {
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
                     justifyContent: "center",
-                    pointerEvents: "none",
-                    zIndex: 50,
-                  }}
-                  onMouseEnter={() => setHovered(b.nodeId)}
-                  onMouseLeave={() => setHovered(null)}
-                >
-                  {(() => {
-                    // Natural canvas-space size of the button group at zoom=1
-                    const NATURAL_H = 160; // 110px button + 20px gap + ~30px label
+                    gap: ui(10),
+                    width: ui(110),
+                    height: ui(110),
+                    background: "#ffffff",
+                    border: `${ui(1)}px solid #e2e8f0`,
+                    borderRadius: ui(12),
+                    cursor: "pointer",
+                    transition: "transform 0.2s, border-color 0.2s, box-shadow 0.2s",
+                    boxShadow: `0 ${ui(4)}px ${ui(12)}px rgba(0,0,0,0.03)`,
+                    padding: ui(4),
+                  };
 
-                    // Scale up to compensate zoom-out, but cap so group fits within section
-                    const inverseZoom = 1 / zoom;
-                    const maxBySection = (b.height * 0.9) / NATURAL_H;
-                    // Only scale up (≥1), never shrink below natural size
-                    const effectiveScale = Math.min(Math.max(inverseZoom, 1), Math.max(maxBySection, 1));
-
-                    return (
-                  <div style={{
-                    pointerEvents: "auto",
+                  const iconBaseStyle: React.CSSProperties = {
+                    width: ui(44),
+                    height: ui(44),
+                    borderRadius: ui(10),
                     display: "flex",
-                    flexDirection: "column",
                     alignItems: "center",
-                    gap: 20,
-                    transform: `scale(${effectiveScale})`,
-                    transformOrigin: "center center",
-                  }}>
-                    <p style={{ 
-                      fontSize: 14, 
-                      fontWeight: 600, 
-                      color: "#94a3b8", 
-                      margin: 0, 
-                      letterSpacing: "-0.01em",
-                      textTransform: "uppercase" as const
-                    }}>
-                      {t("section.startingPoint")}
-                    </p>
-                    <div style={{ display: "flex", gap: 20 }}>
-                      <button
-                        onClick={() => onDSButtonClick?.(b.nodeId)}
-                        style={{
-                          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                          gap: 10, width: 110, height: 110,
-                          background: "#ffffff", 
-                          border: `1px solid #e2e8f0`, 
-                          borderRadius: 12,
-                          cursor: "pointer", 
-                          transition: "transform 0.2s, border-color 0.2s, box-shadow 0.2s",
-                          boxShadow: `0 4px 12px rgba(0,0,0,0.03)`,
-                          padding: "4px"
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.borderColor = "#6366f1";
-                          e.currentTarget.style.transform = "translateY(-4px)";
-                          e.currentTarget.style.boxShadow = "0 10px 25px -5px rgba(99, 102, 241, 0.1), 0 8px 10px -6px rgba(99, 102, 241, 0.1)";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.borderColor = "#e2e8f0";
-                          e.currentTarget.style.transform = "translateY(0)";
-                          e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.03)";
-                        }}
-                      >
-                        <div style={{ 
-                          width: 44, height: 44, borderRadius: 10, background: "#f8faff", 
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          color: "#6366f1"
-                        }}>
-                          <LayoutTemplate size={24} strokeWidth={1.5} />
-                        </div>
-                        <span style={{ fontSize: 12, color: "#475569", fontWeight: 600, textAlign: "center", lineHeight: 1.2 }}>
-                          {t("section.designedSection")}
-                        </span>
-                      </button>
-                      
-                      {aiConfig && dispatch && undo ? (
-                        <AISectionPopover
-                          sectionNodeId={b.nodeId}
-                          currentChildIds={[]}
-                          availableComponentTypes={availableComponentTypes ?? []}
-                          aiConfig={aiConfig}
-                          dispatch={dispatch}
-                          undo={undo}
-                          trigger={
-                            <button
-                              style={{
-                                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                                gap: 10, width: 110, height: 110,
-                                background: "#ffffff", 
-                                border: `1px solid #e2e8f0`, 
-                                borderRadius: 12,
-                                cursor: "pointer", 
-                                transition: "transform 0.2s, border-color 0.2s, box-shadow 0.2s",
-                                boxShadow: `0 4px 12px rgba(0,0,0,0.03)`,
-                                padding: "4px"
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.borderColor = "#8b5cf6";
-                                e.currentTarget.style.transform = "translateY(-4px)";
-                                e.currentTarget.style.boxShadow = "0 10px 25px -5px rgba(139, 92, 246, 0.1), 0 8px 10px -6px rgba(139, 92, 246, 0.1)";
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.borderColor = "#e2e8f0";
-                                e.currentTarget.style.transform = "translateY(0)";
-                                e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.03)";
-                              }}
-                            >
-                              <div style={{ 
-                                width: 44, height: 44, borderRadius: 10, background: "#fdfaff", 
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                color: "#8b5cf6"
-                              }}>
-                                <Sparkles size={24} strokeWidth={1.5} />
-                              </div>
-                              <span style={{ fontSize: 12, color: "#475569", fontWeight: 600, textAlign: "center", lineHeight: 1.2 }}>
-                                {t("section.aiGenerator")}
-                              </span>
-                            </button>
-                          }
-                        />
-                      ) : null}
+                    justifyContent: "center",
+                  };
 
-                      <button
-                        onClick={() => onOpenPaletteGroup?.("text", b.nodeId)}
+                  const labelStyle: React.CSSProperties = {
+                    fontSize: ui(12),
+                    color: "#475569",
+                    fontWeight: 600,
+                    textAlign: "center",
+                    lineHeight: 1.2,
+                  };
+
+                  const setCardHover = (
+                    element: HTMLElement,
+                    color: string,
+                    shadowColor: string,
+                  ) => {
+                    element.style.borderColor = color;
+                    element.style.transform = `translateY(${-ui(4)}px)`;
+                    element.style.boxShadow = `0 ${ui(10)}px ${ui(25)}px ${-ui(5)}px ${shadowColor}, 0 ${ui(8)}px ${ui(10)}px ${-ui(6)}px ${shadowColor}`;
+                  };
+
+                  const resetCardHover = (element: HTMLElement) => {
+                    element.style.borderColor = "#e2e8f0";
+                    element.style.transform = "translateY(0)";
+                    element.style.boxShadow = `0 ${ui(4)}px ${ui(12)}px rgba(0,0,0,0.03)`;
+                  };
+
+                  return createPortal(
+                    <div
+                      style={{
+                        position: "fixed",
+                        left: centerX,
+                        top: centerY,
+                        transform: "translate(-50%, -50%)",
+                        zIndex: 120,
+                        pointerEvents: "auto",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: ui(20),
+                      }}
+                      data-section-overlay-portal={b.nodeId}
+                      onMouseEnter={() => setHovered(b.nodeId)}
+                      onMouseLeave={() => setHovered(null)}
+                      onPointerDown={(event) => event.stopPropagation()}
+                      onMouseDown={(event) => event.stopPropagation()}
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <p
                         style={{
-                          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                          gap: 10, width: 110, height: 110,
-                          background: "#ffffff", 
-                          border: `1px solid #e2e8f0`, 
-                          borderRadius: 12,
-                          cursor: "pointer", 
-                          transition: "transform 0.2s, border-color 0.2s, box-shadow 0.2s",
-                          boxShadow: `0 4px 12px rgba(0,0,0,0.03)`,
-                          padding: "4px"
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.borderColor = "#64748b";
-                          e.currentTarget.style.transform = "translateY(-4px)";
-                          e.currentTarget.style.boxShadow = "0 10px 25px -5px rgba(100, 116, 139, 0.1), 0 8px 10px -6px rgba(100, 116, 139, 0.1)";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.borderColor = "#e2e8f0";
-                          e.currentTarget.style.transform = "translateY(0)";
-                          e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.03)";
+                          fontSize: ui(14),
+                          fontWeight: 600,
+                          color: "#94a3b8",
+                          margin: 0,
+                          letterSpacing: 0,
+                          textTransform: "uppercase" as const,
                         }}
                       >
-                        <div style={{ 
-                          width: 44, height: 44, borderRadius: 10, background: "#f8fafc", 
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          color: "#64748b"
-                        }}>
-                          <PlusSquare size={24} strokeWidth={1.5} />
-                        </div>
-                        <span style={{ fontSize: 12, color: "#475569", fontWeight: 600, textAlign: "center", lineHeight: 1.2 }}>
-                          {t("section.addElements")}
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-                    );
-                  })()}
-                </div>
+                        {t("section.startingPoint")}
+                      </p>
+                      <div style={{ display: "flex", gap: ui(20) }}>
+                        <button
+                          onClick={() => onDSButtonClick?.(b.nodeId)}
+                          style={cardBaseStyle}
+                          onMouseEnter={(e) =>
+                            setCardHover(e.currentTarget, "#6366f1", "rgba(99, 102, 241, 0.1)")
+                          }
+                          onMouseLeave={(e) => resetCardHover(e.currentTarget)}
+                        >
+                          <div
+                            style={{
+                              ...iconBaseStyle,
+                              background: "#f8faff",
+                              color: "#6366f1",
+                            }}
+                          >
+                            <LayoutTemplate size={ui(24)} strokeWidth={1.5} />
+                          </div>
+                          <span style={labelStyle}>{t("section.designedSection")}</span>
+                        </button>
+
+                        {aiConfig && dispatch && undo ? (
+                          <AISectionPopover
+                            sectionNodeId={b.nodeId}
+                            currentChildIds={[]}
+                            availableComponentTypes={availableComponentTypes ?? []}
+                            aiConfig={aiConfig}
+                            dispatch={dispatch}
+                            undo={undo}
+                            trigger={
+                              <button
+                                style={cardBaseStyle}
+                                onMouseEnter={(e) =>
+                                  setCardHover(
+                                    e.currentTarget,
+                                    "#8b5cf6",
+                                    "rgba(139, 92, 246, 0.1)",
+                                  )
+                                }
+                                onMouseLeave={(e) => resetCardHover(e.currentTarget)}
+                              >
+                                <div
+                                  style={{
+                                    ...iconBaseStyle,
+                                    background: "#fdfaff",
+                                    color: "#8b5cf6",
+                                  }}
+                                >
+                                  <Sparkles size={ui(24)} strokeWidth={1.5} />
+                                </div>
+                                <span style={labelStyle}>{t("section.aiGenerator")}</span>
+                              </button>
+                            }
+                          />
+                        ) : null}
+
+                        <button
+                          onClick={() => onOpenPaletteGroup?.("text", b.nodeId)}
+                          style={cardBaseStyle}
+                          onMouseEnter={(e) =>
+                            setCardHover(e.currentTarget, "#64748b", "rgba(100, 116, 139, 0.1)")
+                          }
+                          onMouseLeave={(e) => resetCardHover(e.currentTarget)}
+                        >
+                          <div
+                            style={{
+                              ...iconBaseStyle,
+                              background: "#f8fafc",
+                              color: "#64748b",
+                            }}
+                          >
+                            <PlusSquare size={ui(24)} strokeWidth={1.5} />
+                          </div>
+                          <span style={labelStyle}>{t("section.addElements")}</span>
+                        </button>
+                      </div>
+                    </div>,
+                    portalRoot,
+                  );
+                })()}
               </>
             )}
 
@@ -472,7 +524,7 @@ export const SectionOverlay = memo(function SectionOverlay({
               </>
             )}
 
-             {/* Left Gutter Handle */}
+            {/* Left Gutter Handle */}
             <div
               style={{
                 position: "absolute",
@@ -486,7 +538,7 @@ export const SectionOverlay = memo(function SectionOverlay({
                 userSelect: "none",
               }}
               onMouseEnter={() => setHovered(b.nodeId)}
-              onMouseLeave={() => setHovered(null)}
+              onMouseLeave={clearHoverUnlessSectionPortal}
               onPointerDown={(e) => {
                 if (e.button !== 0) return;
               }}
@@ -517,7 +569,7 @@ export const SectionOverlay = memo(function SectionOverlay({
                 userSelect: "none",
               }}
               onMouseEnter={() => setHovered(b.nodeId)}
-              onMouseLeave={() => setHovered(null)}
+              onMouseLeave={clearHoverUnlessSectionPortal}
               onPointerDown={(e) => {
                 if (e.button !== 0) return;
               }}
@@ -546,7 +598,7 @@ export const SectionOverlay = memo(function SectionOverlay({
                 cursor: "default",
               }}
               onMouseEnter={() => setHovered(b.nodeId)}
-              onMouseLeave={() => setHovered(null)}
+              onMouseLeave={clearHoverUnlessSectionPortal}
             >
               {/* ── Dashed separator line ─── */}
               <div
@@ -563,94 +615,113 @@ export const SectionOverlay = memo(function SectionOverlay({
               />
 
               {/* ── "Thêm mới Section" button + resize handle ─── */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: "50%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 4 / zoom,
-                  opacity: isHov || isResizing ? 1 : 0,
-                  transition: `opacity ${SECTION_OVERLAY_TRANSITION_FAST}`,
-                  pointerEvents: isHov || isResizing ? "auto" : "none",
-                }}
-              >
-                {/* Add section button */}
-                <button
-                  title={t("section.addNew")}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 4 / zoom,
-                    padding: `${3 / zoom}px ${8 / zoom}px`,
-                    background: "#ffffff",
-                    border: `${1 / zoom}px solid #e2e2e2`,
-                    borderRadius: 4 / zoom,
-                    fontSize: 11 / zoom,
-                    color: "#374151",
-                    cursor: "pointer",
-                    whiteSpace: "nowrap",
-                    boxShadow: `0 ${1 / zoom}px ${4 / zoom}px rgba(0,0,0,0.08)`,
-                    lineHeight: 1,
-                    userSelect: "none",
-                    pointerEvents: "auto",
-                  }}
-                  data-section-action="add"
-                  onPointerDown={(e) => {
-                if (e.button !== 0) return;
-              }}
-                  onMouseDown={(e) => {
-                if (e.button !== 0) return;
-                e.preventDefault();
-                  }}
-                  onClick={(e) => {
-                if (e.button !== 0) return;
-                onAddSection(b.order);
-                  }}
-                >
-                  {t("section.addNew")}
-                  <Plus size={10 / zoom} />
-                </button>
+              {isHov || isResizing
+                ? (() => {
+                    const frame = canvasFrameRef.current;
+                    const frameRect = frame?.getBoundingClientRect();
+                    if (!frame || !frameRect || typeof document === "undefined") return null;
+                    const portalRoot =
+                      frame.closest<HTMLElement>("[data-canvas-root]") ?? document.body;
 
-                {/* Resize handle */}
-                <button
-                  title={t("section.resizeHint")}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: 20 / zoom,
-                    height: 20 / zoom,
-                    background: "#ffffff",
-                    border: `${1 / zoom}px solid #e2e2e2`,
-                    borderRadius: 4 / zoom,
-                    cursor: "ns-resize",
-                    boxShadow: `0 ${1 / zoom}px ${4 / zoom}px rgba(0,0,0,0.08)`,
-                    padding: 0,
-                    flexShrink: 0,
-                    userSelect: "none",
-                    pointerEvents: "auto",
-                  }}
-                  data-resize-handle="section"
-                  onPointerDown={(e) => {
-                if (e.button !== 0) return;
-                e.preventDefault();
-                e.stopPropagation();
-                    startResize(e.clientY);
-              }}
-                  onMouseDown={(e) => {
-                if (e.button !== 0) return;
-                e.preventDefault();
-                e.stopPropagation();
-                    if (typeof window !== "undefined" && "PointerEvent" in window) return;
-                    startResize(e.clientY);
-                  }}
-                >
-                  <UnfoldVertical size={10 / zoom} />
-                </button>
-              </div>
+                    const centerX = frameRect.left + frameRect.width / 2;
+                    const bottomY = frameRect.top + b.bottom * zoom;
+
+                    return createPortal(
+                      <div
+                        style={{
+                          position: "fixed",
+                          left: centerX,
+                          top: bottomY,
+                          transform: "translate(-50%, -50%)",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 4,
+                          zIndex: 130,
+                          pointerEvents: "auto",
+                        }}
+                        data-section-overlay-portal={b.nodeId}
+                        onMouseEnter={() => setHovered(b.nodeId)}
+                        onMouseLeave={() => setHovered(null)}
+                        onPointerDown={(event) => event.stopPropagation()}
+                        onMouseDown={(event) => event.stopPropagation()}
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <button
+                          title={t("section.addNew")}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 4,
+                            padding: "3px 8px",
+                            background: "#ffffff",
+                            border: "1px solid #e2e2e2",
+                            borderRadius: 4,
+                            fontSize: 11,
+                            color: "#374151",
+                            cursor: "pointer",
+                            whiteSpace: "nowrap",
+                            boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+                            lineHeight: 1,
+                            userSelect: "none",
+                          }}
+                          data-section-action="add"
+                          onPointerDown={(e) => {
+                            if (e.button !== 0) return;
+                            e.stopPropagation();
+                          }}
+                          onMouseDown={(e) => {
+                            if (e.button !== 0) return;
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
+                          onClick={(e) => {
+                            if (e.button !== 0) return;
+                            onAddSection(b.order);
+                          }}
+                        >
+                          {t("section.addNew")}
+                          <Plus size={10} />
+                        </button>
+
+                        <button
+                          title={t("section.resizeHint")}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: 20,
+                            height: 20,
+                            background: "#ffffff",
+                            border: "1px solid #e2e2e2",
+                            borderRadius: 4,
+                            cursor: "ns-resize",
+                            boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+                            padding: 0,
+                            flexShrink: 0,
+                            userSelect: "none",
+                          }}
+                          data-resize-handle="section"
+                          onPointerDown={(e) => {
+                            if (e.button !== 0) return;
+                            e.preventDefault();
+                            e.stopPropagation();
+                            startResize(e.clientY);
+                          }}
+                          onMouseDown={(e) => {
+                            if (e.button !== 0) return;
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (typeof window !== "undefined" && "PointerEvent" in window) return;
+                            startResize(e.clientY);
+                          }}
+                        >
+                          <UnfoldVertical size={10} />
+                        </button>
+                      </div>,
+                      portalRoot,
+                    );
+                  })()
+                : null}
             </div>
           </div>
         );

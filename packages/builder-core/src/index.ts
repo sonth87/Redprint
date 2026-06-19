@@ -79,6 +79,7 @@ export type {
   ComponentRenderer,
   ComponentA11yConfig,
   ComponentEditorConfig,
+  EditorInteractionPolicy,
   QuickAction,
   SelectOption,
   ComponentFilter,

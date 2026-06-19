@@ -54,6 +54,28 @@ interface CanvasConfig {
 - `Ctrl+;` = Toggle grid
 - `Ctrl+'` = Toggle snap
 
+### Component Interaction On Canvas
+
+The canvas treats component content as a visual preview by default. Runtime DOM
+interactions such as anchors, buttons, gallery controls, dropdown hover behavior,
+video controls, and native image dragging should not run while the user is editing
+the document.
+
+`builder-react` applies an Editor Interaction Shield from `NodeRenderer` in editor
+mode:
+
+- Leaf components resolve to `shielded` by default, so descendant DOM does not
+  receive pointer events, native link/image drag is suppressed, and runtime
+  focus/key activation is blocked.
+- Components with `inlineEditable` resolve to `inline-edit`; normal click/drag
+  still select and move the component, while double-click enters the inline editor.
+- Components with `canContainChildren` resolve to `container`; their subtree is not
+  shielded so child nodes remain selectable and draggable through `data-node-id`.
+- Components can override with `editorConfig.interactionPolicy` when they need a
+  special editor mode, such as `component-managed` for `GalleryPro` Freestyle.
+
+Preview/runtime modes remain fully interactive.
+
 ---
 
 ## Grid & Helper Lines

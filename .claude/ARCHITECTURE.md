@@ -215,6 +215,11 @@ Package `@ui-builder/builder-components` provides the official set of base compo
 | `Repeater` | Data | ✓ |
 | `Anchor` | Navigation | — |
 
+`NavigationMenu` keeps its public component definition in
+`components/NavigationMenu.tsx`. Runtime behavior is split under
+`components/navigation-menu/` (`NavigationMenuRuntime`, `settings`, `styles`,
+`types`, and active-state hooks) to avoid a single god component file.
+
 ### Usage Pattern
 
 ```ts

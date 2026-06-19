@@ -1,8 +1,7 @@
 // Phase 2 tests — AbsoluteDragStrategy
 import { describe, it, expect, afterEach } from "vitest";
 import { AbsoluteDragStrategy } from "../strategies/AbsoluteDragStrategy";
-import type { DragContext, DragVisualState } from "../types";
-import { EMPTY_VISUAL_STATE } from "../types";
+import { EMPTY_VISUAL_STATE, type DragContext } from "../types";
 import type { BuilderNode } from "@ui-builder/builder-core";
 import type { NodeMovingSnapshot } from "../../hooks/dragUtils";
 
@@ -63,6 +62,7 @@ function makeCtx(overrides: Partial<DragContext> & { nodeId: string }): DragCont
     movingNodeIds: overrides.movingNodeIds ?? [overrides.nodeId],
     movingSnapshots: overrides.movingSnapshots ?? [makeSnapshot(overrides.nodeId)],
     snapEnabled: overrides.snapEnabled ?? false,
+    fromToolbar: overrides.fromToolbar ?? false,
   };
 }
 
@@ -203,16 +203,6 @@ describe("AbsoluteDragStrategy.onDrop", () => {
       getBoundingClientRect: () => ({ left: 100, top: 200, width: 600, height: 400, right: 700, bottom: 600, x: 100, y: 200, toJSON: () => ({}) }),
     } as unknown as HTMLElement;
 
-    const frameEl = {
-      querySelector: (sel: string) => {
-        if (sel === '[data-node-id="box1"]') return nodeEl;
-        if (sel === '[data-node-id="section2"]') return sectionEl;
-        return null;
-      },
-      querySelectorAll: () => [],
-      getBoundingClientRect: () => ({ left: 0, top: 0, width: 800, height: 600, right: 800, bottom: 600, x: 0, y: 0, toJSON: () => ({}) }),
-    } as unknown as HTMLElement;
-
     const nodes = {
       root: makeNode({ id: "root", type: "Root", parentId: null }),
       section1: makeNode({ id: "section1", type: "Section", parentId: "root" }),
@@ -231,19 +221,6 @@ describe("AbsoluteDragStrategy.onDrop", () => {
     // Patch document to make getDropTargetSection return section2
     // getDropTargetSection uses document.querySelector and getBoundingClientRect
     // We instead trigger via a frameEl.querySelectorAll that returns section2
-    const frameElWithSections = {
-      ...frameEl,
-      querySelectorAll: (sel: string) => {
-        if (sel === '[data-node-id]') return [sectionEl];
-        return [];
-      },
-      querySelector: (sel: string) => {
-        if (sel === '[data-node-id="box1"]') return nodeEl;
-        if (sel === '[data-node-id="section2"]') return sectionEl;
-        return null;
-      },
-    } as unknown as HTMLElement;
-
     const sectionElWithAttr = {
       ...sectionEl,
       getAttribute: (a: string) => a === "data-node-id" ? "section2" : null,

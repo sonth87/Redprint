@@ -103,6 +103,7 @@ export {
   BuilderNode,
   ComponentDefinition,
   ComponentCapabilities,
+  EditorInteractionPolicy,
   PropSchema,
   StyleConfig,
   InteractionConfig,

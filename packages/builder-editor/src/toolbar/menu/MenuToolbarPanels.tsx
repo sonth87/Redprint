@@ -1,6 +1,7 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { ChevronDown, EyeOff, GripVertical, MoreHorizontal, Plus } from "lucide-react";
+import { ChevronRight, EyeOff, GripVertical, MoreHorizontal, Plus } from "lucide-react";
 import type { BuilderDocument, BuilderNode } from "@ui-builder/builder-core";
 import {
   normalizeMenuItems,
@@ -70,9 +71,14 @@ interface DragSession {
   label: string;
   pointerX: number;
   pointerY: number;
+  offsetX: number;
+  offsetY: number;
+  width: number;
 }
 
 const MAX_MENU_MANAGER_DEPTH = 2;
+const MENU_TREE_INDENT = 22;
+const MENU_ROW_PLACEHOLDER_HEIGHT = 42;
 
 function getMenuItems(node: BuilderNode): MenuItem[] {
   return normalizeMenuItems(node.props.items);
@@ -183,6 +189,10 @@ function sameDropIndicator(a: DropIndicator | null, b: DropIndicator | null): bo
     Math.round(a.top) === Math.round(b.top) &&
     Math.round(a.height ?? 0) === Math.round(b.height ?? 0)
   );
+}
+
+function clampMenuDepth(depth: number): number {
+  return Math.max(0, Math.min(MAX_MENU_MANAGER_DEPTH, depth));
 }
 
 function itemDepth(items: MenuItem[], itemId: string, depth = 0): number {
@@ -342,13 +352,12 @@ function OverflowModePreview({ mode }: { mode: "wrap" | "scroll" | "collapse" })
 
   if (mode === "scroll") {
     return (
-      <div className="flex h-8 w-24 items-center rounded bg-current/10">
-        <div className="flex h-5 flex-1 items-center gap-2 rounded-l bg-background/70 px-2">
-          <span className="h-1.5 w-4 rounded bg-current/60" />
-          <span className="h-1.5 w-4 rounded bg-current/60" />
-          <span className="h-1.5 w-4 rounded bg-current/60" />
+      <div className="flex h-7 w-24 items-center rounded overflow-hidden">
+        <div className="flex h-5 flex-1 items-center gap-2 rounded bg-current/10 px-2">
+          <span className="h-1.5 w-4 rounded bg-current/50" />
+          <span className="h-1.5 w-4 rounded bg-current/50" />
+          <span className="" ><ChevronRight className="h-4 w-3.5" /></span>
         </div>
-        <div className="flex h-5 w-5 items-center justify-center rounded-r bg-current text-[12px] leading-none text-background">›</div>
       </div>
     );
   }
@@ -468,6 +477,10 @@ export function MenuManagerPanel({ node, document, dispatch }: MenuToolbarPanelP
 
   const getRowRect = (itemId: string) => rowRefs.current.get(itemId)?.getBoundingClientRect() ?? null;
 
+  const getPointerDepth = (clientX: number, listRect: DOMRect) => (
+    clampMenuDepth(Math.round((clientX - listRect.left - 18) / MENU_TREE_INDENT))
+  );
+
   const buildLineIndicator = (
     row: FlatMenuRow,
     rect: DOMRect,
@@ -539,7 +552,7 @@ export function MenuManagerPanel({ node, document, dispatch }: MenuToolbarPanelP
     if (measuredRows.length === 0) return null;
 
     const pointerY = clientY;
-    const wantsSubmenuDepth = clientX - listRect.left > 52;
+    const pointerDepth = getPointerDepth(clientX, listRect);
     const hovered = measuredRows.find(({ rect }) => pointerY >= rect.top && pointerY <= rect.bottom);
     if (!hovered) {
       const nextRowIndex = measuredRows.findIndex(({ rect }) => pointerY < rect.top);
@@ -552,14 +565,15 @@ export function MenuManagerPanel({ node, document, dispatch }: MenuToolbarPanelP
         const next = measuredRows[nextRowIndex]!;
         const gapMidpoint = previous.rect.bottom + ((next.rect.top - previous.rect.bottom) / 2);
         return pointerY <= gapMidpoint
-          ? getLineTarget(previous.row, previous.rect, listRect, "after", wantsSubmenuDepth)
-          : getLineTarget(next.row, next.rect, listRect, "before", wantsSubmenuDepth);
+          ? getLineTarget(previous.row, previous.rect, listRect, "after", pointerDepth > previous.row.depth)
+          : getLineTarget(next.row, next.rect, listRect, "before", pointerDepth > next.row.depth);
       }
       const last = measuredRows[measuredRows.length - 1]!;
-      return getLineTarget(last.row, last.rect, listRect, "after", wantsSubmenuDepth);
+      return getLineTarget(last.row, last.rect, listRect, "after", pointerDepth > last.row.depth);
     }
 
     const ratio = (pointerY - hovered.rect.top) / Math.max(hovered.rect.height, 1);
+    const wantsSubmenuDepth = pointerDepth > hovered.row.depth;
     if (hovered.row.depth < MAX_MENU_MANAGER_DEPTH && wantsSubmenuDepth && ratio > 0.18) {
       return buildInsideIndicator(hovered.row, hovered.rect, listRect);
     }
@@ -602,11 +616,14 @@ export function MenuManagerPanel({ node, document, dispatch }: MenuToolbarPanelP
     event.preventDefault();
     event.stopPropagation();
     event.currentTarget.focus();
-    event.currentTarget.setPointerCapture(event.pointerId);
+    const rowRect = rowRefs.current.get(item.id)?.getBoundingClientRect();
+    const offsetX = rowRect ? event.clientX - rowRect.left : 12;
+    const offsetY = rowRect ? event.clientY - rowRect.top : 10;
+    const width = rowRect?.width ?? 220;
 
     dragIdRef.current = item.id;
     setDragId(item.id);
-    setDragSession({ id: item.id, label: item.label, pointerX: event.clientX, pointerY: event.clientY });
+    setDragSession({ id: item.id, label: item.label, pointerX: event.clientX, pointerY: event.clientY, offsetX, offsetY, width });
     setStableDropIndicator(null);
 
     const unlockSelection = lockDocumentSelection("grabbing");
@@ -645,11 +662,11 @@ export function MenuManagerPanel({ node, document, dispatch }: MenuToolbarPanelP
 
   const renderDropIndicator = () => {
     if (!dropIndicator || !dragId) return null;
-    const left = 8 + dropIndicator.depth * 18;
+    const left = 8 + dropIndicator.depth * MENU_TREE_INDENT;
     if (dropIndicator.position === "inside") {
       return (
         <div
-          className="pointer-events-none absolute right-2 rounded-md border border-primary/70 bg-primary/10 shadow-[0_0_0_3px_rgba(37,99,235,0.10)]"
+          className="pointer-events-none absolute right-2 rounded-lg border border-primary/60 bg-primary/15 shadow-[inset_0_0_0_1px_rgba(37,99,235,0.12),0_6px_18px_rgba(37,99,235,0.10)]"
           style={{
             top: dropIndicator.top,
             left,
@@ -658,12 +675,14 @@ export function MenuManagerPanel({ node, document, dispatch }: MenuToolbarPanelP
         />
       );
     }
+    const height = Math.max(MENU_ROW_PLACEHOLDER_HEIGHT, dropIndicator.height ?? 0);
     return (
       <div
-        className="pointer-events-none absolute right-2 h-0.5 rounded-full bg-primary shadow-[0_0_0_3px_rgba(37,99,235,0.12)]"
+        className="pointer-events-none absolute right-2 rounded-lg border border-primary/60 bg-primary/15 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.70),0_8px_20px_rgba(37,99,235,0.12)]"
         style={{
-          top: dropIndicator.top,
+          top: Math.max(0, dropIndicator.top - height / 2),
           left,
+          height,
         }}
       />
     );
@@ -679,25 +698,39 @@ export function MenuManagerPanel({ node, document, dispatch }: MenuToolbarPanelP
             else rowRefs.current.delete(item.id);
           }}
           className={cn(
-            "group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
+            "group relative mb-1.5 flex min-h-9 items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
             editingId === item.id ? "bg-primary/10 text-primary" : "hover:bg-muted/70",
             dropIndicator?.targetId === item.id && dropIndicator.position === "inside" && "bg-primary/5",
             dragId === item.id && "opacity-35",
             item.hidden && "opacity-45",
           )}
           data-menu-row-id={item.id}
-          style={{ paddingLeft: 8 + depth * 18 }}
+          style={{ paddingLeft: 8 + depth * MENU_TREE_INDENT }}
         >
+          {depth > 0 ? (
+            <>
+              {Array.from({ length: depth }).map((_, index) => (
+                <span
+                  key={index}
+                  className="pointer-events-none absolute -top-1 -bottom-1 w-px bg-border"
+                  style={{ left: 14 + index * MENU_TREE_INDENT }}
+                />
+              ))}
+              <span
+                className="pointer-events-none absolute top-1/2 h-px -translate-y-1/2 bg-border"
+                style={{ left: 14 + (depth - 1) * MENU_TREE_INDENT, width: 12 }}
+              />
+            </>
+          ) : null}
           <button
             type="button"
-            className="flex h-5 w-5 shrink-0 cursor-grab items-center justify-center rounded text-muted-foreground hover:bg-muted active:cursor-grabbing"
+            className="relative z-10 flex h-5 w-5 shrink-0 cursor-grab items-center justify-center rounded text-muted-foreground hover:bg-muted active:cursor-grabbing"
             onPointerDown={(event) => startMenuItemDrag(event, item)}
             aria-label={t("menuToolbar.manager.dragHandle", "Drag menu item")}
           >
             <GripVertical className="h-3.5 w-3.5" />
           </button>
-          {children.length > 0 ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <span className="w-3.5" />}
-          <button type="button" className="min-w-0 flex-1 truncate text-left" onClick={() => setEditingId(item.id)}>
+          <button type="button" className="relative z-10 min-w-0 flex-1 truncate text-left" onClick={() => setEditingId(item.id)}>
             {item.label}
           </button>
           <DropdownMenu>
@@ -851,16 +884,21 @@ export function MenuManagerPanel({ node, document, dispatch }: MenuToolbarPanelP
           )}
         </div>
       </div>
-      {dragSession ? (
+      {dragSession && globalThis.document?.body ? createPortal(
         <div
-          className="pointer-events-none fixed z-[10000] max-w-56 truncate rounded-md border bg-popover px-2.5 py-1.5 text-sm font-medium text-popover-foreground shadow-lg"
+          className="pointer-events-none fixed z-[10000] flex h-9 items-center gap-2 truncate rounded-md border border-primary/45 bg-primary/15 px-2 text-sm font-medium text-slate-600 shadow-xl"
           style={{
-            left: dragSession.pointerX + 12,
-            top: dragSession.pointerY + 10,
+            left: dragSession.pointerX - dragSession.offsetX,
+            top: dragSession.pointerY - dragSession.offsetY,
+            width: Math.min(300, Math.max(180, dragSession.width)),
+            transform: "rotate(-4deg)",
+            transformOrigin: "24px 50%",
           }}
         >
-          {dragSession.label}
-        </div>
+          <GripVertical className="h-3.5 w-3.5 shrink-0 text-primary/70" />
+          <span className="min-w-0 truncate">{dragSession.label}</span>
+        </div>,
+        globalThis.document.body,
       ) : null}
     </div>
   );
