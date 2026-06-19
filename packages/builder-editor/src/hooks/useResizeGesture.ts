@@ -3,6 +3,7 @@ import type { ResizeHandleType, SnapGuide, DistanceGuide, LiveDimensions } from 
 import { snapToGrid, type Point, type Rect } from "@ui-builder/shared";
 import type { BuilderNode } from "@ui-builder/builder-core";
 import type { SnapEngine } from "../snap/SnapEngine";
+import { lockDocumentSelection } from "../utils/interactionLock";
 
 interface ResizingState {
   handle: ResizeHandleType;
@@ -53,7 +54,10 @@ export function useResizeGesture({
 
   useEffect(() => {
     if (!resizing) return;
+    const unlockSelection = lockDocumentSelection(`${resizing.handle}-resize`);
     const handleGlobalMouseMove = (e: MouseEvent) => {
+      e.preventDefault();
+      document.getSelection()?.removeAllRanges();
       const dx = (e.clientX - resizing.startPoint.x) / zoom;
       const dy = (e.clientY - resizing.startPoint.y) / zoom;
       let { width, height } = resizing.startRect;
@@ -209,6 +213,7 @@ export function useResizeGesture({
     window.addEventListener("mousemove", handleGlobalMouseMove);
     window.addEventListener("mouseup", handleGlobalMouseUp);
     return () => {
+      unlockSelection();
       window.removeEventListener("mousemove", handleGlobalMouseMove);
       window.removeEventListener("mouseup", handleGlobalMouseUp);
     };

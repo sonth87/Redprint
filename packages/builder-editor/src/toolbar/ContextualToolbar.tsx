@@ -1,7 +1,7 @@
 import React, { useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { Copy, Trash2, ArrowUp, ArrowDown, GripVertical, CornerLeftUp, ImageIcon, Link2, Paintbrush, Frame, Images, Settings2 } from "lucide-react";
+import { Copy, Trash2, ArrowUp, ArrowDown, GripVertical, CornerLeftUp, ImageIcon, Link2, Paintbrush, Frame, Images, Settings2, Maximize2, ListTree, LayoutPanelTop } from "lucide-react";
 import { useDocument, useBuilder } from "@ui-builder/builder-react";
 import { Button, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@ui-builder/ui";
 import { TOOLTIP_DELAY_MS, normalizeCarouselConfig } from "@ui-builder/shared";
@@ -12,6 +12,7 @@ import { ImageFilterPicker } from "../panels/ImageFilterPicker";
 import { ImageFramePanel } from "../panels/ImageFramePanel";
 import { FloatingPanel } from "../panels/FloatingPanel";
 import { GalleryUnifiedSettingsPanel } from "../panels/gallery";
+import { MenuLayoutPanel, MenuManagerPanel, MenuStretchPopover } from "./menu/MenuToolbarPanels";
 
 
 function getClampedPanelPos(
@@ -58,19 +59,31 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
   const [filterOpen, setFilterOpen] = React.useState(false);
   const [frameOpen, setFrameOpen] = React.useState(false);
   const [settingsOpen, setSettingsOpen] = React.useState(false);
+  const [menuStretchOpen, setMenuStretchOpen] = React.useState(false);
+  const [menuManagerOpen, setMenuManagerOpen] = React.useState(false);
+  const [menuLayoutOpen, setMenuLayoutOpen] = React.useState(false);
   const [filterPos, setFilterPos] = React.useState({ x: 0, y: 0 });
   const [framePos, setFramePos] = React.useState({ x: 0, y: 0 });
   const [settingsPos, setSettingsPos] = React.useState({ x: 0, y: 0 });
+  const [menuStretchPos, setMenuStretchPos] = React.useState({ x: 0, y: 0 });
+  const [menuManagerPos, setMenuManagerPos] = React.useState({ x: 0, y: 0 });
+  const [menuLayoutPos, setMenuLayoutPos] = React.useState({ x: 0, y: 0 });
 
   // Close floating panels when the selected node changes
   React.useEffect(() => {
     setFilterOpen(false);
     setFrameOpen(false);
     setSettingsOpen(false);
+    setMenuStretchOpen(false);
+    setMenuManagerOpen(false);
+    setMenuLayoutOpen(false);
   }, [nodeId]);
   const filterBtnRef = useRef<HTMLButtonElement>(null);
   const frameBtnRef = useRef<HTMLButtonElement>(null);
   const settingsBtnRef = useRef<HTMLButtonElement>(null);
+  const menuStretchBtnRef = useRef<HTMLButtonElement>(null);
+  const menuManagerBtnRef = useRef<HTMLButtonElement>(null);
+  const menuLayoutBtnRef = useRef<HTMLButtonElement>(null);
   const { document: builderDoc } = useDocument();
   const { builder, dispatch } = useBuilder();
   const { t } = useTranslation();
@@ -88,6 +101,7 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
   // Section AI Assistant
   const isSection = node?.type === "Section";
   const isGalleryNode = node ? GALLERY_TYPES.has(node.type) : false;
+  const isMenuNode = node?.type === "NavigationMenu";
   const currentChildIds = isSection
     ? Object.values(builderDoc.nodes)
         .filter((n) => n.parentId === nodeId)
@@ -204,15 +218,6 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
           <TooltipContent side="top">{t("contextToolbar.moveDown")}</TooltipContent>
         </Tooltip>
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon-sm" className="h-6 w-6" onClick={wrap(onDuplicate)}>
-              <Copy className="h-3 w-3" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="top">{t("contextToolbar.duplicate")}</TooltipContent>
-        </Tooltip>
-
         {hasAI && (
           <>
             <div className="w-px h-4 bg-border mx-0.5" />
@@ -237,6 +242,125 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
               dispatch={dispatch}
               undo={handleUndo}
             />
+          </>
+        )}
+
+        {/* NavigationMenu-specific quick actions */}
+        {isMenuNode && (
+          <>
+            <div className="w-px h-4 bg-border mx-0.5" />
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  ref={menuStretchBtnRef}
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={t("menuToolbar.stretch.title", "Stretch")}
+                  className="h-6 w-6"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (menuStretchBtnRef.current) {
+                      const r = menuStretchBtnRef.current.getBoundingClientRect();
+                      setMenuStretchPos(getClampedPanelPos(r, 280, 180));
+                    }
+                    setMenuManagerOpen(false);
+                    setMenuLayoutOpen(false);
+                    setMenuStretchOpen((v) => !v);
+                  }}
+                >
+                  <Maximize2 className="h-3 w-3" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">{t("menuToolbar.stretch.title", "Stretch")}</TooltipContent>
+            </Tooltip>
+
+            {menuStretchOpen && node && createPortal(
+              <FloatingPanel
+                title={t("menuToolbar.stretch.title", "Stretch")}
+                defaultPosition={{ x: menuStretchPos.x, y: menuStretchPos.y }}
+                width={280}
+                onClose={() => setMenuStretchOpen(false)}
+              >
+                <MenuStretchPopover node={node} dispatch={dispatch} />
+              </FloatingPanel>,
+              document.body,
+            )}
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  ref={menuManagerBtnRef}
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={t("menuToolbar.manager.title", "Manage Menu")}
+                  className="h-6 w-6"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (menuManagerBtnRef.current) {
+                      const r = menuManagerBtnRef.current.getBoundingClientRect();
+                      setMenuManagerPos(getClampedPanelPos(r, 560, 560));
+                    }
+                    setMenuStretchOpen(false);
+                    setMenuLayoutOpen(false);
+                    setMenuManagerOpen((v) => !v);
+                  }}
+                >
+                  <ListTree className="h-3 w-3" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">{t("menuToolbar.manager.title", "Manage Menu")}</TooltipContent>
+            </Tooltip>
+
+            {menuManagerOpen && node && createPortal(
+              <FloatingPanel
+                title={t("menuToolbar.manager.title", "Manage Menu")}
+                defaultPosition={{ x: menuManagerPos.x, y: menuManagerPos.y }}
+                width={560}
+                onClose={() => setMenuManagerOpen(false)}
+              >
+                <MenuManagerPanel node={node} document={builderDoc} dispatch={dispatch} />
+              </FloatingPanel>,
+              document.body,
+            )}
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  ref={menuLayoutBtnRef}
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={t("menuToolbar.layout.title", "Menu Layout")}
+                  className="h-6 w-6"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (menuLayoutBtnRef.current) {
+                      const r = menuLayoutBtnRef.current.getBoundingClientRect();
+                      setMenuLayoutPos(getClampedPanelPos(r, 380, 580));
+                    }
+                    setMenuStretchOpen(false);
+                    setMenuManagerOpen(false);
+                    setMenuLayoutOpen((v) => !v);
+                  }}
+                >
+                  <LayoutPanelTop className="h-3 w-3" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">{t("menuToolbar.layout.title", "Menu Layout")}</TooltipContent>
+            </Tooltip>
+
+            {menuLayoutOpen && node && createPortal(
+              <FloatingPanel
+                title={t("menuToolbar.layout.title", "Menu Layout")}
+                defaultPosition={{ x: menuLayoutPos.x, y: menuLayoutPos.y }}
+                width={380}
+                scrollable
+                onClose={() => setMenuLayoutOpen(false)}
+              >
+                <MenuLayoutPanel node={node} dispatch={dispatch} />
+              </FloatingPanel>,
+              document.body,
+            )}
           </>
         )}
 
@@ -459,6 +583,15 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
             )}
           </>
         )}
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon-sm" className="h-6 w-6" onClick={wrap(onDuplicate)}>
+              <Copy className="h-3 w-3" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top">{t("contextToolbar.duplicate")}</TooltipContent>
+        </Tooltip>
 
         <div className="w-px h-4 bg-border mx-0.5" />
 

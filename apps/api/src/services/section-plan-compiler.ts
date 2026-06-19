@@ -385,6 +385,14 @@ function navMenuCommand(
   layout: "horizontal" | "vertical" = "horizontal",
 ): AICommandSuggestion {
   const c = colors(ctx.designTokens);
+  const toTarget = (href: string) => {
+    if (href.startsWith("#")) return { type: "anchor", anchorId: href.slice(1), behavior: "smooth" };
+    if (href.startsWith("/")) return { type: "page", path: href };
+    if (href.startsWith("http://") || href.startsWith("https://") || href.startsWith("mailto:") || href.startsWith("tel:")) {
+      return { type: "url", url: href, target: "_self" };
+    }
+    return { type: "none" };
+  };
   return command(
     "ADD_NODE",
     {
@@ -392,9 +400,19 @@ function navMenuCommand(
       componentType: "NavigationMenu",
       parentId,
       props: {
-        items: items.map((item) => ({ label: item.label, href: item.href })),
+        items: items.map((item, index) => ({ id: `nav-${index}-${item.label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "item"}`, label: item.label, target: toTarget(item.href) })),
+        orientation: layout,
         layout,
+        mobileBehavior: "hamburger",
         mobileHamburger: true,
+        hamburgerMode: "fullscreen",
+        widthMode: layout === "vertical" ? "wrap" : "fullWidth",
+        overflowMode: "wrap",
+        fillItems: false,
+        alignment: layout === "vertical" ? "left" : "right",
+        dropdownMode: "flyout",
+        dropdownWidthMode: "fitToMenu",
+        dropdownColumns: 3,
         itemStyle: layout === "vertical" ? "underline" : "pill",
         textColor: c.text,
         activeColor: c.primary,
@@ -406,7 +424,10 @@ function navMenuCommand(
         navPadding: "0px",
         fontSize: "14px",
         gap: layout === "vertical" ? 10 : 18,
+        itemGap: layout === "vertical" ? 10 : 18,
+        rowGap: 8,
         activeIndex: 0,
+        activeMode: "auto",
         floatingMode: "static",
       },
       style: { width: "100%", display: "flex", justifyContent: layout === "vertical" ? "flex-start" : "flex-end" },
@@ -1485,7 +1506,7 @@ function hasValidEnumProps(componentType: string, props: unknown): boolean {
     const layout = String(data.layout ?? "horizontal");
     const itemStyle = String(data.itemStyle ?? "plain");
     return ["horizontal", "vertical", "hamburger"].includes(layout) &&
-      ["plain", "underline", "underline-all", "boxed", "boxed-all", "pill", "pill-outlined", "pill-all", "filled", "button-all"].includes(itemStyle);
+      ["plain", "underline", "underline-all", "boxed", "boxed-all", "pill", "pill-outlined", "pill-all", "filled", "button-all", "block-vertical", "serif-panel", "dark-panel", "pastel-panel", "icon-hamburger", "labeled-hamburger"].includes(itemStyle);
   }
   if (componentType === "GalleryPro") {
     return ["grid", "masonry", "collage", "slider", "slideshow", "strip", "stacked"].includes(String(data.layoutMode ?? "grid"));

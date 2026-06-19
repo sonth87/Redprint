@@ -44,6 +44,7 @@ const ResizeHandle = memo(({ handle, bounds: _bounds, zoom, onMouseDown }: Resiz
         cursor: HANDLE_CURSORS[handle],
       }}
       onMouseDown={(e) => {
+        e.preventDefault();
         e.stopPropagation();
         onMouseDown(handle, e);
       }}

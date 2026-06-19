@@ -8,7 +8,7 @@ The palette data is organized into separate group files for easier management an
 - **text.json** - Text and typography components (headings, paragraphs, titles, text masks)
 - **button.json** - Button component variants with hover states
 - **gallery.json** - Gallery component variants (grid, slider, pro layouts)
-- **menu.json** - Navigation menu variants (horizontal, hamburger, vertical)
+- **menu.json** - Navigation menu variants (themed, horizontal, vertical, hamburger, anchor)
 - **image.json** - Image component presets
 - **container.json** - Container/layout component presets
 - **card.json** - Card component variants

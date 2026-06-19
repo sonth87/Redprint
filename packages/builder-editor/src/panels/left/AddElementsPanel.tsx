@@ -75,13 +75,13 @@ const TypeSection: React.FC<TypeSectionProps> = ({ type, items, locale, onDragSt
 
       {open && (
         <div className={cn(
-          "px-3 pb-2",
+          "max-w-full overflow-hidden px-3 pb-2",
           layout === "list" ? "flex flex-col gap-1" :
           layout === "preview" ? `grid gap-4` :
           "grid gap-2"
         )}
         style={layout !== "list" ? {
-          gridTemplateColumns: `repeat(${type.columns ?? 2}, 1fr)`
+          gridTemplateColumns: `repeat(${type.columns ?? 2}, minmax(0, 1fr))`
         } : undefined}>
           {items.map((item) => (
             <PaletteItemCard
@@ -164,7 +164,7 @@ export const AddElementsPanel: React.FC<AddElementsPanelProps> = ({
   const totalFilteredItems = filteredTypes.reduce((sum, { items }) => sum + items.length, 0);
 
   return (
-    <div className="fixed left-0 top-0 bottom-0 z-50 flex" style={{ width: 380 }}>
+    <div className="fixed left-0 top-0 bottom-0 z-50 flex" style={{ width: 450 }}>
       {/* ── Left: group icon rail ── */}
       <div className="flex flex-col items-center gap-1 py-3 px-1.5 bg-background/50 backdrop-blur-md border-r border-border/50 w-12 flex-shrink-0">
         {groups.map((group) => {

@@ -137,11 +137,19 @@ export const CURATED_COMPONENT_CAPABILITIES: Record<string, Omit<ComponentCapabi
     fallbackTo: ["GalleryGrid", "Grid", "Image"],
   },
   NavigationMenu: {
-    purpose: "Responsive navigation menu.",
-    bestFor: ["header navigation", "footer links", "anchor navigation"],
+    purpose: "Responsive navigation menu with anchor/page/url targets, nested submenu items, overflow handling, and hamburger overlay.",
+    bestFor: ["header navigation", "footer links", "anchor navigation", "multi-page navigation", "mobile hamburger menus"],
     requiredProps: ["items"],
-    keyProps: { items: "array of {label, href}", layout: ["horizontal", "vertical", "hamburger"], itemStyle: "enum" },
-    variants: ["horizontal", "vertical", "hamburger", "pill", "underline"],
+    keyProps: {
+      items: "tree array of {id,label,target,hidden?,children?}; target is anchor/page/url/none",
+      orientation: ["horizontal", "vertical"],
+      hamburgerMode: ["fullscreen", "drawer", "dropdown"],
+      overflowMode: ["wrap", "scroll", "collapse"],
+      dropdownMode: ["flyout", "columns"],
+      dropdownStyle: "dropdownPadding/dropdownRadius/dropdownMinWidth/dropdownShadow/dropdownBg/dropdownBorderColor/dropdownItemHoverBg/dropdownOffsetX/dropdownOffsetY",
+      itemStyle: "enum",
+    },
+    variants: ["horizontal", "vertical", "hamburger", "submenu", "pill", "underline", "vertical panel"],
     fallbackTo: ["Row", "Text", "Button"],
   },
   CollapsibleText: {

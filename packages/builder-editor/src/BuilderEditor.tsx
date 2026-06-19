@@ -576,8 +576,14 @@ function EditorInner({
         )}
 
         {/* Properties / Page settings */}
-        <FloatingPanel id="properties" title={selectedNode ? "Properties" : "Page Settings"} defaultPosition={DEFAULT_PROPERTIES_PANEL_POS}>
-          <div className="flex h-[70vh] max-h-[800px] min-h-[500px] flex-col overflow-hidden">
+        <FloatingPanel
+          id="properties"
+          title={selectedNode ? "Properties" : "Page Settings"}
+          defaultPosition={DEFAULT_PROPERTIES_PANEL_POS}
+          dockable
+          dockOffset={{ top: 48, right: 12, bottom: 12 }}
+        >
+          <div className="flex h-[70vh] max-h-[calc(100vh-72px)] min-h-[500px] flex-col overflow-hidden">
             {selectedNode ? (
               <PropertyPanel selectedNode={selectedNode} definition={selectedDefinition} breakpoint={breakpoint}
                 onPropChange={handlePropChange} onStyleChange={handleStyleChange}
@@ -735,6 +741,8 @@ function EditorInner({
               zoom={zoom} rotation={currentRotation} isSection={!!selectedSectionNode}
               onDoubleClick={handleCanvasDoubleClick}
               onResizeStart={(handle, e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 if (!selectionRect || !selectedNodeId) return;
                 if (document.nodes[selectedNodeId]?.locked) return;
                 setResizing({

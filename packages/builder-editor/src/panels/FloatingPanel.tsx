@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from "react";
-import { Minus, Plus, X } from "lucide-react";
+import { Minus, PanelRightClose, PanelRightOpen, Plus, X } from "lucide-react";
 import { cn } from "@ui-builder/ui";
 import { GLASS_PANEL } from "../constants/panel-styles";
 
@@ -23,6 +23,10 @@ export interface FloatingPanelProps {
   onClose?: () => void;
   /** Add overflow-y-auto + max-h-[50vh] to the content area. Use for panels whose children don't manage their own scroll. */
   scrollable?: boolean;
+  /** Show a dock toggle that pins the panel to the right edge instead of floating over the canvas. */
+  dockable?: boolean;
+  defaultDocked?: boolean;
+  dockOffset?: { top?: number; right?: number; bottom?: number };
 }
 
 export const FloatingPanel: React.FC<FloatingPanelProps> = ({
@@ -34,7 +38,14 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
   icon,
   onClose,
   scrollable = false,
+  dockable = false,
+  defaultDocked = false,
+  dockOffset,
 }) => {
+  const dockTop = dockOffset?.top ?? 56;
+  const dockRight = dockOffset?.right ?? 12;
+  const dockBottom = dockOffset?.bottom ?? 12;
+
   // Compute initial position synchronously so the panel renders at the correct
   // location on the very first paint — no flash from x:0 → x:right-anchored.
   const [position, setPosition] = useState(() => {
@@ -49,12 +60,13 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
   const panelRef = useRef<HTMLDivElement>(null);
 
   const [isExpanded, setIsExpanded] = useState(onClose ? true : defaultExpanded);
+  const [isDocked, setIsDocked] = useState(defaultDocked);
   const [isDragging, setIsDragging] = useState(false);
   const [zIndex, setZIndex] = useState(() => bumpZ());
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
-      if (e.button !== 0) return;
+      if (isDocked || e.button !== 0) return;
       e.preventDefault();
       e.stopPropagation();
       // Capture pointer so move/up always reach this element even when cursor
@@ -90,7 +102,7 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
       window.addEventListener("pointermove", onMove);
       window.addEventListener("pointerup", onUp);
     },
-    [width],
+    [isDocked, width],
   );
 
   const handlePanelPointerDown = useCallback(() => {
@@ -107,14 +119,21 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
       )}
       style={{
         width,
-        left: position.x,
-        top: position.y,
+        left: isDocked ? undefined : position.x,
+        top: isDocked ? dockTop : position.y,
+        right: isDocked ? dockRight : undefined,
+        bottom: isDocked && isExpanded ? dockBottom : undefined,
+        height: isDocked && isExpanded ? `calc(100vh - ${dockTop + dockBottom}px)` : undefined,
         zIndex,
       }}
+      data-docked={isDocked ? "true" : undefined}
     >
       {/* Header - Drag Handle */}
       <div
-        className="flex items-center justify-between px-3 py-2 bg-muted/40 border-b cursor-grab active:cursor-grabbing"
+        className={cn(
+          "flex items-center justify-between px-3 py-2 bg-muted/40 border-b",
+          isDocked ? "cursor-default" : "cursor-grab active:cursor-grabbing",
+        )}
         onPointerDown={handlePointerDown}
       >
         <div className="flex items-center gap-2">
@@ -124,8 +143,21 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
           </span>
         </div>
         <div className="flex items-center gap-1">
+          {dockable && !onClose && (
+            <button
+              type="button"
+              onClick={() => setIsDocked((current) => !current)}
+              className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground"
+              onPointerDown={(e) => e.stopPropagation()}
+              title={isDocked ? "Float panel" : "Dock to right"}
+              aria-label={isDocked ? "Float panel" : "Dock to right"}
+            >
+              {isDocked ? <PanelRightOpen className="w-3.5 h-3.5" /> : <PanelRightClose className="w-3.5 h-3.5" />}
+            </button>
+          )}
           {onClose ? (
             <button
+              type="button"
               onClick={onClose}
               className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground"
               onPointerDown={(e) => e.stopPropagation()}
@@ -135,6 +167,7 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
             </button>
           ) : (
             <button
+              type="button"
               onClick={() => setIsExpanded(!isExpanded)}
               className="p-1 hover:bg-muted rounded text-muted-foreground"
               onPointerDown={(e) => e.stopPropagation()}
@@ -150,6 +183,7 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
         className={cn(
           "flex flex-col transition-[max-height,opacity]",
           isExpanded ? "opacity-100" : "max-h-0 opacity-0",
+          isExpanded && isDocked ? "min-h-0 flex-1" : undefined,
           isExpanded && scrollable ? "overflow-y-auto max-h-[50vh]" : "overflow-hidden",
         )}
       >

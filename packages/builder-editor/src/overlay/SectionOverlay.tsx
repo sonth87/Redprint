@@ -4,6 +4,7 @@ import type { BuilderNode } from "@ui-builder/builder-core";
 import type { Point } from "@ui-builder/shared";
 import { SECTION_HOVER_ZONE, SECTION_OVERLAY_TRANSITION_FAST } from "../constants";
 import { AISectionPopover } from "../ai/ai-section/AISectionPopover";
+import type { AIConfig } from "../ai/types";
 import { useTranslation } from "react-i18next";
 
 interface SectionBoundary {
@@ -44,8 +45,8 @@ export interface SectionOverlayProps {
   onDSButtonClick?: (sectionId: string) => void;
   /** True while a Designed Section item is being dragged from the palette. Enables drop-zone highlighting. */
   isDSDragging?: boolean;
-  aiConfig?: any; // Adjust type if imported
-  dispatch?: (action: any) => void;
+  aiConfig?: AIConfig;
+  dispatch?: (action: { type: string; payload: unknown; groupId?: string; description?: string }) => unknown;
   undo?: () => void;
   availableComponentTypes?: string[];
 }
@@ -119,7 +120,7 @@ export const SectionOverlay = memo(function SectionOverlay({
   // Re-measure after DOM commits (synchronous, avoids flicker)
   useLayoutEffect(() => {
     measureBoundaries();
-  }, [measureBoundaries]);
+  }, [canvasFrameRef, measureBoundaries]);
 
   // ResizeObserver re-measures whenever the canvas frame changes size.
   // This is the reliable fallback for cases where the initial useLayoutEffect
@@ -132,7 +133,7 @@ export const SectionOverlay = memo(function SectionOverlay({
     const ro = new ResizeObserver(() => measureBoundaries());
     ro.observe(frame);
     return () => ro.disconnect();
-  }, [measureBoundaries]);
+  }, [canvasFrameRef, measureBoundaries]);
 
   useEffect(() => {
     if (!isResizing) return;
@@ -157,6 +158,41 @@ export const SectionOverlay = memo(function SectionOverlay({
         const isEmpty = sectionChildren.length === 0;
 
         const isDSDropTarget = dsDragTarget === b.nodeId;
+        const startResize = (clientY: number) => {
+          const id = b.nodeId + "-resize-" + Date.now();
+          const sectionEl = canvasFrameRef.current?.querySelector(`[data-node-id="${b.nodeId}"]`) as HTMLElement | null;
+          let computedMinHeight = 100;
+          if (sectionEl) {
+            const sectionRect = sectionEl.getBoundingClientRect();
+            const children = Array.from(sectionEl.querySelectorAll("[data-node-id]")) as HTMLElement[];
+            let maxChildBottom = 100;
+            for (const child of children) {
+              const childRect = child.getBoundingClientRect();
+              // Track the full extent: from top of section to bottom of child.
+              // childRect.top may be above sectionRect.top (negative local top) —
+              // in that case localBottom still reflects the child's local bottom
+              // relative to the section origin, which is what we care about.
+              const localBottom = (childRect.bottom - sectionRect.top) / zoom;
+              if (localBottom > maxChildBottom) {
+                maxChildBottom = localBottom;
+              }
+              // Also ensure section is tall enough to include children above origin
+              const localTop = (childRect.top - sectionRect.top) / zoom;
+              if (localTop < 0) {
+                // Child overflows above; extend minHeight so a future resize can't
+                // shrink the section to less than childHeight worth of bottom room
+                const childHeightLocal = (childRect.height) / zoom;
+                const bottomIfTopClamped = childHeightLocal;
+                if (bottomIfTopClamped > maxChildBottom) {
+                  maxChildBottom = bottomIfTopClamped;
+                }
+              }
+            }
+            computedMinHeight = Math.max(100, maxChildBottom);
+          }
+          // Pass canvas-space height (NOT multiplied by zoom)
+          onResizeStart(b.nodeId, clientY, b.height, id, computedMinHeight);
+        };
 
         return (
           <div key={b.nodeId} style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
@@ -559,6 +595,7 @@ export const SectionOverlay = memo(function SectionOverlay({
                     boxShadow: `0 ${1 / zoom}px ${4 / zoom}px rgba(0,0,0,0.08)`,
                     lineHeight: 1,
                     userSelect: "none",
+                    pointerEvents: "auto",
                   }}
                   data-section-action="add"
                   onPointerDown={(e) => {
@@ -594,47 +631,21 @@ export const SectionOverlay = memo(function SectionOverlay({
                     padding: 0,
                     flexShrink: 0,
                     userSelect: "none",
+                    pointerEvents: "auto",
                   }}
                   data-resize-handle="section"
                   onPointerDown={(e) => {
                 if (e.button !== 0) return;
+                e.preventDefault();
+                e.stopPropagation();
+                    startResize(e.clientY);
               }}
                   onMouseDown={(e) => {
                 if (e.button !== 0) return;
                 e.preventDefault();
-                    const id = b.nodeId + "-resize-" + Date.now();
-                    const sectionEl = canvasFrameRef.current?.querySelector(`[data-node-id="${b.nodeId}"]`) as HTMLElement | null;
-                    let computedMinHeight = 100;
-                    if (sectionEl) {
-                      const sectionRect = sectionEl.getBoundingClientRect();
-                      const children = Array.from(sectionEl.querySelectorAll("[data-node-id]")) as HTMLElement[];
-                      let maxChildBottom = 100;
-                      for (const child of children) {
-                        const childRect = child.getBoundingClientRect();
-                        // Track the full extent: from top of section to bottom of child.
-                        // childRect.top may be above sectionRect.top (negative local top) —
-                        // in that case localBottom still reflects the child's local bottom
-                        // relative to the section origin, which is what we care about.
-                        const localBottom = (childRect.bottom - sectionRect.top) / zoom;
-                        if (localBottom > maxChildBottom) {
-                          maxChildBottom = localBottom;
-                        }
-                        // Also ensure section is tall enough to include children above origin
-                        const localTop = (childRect.top - sectionRect.top) / zoom;
-                        if (localTop < 0) {
-                          // Child overflows above; extend minHeight so a future resize can't
-                          // shrink the section to less than childHeight worth of bottom room
-                          const childHeightLocal = (childRect.height) / zoom;
-                          const bottomIfTopClamped = childHeightLocal;
-                          if (bottomIfTopClamped > maxChildBottom) {
-                            maxChildBottom = bottomIfTopClamped;
-                          }
-                        }
-                      }
-                      computedMinHeight = Math.max(100, maxChildBottom);
-                    }
-                    // Pass canvas-space height (NOT multiplied by zoom)
-                    onResizeStart(b.nodeId, e.clientY, b.height, id, computedMinHeight);
+                e.stopPropagation();
+                    if (typeof window !== "undefined" && "PointerEvent" in window) return;
+                    startResize(e.clientY);
                   }}
                 >
                   <UnfoldVertical size={10 / zoom} />

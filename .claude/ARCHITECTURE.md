@@ -197,23 +197,23 @@ Package `@ui-builder/builder-components` provides the official set of base compo
 
 | Type | Category | Can contain children |
 | --- | --- | --- |
-| `section` | Layout | ✓ |
-| `container` | Layout | ✓ |
-| `grid` | Layout | ✓ |
-| `column` | Layout | ✓ |
-| `text` | Content | — |
-| `button` | Content | — |
-| `image` | Media | — |
-| `divider` | Content | — |
-| `text-marquee` | Content | — |
-| `collapsible-text` | Content | — |
-| `text-mask` | Content | — |
-| `gallery-grid` | Media | — |
-| `gallery-slider` | Media | — |
-| `shape` | Decorative | — |
-| `navigation-menu` | Navigation | — |
-| `repeater` | Data | ✓ |
-| `anchor` | Navigation | — |
+| `Section` | Layout | ✓ |
+| `Container` | Layout | ✓ |
+| `Grid` | Layout | ✓ |
+| `Column` | Layout | ✓ |
+| `Text` | Content | — |
+| `Button` | Content | — |
+| `Image` | Media | — |
+| `Divider` | Content | — |
+| `TextMarquee` | Content | — |
+| `CollapsibleText` | Content | — |
+| `TextMask` | Content | — |
+| `GalleryGrid` | Media | — |
+| `GallerySlider` | Media | — |
+| `Shape` | Decorative | — |
+| `NavigationMenu` | Navigation | — |
+| `Repeater` | Data | ✓ |
+| `Anchor` | Navigation | — |
 
 ### Usage Pattern
 

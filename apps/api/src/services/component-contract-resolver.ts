@@ -80,7 +80,7 @@ function inferConstraints(component: AvailableComponent, capability: ComponentCa
 
 function examplesFor(type: string): string[] {
   const examples: Record<string, string[]> = {
-    NavigationMenu: ["header navigation with Services, Gallery, Pricing, FAQ links"],
+    NavigationMenu: ["header navigation with anchor targets, page links, and optional submenu children"],
     GalleryPro: ["service showcase gallery using mediaItems and collage or slider variant"],
     CollapsibleText: ["FAQ answer rendered as expandable rich text"],
     TextMask: ["playful hero heading with gradient-filled text"],

@@ -192,3 +192,6 @@ export * from "./gallery";
 
 // ── Carousel (Swiper-based) config types and presets ───────────────────────
 export * from "./carousel";
+
+// ── Navigation menu types and helpers ──────────────────────────────────────
+export * from "./menu";

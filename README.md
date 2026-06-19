@@ -131,7 +131,7 @@ Complete technical reference organized by domain:
 - **Fully undoable** — all AI output dispatched as standard builder commands
 - **Design token enforcement** — AI respects your brand colors and typography
 - **Progressive rendering** — containers appear first, content fills in next frame
-- **Rich component awareness** — page generation can use menus, galleries, marquees, masked text,
+- **Rich component awareness** — page generation can use V2 navigation menus with anchor/page/url targets and submenus, galleries, marquees, masked text,
   collapsible FAQ blocks, and safe component fallbacks when those components are registered
 
 ### Production Ready
@@ -179,7 +179,8 @@ For richer landing pages, the backend builds a compact capability manifest from 
 `availableComponents` sent by the editor. The LLM may request components such as
 `NavigationMenu`, `GalleryPro`, `GalleryGrid`, `GallerySlider`, `CollapsibleText`, `TextMarquee`,
 `TextMask`, `Shape`, `Row`, `Column`, and `Repeater`, but it never emits final props or commands for
-them. The compiler owns the final command shape, validates the component exists, fills missing media
+them. For `NavigationMenu`, the compiler emits tree-shaped menu items with `target` values for
+anchors, page paths, or URLs. The compiler owns the final command shape, validates the component exists, fills missing media
 with deterministic industry-aware images, and falls back to basic `Grid`/`Image`/`Text` layouts when
 rich components are unavailable.
 

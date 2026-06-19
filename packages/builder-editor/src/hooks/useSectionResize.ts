@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { snapToGrid } from "@ui-builder/shared";
 import type { BuilderNode } from "@ui-builder/builder-core";
+import { lockDocumentSelection } from "../utils/interactionLock";
 
 interface SectionResizingState {
   nodeId: string;
@@ -42,12 +43,14 @@ export function useSectionResize({
 
   useEffect(() => {
     if (!sectionResizing) return;
+    const unlockSelection = lockDocumentSelection("ns-resize");
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const updateSectionHeight = (clientY: number) => {
+      document.getSelection()?.removeAllRanges();
       const state = resizingRef.current;
       if (!state) return;
 
-      const deltaY = (e.clientY - state.startY) / zoom;
+      const deltaY = (clientY - state.startY) / zoom;
       let newHeight = Math.round(state.startHeight + deltaY);
       newHeight = Math.max(state.minAllowedHeight || MIN_HEIGHT, newHeight);
 
@@ -102,15 +105,32 @@ export function useSectionResize({
       }
     };
 
-    const handleMouseUp = () => {
+    const handleMouseMove = (e: MouseEvent) => {
+      e.preventDefault();
+      updateSectionHeight(e.clientY);
+    };
+
+    const handlePointerMove = (e: PointerEvent) => {
+      e.preventDefault();
+      updateSectionHeight(e.clientY);
+    };
+
+    const stopResize = () => {
       setSectionResizing(null);
     };
 
     window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("mouseup", stopResize);
+    window.addEventListener("pointermove", handlePointerMove, { passive: false });
+    window.addEventListener("pointerup", stopResize);
+    window.addEventListener("pointercancel", stopResize);
     return () => {
+      unlockSelection();
       window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("mouseup", stopResize);
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", stopResize);
+      window.removeEventListener("pointercancel", stopResize);
     };
   }, [sectionResizing, zoom, showGrid, gridSize, breakpoint, nodes, dispatch]);
 

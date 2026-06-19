@@ -503,7 +503,7 @@ Provides 17 ready-to-use `ComponentDefinition` objects covering the full base co
 
 | Type | Category | Notes |
 |---|---|---|
-| `Section` | layout | Full-width page section, contains children |
+| `Section` | layout | Full-width page section, contains children; also exposes a stable anchor `id` |
 | `Container` | layout | Generic flex/grid container |
 | `Grid` | layout | CSS grid with configurable columns |
 | `Column` | layout | Grid/flex column child |
@@ -519,7 +519,52 @@ Provides 17 ready-to-use `ComponentDefinition` objects covering the full base co
 | `Shape` | decoration | SVG shapes (circle, rect, triangle, star…) |
 | `NavigationMenu` | navigation | Horizontal / vertical / hamburger nav |
 | `Repeater` | layout | Template repeater for data lists |
-| `Anchor` | navigation | Invisible scroll-target anchor point |
+| `Anchor` | navigation | Invisible scroll-target anchor point, in addition to section anchors |
+
+### NavigationMenu V2 Props
+
+`NavigationMenu` uses a tree-shaped `items` prop while continuing to render legacy
+`{ label, href }` entries. The V2 item contract is:
+
+```ts
+type MenuTarget =
+  | { type: "anchor"; anchorId: string; behavior?: "smooth" | "auto" }
+  | { type: "page"; path: string; pageId?: string }
+  | { type: "url"; url: string; target?: "_self" | "_blank" }
+  | { type: "none" };
+
+type MenuItem = {
+  id: string;
+  label: string;
+  target: MenuTarget;
+  hidden?: boolean;
+  children?: MenuItem[];
+};
+```
+
+Menu layout props include `orientation`, `mobileBehavior`, `hamburgerMode`,
+`widthMode`, `overflowMode`, `fillItems`, `alignment`, `dropdownMode`,
+`dropdownWidthMode`, and spacing controls such as `itemGap`, `rowGap`,
+`dropdownMargin`, `dropdownGap`, and `columnGap`. Dropdown visual props include
+`dropdownPadding`, `dropdownRadius`, `dropdownMinWidth`, `dropdownShadow`,
+`dropdownBg`, `dropdownBorderColor`, `dropdownItemHoverBg`, `dropdownOffsetX`,
+and `dropdownOffsetY`.
+
+Desktop submenu rendering is recursive. Top-level dropdowns and nested flyouts
+must support hover and keyboard focus, with parent hover/focus bridges so moving
+from a menu item into its submenu does not close the submenu. Column dropdowns
+render nested children inline within the column instead of as detached flyouts.
+
+`widthMode` controls the menu container width only: `fullWidth` stretches the
+menu to the available container/page width, while `wrap` returns the menu to
+content-sized width. It must not imply `fillItems`; item distribution is controlled
+only by `fillItems`. `overflowMode: "scroll"` uses click scroll controls instead
+of exposing a native horizontal scrollbar.
+
+Every `Section` is also a valid anchor target. Its runtime DOM `id` resolves from
+`props.anchorId`, `props.htmlId`, `props.slug`, then the node id. Manage Menu
+therefore offers both explicit `Anchor` nodes and all document `Section` nodes
+when configuring an anchor target.
 
 ### Usage
 

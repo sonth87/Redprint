@@ -96,8 +96,6 @@ function SectionFrame({
   const parallaxSpeed = Number(props.backgroundParallaxSpeed ?? 0);
   const parallaxEnabled = !editor && parallaxSpeed > 0 && !!bgStyle.backgroundImage;
 
-  // Debug state
-  const [debugText, setDebugText] = React.useState("Waiting for scroll...");
   // When parallax is active, remove backgroundPosition from React's control so the
   // scroll handler can manage it exclusively — prevents React re-renders from resetting it.
   const bgRenderStyle: React.CSSProperties =
@@ -116,6 +114,7 @@ function SectionFrame({
   const overlayOpacity = (props.backgroundOverlayOpacity as number) ?? 0.4;
   const hasOverlay = !!overlayColor;
   const hasBg = Object.keys(bgStyle).length > 0;
+  const sectionAnchorId = String(props.anchorId ?? props.htmlId ?? props.slug ?? nodeId ?? "").replace(/^#/, "");
 
   const parallaxBleed = parallaxEnabled ? Math.max(80, Math.ceil(parallaxSpeed * 120)) : 0;
 
@@ -229,6 +228,7 @@ function SectionFrame({
 
   return (
     <div
+      id={sectionAnchorId || undefined}
       ref={rootRef}
       data-node-id={nodeId}
       data-section={editor ? true : undefined}
@@ -369,6 +369,7 @@ export const SectionComponent: ComponentDefinition = {
   ),
   runtimeRenderer: ({ node, children, style, breakpoint }) => (
     <SectionFrame
+      nodeId={node.id}
       props={node.props as Record<string, unknown>}
       style={style as React.CSSProperties}
       editor={false}

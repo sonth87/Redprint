@@ -4,7 +4,12 @@ import * as LucideIcons from "lucide-react";
 import { cn } from "@ui-builder/ui";
 import type { PaletteItem } from "@ui-builder/builder-core";
 import { useTranslation } from "react-i18next";
-import type { GalleryLayoutMode } from "@ui-builder/shared";
+import {
+  hasActiveDescendant,
+  normalizeMenuItems,
+  type GalleryLayoutMode,
+  type MenuItemStyle,
+} from "@ui-builder/shared";
 import { LayoutMiniPreview } from "../gallery/LayoutMiniPreview";
 
 // ── Helper to dynamically load lucide icons ─────────────────────────────────
@@ -34,10 +39,206 @@ const SIMPLE_PREVIEW_TYPES = new Set([
   "GallerySlider",
   "GalleryPro",
   "Section",
+  "NavigationMenu",
 ]);
 
 interface MiniPreviewProps {
   item: PaletteItem;
+}
+
+const MENU_ITEM_STYLE_VALUES = new Set([
+  "plain",
+  "underline",
+  "underline-all",
+  "boxed",
+  "boxed-all",
+  "pill",
+  "pill-outlined",
+  "pill-all",
+  "filled",
+  "button-all",
+  "block-vertical",
+  "serif-panel",
+  "dark-panel",
+  "pastel-panel",
+  "icon-hamburger",
+  "labeled-hamburger",
+]);
+
+function getMenuStyle(value: unknown): MenuItemStyle {
+  return MENU_ITEM_STYLE_VALUES.has(String(value)) ? String(value) as MenuItemStyle : "plain";
+}
+
+function MenuMiniPreview({ item }: { item: PaletteItem }) {
+  const p = item.props ?? {};
+  const s = item.style ?? {};
+  const orientation = String(p.orientation ?? p.layout ?? "horizontal") === "vertical" ? "vertical" : "horizontal";
+  const visibleItems = normalizeMenuItems(p.items).filter((menuItem) => !menuItem.hidden);
+  const items = visibleItems.slice(0, orientation === "vertical" ? 4 : 3);
+  const activeId = String(p.activeItemId ?? items[Number(p.activeIndex ?? 0)]?.id ?? "");
+  const itemStyle = getMenuStyle(p.itemStyle);
+  const textColor = String(p.textColor ?? s.color ?? "#111827");
+  const activeColor = String(p.activeColor ?? "#2563eb");
+  const activeBg = String(p.activeBg ?? "");
+  const itemBg = String(p.itemBg ?? "");
+  const navBg = String(p.navBg ?? s.backgroundColor ?? s.background ?? "transparent");
+  const navBorder = String(p.navBorder ?? "");
+  const navRadius = String(p.navBorderRadius ?? s.borderRadius ?? "4px");
+  const gap = Math.max(0, Math.min(Number(p.itemGap ?? p.gap ?? 12), 28));
+  const isHamburger = String(p.layout ?? "") === "hamburger" || itemStyle === "icon-hamburger" || itemStyle === "labeled-hamburger";
+
+  const itemStyleFor = (active: boolean): React.CSSProperties => {
+    const base: React.CSSProperties = {
+      color: active ? activeColor : textColor,
+      background: itemBg || "transparent",
+      borderRadius: 4,
+      border: "1px solid transparent",
+      padding: orientation === "vertical" ? "4px 10px" : "4px 8px",
+      fontSize: orientation === "vertical" ? 11 : 10,
+      lineHeight: 1,
+      whiteSpace: "nowrap",
+      minWidth: 0,
+      maxWidth: orientation === "vertical" ? undefined : 52,
+      textAlign: "center",
+      textDecoration: "none",
+      fontWeight: 500,
+      boxSizing: "border-box",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+    };
+
+    if (itemStyle === "underline" || itemStyle === "underline-all") {
+      base.borderRadius = 0;
+      base.borderBottom = `2px solid ${active || itemStyle === "underline-all" ? activeColor : "transparent"}`;
+      base.padding = "4px 3px";
+    }
+    if (itemStyle === "boxed" || itemStyle === "boxed-all") {
+      base.border = `1px solid ${active || itemStyle === "boxed-all" ? activeColor || textColor : "transparent"}`;
+      base.padding = orientation === "vertical" ? "6px 9px" : "5px 6px";
+    }
+    if (itemStyle === "pill" || itemStyle === "pill-all" || itemStyle === "pill-outlined") {
+      base.borderRadius = 999;
+      base.background = itemStyle === "pill-all" ? (itemBg || "#f3f4f6") : "transparent";
+      if (active) {
+        base.background = activeBg || activeColor;
+        base.color = itemStyle === "pill-outlined" ? activeColor : "#fff";
+        base.border = itemStyle === "pill-outlined" ? `1px solid ${activeColor}` : "1px solid transparent";
+      }
+    }
+    if (itemStyle === "filled") {
+      if (active) {
+        base.background = activeBg || activeColor;
+        base.color = "#fff";
+      }
+    }
+    if (itemStyle === "button-all") {
+      base.background = activeColor;
+      base.color = "#fff";
+      base.borderRadius = 0;
+      base.padding = orientation === "vertical" ? "6px 10px" : "5px 7px";
+    }
+    if (itemStyle === "block-vertical") {
+      base.background = active ? activeColor : itemBg || "#fff";
+      base.color = active ? "#fff" : textColor;
+      base.border = `1px solid ${activeColor}`;
+      base.borderRadius = 0;
+      base.fontWeight = 700;
+      base.width = "100%";
+      base.maxWidth = undefined;
+    }
+    if (itemStyle === "serif-panel" || itemStyle === "pastel-panel") {
+      base.fontFamily = "Georgia, serif";
+      base.fontSize = 13;
+      base.background = active ? (activeBg || activeColor) : (itemBg || "#eef2ff");
+      base.color = active ? "#fff" : textColor;
+      base.borderRadius = 0;
+      base.width = "100%";
+      base.maxWidth = undefined;
+    }
+    if (itemStyle === "dark-panel") {
+      base.fontFamily = "Georgia, serif";
+      base.fontStyle = "italic";
+      base.background = active ? "#000" : (itemBg || "transparent");
+      base.color = active ? "#fff" : textColor;
+      base.borderBottom = "1px solid rgba(0,0,0,0.45)";
+      base.borderRadius = 0;
+      base.width = "100%";
+      base.maxWidth = undefined;
+    }
+
+    return base;
+  };
+
+  if (isHamburger) {
+    const triggerStyle: React.CSSProperties = {
+      minWidth: itemStyle === "labeled-hamburger" ? 82 : 38,
+      height: 38,
+      borderRadius: itemStyle === "button-all" ? 8 : 999,
+      border: itemStyle === "boxed" || itemStyle === "boxed-all" ? `2px solid ${textColor}` : "none",
+      background: itemStyle === "filled" || itemStyle === "icon-hamburger" ? activeColor : (itemStyle === "labeled-hamburger" ? itemBg || "#e7e5df" : "transparent"),
+      color: itemStyle === "filled" || itemStyle === "icon-hamburger" ? "#fff" : textColor,
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      fontSize: itemStyle === "icon-hamburger" ? 27 : 14,
+      fontWeight: 700,
+    };
+
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <div style={triggerStyle}>
+          {itemStyle === "icon-hamburger" ? "+" : itemStyle === "labeled-hamburger" ? (
+            <>
+              <span>Menu</span>
+              <span style={{ width: 8, height: 8, borderRadius: 999, background: "currentColor" }} />
+            </>
+          ) : (
+            <span className="flex flex-col gap-1">
+              <span style={{ width: 22, height: 2, background: "currentColor" }} />
+              <span style={{ width: 22, height: 2, background: "currentColor" }} />
+              <span style={{ width: 22, height: 2, background: "currentColor" }} />
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="flex h-full w-full items-center justify-center overflow-hidden p-1"
+      style={{
+        background: navBg,
+        border: navBorder || undefined,
+        borderRadius: navRadius,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          flexDirection: orientation === "vertical" ? "column" : "row",
+          gap: orientation === "vertical" ? 5 : Math.min(5, Math.max(2, gap / 5)),
+          alignItems: "center",
+          justifyContent: "center",
+          width: "100%",
+          minWidth: 0,
+        }}
+      >
+        {items.map((menuItem) => {
+          const active = menuItem.id === activeId || hasActiveDescendant(menuItem, activeId);
+          const labelLimit = orientation === "vertical" ? 8 : 7;
+          const label = menuItem.label.length > labelLimit ? `${menuItem.label.slice(0, labelLimit)}...` : menuItem.label;
+          return (
+            <div key={menuItem.id} style={itemStyleFor(active)}>
+              {label}
+              {menuItem.children?.length ? <span style={{ marginLeft: 3 }}>v</span> : null}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 const MiniPreview: React.FC<MiniPreviewProps> = ({ item }) => {
@@ -199,6 +400,10 @@ const MiniPreview: React.FC<MiniPreviewProps> = ({ item }) => {
         </div>
       </div>
     );
+  }
+
+  if (type === "NavigationMenu") {
+    return <MenuMiniPreview item={item} />;
   }
 
   if (type === "GalleryGrid") {
@@ -363,7 +568,7 @@ export const PaletteItemCard: React.FC<PaletteItemCardProps> = ({
           if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); }
         }}
         className={cn(
-          "min-h-16 flex items-center justify-center rounded-lg overflow-hidden cursor-grab active:cursor-grabbing",
+          "min-h-16 min-w-0 max-w-full flex items-center justify-center rounded-lg cursor-grab active:cursor-grabbing",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring select-none group",
           // !showThumbnail && "border border-border/40 bg-muted/10"
         )}
@@ -398,7 +603,7 @@ export const PaletteItemCard: React.FC<PaletteItemCardProps> = ({
               {label}
             </div>
           ) : (
-            <div className="w-full h-[72px]">
+            <div className="w-full h-full">
               <MiniPreview item={item} />
             </div>
           )

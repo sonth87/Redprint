@@ -323,7 +323,7 @@ export const MediaManager = memo(function MediaManager({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+      <DialogContent className="max-w-5xl max-h-[80vh] h-[70vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FolderOpen className="h-4 w-4" />
@@ -393,7 +393,7 @@ export const MediaManager = memo(function MediaManager({
                   )}
                 </div>
               ) : (
-                <div className="grid grid-cols-4 gap-2 pb-2">
+                <div className="grid md:grid-cols-6 lg:grid-cols-6 gap-2 pb-2">
                   {filtered.map((asset) => (
                     <AssetCard
                       key={asset.id}

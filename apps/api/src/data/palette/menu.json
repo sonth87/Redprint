@@ -24,25 +24,23 @@
           "name": "Plain Menu",
           "thumbnail": null,
           "i18n": {
-            "en": { "name": "Plain Menu" },
-            "vi": { "name": "Menu đơn giản" }
+            "en": { "name": "Plain Menu", "description": "Minimal text links for clean headers." },
+            "vi": { "name": "Menu đơn giản", "description": "Liên kết chữ tối giản cho header gọn gàng." }
           },
           "props": {
             "items": [
-              { "label": "Home", "href": "#" },
-              { "label": "About", "href": "#" },
-              { "label": "Gallery", "href": "#" },
-              { "label": "Contact", "href": "#" }
+              { "id": "home", "label": "Home", "target": { "type": "anchor", "anchorId": "home" } },
+              { "id": "about", "label": "About", "target": { "type": "anchor", "anchorId": "about" } },
+              { "id": "gallery", "label": "Gallery", "target": { "type": "anchor", "anchorId": "gallery" } },
+              { "id": "contact", "label": "Contact", "target": { "type": "anchor", "anchorId": "contact" } }
             ],
+            "orientation": "horizontal",
             "layout": "horizontal",
-            "mobileHamburger": true,
+            "mobileBehavior": "hamburger",
+            "hamburgerMode": "fullscreen",
             "textColor": "#111827",
             "activeColor": "#111827",
-            "activeBg": "",
-            "itemBg": "",
-            "navBg": "",
-            "fontSize": "14px",
-            "gap": 28,
+            "itemGap": 28,
             "activeIndex": 0,
             "itemStyle": "plain"
           },
@@ -54,25 +52,22 @@
           "name": "Underline Menu",
           "thumbnail": null,
           "i18n": {
-            "en": { "name": "Underline Menu" },
-            "vi": { "name": "Menu gạch chân" }
+            "en": { "name": "Underline Menu", "description": "Every item uses an editorial underline." },
+            "vi": { "name": "Menu gạch chân", "description": "Mọi mục đều có gạch chân kiểu editorial." }
           },
           "props": {
             "items": [
-              { "label": "Home", "href": "#" },
-              { "label": "About", "href": "#" },
-              { "label": "Gallery", "href": "#" },
-              { "label": "Contact", "href": "#" }
+              { "id": "home", "label": "Home", "target": { "type": "anchor", "anchorId": "home" } },
+              { "id": "about", "label": "About", "target": { "type": "anchor", "anchorId": "about" } },
+              { "id": "gallery", "label": "Gallery", "target": { "type": "anchor", "anchorId": "gallery" } },
+              { "id": "contact", "label": "Contact", "target": { "type": "anchor", "anchorId": "contact" } }
             ],
+            "orientation": "horizontal",
             "layout": "horizontal",
-            "mobileHamburger": true,
-            "textColor": "#111827",
+            "mobileBehavior": "hamburger",
+            "textColor": "#374151",
             "activeColor": "#111827",
-            "activeBg": "",
-            "itemBg": "",
-            "navBg": "",
-            "fontSize": "14px",
-            "gap": 28,
+            "itemGap": 28,
             "activeIndex": 0,
             "itemStyle": "underline-all"
           },
@@ -84,25 +79,22 @@
           "name": "Boxed Menu",
           "thumbnail": null,
           "i18n": {
-            "en": { "name": "Boxed Menu" },
-            "vi": { "name": "Menu viền khung" }
+            "en": { "name": "Boxed Menu", "description": "Outlined boxes around every navigation item." },
+            "vi": { "name": "Menu viền khung", "description": "Mỗi mục điều hướng nằm trong một khung viền." }
           },
           "props": {
             "items": [
-              { "label": "Home", "href": "#" },
-              { "label": "About", "href": "#" },
-              { "label": "Gallery", "href": "#" },
-              { "label": "Contact", "href": "#" }
+              { "id": "home", "label": "Home", "target": { "type": "anchor", "anchorId": "home" } },
+              { "id": "about", "label": "About", "target": { "type": "anchor", "anchorId": "about" } },
+              { "id": "gallery", "label": "Gallery", "target": { "type": "anchor", "anchorId": "gallery" } },
+              { "id": "contact", "label": "Contact", "target": { "type": "anchor", "anchorId": "contact" } }
             ],
+            "orientation": "horizontal",
             "layout": "horizontal",
-            "mobileHamburger": true,
+            "mobileBehavior": "hamburger",
             "textColor": "#111827",
             "activeColor": "#111827",
-            "activeBg": "",
-            "itemBg": "",
-            "navBg": "",
-            "fontSize": "14px",
-            "gap": 12,
+            "itemGap": 10,
             "activeIndex": 0,
             "itemStyle": "boxed-all"
           },
@@ -126,25 +118,21 @@
           "name": "Classic Nav",
           "thumbnail": null,
           "i18n": {
-            "en": { "name": "Classic Nav" },
-            "vi": { "name": "Menu cổ điển" }
+            "en": { "name": "Classic Nav", "description": "Balanced classic navigation with one active text item." },
+            "vi": { "name": "Menu cổ điển", "description": "Menu cân bằng với một mục chữ đang active." }
           },
           "props": {
             "items": [
-              { "label": "Home", "href": "#" },
-              { "label": "About", "href": "#" },
-              { "label": "Gallery", "href": "#" },
-              { "label": "Contact", "href": "#" }
+              { "id": "home", "label": "Home", "target": { "type": "anchor", "anchorId": "home" } },
+              { "id": "about", "label": "About", "target": { "type": "anchor", "anchorId": "about" } },
+              { "id": "gallery", "label": "Gallery", "target": { "type": "anchor", "anchorId": "gallery" } },
+              { "id": "contact", "label": "Contact", "target": { "type": "anchor", "anchorId": "contact" } }
             ],
+            "orientation": "horizontal",
             "layout": "horizontal",
-            "mobileHamburger": true,
             "textColor": "#111827",
-            "activeColor": "#4f46e5",
-            "activeBg": "",
-            "itemBg": "",
-            "navBg": "",
-            "fontSize": "14px",
-            "gap": 28,
+            "activeColor": "#2563eb",
+            "itemGap": 26,
             "activeIndex": 1,
             "itemStyle": "plain"
           },
@@ -156,27 +144,25 @@
           "name": "Pill Nav (Green)",
           "thumbnail": null,
           "i18n": {
-            "en": { "name": "Pill Nav (Green)" },
-            "vi": { "name": "Menu viên thuốc xanh" }
+            "en": { "name": "Pill Nav (Green)", "description": "Soft green bar with outlined active pill." },
+            "vi": { "name": "Menu viên thuốc xanh", "description": "Thanh xanh dịu với mục active dạng pill viền." }
           },
           "props": {
             "items": [
-              { "label": "Home", "href": "#" },
-              { "label": "About", "href": "#" },
-              { "label": "Gallery", "href": "#" },
-              { "label": "Contact", "href": "#" }
+              { "id": "home", "label": "Home", "target": { "type": "anchor", "anchorId": "home" } },
+              { "id": "about", "label": "About", "target": { "type": "anchor", "anchorId": "about" } },
+              { "id": "gallery", "label": "Gallery", "target": { "type": "anchor", "anchorId": "gallery" } },
+              { "id": "contact", "label": "Contact", "target": { "type": "anchor", "anchorId": "contact" } }
             ],
+            "orientation": "horizontal",
             "layout": "horizontal",
-            "mobileHamburger": true,
-            "textColor": "#374151",
-            "activeColor": "#16a34a",
+            "textColor": "#064e3b",
+            "activeColor": "#047857",
             "activeBg": "#ffffff",
-            "itemBg": "",
             "navBg": "#d1fae5",
             "navBorderRadius": "12px",
             "navPadding": "6px 12px",
-            "fontSize": "14px",
-            "gap": 4,
+            "itemGap": 4,
             "activeIndex": 1,
             "itemStyle": "pill-outlined"
           },
@@ -188,29 +174,29 @@
           "name": "Dark Active Nav",
           "thumbnail": null,
           "i18n": {
-            "en": { "name": "Dark Active Nav" },
-            "vi": { "name": "Menu nền tối" }
+            "en": { "name": "Dark Active Nav", "description": "Bordered white menu with black active item." },
+            "vi": { "name": "Menu nền tối", "description": "Menu nền trắng viền mảnh với mục active màu đen." }
           },
           "props": {
             "items": [
-              { "label": "Home", "href": "#" },
-              { "label": "About", "href": "#" },
-              { "label": "Gallery", "href": "#" },
-              { "label": "Contact", "href": "#" }
+              { "id": "home", "label": "Home", "target": { "type": "anchor", "anchorId": "home" } },
+              { "id": "about", "label": "About", "target": { "type": "anchor", "anchorId": "about" } },
+              { "id": "gallery", "label": "Gallery", "target": { "type": "anchor", "anchorId": "gallery" } },
+              { "id": "contact", "label": "Contact", "target": { "type": "anchor", "anchorId": "contact" } }
             ],
+            "orientation": "horizontal",
             "layout": "horizontal",
-            "mobileHamburger": true,
             "textColor": "#111827",
             "activeColor": "#111827",
             "activeBg": "#111827",
-            "itemBg": "",
             "navBg": "#ffffff",
             "navBorder": "1px solid #111827",
             "navPadding": "4px 8px",
-            "fontSize": "14px",
-            "gap": 0,
+            "itemGap": 0,
             "activeIndex": 1,
-            "itemStyle": "filled"
+            "itemStyle": "filled",
+            "fillItems": true,
+            "widthMode": "fullWidth"
           },
           "tags": ["menu", "horizontal", "dark", "filled", "bordered"]
         },
@@ -220,26 +206,22 @@
           "name": "Underline Spaced Nav",
           "thumbnail": null,
           "i18n": {
-            "en": { "name": "Underline Spaced Nav" },
-            "vi": { "name": "Menu gạch chân cách chữ" }
+            "en": { "name": "Underline Spaced Nav", "description": "Wide letter spacing with a purple active underline." },
+            "vi": { "name": "Menu gạch chân cách chữ", "description": "Chữ giãn rộng với gạch chân active màu tím." }
           },
           "props": {
             "items": [
-              { "label": "Home", "href": "#" },
-              { "label": "About", "href": "#" },
-              { "label": "Gallery", "href": "#" },
-              { "label": "Contact", "href": "#" }
+              { "id": "home", "label": "Home", "target": { "type": "anchor", "anchorId": "home" } },
+              { "id": "about", "label": "About", "target": { "type": "anchor", "anchorId": "about" } },
+              { "id": "gallery", "label": "Gallery", "target": { "type": "anchor", "anchorId": "gallery" } },
+              { "id": "contact", "label": "Contact", "target": { "type": "anchor", "anchorId": "contact" } }
             ],
+            "orientation": "horizontal",
             "layout": "horizontal",
-            "mobileHamburger": true,
             "textColor": "#111827",
             "activeColor": "#7c3aed",
-            "activeBg": "",
-            "itemBg": "",
-            "navBg": "",
-            "fontSize": "14px",
-            "letterSpacing": "0.05em",
-            "gap": 20,
+            "letterSpacing": "0.08em",
+            "itemGap": 18,
             "activeIndex": 1,
             "itemStyle": "underline"
           },
@@ -251,25 +233,22 @@
           "name": "Pill All Nav (Coral)",
           "thumbnail": null,
           "i18n": {
-            "en": { "name": "Pill All Nav (Coral)" },
-            "vi": { "name": "Menu viên thuốc san hô" }
+            "en": { "name": "Pill All Nav (Coral)", "description": "Rounded coral chips for every menu item." },
+            "vi": { "name": "Menu viên thuốc san hô", "description": "Các mục dạng chip bo tròn màu san hô." }
           },
           "props": {
             "items": [
-              { "label": "Home", "href": "#" },
-              { "label": "About", "href": "#" },
-              { "label": "Gallery", "href": "#" },
-              { "label": "Contact", "href": "#" }
+              { "id": "home", "label": "Home", "target": { "type": "anchor", "anchorId": "home" } },
+              { "id": "about", "label": "About", "target": { "type": "anchor", "anchorId": "about" } },
+              { "id": "gallery", "label": "Gallery", "target": { "type": "anchor", "anchorId": "gallery" } },
+              { "id": "contact", "label": "Contact", "target": { "type": "anchor", "anchorId": "contact" } }
             ],
+            "orientation": "horizontal",
             "layout": "horizontal",
-            "mobileHamburger": true,
             "textColor": "#ea580c",
-            "activeColor": "#ea580c",
-            "activeBg": "",
-            "itemBg": "#fed7aa",
-            "navBg": "",
-            "fontSize": "14px",
-            "gap": 8,
+            "activeColor": "#ff4d2d",
+            "itemBg": "#fff1ed",
+            "itemGap": 8,
             "activeIndex": 1,
             "itemStyle": "pill-all"
           },
@@ -281,36 +260,241 @@
           "name": "Button Nav (Blue)",
           "thumbnail": null,
           "i18n": {
-            "en": { "name": "Button Nav (Blue)" },
-            "vi": { "name": "Menu nút xanh" }
+            "en": { "name": "Button Nav (Blue)", "description": "Blue button-style navigation." },
+            "vi": { "name": "Menu nút xanh", "description": "Menu dạng các nút xanh." }
           },
           "props": {
             "items": [
-              { "label": "Home", "href": "#" },
-              { "label": "About", "href": "#" },
-              { "label": "Gallery", "href": "#" },
-              { "label": "Contact", "href": "#" }
+              { "id": "home", "label": "Home", "target": { "type": "anchor", "anchorId": "home" } },
+              { "id": "about", "label": "About", "target": { "type": "anchor", "anchorId": "about" } },
+              { "id": "gallery", "label": "Gallery", "target": { "type": "anchor", "anchorId": "gallery" } },
+              { "id": "contact", "label": "Contact", "target": { "type": "anchor", "anchorId": "contact" } }
             ],
+            "orientation": "horizontal",
             "layout": "horizontal",
-            "mobileHamburger": true,
             "textColor": "#ffffff",
             "activeColor": "#2563eb",
-            "activeBg": "#2563eb",
-            "itemBg": "",
-            "navBg": "",
-            "fontSize": "14px",
-            "gap": 8,
+            "activeBg": "#1d4ed8",
+            "itemGap": 8,
             "activeIndex": 1,
             "itemStyle": "button-all"
           },
           "tags": ["menu", "horizontal", "button", "blue", "solid"]
+        },
+        {
+          "id": "menu-horizontal-purple-bar",
+          "componentType": "NavigationMenu",
+          "name": "Purple Full Bar",
+          "thumbnail": null,
+          "i18n": {
+            "en": { "name": "Purple Full Bar", "description": "Full-width purple navigation bar with filled items." },
+            "vi": { "name": "Thanh menu tím", "description": "Thanh menu tím full-width với các mục giãn đều." }
+          },
+          "props": {
+            "items": [
+              { "id": "home", "label": "Home", "target": { "type": "anchor", "anchorId": "home" } },
+              { "id": "about", "label": "About", "target": { "type": "anchor", "anchorId": "about" } },
+              { "id": "gallery", "label": "Gallery", "target": { "type": "anchor", "anchorId": "gallery" } },
+              { "id": "contact", "label": "Contact", "target": { "type": "anchor", "anchorId": "contact" } }
+            ],
+            "orientation": "horizontal",
+            "layout": "horizontal",
+            "textColor": "#ffffff",
+            "activeColor": "#ffffff",
+            "activeBg": "rgba(255,255,255,0.12)",
+            "navBg": "#6d4bd8",
+            "navBorderRadius": "8px",
+            "navPadding": "6px 12px",
+            "widthMode": "fullWidth",
+            "fillItems": true,
+            "itemGap": 0,
+            "activeIndex": 1,
+            "itemStyle": "plain"
+          },
+          "tags": ["menu", "horizontal", "purple", "full-width", "bar"]
+        }
+      ]
+    },
+    {
+      "id": "vertical-menus",
+      "label": "Vertical Menus",
+      "order": 2,
+      "layout": "preview",
+      "i18n": {
+        "en": "Vertical Menus",
+        "vi": "Menu dọc"
+      },
+      "items": [
+        {
+          "id": "menu-vertical-orange-stack",
+          "componentType": "NavigationMenu",
+          "name": "Orange Stack",
+          "thumbnail": null,
+          "i18n": {
+            "en": { "name": "Orange Stack", "description": "Bold bordered vertical menu." },
+            "vi": { "name": "Menu dọc cam", "description": "Menu dọc viền cam đậm." }
+          },
+          "props": {
+            "items": [
+              { "id": "home", "label": "Home", "target": { "type": "anchor", "anchorId": "home" } },
+              { "id": "about", "label": "About", "target": { "type": "anchor", "anchorId": "about" } },
+              { "id": "gallery", "label": "Gallery", "target": { "type": "anchor", "anchorId": "gallery" } },
+              { "id": "contact", "label": "Contact", "target": { "type": "anchor", "anchorId": "contact" } }
+            ],
+            "orientation": "vertical",
+            "layout": "vertical",
+            "textColor": "#111827",
+            "activeColor": "#fb4e0b",
+            "itemGap": 6,
+            "activeIndex": 0,
+            "itemStyle": "block-vertical"
+          },
+          "tags": ["menu", "vertical", "orange", "bordered"]
+        },
+        {
+          "id": "menu-vertical-blue-serif",
+          "componentType": "NavigationMenu",
+          "name": "Blue Serif Panel",
+          "thumbnail": null,
+          "i18n": {
+            "en": { "name": "Blue Serif Panel", "description": "Editorial vertical menu with serif typography." },
+            "vi": { "name": "Panel serif xanh", "description": "Menu dọc kiểu editorial với chữ serif." }
+          },
+          "props": {
+            "items": [
+              { "id": "home", "label": "Home", "target": { "type": "anchor", "anchorId": "home" } },
+              { "id": "about", "label": "About", "target": { "type": "anchor", "anchorId": "about" } },
+              { "id": "gallery", "label": "Gallery", "target": { "type": "anchor", "anchorId": "gallery" } },
+              { "id": "contact", "label": "Contact", "target": { "type": "anchor", "anchorId": "contact" } }
+            ],
+            "orientation": "vertical",
+            "layout": "vertical",
+            "textColor": "#17396d",
+            "activeColor": "#1e5aa8",
+            "itemBg": "#dfe8f8",
+            "itemGap": 0,
+            "activeIndex": 0,
+            "itemStyle": "serif-panel"
+          },
+          "tags": ["menu", "vertical", "blue", "serif"]
+        },
+        {
+          "id": "menu-vertical-black-italic",
+          "componentType": "NavigationMenu",
+          "name": "Black Italic Stack",
+          "thumbnail": null,
+          "i18n": {
+            "en": { "name": "Black Italic Stack", "description": "High-contrast vertical menu with italic active row." },
+            "vi": { "name": "Menu đen italic", "description": "Menu dọc tương phản cao với chữ nghiêng." }
+          },
+          "props": {
+            "items": [
+              { "id": "home", "label": "Home", "target": { "type": "anchor", "anchorId": "home" } },
+              { "id": "about", "label": "About", "target": { "type": "anchor", "anchorId": "about" } },
+              { "id": "gallery", "label": "Gallery", "target": { "type": "anchor", "anchorId": "gallery" } },
+              { "id": "contact", "label": "Contact", "target": { "type": "anchor", "anchorId": "contact" } }
+            ],
+            "orientation": "vertical",
+            "layout": "vertical",
+            "textColor": "#111827",
+            "activeColor": "#111827",
+            "itemGap": 0,
+            "activeIndex": 0,
+            "itemStyle": "dark-panel"
+          },
+          "tags": ["menu", "vertical", "black", "italic"]
+        },
+        {
+          "id": "menu-vertical-yellow-card",
+          "componentType": "NavigationMenu",
+          "name": "Yellow Card",
+          "thumbnail": null,
+          "i18n": {
+            "en": { "name": "Yellow Card", "description": "Rounded card menu with yellow header row." },
+            "vi": { "name": "Thẻ menu vàng", "description": "Menu dạng thẻ bo góc với hàng active màu vàng." }
+          },
+          "props": {
+            "items": [
+              { "id": "home", "label": "Home", "target": { "type": "anchor", "anchorId": "home" } },
+              { "id": "about", "label": "About", "target": { "type": "anchor", "anchorId": "about" } },
+              { "id": "gallery", "label": "Gallery", "target": { "type": "anchor", "anchorId": "gallery" } },
+              { "id": "contact", "label": "Contact", "target": { "type": "anchor", "anchorId": "contact" } }
+            ],
+            "orientation": "vertical",
+            "layout": "vertical",
+            "textColor": "#111827",
+            "activeColor": "#111827",
+            "activeBg": "#fef96a",
+            "navBorder": "2px solid #111827",
+            "navBorderRadius": "10px",
+            "itemGap": 0,
+            "activeIndex": 0,
+            "itemStyle": "pastel-panel"
+          },
+          "tags": ["menu", "vertical", "yellow", "card"]
+        },
+        {
+          "id": "menu-vertical-green-block",
+          "componentType": "NavigationMenu",
+          "name": "Green Block",
+          "thumbnail": null,
+          "i18n": {
+            "en": { "name": "Green Block", "description": "Deep green vertical block navigation." },
+            "vi": { "name": "Menu khối xanh", "description": "Menu dọc dạng khối xanh đậm." }
+          },
+          "props": {
+            "items": [
+              { "id": "home", "label": "Home", "target": { "type": "anchor", "anchorId": "home" } },
+              { "id": "about", "label": "About", "target": { "type": "anchor", "anchorId": "about" } },
+              { "id": "gallery", "label": "Gallery", "target": { "type": "anchor", "anchorId": "gallery" } },
+              { "id": "contact", "label": "Contact", "target": { "type": "anchor", "anchorId": "contact" } }
+            ],
+            "orientation": "vertical",
+            "layout": "vertical",
+            "textColor": "#ffffff",
+            "activeColor": "#1f6b43",
+            "activeBg": "#0f3f2a",
+            "itemBg": "#1f6b43",
+            "itemGap": 0,
+            "activeIndex": 0,
+            "itemStyle": "block-vertical"
+          },
+          "tags": ["menu", "vertical", "green", "block"]
+        },
+        {
+          "id": "menu-vertical-peach-panel",
+          "componentType": "NavigationMenu",
+          "name": "Peach Panel",
+          "thumbnail": null,
+          "i18n": {
+            "en": { "name": "Peach Panel", "description": "Soft peach vertical menu with serif labels." },
+            "vi": { "name": "Panel hồng đào", "description": "Menu dọc hồng đào nhẹ với chữ serif." }
+          },
+          "props": {
+            "items": [
+              { "id": "home", "label": "Home", "target": { "type": "anchor", "anchorId": "home" } },
+              { "id": "about", "label": "About", "target": { "type": "anchor", "anchorId": "about" } },
+              { "id": "gallery", "label": "Gallery", "target": { "type": "anchor", "anchorId": "gallery" } },
+              { "id": "contact", "label": "Contact", "target": { "type": "anchor", "anchorId": "contact" } }
+            ],
+            "orientation": "vertical",
+            "layout": "vertical",
+            "textColor": "#4a372f",
+            "activeColor": "#4a372f",
+            "itemBg": "#fff1eb",
+            "activeBg": "#f8b894",
+            "itemGap": 0,
+            "activeIndex": 0,
+            "itemStyle": "pastel-panel"
+          },
+          "tags": ["menu", "vertical", "peach", "pastel"]
         }
       ]
     },
     {
       "id": "hamburger-menus",
       "label": "Hamburger Menus",
-      "order": 2,
+      "order": 3,
       "layout": "preview",
       "i18n": {
         "en": "Hamburger Menus",
@@ -320,37 +504,152 @@
         {
           "id": "menu-hamburger-basic",
           "componentType": "NavigationMenu",
-          "name": "Hamburger Menu",
+          "name": "Basic Hamburger",
+          "description": "Responsive hamburger that opens a full-screen menu.",
           "thumbnail": null,
-          "description": "Responsive: shows as hamburger, expands on mobile",
           "i18n": {
-            "en": {
-              "name": "Hamburger Menu",
-              "description": "Best for mobile-first layouts"
-            },
-            "vi": { "name": "Menu hamburger" }
+            "en": { "name": "Basic Hamburger", "description": "Responsive hamburger that opens a full-screen menu." },
+            "vi": { "name": "Menu hamburger cơ bản", "description": "Hamburger responsive mở menu toàn màn hình." }
           },
           "props": {
             "items": [
-              { "label": "Home", "href": "#" },
-              { "label": "About", "href": "#" },
-              { "label": "Portfolio", "href": "#" },
-              { "label": "Contact", "href": "#" }
+              { "id": "home", "label": "Home", "target": { "type": "anchor", "anchorId": "home" } },
+              { "id": "about", "label": "About", "target": { "type": "anchor", "anchorId": "about" } },
+              { "id": "portfolio", "label": "Portfolio", "target": { "type": "anchor", "anchorId": "portfolio" } },
+              { "id": "contact", "label": "Contact", "target": { "type": "anchor", "anchorId": "contact" } }
             ],
             "layout": "hamburger",
-            "mobileHamburger": true,
+            "orientation": "horizontal",
+            "mobileBehavior": "hamburger",
+            "hamburgerMode": "fullscreen",
             "textColor": "#111827",
-            "activeColor": "#4f46e5",
+            "activeColor": "#2563eb",
             "itemStyle": "plain"
           },
           "tags": ["menu", "hamburger", "responsive", "mobile"]
+        },
+        {
+          "id": "menu-hamburger-circle-dark",
+          "componentType": "NavigationMenu",
+          "name": "Circle Hamburger",
+          "thumbnail": null,
+          "i18n": {
+            "en": { "name": "Circle Hamburger", "description": "Black circular hamburger trigger." },
+            "vi": { "name": "Hamburger tròn đen", "description": "Nút hamburger hình tròn màu đen." }
+          },
+          "props": {
+            "items": [
+              { "id": "home", "label": "Home", "target": { "type": "anchor", "anchorId": "home" } },
+              { "id": "about", "label": "About", "target": { "type": "anchor", "anchorId": "about" } },
+              { "id": "contact", "label": "Contact", "target": { "type": "anchor", "anchorId": "contact" } }
+            ],
+            "layout": "hamburger",
+            "hamburgerMode": "fullscreen",
+            "textColor": "#ffffff",
+            "activeColor": "#000000",
+            "itemStyle": "filled"
+          },
+          "tags": ["menu", "hamburger", "circle", "dark"]
+        },
+        {
+          "id": "menu-hamburger-plus-purple",
+          "componentType": "NavigationMenu",
+          "name": "Plus Menu",
+          "thumbnail": null,
+          "i18n": {
+            "en": { "name": "Plus Menu", "description": "Purple plus trigger for playful sites." },
+            "vi": { "name": "Menu dấu cộng", "description": "Nút dấu cộng màu tím cho website vui tươi." }
+          },
+          "props": {
+            "items": [
+              { "id": "home", "label": "Home", "target": { "type": "anchor", "anchorId": "home" } },
+              { "id": "work", "label": "Work", "target": { "type": "anchor", "anchorId": "work" } },
+              { "id": "contact", "label": "Contact", "target": { "type": "anchor", "anchorId": "contact" } }
+            ],
+            "layout": "hamburger",
+            "hamburgerMode": "fullscreen",
+            "textColor": "#ffffff",
+            "activeColor": "#6d4bf2",
+            "itemStyle": "icon-hamburger"
+          },
+          "tags": ["menu", "hamburger", "plus", "purple"]
+        },
+        {
+          "id": "menu-hamburger-labeled-pill",
+          "componentType": "NavigationMenu",
+          "name": "Labeled Pill",
+          "thumbnail": null,
+          "i18n": {
+            "en": { "name": "Labeled Pill", "description": "Large pill trigger with Menu label." },
+            "vi": { "name": "Nút pill có nhãn", "description": "Nút pill lớn có nhãn Menu." }
+          },
+          "props": {
+            "items": [
+              { "id": "home", "label": "Home", "target": { "type": "anchor", "anchorId": "home" } },
+              { "id": "services", "label": "Services", "target": { "type": "anchor", "anchorId": "services" } },
+              { "id": "contact", "label": "Contact", "target": { "type": "anchor", "anchorId": "contact" } }
+            ],
+            "layout": "hamburger",
+            "hamburgerMode": "fullscreen",
+            "textColor": "#111827",
+            "itemBg": "#e6e3dc",
+            "activeColor": "#111827",
+            "itemStyle": "labeled-hamburger"
+          },
+          "tags": ["menu", "hamburger", "pill", "label"]
+        },
+        {
+          "id": "menu-hamburger-outline-circle",
+          "componentType": "NavigationMenu",
+          "name": "Outline Circle",
+          "thumbnail": null,
+          "i18n": {
+            "en": { "name": "Outline Circle", "description": "Outlined circular hamburger trigger." },
+            "vi": { "name": "Hamburger tròn viền", "description": "Nút hamburger tròn có viền." }
+          },
+          "props": {
+            "items": [
+              { "id": "home", "label": "Home", "target": { "type": "anchor", "anchorId": "home" } },
+              { "id": "about", "label": "About", "target": { "type": "anchor", "anchorId": "about" } },
+              { "id": "contact", "label": "Contact", "target": { "type": "anchor", "anchorId": "contact" } }
+            ],
+            "layout": "hamburger",
+            "hamburgerMode": "drawer",
+            "textColor": "#111827",
+            "activeColor": "#111827",
+            "itemStyle": "boxed"
+          },
+          "tags": ["menu", "hamburger", "outline", "circle"]
+        },
+        {
+          "id": "menu-hamburger-orange-square",
+          "componentType": "NavigationMenu",
+          "name": "Orange Square",
+          "thumbnail": null,
+          "i18n": {
+            "en": { "name": "Orange Square", "description": "Solid orange label trigger." },
+            "vi": { "name": "Nút vuông cam", "description": "Nút nhãn màu cam nổi bật." }
+          },
+          "props": {
+            "items": [
+              { "id": "home", "label": "Home", "target": { "type": "anchor", "anchorId": "home" } },
+              { "id": "shop", "label": "Shop", "target": { "type": "page", "path": "/shop" } },
+              { "id": "contact", "label": "Contact", "target": { "type": "anchor", "anchorId": "contact" } }
+            ],
+            "layout": "hamburger",
+            "hamburgerMode": "fullscreen",
+            "textColor": "#ffffff",
+            "activeColor": "#fb5a2a",
+            "itemStyle": "button-all"
+          },
+          "tags": ["menu", "hamburger", "orange", "square"]
         }
       ]
     },
     {
       "id": "anchors",
       "label": "Anchors",
-      "order": 3,
+      "order": 4,
       "layout": "preview",
       "i18n": {
         "en": "Anchors",
@@ -364,8 +663,8 @@
           "description": "Invisible anchor point for scroll-to navigation",
           "thumbnail": null,
           "i18n": {
-            "en": { "name": "Section Anchor" },
-            "vi": { "name": "Neo phần" }
+            "en": { "name": "Section Anchor", "description": "Invisible target for in-page menu links." },
+            "vi": { "name": "Neo phần", "description": "Điểm đích vô hình cho liên kết menu trong trang." }
           },
           "props": {
             "anchorId": "section-1",
@@ -379,8 +678,8 @@
           "name": "Top Anchor",
           "thumbnail": null,
           "i18n": {
-            "en": { "name": "Top Anchor" },
-            "vi": { "name": "Neo đầu trang" }
+            "en": { "name": "Top Anchor", "description": "Anchor for returning to the top of the page." },
+            "vi": { "name": "Neo đầu trang", "description": "Neo để quay lại đầu trang." }
           },
           "props": {
             "anchorId": "top",

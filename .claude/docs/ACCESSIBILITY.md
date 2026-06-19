@@ -69,6 +69,25 @@ For users unable to use mouse drag:
 - **Shift+Ctrl+Arrow**: Resize larger increments
 - **Shift+Arrow**: Drag (move) selected node
 
+### Navigation Menus
+
+Runtime `NavigationMenu` output uses a labelled navigation landmark. Menu links must
+remain keyboard reachable with normal Tab navigation. Items with submenu children
+open their desktop submenu recursively on hover or keyboard focus. Desktop
+submenus use hover/focus bridges so pointer movement into nested flyouts remains
+stable; Escape closes the actively opened desktop submenu chain.
+
+Hamburger menus must expose `aria-expanded` and `aria-controls`, close with Escape
+or backdrop/close button, restore focus to the trigger when closed, and lock body
+scroll for fullscreen/drawer modes. Mobile submenu children render as expandable
+groups instead of hover-only flyouts.
+
+Editor Manage Menu keeps hidden menu items visible in the management tree so they
+can be reordered, nested, restored, or deleted without losing state. Dragging menu
+items must show a visible placeholder for before/after/inside drops; indent,
+outdent, reorder, hide/show, and target edits are committed as command-based prop
+updates so undo/redo remains predictable.
+
 ### Screen Reader Announcements
 
 Critical state changes broadcast to screen reader:
