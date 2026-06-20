@@ -1,9 +1,9 @@
 import React, { useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { Copy, Trash2, ArrowUp, ArrowDown, GripVertical, CornerLeftUp, ImageIcon, Link2, Paintbrush, Frame, Images, Settings2, Maximize2, ListTree, LayoutPanelTop } from "lucide-react";
+import { Check, Copy, Trash2, ArrowUp, ArrowDown, GripVertical, CornerLeftUp, ImageIcon, Link2, Paintbrush, Frame, Images, Settings2, Maximize2, ListTree, LayoutPanelTop, Unlink } from "lucide-react";
 import { useDocument, useBuilder } from "@ui-builder/builder-react";
-import { Button, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@ui-builder/ui";
+import { Button, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@ui-builder/ui";
 import { TOOLTIP_DELAY_MS, normalizeCarouselConfig } from "@ui-builder/shared";
 import { AIToolsPopover } from "../ai/ai-tools/AIToolsPopover";
 import { AISectionPopover } from "../ai/ai-section/AISectionPopover";
@@ -55,15 +55,125 @@ const GALLERY_TYPES = new Set([
   "GalleryFreestyle", "Gallery3DCarousel", "GalleryStacked",
 ]);
 
+function normalizeImageLinkUrl(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (
+    /^(https?:|mailto:|tel:|#|\/)/i.test(trimmed)
+  ) return trimmed;
+  return `https://${trimmed}`;
+}
+
+function ImageLinkPanel({
+  url,
+  target,
+  onApply,
+  onRemove,
+  onClose,
+}: {
+  url: string;
+  target: string;
+  onApply: (url: string, target: "_blank" | "_self") => void;
+  onRemove: () => void;
+  onClose: () => void;
+}) {
+  const [draftUrl, setDraftUrl] = React.useState(url);
+  const [draftTarget, setDraftTarget] = React.useState<"_blank" | "_self">(target === "_self" ? "_self" : "_blank");
+
+  React.useEffect(() => {
+    setDraftUrl(url);
+    setDraftTarget(target === "_self" ? "_self" : "_blank");
+  }, [url, target]);
+
+  const apply = () => {
+    onApply(normalizeImageLinkUrl(draftUrl), draftTarget);
+    onClose();
+  };
+
+  return (
+    <div className="grid gap-3 p-1.5">
+      <div className="rounded-md border bg-muted/35 p-3">
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border bg-background">
+            <Link2 className="h-3.5 w-3.5 text-primary" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold">Image link</p>
+            <p className="truncate text-[11px] text-muted-foreground">
+              {url ? url : "No link set"}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-1.5">
+        <Label className="text-[11px] font-medium">URL</Label>
+        <Input
+          autoFocus
+          className="h-8 text-xs"
+          placeholder="https://example.com"
+          value={draftUrl}
+          onChange={(event) => setDraftUrl(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              apply();
+            }
+            if (event.key === "Escape") {
+              event.preventDefault();
+              onClose();
+            }
+          }}
+        />
+      </div>
+
+      <div className="grid gap-1.5">
+        <Label className="text-[11px] font-medium">Open link in</Label>
+        <Select value={draftTarget} onValueChange={(value) => setDraftTarget(value === "_self" ? "_self" : "_blank")}>
+          <SelectTrigger className="h-8 text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="_blank">New tab</SelectItem>
+            <SelectItem value="_self">Current tab</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex items-center justify-between gap-2 pt-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
+          disabled={!url && !draftUrl.trim()}
+          onClick={() => {
+            onRemove();
+            onClose();
+          }}
+        >
+          <Unlink className="mr-1.5 h-3.5 w-3.5" />
+          Remove
+        </Button>
+        <Button size="sm" className="h-8 px-3 text-xs" onClick={apply}>
+          <Check className="mr-1.5 h-3.5 w-3.5" />
+          Apply
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, rect, zoom, panOffset, onDelete, onDuplicate, onMoveUp, onMoveDown, onDragHandlePointerDown, onOpenMediaManager, onOpenGalleryManager }) => {
   const [filterOpen, setFilterOpen] = React.useState(false);
   const [frameOpen, setFrameOpen] = React.useState(false);
+  const [linkOpen, setLinkOpen] = React.useState(false);
   const [settingsOpen, setSettingsOpen] = React.useState(false);
   const [menuStretchOpen, setMenuStretchOpen] = React.useState(false);
   const [menuManagerOpen, setMenuManagerOpen] = React.useState(false);
   const [menuLayoutOpen, setMenuLayoutOpen] = React.useState(false);
   const [filterPos, setFilterPos] = React.useState({ x: 0, y: 0 });
   const [framePos, setFramePos] = React.useState({ x: 0, y: 0 });
+  const [linkPos, setLinkPos] = React.useState({ x: 0, y: 0 });
   const [settingsPos, setSettingsPos] = React.useState({ x: 0, y: 0 });
   const [menuStretchPos, setMenuStretchPos] = React.useState({ x: 0, y: 0 });
   const [menuManagerPos, setMenuManagerPos] = React.useState({ x: 0, y: 0 });
@@ -73,6 +183,7 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
   React.useEffect(() => {
     setFilterOpen(false);
     setFrameOpen(false);
+    setLinkOpen(false);
     setSettingsOpen(false);
     setMenuStretchOpen(false);
     setMenuManagerOpen(false);
@@ -80,6 +191,7 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
   }, [nodeId]);
   const filterBtnRef = useRef<HTMLButtonElement>(null);
   const frameBtnRef = useRef<HTMLButtonElement>(null);
+  const linkBtnRef = useRef<HTMLButtonElement>(null);
   const settingsBtnRef = useRef<HTMLButtonElement>(null);
   const menuStretchBtnRef = useRef<HTMLButtonElement>(null);
   const menuManagerBtnRef = useRef<HTMLButtonElement>(null);
@@ -262,7 +374,7 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
                     e.stopPropagation();
                     if (menuStretchBtnRef.current) {
                       const r = menuStretchBtnRef.current.getBoundingClientRect();
-                      setMenuStretchPos(getClampedPanelPos(r, 280, 180));
+                      setMenuStretchPos(getClampedPanelPos(r, 280, 170));
                     }
                     setMenuManagerOpen(false);
                     setMenuLayoutOpen(false);
@@ -380,6 +492,7 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
                     onClick={wrap(() => {
                       setFilterOpen(false);
                       setFrameOpen(false);
+                      setLinkOpen(false);
                       onOpenMediaManager("src");
                     })}
                   >
@@ -404,6 +517,8 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
                       const r = filterBtnRef.current.getBoundingClientRect();
                       setFilterPos(getClampedPanelPos(r, 380, 450));
                     }
+                    setFrameOpen(false);
+                    setLinkOpen(false);
                     setFilterOpen((v) => !v);
                   }}
                 >
@@ -449,6 +564,8 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
                       const r = frameBtnRef.current.getBoundingClientRect();
                       setFramePos(getClampedPanelPos(r, 320, 500));
                     }
+                    setFilterOpen(false);
+                    setLinkOpen(false);
                     setFrameOpen((v) => !v);
                   }}
                 >
@@ -490,21 +607,55 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
+                  ref={linkBtnRef}
                   variant="ghost"
                   size="icon-sm"
                   className="h-6 w-6"
-                  onClick={wrap(() => {
-                    const url = window.prompt("Link URL:", String(node.props.linkUrl ?? ""));
-                    if (url !== null) {
-                      dispatch({ type: "UPDATE_PROPS", payload: { nodeId, props: { linkUrl: url } }, description: "Set image link" });
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (linkBtnRef.current) {
+                      const r = linkBtnRef.current.getBoundingClientRect();
+                      setLinkPos(getClampedPanelPos(r, 300, 260));
                     }
-                  })}
+                    setFilterOpen(false);
+                    setFrameOpen(false);
+                    setLinkOpen((v) => !v);
+                  }}
                 >
                   <Link2 className="h-3 w-3" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="top">Set Link</TooltipContent>
             </Tooltip>
+            {linkOpen && createPortal(
+              <FloatingPanel
+                title="Image Link"
+                defaultPosition={{ x: linkPos.x, y: linkPos.y }}
+                width={300}
+                onClose={() => setLinkOpen(false)}
+              >
+                <ImageLinkPanel
+                  url={String(node.props.linkUrl ?? "")}
+                  target={String(node.props.linkTarget ?? "_blank")}
+                  onApply={(linkUrl, linkTarget) => {
+                    dispatch({
+                      type: "UPDATE_PROPS",
+                      payload: { nodeId, props: { linkUrl, linkTarget } },
+                      description: "Set image link",
+                    });
+                  }}
+                  onRemove={() => {
+                    dispatch({
+                      type: "UPDATE_PROPS",
+                      payload: { nodeId, props: { linkUrl: "", linkTarget: "_blank" } },
+                      description: "Remove image link",
+                    });
+                  }}
+                  onClose={() => setLinkOpen(false)}
+                />
+              </FloatingPanel>,
+              document.body,
+            )}
           </>
         )}
 

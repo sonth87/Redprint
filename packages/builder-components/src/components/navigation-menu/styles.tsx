@@ -13,17 +13,24 @@ function alignmentToJustify(alignment: MenuAlignment): React.CSSProperties["just
 function buildNavStyle(settings: MenuSettings, style: Partial<StyleConfig> | undefined): React.CSSProperties {
   const shouldUseContentHeight = settings.orientation === "horizontal" && settings.overflowMode === "wrap";
   const styleWidth = (style as React.CSSProperties | undefined)?.width;
+  const shouldUseViewportWidth = settings.widthMode === "fullWidth";
   const shouldUseIntrinsicVerticalWidth =
     settings.orientation === "vertical" &&
     settings.widthMode === "wrap" &&
     (styleWidth === undefined || styleWidth === "100%");
   const navStyle: React.CSSProperties = {
     ...(style as React.CSSProperties),
-    width: settings.widthMode === "fullWidth"
-      ? "100%"
+    width: shouldUseViewportWidth
+      ? "100vw"
       : shouldUseIntrinsicVerticalWidth ? "fit-content" : (styleWidth ?? "fit-content"),
+    ...(shouldUseViewportWidth
+      ? {
+          marginLeft: settings.floatingMode === "fixed" ? 0 : "calc(-50vw + 50%)",
+          maxWidth: "none",
+        }
+      : {}),
     ...(shouldUseContentHeight ? { height: "auto" } : {}),
-    maxWidth: "100%",
+    maxWidth: shouldUseViewportWidth ? "none" : "100%",
     display: "flex",
     flexDirection: settings.orientation === "vertical" ? "column" : "row",
     alignItems: settings.orientation === "vertical" ? "stretch" : "center",

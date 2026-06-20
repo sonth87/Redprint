@@ -648,7 +648,7 @@ function EditorInner({
                           borderRadius: 4,
                           transition: `box-shadow ${TRANSITION_FAST_CSS} ease`,
                         }}
-                        onPointerDown={(e) => { setBreakpoint("desktop"); handlePointerDown(e); }}
+                        onPointerDown={(e) => { setBreakpoint("desktop"); handlePointerDown(e); e.stopPropagation(); }}
                         {...frameEventHandlers}
                       >
                         <div className="pointer-events-none absolute inset-y-0 left-1/2 z-0 w-[1200px] -translate-x-1/2 border-x border-dashed border-blue-400/20" />
@@ -666,7 +666,7 @@ function EditorInner({
                       position: "relative", boxShadow: "0 4px 24px rgba(0,0,0,0.12)", borderRadius: 4,
                       transition: `width ${TRANSITION_MID_CSS} ease, min-height ${TRANSITION_MID_CSS} ease, box-shadow ${TRANSITION_FAST_CSS} ease`,
                     }}
-                    onPointerDown={handlePointerDown}
+                    onPointerDown={(e) => { handlePointerDown(e); e.stopPropagation(); }}
                     {...frameEventHandlers}
                   >
                     <div className="pointer-events-none absolute inset-y-0 left-1/2 z-0 w-[1200px] -translate-x-1/2 border-x border-dashed border-blue-400/20" />
@@ -722,7 +722,7 @@ function EditorInner({
                             : "0 4px 24px rgba(0,0,0,0.12)",
                           borderRadius: 4, transition: `box-shadow ${TRANSITION_FAST_CSS} ease`,
                         }}
-                        onPointerDown={(e) => { setBreakpoint("mobile"); handlePointerDown(e); }}
+                        onPointerDown={(e) => { setBreakpoint("mobile"); handlePointerDown(e); e.stopPropagation(); }}
                         onDoubleClick={handleCanvasDoubleClick} onMouseOver={handleMouseOver} onMouseOut={handleMouseOut}
                         onDragEnter={handleDragEnter} onDragOver={handleDragOver} onDrop={handleDrop}
                       >

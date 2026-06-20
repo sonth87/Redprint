@@ -1,7 +1,7 @@
 import React from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { ChevronRight, EyeOff, GripVertical, MoreHorizontal, Plus } from "lucide-react";
+import { ChevronRight, EyeOff, GripVertical, Maximize2, Minimize2, MoreHorizontal, Plus } from "lucide-react";
 import type { BuilderDocument, BuilderNode } from "@ui-builder/builder-core";
 import {
   normalizeMenuItems,
@@ -401,6 +401,7 @@ function ModeCard({
 export function MenuStretchPopover({ node, dispatch }: Pick<MenuToolbarPanelProps, "node" | "dispatch">) {
   const { t } = useTranslation();
   const widthMode = String(node.props.widthMode ?? "wrap");
+  const isFullWidth = widthMode === "fullWidth";
   const setWidthMode = (mode: "wrap" | "fullWidth") => {
     dispatch({
       type: "UPDATE_PROPS",
@@ -409,27 +410,56 @@ export function MenuStretchPopover({ node, dispatch }: Pick<MenuToolbarPanelProp
     });
     dispatch({
       type: "UPDATE_STYLE",
-      payload: { nodeId: node.id, style: { width: mode === "fullWidth" ? "100%" : "fit-content" } },
+      payload: {
+        nodeId: node.id,
+        style: mode === "fullWidth"
+          ? { width: "100vw", marginLeft: "calc(-50vw + 50%)", maxWidth: "none" }
+          : { width: "fit-content", marginLeft: undefined, maxWidth: undefined },
+      },
       description: "Set menu width",
     });
   };
 
   return (
-    <div className="grid gap-3 p-1">
+    <div className="grid gap-3 p-1.5">
       <div className="flex items-center justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <p className="text-sm font-semibold">{t("menuToolbar.stretch.title", "Stretch")}</p>
           <p className="text-xs text-muted-foreground">{t("menuToolbar.stretch.description", "Choose how the menu uses available width.")}</p>
         </div>
-        <Switch checked={widthMode === "fullWidth"} onCheckedChange={(checked) => setWidthMode(checked ? "fullWidth" : "wrap")} />
+        <Switch
+          aria-label={t("menuToolbar.stretch.title", "Stretch")}
+          checked={isFullWidth}
+          onCheckedChange={(checked) => setWidthMode(checked ? "fullWidth" : "wrap")}
+        />
       </div>
-      <div className="grid grid-cols-2 gap-2">
-        <Button variant={widthMode === "wrap" ? "default" : "outline"} size="sm" onClick={() => setWidthMode("wrap")}>
-          {t("menuToolbar.stretch.wrap", "Wrap")}
-        </Button>
-        <Button variant={widthMode === "fullWidth" ? "default" : "outline"} size="sm" onClick={() => setWidthMode("fullWidth")}>
-          {t("menuToolbar.stretch.fullWidth", "Full width")}
-        </Button>
+      <div className={cn(
+        "flex items-center gap-3 rounded-md border px-3 py-2.5 transition-colors",
+        isFullWidth
+          ? "border-primary/30 bg-primary/10 text-primary"
+          : "border-border bg-muted/40 text-foreground",
+      )}>
+        <div className={cn(
+          "flex h-8 w-8 shrink-0 items-center justify-center rounded-md border",
+          isFullWidth ? "border-primary/25 bg-background/70" : "border-border bg-background",
+        )}>
+          {isFullWidth ? <Maximize2 className="h-3.5 w-3.5" /> : <Minimize2 className="h-3.5 w-3.5" />}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <span className="truncate text-xs font-semibold">
+              {isFullWidth ? t("menuToolbar.stretch.fullWidth", "Full width") : t("menuToolbar.stretch.wrap", "Wrap")}
+            </span>
+            <span className="rounded-sm border border-current/15 bg-background/70 px-1.5 py-0.5 text-[10px] font-medium uppercase leading-none">
+              {isFullWidth ? "100vw" : "fit"}
+            </span>
+          </div>
+          <p className={cn("mt-1 text-[11px]", isFullWidth ? "text-primary/80" : "text-muted-foreground")}>
+            {isFullWidth
+              ? t("menuToolbar.stretch.fullWidthHint", "Bleeds to both viewport edges.")
+              : t("menuToolbar.stretch.wrapHint", "Keeps the menu sized to its content.")}
+          </p>
+        </div>
       </div>
     </div>
   );

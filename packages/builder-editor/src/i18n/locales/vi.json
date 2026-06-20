@@ -68,7 +68,9 @@
       "title": "Stretch",
       "description": "Chọn cách menu sử dụng chiều rộng khả dụng.",
       "wrap": "Co theo nội dung",
-      "fullWidth": "Toàn chiều rộng"
+      "fullWidth": "Toàn chiều rộng",
+      "wrapHint": "Giữ menu co theo nội dung.",
+      "fullWidthHint": "Bung menu sát hai cạnh viewport."
     },
     "manager": {
       "title": "Quản lý menu",

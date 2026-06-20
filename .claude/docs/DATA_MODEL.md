@@ -585,13 +585,14 @@ must support hover and keyboard focus, with parent hover/focus bridges so moving
 from a menu item into its submenu does not close the submenu. Column dropdowns
 render nested children inline within the column instead of as detached flyouts.
 
-`widthMode` controls the menu container width only: `fullWidth` stretches the
-menu to the available container/page width, while `wrap` returns the menu to
-content-sized width. It must not imply `fillItems`; item distribution is controlled
-only by `fillItems`. Vertical menus in `wrap` mode ignore the component default
-`width: 100%` and render at intrinsic content width unless the user resizes them
-or switches to `fullWidth`. `overflowMode: "scroll"` uses click scroll controls
-instead of exposing a native horizontal scrollbar.
+`widthMode` controls the menu container width only: `fullWidth` makes the menu
+bleed to the full viewport width (`100vw`) even when it is nested inside a
+constrained container, while `wrap` returns the menu to content-sized width. It
+must not imply `fillItems`; item distribution is controlled only by `fillItems`.
+Vertical menus in `wrap` mode ignore the component default `width: 100%` and
+render at intrinsic content width unless the user resizes them or switches to
+`fullWidth`. `overflowMode: "scroll"` uses click scroll controls instead of
+exposing a native horizontal scrollbar.
 When `overflowMode: "wrap"` is used on a horizontal menu, the menu keeps an
 intrinsic content height so the editor selection frame expands and contracts with
 the actual wrapped rows while side-resizing changes width.

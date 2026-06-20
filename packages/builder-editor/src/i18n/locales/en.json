@@ -68,7 +68,9 @@
       "title": "Stretch",
       "description": "Choose how the menu uses available width.",
       "wrap": "Wrap",
-      "fullWidth": "Full width"
+      "fullWidth": "Full width",
+      "wrapHint": "Keeps the menu sized to its content.",
+      "fullWidthHint": "Bleeds to both viewport edges."
     },
     "manager": {
       "title": "Manage Menu",

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useLayoutEffect, useRef } from "react";
 import type { SnapGuide, DistanceGuide, LiveDimensions } from "../types";
 import type { BuilderNode } from "@ui-builder/builder-core";
 import type { SnapEngine } from "../snap/SnapEngine";
@@ -68,7 +68,7 @@ export interface UseMoveGestureReturn {
   } | null;
 }
 
-const DRAG_THRESHOLD = 5;
+const DRAG_THRESHOLD = 8;
 
 // ── Build coordinator ─────────────────────────────────────────────────────
 
@@ -135,21 +135,17 @@ export function useMoveGesture({
   const optionsRef = useRef(options);
   optionsRef.current = options;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!moving) {
       dragStartedRef.current = false;
       return;
     }
 
-    const handleMove = (e: MouseEvent) => {
+    const handleMove = (e: PointerEvent) => {
       const dx = e.clientX - moving.startPoint.x;
       const dy = e.clientY - moving.startPoint.y;
 
-      if (
-        !dragStartedRef.current &&
-        Math.abs(dx) < DRAG_THRESHOLD &&
-        Math.abs(dy) < DRAG_THRESHOLD
-      )
+      if (!dragStartedRef.current && Math.hypot(dx, dy) < DRAG_THRESHOLD)
         return;
 
       const isFirstMove = !dragStartedRef.current;
@@ -169,10 +165,10 @@ export function useMoveGesture({
       setVisualState(coordinatorRef.current.onMove(e));
     };
 
-    const handleUp = (e: MouseEvent) => {
+    const handleUp = (e: PointerEvent) => {
       const opts = optionsRef.current;
       const frameEl = opts.activeFrameRef?.current ?? opts.canvasFrameRef.current;
-      if (frameEl) {
+      if (frameEl && dragStartedRef.current) {
         coordinatorRef.current.onDrop(e);
         // Restore DOM state on all moving nodes (cancel any leftover transforms)
         for (const mNode of moving.nodes) {
@@ -192,7 +188,7 @@ export function useMoveGesture({
             }
           }
         }
-      } else {
+      } else if (dragStartedRef.current) {
         coordinatorRef.current.onDrop(e);
       }
 
@@ -202,11 +198,23 @@ export function useMoveGesture({
       setVisualState(EMPTY_VISUAL_STATE);
     };
 
-    window.addEventListener("mousemove", handleMove);
-    window.addEventListener("mouseup", handleUp);
+    const handleCancel = () => {
+      if (dragStartedRef.current) {
+        coordinatorRef.current.onCancel();
+      }
+      coordinatorRef.current = buildCoordinator();
+      dragStartedRef.current = false;
+      setMoving(null);
+      setVisualState(EMPTY_VISUAL_STATE);
+    };
+
+    window.addEventListener("pointermove", handleMove);
+    window.addEventListener("pointerup", handleUp);
+    window.addEventListener("pointercancel", handleCancel);
     return () => {
-      window.removeEventListener("mousemove", handleMove);
-      window.removeEventListener("mouseup", handleUp);
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("pointerup", handleUp);
+      window.removeEventListener("pointercancel", handleCancel);
     };
   }, [moving]);
 
