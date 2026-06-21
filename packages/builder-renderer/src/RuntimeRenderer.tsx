@@ -1,6 +1,29 @@
 import React, { createContext, useContext, useState, useCallback, useMemo, memo, useRef, useEffect } from "react";
-import type { BuilderDocument, Breakpoint, ComponentDefinition } from "@ui-builder/builder-core";
-import { ComponentRegistry, resolveProps, resolveVisibility } from "@ui-builder/builder-core";
+import type {
+  BuilderDocument,
+  Breakpoint,
+  ComponentDefinition,
+  PopupStackEntry,
+  PopupLifecycleState,
+  PopupDefinition,
+  PopupAnalyticsEvent,
+} from "@ui-builder/builder-core";
+import {
+  ComponentRegistry,
+  resolveProps,
+  resolveVisibility,
+  DEFAULT_POPUP_Z_INDEX_BASE,
+  applyPopupOpen,
+  applyPopupClose,
+  applyPopupOpened,
+  applyPopupClosed,
+  applyPopupRemove,
+  topmostInteractivePopup,
+  shouldReducePopupMotion,
+  resolveVariantAssignment,
+  resolvePopupForVariant,
+  seededRng,
+} from "@ui-builder/builder-core";
 import { ANIMATION_KEYFRAMES_CSS, PRESET_KEYFRAME, PRESET_INITIAL } from "@ui-builder/shared";
 import type { RendererConfig } from "./types";
 import { StylePipeline } from "./pipeline/StylePipeline";
@@ -31,6 +54,8 @@ interface RuntimeContextValue {
   breakpoint: Breakpoint;
   variables: Record<string, unknown>;
   setVariable: (key: string, value: unknown) => void;
+  openPopup: (popupId: string) => void;
+  closePopup: (popupId: string, reason?: PopupAnalyticsEvent["closeReason"]) => void;
   attachNodeIds: boolean;
   missingComponentFallback?: ComponentDefinition;
 }
@@ -106,6 +131,12 @@ const RuntimeNode = memo(function RuntimeNode({ nodeId }: { nodeId: string }) {
       if (type === "SET_VARIABLE") {
         const { key, value } = payload as { key: string; value: unknown };
         ctx.setVariable(key, value);
+      } else if (type === "SHOW_MODAL") {
+        const { targetId } = payload as { targetId: string };
+        ctx.openPopup(targetId);
+      } else if (type === "HIDE_MODAL") {
+        const { targetId } = payload as { targetId: string };
+        ctx.closePopup(targetId, "action");
       }
     },
   );
@@ -229,7 +260,19 @@ export function RuntimeRenderer({ document, registry, config = {} }: RuntimeRend
     variables: initialVariables = {},
     missingComponentFallback,
     attachNodeIds = false,
+    onPopupOpen,
+    onPopupClose,
+    popupStorage,
+    onPopupAnalyticsEvent,
+    eventBus,
+    getVariantAssignment,
+    setVariantAssignment,
+    isPreview = false,
   } = config;
+  const hasSectionVisibleTrigger = Object.values(document.popups ?? {}).some(
+    (popup) => popup.autoTrigger.type === "sectionVisible",
+  );
+  const effectiveAttachNodeIds = attachNodeIds || hasSectionVisibleTrigger;
 
   const [variables, setVariables] = useState<Record<string, unknown>>(() => ({
     // Merge document default variable values with initial overrides
@@ -243,6 +286,252 @@ export function RuntimeRenderer({ document, registry, config = {} }: RuntimeRend
     setVariables((prev) => ({ ...prev, [key]: value }));
   }, []);
 
+  // Runtime popup lifecycle stack (opening → open → closing → closed).
+  // Pure transitions live in builder-core; this hook owns timers + callbacks.
+  const [popupStack, setPopupStack] = useState<PopupStackEntry[]>([]);
+  const openTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const closeTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+
+  const clearTimer = useCallback((map: React.MutableRefObject<Map<string, ReturnType<typeof setTimeout>>>, popupId: string) => {
+    const t = map.current.get(popupId);
+    if (t) {
+      clearTimeout(t);
+      map.current.delete(popupId);
+    }
+  }, []);
+
+  const effectiveDurationMs = useCallback((popupId: string): number => {
+    const popup = document.popups?.[popupId];
+    if (!popup) return 0;
+    const prefersReduced =
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (shouldReducePopupMotion(popup.behavior.reducedMotion, prefersReduced)) return 0;
+    if (popup.animation.enter === "none") return 0;
+    return popup.animation.durationMs ?? 0;
+  }, [document.popups]);
+
+  const markPopupShown = useCallback((popupId: string) => {
+    if (typeof window === "undefined") return;
+    const storage = popupStorage ?? window.localStorage;
+    const prefix = `ui-builder:popup:${document.id}:${popupId}`;
+    const count = Number(storage.getItem(`${prefix}:count`) ?? "0");
+    storage.setItem(`${prefix}:count`, String(count + 1));
+    storage.setItem(`${prefix}:lastShownAt`, String(Date.now()));
+    window.sessionStorage.setItem(`${prefix}:sessionShown`, "true");
+  }, [document.id, popupStorage]);
+
+  // ── V4: analytics emission (callback + optional EventBus) ────────────────
+  const emitPopupEvent = useCallback(
+    (event: Omit<PopupAnalyticsEvent, "timestamp"> & { timestamp?: number }) => {
+      const full: PopupAnalyticsEvent = {
+        ...event,
+        timestamp: event.timestamp ?? Date.now(),
+        ...(isPreview
+          ? { metadata: { ...(event.metadata ?? {}), preview: true } }
+          : event.metadata
+            ? { metadata: event.metadata }
+            : {}),
+      };
+      // A throwing host analytics handler must never break the popup UI.
+      try {
+        onPopupAnalyticsEvent?.(full);
+      } catch {
+        /* swallow — analytics is best-effort */
+      }
+      try {
+        eventBus?.emit("popup:analytics", full);
+      } catch {
+        /* swallow */
+      }
+    },
+    [onPopupAnalyticsEvent, eventBus, isPreview],
+  );
+
+  // ── V4: A/B variant assignment (runtime-only; never mutates the document) ─
+  // Resolved per popup at open time and held in component state so the surface
+  // renders the right content. Sticky reads/writes go through the host
+  // callbacks first, then fall back to popupStorage.
+  const [assignments, setAssignments] = useState<Record<string, string | null>>({});
+
+  const readStickyAssignment = useCallback(
+    (popupId: string): string | null => {
+      const fromHost = getVariantAssignment?.(popupId);
+      if (fromHost !== undefined && fromHost !== null) return fromHost;
+      if (typeof window === "undefined") return null;
+      const storage = popupStorage ?? window.localStorage;
+      return storage.getItem(`ui-builder:popup:${document.id}:${popupId}:variant`);
+    },
+    [getVariantAssignment, popupStorage, document.id],
+  );
+
+  const persistStickyAssignment = useCallback(
+    (popupId: string, variantId: string) => {
+      setVariantAssignment?.(popupId, variantId);
+      if (typeof window === "undefined") return;
+      const storage = popupStorage ?? window.localStorage;
+      storage.setItem(`ui-builder:popup:${document.id}:${popupId}:variant`, variantId);
+    },
+    [setVariantAssignment, popupStorage, document.id],
+  );
+
+  const assignVariant = useCallback(
+    (popup: PopupDefinition): string | null => {
+      const sticky = popup.experiment?.assignment === "sticky";
+      const { variantId, isNew } = resolveVariantAssignment({
+        variants: popup.variants,
+        experiment: popup.experiment,
+        existingAssignment: sticky ? readStickyAssignment(popup.id) : undefined,
+        rng: popup.experiment?.seed ? seededRng(`${popup.experiment.seed}:${popup.id}`) : Math.random,
+      });
+      setAssignments((prev) => ({ ...prev, [popup.id]: variantId }));
+      if (variantId) {
+        if (sticky && isNew) persistStickyAssignment(popup.id, variantId);
+        emitPopupEvent({ type: "popup_variant_assigned", popupId: popup.id, popupName: popup.name, variantId });
+      }
+      return variantId;
+    },
+    [readStickyAssignment, persistStickyAssignment, emitPopupEvent],
+  );
+
+  const openPopup = useCallback((popupId: string) => {
+    const popup = document.popups?.[popupId];
+    if (!popup?.enabled) return;
+    const zIndexBase = popup.runtimeState?.zIndexBase ?? DEFAULT_POPUP_Z_INDEX_BASE;
+    // Reopen cancels a pending close.
+    clearTimer(closeTimers, popupId);
+    // V4: resolve the A/B variant before showing the surface.
+    const variantId = assignVariant(popup);
+    setPopupStack((prev) =>
+      applyPopupOpen(prev, {
+        popupId,
+        kind: popup.kind,
+        stackMode: popup.runtimeState?.stackMode ?? "single",
+        zIndexBase,
+        now: Date.now(),
+      }),
+    );
+    markPopupShown(popupId);
+    onPopupOpen?.(popupId);
+    emitPopupEvent({
+      type: "popup_open",
+      popupId,
+      popupName: popup.name,
+      ...(variantId ? { variantId } : {}),
+      triggerType: popup.autoTrigger.type,
+    });
+    // Promote opening → open after the enter animation, then count impression.
+    clearTimer(openTimers, popupId);
+    const duration = effectiveDurationMs(popupId);
+    const finishOpen = () => {
+      openTimers.current.delete(popupId);
+      setPopupStack((prev) => applyPopupOpened(prev, popupId, zIndexBase));
+      emitPopupEvent({
+        type: "popup_impression",
+        popupId,
+        popupName: popup.name,
+        ...(variantId ? { variantId } : {}),
+      });
+    };
+    if (duration <= 0) finishOpen();
+    else openTimers.current.set(popupId, setTimeout(finishOpen, duration));
+  }, [document.popups, markPopupShown, onPopupOpen, clearTimer, effectiveDurationMs, assignVariant, emitPopupEvent]);
+
+  const closePopup = useCallback(
+    (popupId: string, closeReason: PopupAnalyticsEvent["closeReason"] = "programmatic") => {
+      const popup = document.popups?.[popupId];
+      const zIndexBase = popup?.runtimeState?.zIndexBase ?? DEFAULT_POPUP_Z_INDEX_BASE;
+      clearTimer(openTimers, popupId);
+      setPopupStack((prev) => applyPopupClose(prev, popupId, zIndexBase));
+      onPopupClose?.(popupId);
+      const variantId = assignments[popupId] ?? undefined;
+      emitPopupEvent({
+        type: "popup_close",
+        popupId,
+        popupName: popup?.name,
+        ...(variantId ? { variantId } : {}),
+        closeReason,
+      });
+      // V4: a `close`-type goal converts when the popup closes.
+      for (const goal of popup?.goals ?? []) {
+        if (goal.type === "close") {
+          emitPopupEvent({
+            type: "popup_conversion",
+            popupId,
+            popupName: popup?.name,
+            ...(variantId ? { variantId } : {}),
+            goalId: goal.id,
+          });
+        }
+      }
+      // V4: dismissal = user-initiated close (not a programmatic/action close).
+      if (closeReason === "escape" || closeReason === "backdrop" || closeReason === "button") {
+        emitPopupEvent({
+          type: "popup_dismiss",
+          popupId,
+          popupName: popup?.name,
+          ...(variantId ? { variantId } : {}),
+          closeReason,
+        });
+      }
+      // Remove after exit animation.
+      clearTimer(closeTimers, popupId);
+      const duration = effectiveDurationMs(popupId);
+      const finishClose = () => {
+        closeTimers.current.delete(popupId);
+        setPopupStack((prev) => applyPopupClosed(prev, popupId, zIndexBase));
+      };
+      if (duration <= 0) finishClose();
+      else closeTimers.current.set(popupId, setTimeout(finishClose, duration));
+    },
+    [document.popups, onPopupClose, clearTimer, effectiveDurationMs, assignments, emitPopupEvent],
+  );
+
+  // Clean up all timers on unmount.
+  useEffect(() => {
+    const open = openTimers.current;
+    const close = closeTimers.current;
+    return () => {
+      open.forEach((t) => clearTimeout(t));
+      close.forEach((t) => clearTimeout(t));
+      open.clear();
+      close.clear();
+    };
+  }, []);
+
+  // Force-remove popups that get deleted/disabled while mounted.
+  useEffect(() => {
+    setPopupStack((prev) => {
+      let next = prev;
+      for (const entry of prev) {
+        const popup = document.popups?.[entry.popupId];
+        if (!popup || !popup.enabled) {
+          clearTimer(openTimers, entry.popupId);
+          clearTimer(closeTimers, entry.popupId);
+          next = applyPopupRemove(next, entry.popupId);
+        }
+      }
+      return next;
+    });
+  }, [document.popups, clearTimer]);
+
+  const popupPushPadding = useMemo<React.CSSProperties | undefined>(() => {
+    let paddingTop: string | undefined;
+    let paddingBottom: string | undefined;
+    for (const entry of popupStack) {
+      if (entry.state === "closing") continue;
+      const popup = document.popups?.[entry.popupId];
+      if (!popup || popup.kind !== "bar" || popup.kindConfig.kind !== "bar" || !popup.kindConfig.pushPageContent) {
+        continue;
+      }
+      const height = popup.kindConfig.height ?? "72px";
+      if (popup.placement === "top") paddingTop = height;
+      if (popup.placement === "bottom") paddingBottom = height;
+    }
+    return paddingTop || paddingBottom ? { paddingTop, paddingBottom } : undefined;
+  }, [document.popups, popupStack]);
+
   const contextValue = useMemo<RuntimeContextValue>(
     () => ({
       document,
@@ -250,16 +539,589 @@ export function RuntimeRenderer({ document, registry, config = {} }: RuntimeRend
       breakpoint,
       variables,
       setVariable,
-      attachNodeIds,
+      openPopup,
+      closePopup,
+      attachNodeIds: effectiveAttachNodeIds,
       missingComponentFallback,
     }),
-    [document, registry, breakpoint, variables, setVariable, attachNodeIds, missingComponentFallback],
+    [document, registry, breakpoint, variables, setVariable, openPopup, closePopup, effectiveAttachNodeIds, missingComponentFallback],
+  );
+
+  // Background should be inert when the topmost interactive popup is modal-like
+  // and requests it (a11y: keep AT/keyboard focus inside the dialog).
+  const topInteractive = topmostInteractivePopup(popupStack);
+  const topPopup = topInteractive ? document.popups?.[topInteractive.popupId] : undefined;
+  const backgroundInert = !!(
+    topPopup &&
+    topPopup.kind !== "bar" &&
+    (topPopup.behavior.inertBackground ?? false)
   );
 
   return React.createElement(
     RuntimeContext.Provider,
     { value: contextValue },
     React.createElement(AnimationKeyframes, null),
-    React.createElement(RuntimeNode, { nodeId: document.rootNodeId }),
+    React.createElement(PopupKeyframes, null),
+    React.createElement(
+      "div",
+      {
+        style: popupPushPadding,
+        // `inert` is the standard way to make a subtree non-interactive for
+        // pointer, keyboard, and AT. React passes it through to the DOM.
+        ...(backgroundInert ? { inert: "", "aria-hidden": true } : {}),
+      },
+      React.createElement(RuntimeNode, { nodeId: document.rootNodeId }),
+    ),
+    React.createElement(PopupRuntimeLayer, {
+      popupStack,
+      breakpoint,
+      storage: popupStorage,
+      onOpenPopup: openPopup,
+      onClosePopup: closePopup,
+      assignments,
+      emitPopupEvent,
+    }),
   );
+}
+
+function PopupKeyframes() {
+  return React.createElement("style", null, `
+@keyframes rb-popup-fade { from { opacity: 0 } to { opacity: 1 } }
+@keyframes rb-popup-scale { from { opacity: 0; transform: scale(.96) } to { opacity: 1; transform: scale(1) } }
+@keyframes rb-popup-slide-up { from { opacity: 0; transform: translateY(32px) } to { opacity: 1; transform: translateY(0) } }
+@keyframes rb-popup-slide-down { from { opacity: 0; transform: translateY(-32px) } to { opacity: 1; transform: translateY(0) } }
+@keyframes rb-popup-slide-left { from { opacity: 0; transform: translateX(32px) } to { opacity: 1; transform: translateX(0) } }
+@keyframes rb-popup-slide-right { from { opacity: 0; transform: translateX(-32px) } to { opacity: 1; transform: translateX(0) } }
+@keyframes rb-popup-fade-out { from { opacity: 1 } to { opacity: 0 } }
+@keyframes rb-popup-scale-out { from { opacity: 1; transform: scale(1) } to { opacity: 0; transform: scale(.96) } }
+@keyframes rb-popup-slide-up-out { from { opacity: 1; transform: translateY(0) } to { opacity: 0; transform: translateY(32px) } }
+@keyframes rb-popup-slide-down-out { from { opacity: 1; transform: translateY(0) } to { opacity: 0; transform: translateY(-32px) } }
+@keyframes rb-popup-slide-left-out { from { opacity: 1; transform: translateX(0) } to { opacity: 0; transform: translateX(32px) } }
+@keyframes rb-popup-slide-right-out { from { opacity: 1; transform: translateX(0) } to { opacity: 0; transform: translateX(-32px) } }
+@keyframes rb-popup-backdrop-in { from { opacity: 0 } to { opacity: 1 } }
+@keyframes rb-popup-backdrop-out { from { opacity: 1 } to { opacity: 0 } }
+`);
+}
+
+function popupCanOpen(
+  popup: NonNullable<BuilderDocument["popups"]>[string],
+  documentId: string,
+  breakpoint: Breakpoint,
+  storage?: Storage,
+): boolean {
+  if (!popup.enabled) return false;
+  if (popup.rules.devices?.length && !popup.rules.devices.includes(breakpoint)) return false;
+  if (typeof window === "undefined") return false;
+
+  const local = storage ?? window.localStorage;
+  const prefix = `ui-builder:popup:${documentId}:${popup.id}`;
+  if (popup.rules.showOncePerSession && window.sessionStorage.getItem(`${prefix}:sessionShown`) === "true") {
+    return false;
+  }
+  const count = Number(local.getItem(`${prefix}:count`) ?? "0");
+  if (popup.rules.maxShows !== undefined && count >= popup.rules.maxShows) return false;
+  if (popup.rules.showOnceEveryDays !== undefined) {
+    const last = Number(local.getItem(`${prefix}:lastShownAt`) ?? "0");
+    if (last > 0) {
+      const elapsedDays = (Date.now() - last) / 86_400_000;
+      if (elapsedDays < popup.rules.showOnceEveryDays) return false;
+    }
+  }
+  return true;
+}
+
+function PopupRuntimeLayer({
+  popupStack,
+  breakpoint,
+  storage,
+  onOpenPopup,
+  onClosePopup,
+  assignments,
+  emitPopupEvent,
+}: {
+  popupStack: PopupStackEntry[];
+  breakpoint: Breakpoint;
+  storage?: Storage;
+  onOpenPopup: (popupId: string) => void;
+  onClosePopup: (popupId: string, reason?: PopupAnalyticsEvent["closeReason"]) => void;
+  assignments: Record<string, string | null>;
+  emitPopupEvent: (event: Omit<PopupAnalyticsEvent, "timestamp"> & { timestamp?: number }) => void;
+}) {
+  const ctx = useRuntimeContext();
+  const builderDocument = ctx.document;
+  const popups = builderDocument.popups ?? {};
+  const topInteractive = topmostInteractivePopup(popupStack);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const disposers: Array<() => void> = [];
+    Object.values(popups).forEach((popup) => {
+      if (!popupCanOpen(popup, builderDocument.id, breakpoint, storage)) return;
+      if (popup.autoTrigger.type === "pageLoad") {
+        const id = window.setTimeout(() => onOpenPopup(popup.id), popup.autoTrigger.delayMs ?? 0);
+        disposers.push(() => window.clearTimeout(id));
+      }
+      if (popup.autoTrigger.type === "scrollDepth") {
+        const trigger = popup.autoTrigger;
+        const onScroll = () => {
+          const doc = window.document.documentElement;
+          const scrollable = Math.max(1, doc.scrollHeight - window.innerHeight);
+          const percent = Math.round((window.scrollY / scrollable) * 100);
+          if (percent >= trigger.percent) {
+            onOpenPopup(popup.id);
+            window.removeEventListener("scroll", onScroll);
+          }
+        };
+        window.addEventListener("scroll", onScroll, { passive: true });
+        disposers.push(() => window.removeEventListener("scroll", onScroll));
+      }
+      if (popup.autoTrigger.type === "sectionVisible" && "IntersectionObserver" in window) {
+        const target = window.document.querySelector(`[data-node-id="${popup.autoTrigger.targetNodeId}"]`);
+        if (!target) return;
+        const observer = new IntersectionObserver(([entry]) => {
+          if (entry?.isIntersecting) {
+            onOpenPopup(popup.id);
+            observer.disconnect();
+          }
+        }, { threshold: popup.autoTrigger.threshold ?? 0.25 });
+        observer.observe(target);
+        disposers.push(() => observer.disconnect());
+      }
+    });
+    return () => disposers.forEach((dispose) => dispose());
+  }, [popups, builderDocument.id, breakpoint, storage, onOpenPopup]);
+
+  // Body scroll stays locked while ANY mounted (non-closed) popup wants it.
+  const shouldLock = popupStack.some(
+    (entry) => entry.state !== "closed" && popups[entry.popupId]?.behavior.lockBodyScroll,
+  );
+  useEffect(() => {
+    if (typeof window === "undefined" || !shouldLock) return;
+    const previous = window.document.body.style.overflow;
+    window.document.body.style.overflow = "hidden";
+    return () => {
+      window.document.body.style.overflow = previous;
+    };
+  }, [shouldLock]);
+
+  return React.createElement(
+    React.Fragment,
+    null,
+    popupStack.map((entry) => {
+      if (entry.state === "closed") return null;
+      const popup = popups[entry.popupId];
+      if (!popup?.enabled) return null;
+      return React.createElement(PopupSurface, {
+        key: entry.popupId,
+        popupId: entry.popupId,
+        lifecycle: entry.state,
+        zIndex: entry.zIndex,
+        isTopmost: topInteractive?.popupId === entry.popupId,
+        variantId: assignments[entry.popupId] ?? null,
+        emitPopupEvent,
+        onClose: (reason?: PopupAnalyticsEvent["closeReason"]) => onClosePopup(entry.popupId, reason),
+      });
+    }),
+  );
+}
+
+function PopupSurface({
+  popupId,
+  lifecycle,
+  zIndex,
+  isTopmost,
+  variantId,
+  emitPopupEvent,
+  onClose,
+}: {
+  popupId: string;
+  lifecycle: PopupLifecycleState;
+  zIndex: number;
+  isTopmost: boolean;
+  variantId: string | null;
+  emitPopupEvent: (event: Omit<PopupAnalyticsEvent, "timestamp"> & { timestamp?: number }) => void;
+  onClose: (reason?: PopupAnalyticsEvent["closeReason"]) => void;
+}) {
+  const ctx = useRuntimeContext();
+  const basePopup = ctx.document.popups?.[popupId];
+  // V4: apply the assigned variant's patch + pick its content root.
+  const resolved = basePopup ? resolvePopupForVariant(basePopup, variantId) : null;
+  const popup = resolved?.popup;
+  const contentRootId = resolved?.rootNodeId ?? basePopup?.rootNodeId;
+  const surfaceRef = useRef<HTMLDivElement | null>(null);
+  const restoreFocusRef = useRef<Element | null>(null);
+  const isClosing = lifecycle === "closing";
+
+  // V4: track which goals already fired this open lifecycle (de-dupe).
+  const firedGoals = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    firedGoals.current = new Set();
+  }, [popupId, variantId]);
+
+  // V4: delegated goal tracking for click/submit goals targeting content nodes.
+  useEffect(() => {
+    if (!basePopup?.goals?.length || typeof document === "undefined") return;
+    const surface = surfaceRef.current;
+    if (!surface) return;
+
+    const matchGoalNode = (target: EventTarget | null, type: "click" | "submit") => {
+      if (!(target instanceof Element)) return;
+      for (const goal of basePopup.goals ?? []) {
+        if (goal.type !== type || !goal.targetNodeId) continue;
+        if (firedGoals.current.has(goal.id)) continue;
+        const node = target.closest(`[data-node-id="${goal.targetNodeId}"]`);
+        if (node) {
+          firedGoals.current.add(goal.id);
+          emitPopupEvent({
+            type: type === "click" ? "popup_cta_click" : "popup_submit",
+            popupId,
+            popupName: basePopup.name,
+            ...(variantId ? { variantId } : {}),
+            goalId: goal.id,
+            nodeId: goal.targetNodeId,
+          });
+          emitPopupEvent({
+            type: "popup_conversion",
+            popupId,
+            popupName: basePopup.name,
+            ...(variantId ? { variantId } : {}),
+            goalId: goal.id,
+            nodeId: goal.targetNodeId,
+          });
+        }
+      }
+    };
+    const onClick = (e: Event) => matchGoalNode(e.target, "click");
+    const onSubmit = (e: Event) => matchGoalNode(e.target, "submit");
+    surface.addEventListener("click", onClick);
+    surface.addEventListener("submit", onSubmit, true);
+    return () => {
+      surface.removeEventListener("click", onClick);
+      surface.removeEventListener("submit", onSubmit, true);
+    };
+  }, [basePopup, popupId, variantId, emitPopupEvent]);
+
+  // Runtime-only drag/resize state. NEVER written back to the document.
+  const modalConfig = popup?.kindConfig.kind === "modal" ? popup.kindConfig : undefined;
+  const runtimeDraggable = !!modalConfig?.runtimeDraggable;
+  const runtimeResizable = !!modalConfig?.runtimeResizable;
+  const dragBounds = modalConfig?.dragBounds ?? "viewport";
+  const [dragOffset, setDragOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [runtimeSize, setRuntimeSize] = useState<{ width: number; height: number } | null>(null);
+
+  const beginPointerDrag = useCallback(
+    (event: React.PointerEvent, mode: "move" | "resize") => {
+      if (isClosing) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const startX = event.clientX;
+      const startY = event.clientY;
+      const startOffset = { ...dragOffset };
+      const rect = surfaceRef.current?.getBoundingClientRect();
+      const startSize = rect ? { width: rect.width, height: rect.height } : { width: 0, height: 0 };
+      const onMove = (e: PointerEvent) => {
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        if (mode === "move") {
+          let nx = startOffset.x + dx;
+          let ny = startOffset.y + dy;
+          if (dragBounds === "viewport" && rect) {
+            const maxX = Math.max(0, (window.innerWidth - rect.width) / 2);
+            const maxY = Math.max(0, (window.innerHeight - rect.height) / 2);
+            nx = Math.min(maxX, Math.max(-maxX, nx));
+            ny = Math.min(maxY, Math.max(-maxY, ny));
+          }
+          setDragOffset({ x: nx, y: ny });
+        } else {
+          setRuntimeSize({
+            width: Math.max(160, startSize.width + dx),
+            height: Math.max(120, startSize.height + dy),
+          });
+        }
+      };
+      const onUp = () => {
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onUp);
+      };
+      window.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup", onUp);
+    },
+    [dragOffset, dragBounds, isClosing],
+  );
+
+  // Capture the element to restore focus to, once, on mount.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    restoreFocusRef.current = document.activeElement;
+    return () => {
+      if (popup?.behavior.restoreFocus && restoreFocusRef.current instanceof HTMLElement) {
+        restoreFocusRef.current.focus();
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ESC + focus-trap: only the topmost interactive popup responds.
+  useEffect(() => {
+    if (!popup || typeof document === "undefined" || !isTopmost || isClosing) return;
+    const surface = surfaceRef.current;
+    if (popup.behavior.trapFocus && surface) {
+      const focusable = surface.querySelector<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      focusable?.focus();
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && popup.behavior.closeOnEscape) {
+        onClose("escape");
+        return;
+      }
+      if (event.key !== "Tab" || !popup.behavior.trapFocus || !surface) return;
+      const focusables = Array.from(surface.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      )).filter((el) => !el.hasAttribute("disabled"));
+      if (focusables.length === 0) return;
+      const first = focusables[0]!;
+      const last = focusables[focusables.length - 1]!;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [popup, onClose, isTopmost, isClosing]);
+
+  if (!popup) return null;
+
+  const shellStyle = getPopupShellStyle(popup);
+  const backdrop = popup.behavior.backdrop;
+  // Enter animation while opening, exit animation while closing.
+  const exitKind = popup.animation.exit ?? popup.animation.enter;
+  const animationName = (() => {
+    if (isClosing) return exitKind === "none" ? undefined : `rb-popup-${exitKind}-out`;
+    return popup.animation.enter === "none" ? undefined : `rb-popup-${popup.animation.enter}`;
+  })();
+
+  return React.createElement(
+    "div",
+    {
+      "data-popup-id": popup.id,
+      "data-popup-state": lifecycle,
+      style: {
+        position: "fixed",
+        inset: 0,
+        zIndex,
+        // Non-backdrop popups (e.g. bar) must not block the whole page; only
+        // the surface itself should capture pointer events.
+        pointerEvents: backdrop.enabled ? "auto" : "none",
+        display: "flex",
+        alignItems: shellStyle.alignItems,
+        justifyContent: shellStyle.justifyContent,
+        padding: shellStyle.wrapperPadding,
+      } as React.CSSProperties,
+    },
+    backdrop.enabled
+      ? React.createElement("button", {
+          type: "button",
+          "aria-label": "Close popup backdrop",
+          tabIndex: -1,
+          onClick: popup.behavior.closeOnBackdropClick && !isClosing ? () => onClose("backdrop") : undefined,
+          style: {
+            position: "absolute",
+            inset: 0,
+            border: 0,
+            padding: 0,
+            margin: 0,
+            background: backdrop.color,
+            opacity: backdrop.opacity,
+            backdropFilter: backdrop.blur ? `blur(${backdrop.blur})` : undefined,
+            cursor: popup.behavior.closeOnBackdropClick ? "pointer" : "default",
+            animation: animationName
+              ? `${isClosing ? "rb-popup-backdrop-out" : "rb-popup-backdrop-in"} ${popup.animation.durationMs}ms ${popup.animation.easing ?? "ease"} both`
+              : undefined,
+          },
+        })
+      : null,
+    React.createElement(
+      "div",
+      {
+        ref: surfaceRef,
+        role: "dialog",
+        "aria-modal": popup.kind !== "bar" ? true : undefined,
+        style: {
+          ...shellStyle.surface,
+          ...(runtimeSize ? { width: `${runtimeSize.width}px`, height: `${runtimeSize.height}px` } : {}),
+          position: "relative",
+          zIndex: 1,
+          pointerEvents: "auto",
+          overflow: "auto",
+          // Compose runtime drag offset on top of the document-defined transform.
+          transform: composeTransforms(shellStyle.surface.transform, dragOffset),
+          animation: animationName
+            ? `${animationName} ${popup.animation.durationMs}ms ${popup.animation.easing ?? "ease"} both`
+            : undefined,
+        },
+      },
+      // Runtime drag handle (modal only, opt-in). Grab anywhere on this bar.
+      runtimeDraggable
+        ? React.createElement("div", {
+            "aria-hidden": true,
+            onPointerDown: (e: React.PointerEvent) => beginPointerDrag(e, "move"),
+            style: {
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 28,
+              cursor: "move",
+              zIndex: 3,
+              touchAction: "none",
+            } as React.CSSProperties,
+          })
+        : null,
+      // Runtime resize handle (modal only, opt-in), bottom-right corner.
+      runtimeResizable
+        ? React.createElement("div", {
+            "aria-hidden": true,
+            onPointerDown: (e: React.PointerEvent) => beginPointerDrag(e, "resize"),
+            style: {
+              position: "absolute",
+              right: 0,
+              bottom: 0,
+              width: 18,
+              height: 18,
+              cursor: "nwse-resize",
+              zIndex: 3,
+              touchAction: "none",
+              background: "linear-gradient(135deg, transparent 50%, rgba(0,0,0,.25) 50%)",
+            } as React.CSSProperties,
+          })
+        : null,
+      popup.behavior.showCloseButton
+        ? React.createElement("button", {
+            type: "button",
+            "aria-label": "Close popup",
+            onClick: () => onClose("button"),
+            style: {
+              position: "absolute",
+              right: 12,
+              top: 12,
+              zIndex: 2,
+              width: 32,
+              height: 32,
+              borderRadius: 999,
+              border: "1px solid rgba(0,0,0,.12)",
+              background: "rgba(255,255,255,.86)",
+              cursor: "pointer",
+              fontSize: 20,
+              lineHeight: "28px",
+            },
+          }, "×")
+        : null,
+      React.createElement(RuntimeNode, { nodeId: contentRootId ?? popup.rootNodeId }),
+    ),
+  );
+}
+
+/** Compose the document-defined transform with a runtime drag offset. */
+function composeTransforms(
+  base: React.CSSProperties["transform"],
+  offset: { x: number; y: number },
+): React.CSSProperties["transform"] {
+  const parts: string[] = [];
+  if (typeof base === "string" && base.length > 0) parts.push(base);
+  if (offset.x !== 0 || offset.y !== 0) parts.push(`translate(${offset.x}px, ${offset.y}px)`);
+  return parts.length > 0 ? parts.join(" ") : undefined;
+}
+
+function getPopupShellStyle(popup: NonNullable<BuilderDocument["popups"]>[string]): {
+  alignItems: React.CSSProperties["alignItems"];
+  justifyContent: React.CSSProperties["justifyContent"];
+  wrapperPadding: string;
+  surface: React.CSSProperties;
+} {
+  const base: React.CSSProperties = {
+    background: "#ffffff",
+    color: "#111827",
+    boxShadow: "0 24px 80px rgba(15, 23, 42, 0.24)",
+    maxWidth: "calc(100vw - 32px)",
+    maxHeight: "calc(100vh - 32px)",
+  };
+
+  if (popup.kind === "drawer") {
+    const config = popup.kindConfig.kind === "drawer" ? popup.kindConfig : undefined;
+    return {
+      alignItems: "stretch",
+      justifyContent: popup.placement === "left" ? "flex-start" : "flex-end",
+      wrapperPadding: "0",
+      surface: {
+        ...base,
+        width: config?.width ?? "420px",
+        minWidth: config?.minWidth,
+        maxWidth: config?.maxWidth ?? "80vw",
+        height: "100vh",
+        maxHeight: "100vh",
+      },
+    };
+  }
+  if (popup.kind === "bottomSheet") {
+    const config = popup.kindConfig.kind === "bottomSheet" ? popup.kindConfig : undefined;
+    return {
+      alignItems: "flex-end",
+      justifyContent: "center",
+      wrapperPadding: "0",
+      surface: {
+        ...base,
+        width: "100%",
+        minHeight: config?.minHeight,
+        height: config?.initialHeight ?? "45vh",
+        maxHeight: config?.maxHeight ?? "92vh",
+        borderRadius: "18px 18px 0 0",
+      },
+    };
+  }
+  if (popup.kind === "bar") {
+    const config = popup.kindConfig.kind === "bar" ? popup.kindConfig : undefined;
+    return {
+      alignItems: popup.placement === "top" ? "flex-start" : "flex-end",
+      justifyContent: "center",
+      wrapperPadding: "0",
+      surface: {
+        ...base,
+        width: "100%",
+        minHeight: config?.height ?? "72px",
+        maxHeight: "40vh",
+        borderRadius: 0,
+      },
+    };
+  }
+  if (popup.kind === "fullscreen") {
+    return {
+      alignItems: "stretch",
+      justifyContent: "stretch",
+      wrapperPadding: "0",
+      surface: { ...base, width: "100vw", height: "100vh", maxWidth: "100vw", maxHeight: "100vh" },
+    };
+  }
+  const config = popup.kindConfig.kind === "modal" ? popup.kindConfig : undefined;
+  const offsetX = config?.offsetX ?? 0;
+  const offsetY = config?.offsetY ?? 0;
+  return {
+    alignItems: "center",
+    justifyContent: "center",
+    wrapperPadding: "16px",
+    surface: {
+      ...base,
+      width: config?.width ?? undefined,
+      height: config?.height ?? undefined,
+      maxWidth: config?.maxWidth ?? "640px",
+      maxHeight: config?.maxHeight ?? "90vh",
+      borderRadius: 16,
+      transform: offsetX !== 0 || offsetY !== 0 ? `translate(${offsetX}px, ${offsetY}px)` : undefined,
+    },
+  };
 }

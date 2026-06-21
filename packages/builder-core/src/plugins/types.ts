@@ -7,6 +7,7 @@ import type { Command, CommandResult } from "../commands/types";
 import type { ComponentDefinition } from "../registry/types";
 import type { BuilderEventType, BuilderEventMap, Unsubscribe } from "../events/types";
 import type { AssetProvider } from "../document/assets";
+import type { PopupTemplate } from "../document/popups";
 import type { SchemaMigration } from "../migration/types";
 
 // ── PluginAPI ──────────────────────────────────────────────────────────────
@@ -26,6 +27,9 @@ export interface PluginAPI {
 
   // Asset providers
   registerAssetProvider(provider: AssetProvider): void;
+
+  // Popup templates
+  registerPopupTemplate(template: PopupTemplate): void;
 
   // Schema migration
   registerMigration(migration: SchemaMigration): void;

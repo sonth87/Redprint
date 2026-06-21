@@ -25,6 +25,64 @@ export type {
   PluginReference,
 } from "./document/types";
 export type {
+  PopupAnimation,
+  PopupAutoTrigger,
+  PopupBehavior,
+  PopupDefinition,
+  PopupKind,
+  PopupKindConfig,
+  PopupModalConfig,
+  PopupBottomSheetConfig,
+  PopupDrawerConfig,
+  PopupBarConfig,
+  PopupFullscreenConfig,
+  PopupPlacement,
+  PopupRules,
+  PopupRuntimeStateConfig,
+  PopupStackMode,
+  PopupTemplate,
+  PopupNodeTemplate,
+  PopupGoal,
+  PopupVariant,
+  PopupExperiment,
+  PopupAnalyticsEvent,
+} from "./document/popups";
+export {
+  createDefaultPopupDefinition,
+  getDefaultPopupAnimation,
+  getDefaultPopupBehavior,
+  getDefaultPopupKindConfig,
+} from "./document/popups";
+export type { PopupLifecycleState, PopupStackEntry } from "./popups/lifecycle";
+export type {
+  NormalizedVariantWeight,
+  ResolveAssignmentInput,
+  ResolveAssignmentResult,
+  ResolvedPopup,
+} from "./popups/experiment";
+export {
+  normalizeWeights,
+  pickVariant,
+  resolveVariantAssignment,
+  resolvePopupForVariant,
+  seededRng,
+} from "./popups/experiment";
+export {
+  DEFAULT_POPUP_Z_INDEX_BASE,
+  POPUP_Z_INDEX_STEP,
+  computeZIndex,
+  isMounted as isPopupMounted,
+  mountedEntries as mountedPopupEntries,
+  topmostInteractive as topmostInteractivePopup,
+  findEntry as findPopupEntry,
+  applyOpen as applyPopupOpen,
+  applyClose as applyPopupClose,
+  applyOpened as applyPopupOpened,
+  applyClosed as applyPopupClosed,
+  applyRemove as applyPopupRemove,
+  shouldReduceMotion as shouldReducePopupMotion,
+} from "./popups/lifecycle";
+export type {
   InteractionConfig,
   InteractionTrigger,
   InteractionAction,
@@ -113,10 +171,26 @@ export {
   CMD_SET_VARIABLE,
   CMD_UPDATE_CANVAS_CONFIG,
   CMD_LOAD_COMPONENT,
+  CMD_CREATE_POPUP,
+  CMD_UPDATE_POPUP,
+  CMD_DELETE_POPUP,
+  CMD_DUPLICATE_POPUP,
+  CMD_ENABLE_POPUP,
+  CMD_DISABLE_POPUP,
   CMD_TOGGLE_RESPONSIVE_HIDDEN,
   CMD_UPDATE_RESPONSIVE_PROPS,
   CMD_RESET_RESPONSIVE_STYLE,
+  CMD_ADD_POPUP_GOAL,
+  CMD_UPDATE_POPUP_GOAL,
+  CMD_REMOVE_POPUP_GOAL,
+  CMD_ADD_POPUP_VARIANT,
+  CMD_UPDATE_POPUP_VARIANT,
+  CMD_REMOVE_POPUP_VARIANT,
+  CMD_UPDATE_POPUP_EXPERIMENT,
   CMD_SET_CANVAS_MODE,
+  CMD_SET_ACTIVE_POPUP,
+  CMD_SET_ACTIVE_POPUP_SELECTION,
+  CMD_SET_ACTIVE_POPUP_VARIANT,
   CMD_ENTER_TEXT_EDIT,
   CMD_EXIT_TEXT_EDIT,
   CMD_SET_THEME_COLORS,
@@ -133,10 +207,25 @@ export type {
   GroupNodesPayload,
   SetVariablePayload,
   UpdateCanvasConfigPayload,
+  CreatePopupPayload,
+  UpdatePopupPayload,
+  DeletePopupPayload,
+  DuplicatePopupPayload,
+  EnableDisablePopupPayload,
   ToggleResponsiveHiddenPayload,
   UpdateResponsivePropsPayload,
   ResetResponsiveStylePayload,
   SetCanvasModePayload,
+  SetActivePopupPayload,
+  SetActivePopupSelectionPayload,
+  AddPopupGoalPayload,
+  UpdatePopupGoalPayload,
+  RemovePopupGoalPayload,
+  AddPopupVariantPayload,
+  UpdatePopupVariantPayload,
+  RemovePopupVariantPayload,
+  UpdatePopupExperimentPayload,
+  SetActivePopupVariantPayload,
   EnterTextEditPayload,
   ExitTextEditPayload,
   SetThemeColorsPayload,
@@ -150,6 +239,7 @@ export type { HistoryEntry, HistoryState } from "./history/types";
 export type {
   BuilderState,
   EditorState,
+  PopupSelectionMode,
   InteractionState,
   UIState,
   DragOperation,
@@ -166,6 +256,7 @@ export type {
 // ── Plugins ────────────────────────────────────────────────────────────────
 export { PluginEngine } from "./plugins/PluginEngine";
 export type { BuilderPlugin, PluginAPI } from "./plugins/types";
+export { PopupTemplateRegistry } from "./popups/PopupTemplateRegistry";
 
 // ── Validation ─────────────────────────────────────────────────────────────
 export { DocumentValidator } from "./validation/DocumentValidator";
@@ -175,6 +266,8 @@ export type { DropValidationResult, DropValidator } from "./validation/types";
 // ── Migration ──────────────────────────────────────────────────────────────
 export { MigrationEngine } from "./migration/MigrationEngine";
 export type { SchemaMigration } from "./migration/types";
+export { popupV3Migration } from "./migration/popupV3Migration";
+export { popupV4Migration } from "./migration/popupV4Migration";
 
 // ── Properties (shared descriptor system) ──────────────────────────────────
 export {

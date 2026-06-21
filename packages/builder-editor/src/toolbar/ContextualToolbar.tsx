@@ -46,6 +46,7 @@ export interface ContextualToolbarProps {
   onOpenMediaManager?: (propKey: string) => void;
   /** Open the GalleryMediaManager dialog for the selected gallery node */
   onOpenGalleryManager?: () => void;
+  zIndex?: number;
 }
 
 // All component types that use the GalleryPro engine (share Manage Media + Settings buttons)
@@ -163,7 +164,7 @@ function ImageLinkPanel({
   );
 }
 
-export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, rect, zoom, panOffset, onDelete, onDuplicate, onMoveUp, onMoveDown, onDragHandlePointerDown, onOpenMediaManager, onOpenGalleryManager }) => {
+export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, rect, zoom, panOffset, onDelete, onDuplicate, onMoveUp, onMoveDown, onDragHandlePointerDown, onOpenMediaManager, onOpenGalleryManager, zIndex = 30 }) => {
   const [filterOpen, setFilterOpen] = React.useState(false);
   const [frameOpen, setFrameOpen] = React.useState(false);
   const [linkOpen, setLinkOpen] = React.useState(false);
@@ -280,10 +281,11 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
   return (
     <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
       <div
-        className="absolute z-30 flex items-center bg-background/95 backdrop-blur-md rounded-md border shadow-md p-1 gap-1"
+        className="absolute flex items-center bg-background/95 backdrop-blur-md rounded-md border shadow-md p-1 gap-1"
         style={{
           left: xPos,
           top: yPos,
+          zIndex,
         }}
         onPointerDown={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}

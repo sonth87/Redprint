@@ -37,8 +37,29 @@ export const CMD_SET_VARIABLE = "SET_VARIABLE" as const;
 export const CMD_UPDATE_CANVAS_CONFIG = "UPDATE_CANVAS_CONFIG" as const;
 export const CMD_LOAD_COMPONENT = "LOAD_COMPONENT" as const;
 
+// Popups
+export const CMD_CREATE_POPUP = "CREATE_POPUP" as const;
+export const CMD_UPDATE_POPUP = "UPDATE_POPUP" as const;
+export const CMD_DELETE_POPUP = "DELETE_POPUP" as const;
+export const CMD_DUPLICATE_POPUP = "DUPLICATE_POPUP" as const;
+export const CMD_ENABLE_POPUP = "ENABLE_POPUP" as const;
+export const CMD_DISABLE_POPUP = "DISABLE_POPUP" as const;
+
+// Popups — V4 goals / variants / experiment
+export const CMD_ADD_POPUP_GOAL = "ADD_POPUP_GOAL" as const;
+export const CMD_UPDATE_POPUP_GOAL = "UPDATE_POPUP_GOAL" as const;
+export const CMD_REMOVE_POPUP_GOAL = "REMOVE_POPUP_GOAL" as const;
+export const CMD_ADD_POPUP_VARIANT = "ADD_POPUP_VARIANT" as const;
+export const CMD_UPDATE_POPUP_VARIANT = "UPDATE_POPUP_VARIANT" as const;
+export const CMD_REMOVE_POPUP_VARIANT = "REMOVE_POPUP_VARIANT" as const;
+export const CMD_RESTORE_POPUP_VARIANT = "RESTORE_POPUP_VARIANT" as const;
+export const CMD_UPDATE_POPUP_EXPERIMENT = "UPDATE_POPUP_EXPERIMENT" as const;
+
 // Editor UI
 export const CMD_SET_CANVAS_MODE = "SET_CANVAS_MODE" as const;
+export const CMD_SET_ACTIVE_POPUP = "SET_ACTIVE_POPUP" as const;
+export const CMD_SET_ACTIVE_POPUP_SELECTION = "SET_ACTIVE_POPUP_SELECTION" as const;
+export const CMD_SET_ACTIVE_POPUP_VARIANT = "SET_ACTIVE_POPUP_VARIANT" as const;
 
 // Document theme
 export const CMD_SET_THEME_COLORS = "SET_THEME_COLORS" as const;
@@ -50,6 +71,16 @@ export const CMD_EXIT_TEXT_EDIT  = "EXIT_TEXT_EDIT"  as const;
 // ── Payload Types ─────────────────────────────────────────────────────────
 
 import type { StyleConfig, CanvasConfig } from "../document/types";
+import type {
+  PopupDefinition,
+  PopupKind,
+  PopupNodeTemplate,
+  PopupGoal,
+  PopupVariant,
+  PopupExperiment,
+} from "../document/popups";
+import type { BuilderNode } from "../document/types";
+import type { PopupSelectionMode } from "../state/types";
 import type { Breakpoint } from "../responsive/types";
 import type { InteractionConfig } from "../document/interactions";
 import type { Point } from "@ui-builder/shared";
@@ -161,6 +192,100 @@ export interface LoadComponentPayload {
   componentType: string;
 }
 
+export interface CreatePopupPayload {
+  popupId?: string;
+  rootNodeId?: string;
+  name: string;
+  kind?: PopupKind;
+  placement?: PopupDefinition["placement"];
+  popup?: Partial<Omit<PopupDefinition, "id" | "rootNodeId" | "metadata">>;
+  root?: PopupNodeTemplate;
+}
+
+export interface UpdatePopupPayload {
+  popupId: string;
+  popup: Partial<Omit<PopupDefinition, "id" | "rootNodeId" | "metadata">>;
+}
+
+export interface DeletePopupPayload {
+  popupId: string;
+}
+
+export interface DuplicatePopupPayload {
+  popupId: string;
+  newPopupId?: string;
+  newRootNodeId?: string;
+  name?: string;
+}
+
+export interface EnableDisablePopupPayload {
+  popupId: string;
+}
+
+// ── V4: goals / variants / experiment ──────────────────────────────────────
+
+export interface AddPopupGoalPayload {
+  popupId: string;
+  /** Pre-generated goal id for predictable undo/redo. */
+  goalId?: string;
+  goal?: Partial<Omit<PopupGoal, "id">>;
+}
+
+export interface UpdatePopupGoalPayload {
+  popupId: string;
+  goalId: string;
+  goal: Partial<Omit<PopupGoal, "id">>;
+}
+
+export interface RemovePopupGoalPayload {
+  popupId: string;
+  goalId: string;
+}
+
+export interface AddPopupVariantPayload {
+  popupId: string;
+  /** Pre-generated variant id for predictable undo/redo. */
+  variantId?: string;
+  /** Pre-generated content root id (only used when cloneFromBase). */
+  rootNodeId?: string;
+  name?: string;
+  weight?: number;
+  /** When true, deep-clone the base content into an owned variant root. */
+  cloneFromBase?: boolean;
+  popupPatch?: PopupVariant["popupPatch"];
+}
+
+export interface UpdatePopupVariantPayload {
+  popupId: string;
+  variantId: string;
+  variant: Partial<Omit<PopupVariant, "id">>;
+}
+
+export interface RemovePopupVariantPayload {
+  popupId: string;
+  variantId: string;
+}
+
+/** Internal inverse of REMOVE_POPUP_VARIANT — restores the variant + its nodes. */
+export interface RestorePopupVariantPayload {
+  popupId: string;
+  variant: PopupVariant;
+  /** Snapshot of the variant's owned content nodes (if any). */
+  nodes?: Record<string, BuilderNode>;
+  /** Index at which to reinsert the variant. */
+  index?: number;
+}
+
+export interface UpdatePopupExperimentPayload {
+  popupId: string;
+  experiment: Partial<PopupExperiment>;
+}
+
+export interface SetActivePopupVariantPayload {
+  popupId: string;
+  variantId: string | null;
+}
+
 export interface ToggleResponsiveHiddenPayload {
   nodeId: string;
   breakpoint: Breakpoint;
@@ -183,6 +308,14 @@ export interface ResetResponsiveStylePayload {
 
 export interface SetCanvasModePayload {
   canvasMode: import("../state/types").CanvasMode;
+}
+
+export interface SetActivePopupPayload {
+  popupId: string | null;
+}
+
+export interface SetActivePopupSelectionPayload {
+  selection: PopupSelectionMode;
 }
 
 export interface EnterTextEditPayload {

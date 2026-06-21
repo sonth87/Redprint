@@ -8,8 +8,10 @@
  */
 
 import { v4 as uuidv4 } from "uuid";
-import type { ClipboardData } from "../state/types";
+import type { BuilderState, ClipboardData } from "../state/types";
 import type { BuilderNode, NodeMetadata, StyleConfig } from "../document/types";
+import type { PopupDefinition, PopupNodeTemplate } from "../document/popups";
+import { createDefaultPopupDefinition } from "../document/popups";
 import type { CommandEngine } from "./CommandEngine";
 import type { ComponentRegistry } from "../registry/ComponentRegistry";
 import type { EventBus } from "../events/EventBus";
@@ -36,10 +38,27 @@ import {
   CMD_UNGROUP_NODES,
   CMD_SET_VARIABLE,
   CMD_UPDATE_CANVAS_CONFIG,
+  CMD_CREATE_POPUP,
+  CMD_UPDATE_POPUP,
+  CMD_DELETE_POPUP,
+  CMD_DUPLICATE_POPUP,
+  CMD_ENABLE_POPUP,
+  CMD_DISABLE_POPUP,
   CMD_TOGGLE_RESPONSIVE_HIDDEN,
   CMD_UPDATE_RESPONSIVE_PROPS,
   CMD_RESET_RESPONSIVE_STYLE,
+  CMD_ADD_POPUP_GOAL,
+  CMD_UPDATE_POPUP_GOAL,
+  CMD_REMOVE_POPUP_GOAL,
+  CMD_ADD_POPUP_VARIANT,
+  CMD_UPDATE_POPUP_VARIANT,
+  CMD_REMOVE_POPUP_VARIANT,
+  CMD_RESTORE_POPUP_VARIANT,
+  CMD_UPDATE_POPUP_EXPERIMENT,
   CMD_SET_CANVAS_MODE,
+  CMD_SET_ACTIVE_POPUP,
+  CMD_SET_ACTIVE_POPUP_SELECTION,
+  CMD_SET_ACTIVE_POPUP_VARIANT,
   CMD_ENTER_TEXT_EDIT,
   CMD_EXIT_TEXT_EDIT,
   CMD_SET_THEME_COLORS,
@@ -58,14 +77,31 @@ import {
   type UngroupNodesPayload,
   type SetVariablePayload,
   type UpdateCanvasConfigPayload,
+  type CreatePopupPayload,
+  type UpdatePopupPayload,
+  type DeletePopupPayload,
+  type DuplicatePopupPayload,
+  type EnableDisablePopupPayload,
   type ToggleResponsiveHiddenPayload,
   type UpdateResponsivePropsPayload,
   type ResetResponsiveStylePayload,
   type SetCanvasModePayload,
+  type SetActivePopupPayload,
+  type SetActivePopupSelectionPayload,
+  type AddPopupGoalPayload,
+  type UpdatePopupGoalPayload,
+  type RemovePopupGoalPayload,
+  type AddPopupVariantPayload,
+  type UpdatePopupVariantPayload,
+  type RemovePopupVariantPayload,
+  type RestorePopupVariantPayload,
+  type UpdatePopupExperimentPayload,
+  type SetActivePopupVariantPayload,
   type EnterTextEditPayload,
   type ExitTextEditPayload,
   type SetThemeColorsPayload,
 } from "./built-in";
+import type { PopupGoal, PopupVariant } from "../document/popups";
 
 // ── Editor-only command types (no undo/redo) ─────────────────────────────
 
@@ -160,6 +196,145 @@ function cloneSubtree(
   }
 
   return { newNodes, newRootId: idMap.get(rootNodeId)! };
+}
+
+function collectSubtreeSnapshot(
+  rootNodeId: string,
+  nodes: Record<string, BuilderNode>,
+): Record<string, BuilderNode> {
+  const ids = [rootNodeId, ...collectDescendants(rootNodeId, nodes)];
+  const snapshot: Record<string, BuilderNode> = {};
+  for (const id of ids) {
+    const node = nodes[id];
+    if (node) snapshot[id] = node;
+  }
+  return snapshot;
+}
+
+/**
+ * V4: all content roots owned by a popup — the base root plus every variant's
+ * own `rootNodeId` (patch-only variants own no root). Used for cascade delete
+ * and deep-clone-on-duplicate so variant content never orphans.
+ */
+function popupOwnedRoots(popup: PopupDefinition): string[] {
+  const roots = [popup.rootNodeId];
+  for (const variant of popup.variants ?? []) {
+    if (variant.rootNodeId) roots.push(variant.rootNodeId);
+  }
+  return roots;
+}
+
+/**
+ * V4: shallow-merge fields onto a popup (preserving id/rootNodeId/metadata),
+ * bumping `updatedAt`. Used by the goal/variant/experiment handlers that mutate
+ * popup-level config only (no node changes).
+ */
+function setPopup(
+  state: BuilderState,
+  popupId: string,
+  patch: Partial<Omit<PopupDefinition, "id" | "rootNodeId" | "metadata">>,
+): BuilderState {
+  const popup = state.document.popups?.[popupId];
+  if (!popup) return state;
+  const timestamp = new Date().toISOString();
+  return {
+    ...state,
+    document: {
+      ...state.document,
+      updatedAt: timestamp,
+      popups: {
+        ...(state.document.popups ?? {}),
+        [popupId]: {
+          ...popup,
+          ...patch,
+          id: popup.id,
+          rootNodeId: popup.rootNodeId,
+          metadata: { ...popup.metadata, updatedAt: timestamp },
+        },
+      },
+    },
+  };
+}
+
+function isNodeInSubtree(
+  nodeId: string,
+  rootNodeId: string,
+  nodes: Record<string, BuilderNode>,
+): boolean {
+  if (nodeId === rootNodeId) return true;
+  let current = nodes[nodeId];
+  while (current?.parentId) {
+    if (current.parentId === rootNodeId) return true;
+    current = nodes[current.parentId];
+  }
+  return false;
+}
+
+function isPopupContentSelection(
+  nodeIds: string[],
+  state: BuilderState,
+): boolean {
+  const activePopupId = state.editor.activePopupId;
+  const popup = activePopupId ? state.document.popups?.[activePopupId] : undefined;
+  return !!popup && nodeIds.some((nodeId) => isNodeInSubtree(nodeId, popup.rootNodeId, state.document.nodes));
+}
+
+function buildPopupNodeTree(
+  rootNodeId: string,
+  rootTemplate: PopupNodeTemplate | undefined,
+  registry: ComponentRegistry,
+  timestamp: string,
+): Record<string, BuilderNode> {
+  const nodes: Record<string, BuilderNode> = {};
+
+  const createNode = (
+    template: PopupNodeTemplate,
+    nodeId: string,
+    parentId: string | null,
+    order: number,
+  ) => {
+    const def = registry.getComponent(template.componentType);
+    const node: BuilderNode = {
+      id: nodeId,
+      type: template.componentType,
+      parentId,
+      order,
+      props: { ...(def?.defaultProps ?? {}), ...(template.props ?? {}) },
+      style: { ...(def?.defaultStyle ?? {}), ...(template.style ?? {}) },
+      responsiveStyle: template.responsiveStyle ?? {},
+      responsiveProps: template.responsiveProps,
+      interactions: [],
+      hidden: false,
+      locked: false,
+      name: template.name ?? def?.name ?? template.componentType,
+      metadata: { createdAt: timestamp, updatedAt: timestamp },
+    };
+    nodes[nodeId] = node;
+
+    template.children?.forEach((child, index) => {
+      createNode(child, uuidv4(), nodeId, index);
+    });
+  };
+
+  createNode(
+    rootTemplate ?? {
+      componentType: "PopupContent",
+      props: {},
+      style: {
+        width: "100%",
+        minHeight: "220px",
+        padding: "32px",
+        display: "flex",
+        flexDirection: "column",
+        gap: "16px",
+      },
+    },
+    rootNodeId,
+    null,
+    0,
+  );
+
+  return nodes;
 }
 
 // ── Main registration ─────────────────────────────────────────────────────
@@ -965,6 +1140,500 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
     }),
   );
 
+  // ── CREATE_POPUP ───────────────────────────────────────────────────────
+  engine.registerHandler<CreatePopupPayload>(
+    CMD_CREATE_POPUP,
+    (state, payload) => {
+      const timestamp = now();
+      const popupId = payload.popupId ?? uuidv4();
+      const rootNodeId = payload.rootNodeId ?? uuidv4();
+      if (state.document.popups?.[popupId]) {
+        throw new Error(`Popup "${popupId}" already exists.`);
+      }
+      if (state.document.nodes[rootNodeId]) {
+        throw new Error(`Popup root node "${rootNodeId}" already exists.`);
+      }
+
+      const base = createDefaultPopupDefinition({
+        id: popupId,
+        name: payload.name,
+        rootNodeId,
+        kind: payload.kind,
+        placement: payload.placement,
+        timestamp,
+      });
+      const popup: PopupDefinition = {
+        ...base,
+        ...(payload.popup ?? {}),
+        id: popupId,
+        rootNodeId,
+        metadata: { createdAt: timestamp, updatedAt: timestamp },
+      };
+      const popupNodes = buildPopupNodeTree(rootNodeId, payload.root, registry, timestamp);
+
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: timestamp,
+          nodes: { ...state.document.nodes, ...popupNodes },
+          popups: { ...(state.document.popups ?? {}), [popupId]: popup },
+        },
+        editor: { ...state.editor, activePopupId: popupId, activePopupSelection: "shell", selectedNodeIds: [] },
+      };
+    },
+    (_state, payload) => {
+      if (!payload.popupId) return undefined;
+      return { type: CMD_DELETE_POPUP, payload: { popupId: payload.popupId } };
+    },
+  );
+
+  // ── UPDATE_POPUP ───────────────────────────────────────────────────────
+  engine.registerHandler<UpdatePopupPayload>(
+    CMD_UPDATE_POPUP,
+    (state, payload) => {
+      const current = state.document.popups?.[payload.popupId];
+      if (!current) return state;
+      const timestamp = now();
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: timestamp,
+          popups: {
+            ...(state.document.popups ?? {}),
+            [payload.popupId]: {
+              ...current,
+              ...payload.popup,
+              id: current.id,
+              rootNodeId: current.rootNodeId,
+              metadata: { ...current.metadata, updatedAt: timestamp },
+            },
+          },
+        },
+      };
+    },
+    (state, payload) => {
+      const current = state.document.popups?.[payload.popupId];
+      if (!current) return undefined;
+      const previous: Partial<Omit<PopupDefinition, "id" | "rootNodeId" | "metadata">> = {};
+      for (const key of Object.keys(payload.popup) as Array<keyof typeof previous>) {
+        previous[key] = current[key] as never;
+      }
+      return { type: CMD_UPDATE_POPUP, payload: { popupId: payload.popupId, popup: previous } };
+    },
+  );
+
+  // ── DELETE_POPUP ───────────────────────────────────────────────────────
+  engine.registerHandler<DeletePopupPayload>(
+    CMD_DELETE_POPUP,
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      if (!popup) return state;
+      // V4: cascade-delete the base root AND every variant-owned content root.
+      const toRemove = new Set<string>();
+      for (const root of popupOwnedRoots(popup)) {
+        toRemove.add(root);
+        for (const id of collectDescendants(root, state.document.nodes)) toRemove.add(id);
+      }
+      const nodes = { ...state.document.nodes };
+      for (const id of toRemove) delete nodes[id];
+      const popups = { ...(state.document.popups ?? {}) };
+      delete popups[payload.popupId];
+      return {
+        ...state,
+        document: { ...state.document, updatedAt: now(), nodes, popups },
+        editor: {
+          ...state.editor,
+          activePopupId: state.editor.activePopupId === payload.popupId ? null : state.editor.activePopupId,
+          activePopupSelection: state.editor.activePopupId === payload.popupId ? null : state.editor.activePopupSelection,
+          selectedNodeIds: state.editor.selectedNodeIds.filter((id) => !toRemove.has(id)),
+        },
+      };
+    },
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      if (!popup) return undefined;
+      // V4: snapshot the base root AND every variant-owned root so undo restores
+      // variant content too.
+      const snapshot: Record<string, BuilderNode> = {};
+      for (const root of popupOwnedRoots(popup)) {
+        Object.assign(snapshot, collectSubtreeSnapshot(root, state.document.nodes));
+      }
+      return { type: "RESTORE_POPUP", payload: { popup, snapshot } };
+    },
+  );
+
+  engine.registerHandler<{ popup: PopupDefinition; snapshot: Record<string, BuilderNode> }>(
+    "RESTORE_POPUP",
+    (state, payload) => ({
+      ...state,
+      document: {
+        ...state.document,
+        updatedAt: now(),
+        nodes: { ...state.document.nodes, ...payload.snapshot },
+        popups: { ...(state.document.popups ?? {}), [payload.popup.id]: payload.popup },
+      },
+      editor: { ...state.editor, activePopupId: payload.popup.id, activePopupSelection: "shell", selectedNodeIds: [] },
+    }),
+  );
+
+  // ── DUPLICATE_POPUP ────────────────────────────────────────────────────
+  engine.registerHandler<DuplicatePopupPayload>(
+    CMD_DUPLICATE_POPUP,
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      if (!popup) return state;
+      const timestamp = now();
+      const newPopupId = payload.newPopupId ?? uuidv4();
+      const { newNodes, newRootId } = cloneSubtree(
+        popup.rootNodeId,
+        state.document.nodes,
+        { x: 0, y: 0 },
+        payload.newRootNodeId,
+      );
+      const allNewNodes: Record<string, BuilderNode> = { ...newNodes };
+
+      // V4: deep-clone each variant's owned content root and remap variant roots.
+      const newVariants = popup.variants?.map((variant) => {
+        if (!variant.rootNodeId) return { ...variant };
+        const cloned = cloneSubtree(variant.rootNodeId, state.document.nodes, { x: 0, y: 0 });
+        Object.assign(allNewNodes, cloned.newNodes);
+        return { ...variant, rootNodeId: cloned.newRootId };
+      });
+
+      // V4: regenerate goal ids so the duplicate has independent goals.
+      const newGoals = popup.goals?.map((goal) => ({ ...goal, id: uuidv4() }));
+
+      const duplicated: PopupDefinition = {
+        ...popup,
+        id: newPopupId,
+        name: payload.name ?? `${popup.name} Copy`,
+        rootNodeId: newRootId,
+        ...(newVariants ? { variants: newVariants } : {}),
+        ...(newGoals ? { goals: newGoals } : {}),
+        ...(popup.experiment ? { experiment: { ...popup.experiment } } : {}),
+        metadata: { ...popup.metadata, createdAt: timestamp, updatedAt: timestamp },
+      };
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: timestamp,
+          nodes: { ...state.document.nodes, ...allNewNodes },
+          popups: { ...(state.document.popups ?? {}), [newPopupId]: duplicated },
+        },
+        editor: { ...state.editor, activePopupId: newPopupId, activePopupSelection: "shell", selectedNodeIds: [] },
+      };
+    },
+    (_state, payload) => {
+      if (!payload.newPopupId) return undefined;
+      return { type: CMD_DELETE_POPUP, payload: { popupId: payload.newPopupId } };
+    },
+  );
+
+  engine.registerHandler<EnableDisablePopupPayload>(
+    CMD_ENABLE_POPUP,
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      if (!popup) return state;
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: now(),
+          popups: {
+            ...(state.document.popups ?? {}),
+            [payload.popupId]: { ...popup, enabled: true, metadata: { ...popup.metadata, updatedAt: now() } },
+          },
+        },
+      };
+    },
+    (state, payload) => ({
+      type: state.document.popups?.[payload.popupId]?.enabled ? CMD_ENABLE_POPUP : CMD_DISABLE_POPUP,
+      payload: { popupId: payload.popupId },
+    }),
+  );
+
+  engine.registerHandler<EnableDisablePopupPayload>(
+    CMD_DISABLE_POPUP,
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      if (!popup) return state;
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: now(),
+          popups: {
+            ...(state.document.popups ?? {}),
+            [payload.popupId]: { ...popup, enabled: false, metadata: { ...popup.metadata, updatedAt: now() } },
+          },
+        },
+      };
+    },
+    (state, payload) => ({
+      type: state.document.popups?.[payload.popupId]?.enabled ? CMD_ENABLE_POPUP : CMD_DISABLE_POPUP,
+      payload: { popupId: payload.popupId },
+    }),
+  );
+
+  // ── V4: GOALS ──────────────────────────────────────────────────────────
+  engine.registerHandler<AddPopupGoalPayload>(
+    CMD_ADD_POPUP_GOAL,
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      if (!popup) return state;
+      const goal: PopupGoal = {
+        id: payload.goalId ?? uuidv4(),
+        name: payload.goal?.name ?? "New goal",
+        type: payload.goal?.type ?? "click",
+        targetNodeId: payload.goal?.targetNodeId,
+        eventName: payload.goal?.eventName,
+        urlPattern: payload.goal?.urlPattern,
+      };
+      return setPopup(state, payload.popupId, { goals: [...(popup.goals ?? []), goal] });
+    },
+    (_state, payload) => {
+      if (!payload.goalId) return undefined;
+      return { type: CMD_REMOVE_POPUP_GOAL, payload: { popupId: payload.popupId, goalId: payload.goalId } };
+    },
+  );
+
+  engine.registerHandler<UpdatePopupGoalPayload>(
+    CMD_UPDATE_POPUP_GOAL,
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      if (!popup?.goals) return state;
+      const goals = popup.goals.map((g) =>
+        g.id === payload.goalId ? { ...g, ...payload.goal, id: g.id } : g,
+      );
+      return setPopup(state, payload.popupId, { goals });
+    },
+    (state, payload) => {
+      const current = state.document.popups?.[payload.popupId]?.goals?.find((g) => g.id === payload.goalId);
+      if (!current) return undefined;
+      const previous: Partial<Omit<PopupGoal, "id">> = {};
+      for (const key of Object.keys(payload.goal) as Array<keyof typeof previous>) {
+        previous[key] = current[key] as never;
+      }
+      return { type: CMD_UPDATE_POPUP_GOAL, payload: { popupId: payload.popupId, goalId: payload.goalId, goal: previous } };
+    },
+  );
+
+  engine.registerHandler<RemovePopupGoalPayload>(
+    CMD_REMOVE_POPUP_GOAL,
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      if (!popup?.goals) return state;
+      return setPopup(state, payload.popupId, { goals: popup.goals.filter((g) => g.id !== payload.goalId) });
+    },
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      const goal = popup?.goals?.find((g) => g.id === payload.goalId);
+      if (!goal) return undefined;
+      const { id, ...rest } = goal;
+      return { type: CMD_ADD_POPUP_GOAL, payload: { popupId: payload.popupId, goalId: id, goal: rest } };
+    },
+  );
+
+  // ── V4: VARIANTS ───────────────────────────────────────────────────────
+  engine.registerHandler<AddPopupVariantPayload>(
+    CMD_ADD_POPUP_VARIANT,
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      if (!popup) return state;
+      const variantId = payload.variantId ?? uuidv4();
+      let nodes = state.document.nodes;
+      let rootNodeId: string | undefined;
+
+      if (payload.cloneFromBase) {
+        const cloned = cloneSubtree(popup.rootNodeId, state.document.nodes, { x: 0, y: 0 }, payload.rootNodeId);
+        nodes = { ...state.document.nodes, ...cloned.newNodes };
+        rootNodeId = cloned.newRootId;
+      }
+
+      const variant: PopupVariant = {
+        id: variantId,
+        name: payload.name ?? `Variant ${(popup.variants?.length ?? 0) + 1}`,
+        weight: payload.weight ?? 1,
+        enabled: true,
+        ...(payload.popupPatch ? { popupPatch: payload.popupPatch } : {}),
+        ...(rootNodeId ? { rootNodeId } : {}),
+      };
+
+      const timestamp = now();
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: timestamp,
+          nodes,
+          popups: {
+            ...(state.document.popups ?? {}),
+            [payload.popupId]: {
+              ...popup,
+              variants: [...(popup.variants ?? []), variant],
+              metadata: { ...popup.metadata, updatedAt: timestamp },
+            },
+          },
+        },
+      };
+    },
+    (_state, payload) => {
+      if (!payload.variantId) return undefined;
+      return { type: CMD_REMOVE_POPUP_VARIANT, payload: { popupId: payload.popupId, variantId: payload.variantId } };
+    },
+  );
+
+  engine.registerHandler<UpdatePopupVariantPayload>(
+    CMD_UPDATE_POPUP_VARIANT,
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      if (!popup?.variants) return state;
+      const variants = popup.variants.map((v) =>
+        v.id === payload.variantId ? { ...v, ...payload.variant, id: v.id } : v,
+      );
+      return setPopup(state, payload.popupId, { variants });
+    },
+    (state, payload) => {
+      const current = state.document.popups?.[payload.popupId]?.variants?.find((v) => v.id === payload.variantId);
+      if (!current) return undefined;
+      const previous: Partial<Omit<PopupVariant, "id">> = {};
+      for (const key of Object.keys(payload.variant) as Array<keyof typeof previous>) {
+        previous[key] = current[key] as never;
+      }
+      return { type: CMD_UPDATE_POPUP_VARIANT, payload: { popupId: payload.popupId, variantId: payload.variantId, variant: previous } };
+    },
+  );
+
+  engine.registerHandler<RemovePopupVariantPayload>(
+    CMD_REMOVE_POPUP_VARIANT,
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      if (!popup?.variants) return state;
+      const variant = popup.variants.find((v) => v.id === payload.variantId);
+      if (!variant) return state;
+
+      const nodes = { ...state.document.nodes };
+      if (variant.rootNodeId) {
+        const toRemove = new Set([variant.rootNodeId, ...collectDescendants(variant.rootNodeId, state.document.nodes)]);
+        for (const id of toRemove) delete nodes[id];
+      }
+      const timestamp = now();
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: timestamp,
+          nodes,
+          popups: {
+            ...(state.document.popups ?? {}),
+            [payload.popupId]: {
+              ...popup,
+              variants: popup.variants.filter((v) => v.id !== payload.variantId),
+              metadata: { ...popup.metadata, updatedAt: timestamp },
+            },
+          },
+        },
+        editor: {
+          ...state.editor,
+          activePopupVariantId:
+            state.editor.activePopupVariantId === payload.variantId ? null : state.editor.activePopupVariantId,
+        },
+      };
+    },
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      const index = popup?.variants?.findIndex((v) => v.id === payload.variantId) ?? -1;
+      const variant = index >= 0 ? popup!.variants![index] : undefined;
+      if (!variant) return undefined;
+      const restorePayload: RestorePopupVariantPayload = {
+        popupId: payload.popupId,
+        variant,
+        index,
+        ...(variant.rootNodeId
+          ? { nodes: collectSubtreeSnapshot(variant.rootNodeId, state.document.nodes) }
+          : {}),
+      };
+      return { type: CMD_RESTORE_POPUP_VARIANT, payload: restorePayload };
+    },
+  );
+
+  engine.registerHandler<RestorePopupVariantPayload>(
+    CMD_RESTORE_POPUP_VARIANT,
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      if (!popup) return state;
+      const variants = [...(popup.variants ?? [])];
+      const index = payload.index ?? variants.length;
+      variants.splice(index, 0, payload.variant);
+      const timestamp = now();
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: timestamp,
+          nodes: { ...state.document.nodes, ...(payload.nodes ?? {}) },
+          popups: {
+            ...(state.document.popups ?? {}),
+            [payload.popupId]: { ...popup, variants, metadata: { ...popup.metadata, updatedAt: timestamp } },
+          },
+        },
+      };
+    },
+    (_state, payload) => ({
+      type: CMD_REMOVE_POPUP_VARIANT,
+      payload: { popupId: payload.popupId, variantId: payload.variant.id },
+    }),
+  );
+
+  engine.registerHandler<UpdatePopupExperimentPayload>(
+    CMD_UPDATE_POPUP_EXPERIMENT,
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      if (!popup) return state;
+      const experiment = {
+        enabled: popup.experiment?.enabled ?? false,
+        assignment: popup.experiment?.assignment ?? "random",
+        ...popup.experiment,
+        ...payload.experiment,
+      };
+      return setPopup(state, payload.popupId, { experiment });
+    },
+    (state, payload) => {
+      const current = state.document.popups?.[payload.popupId]?.experiment;
+      return {
+        type: CMD_UPDATE_POPUP_EXPERIMENT,
+        payload: {
+          popupId: payload.popupId,
+          experiment: current ?? { enabled: false, assignment: "random" },
+        },
+      };
+    },
+  );
+
+  // ── V4: editor-only — active variant being edited (no undo) ─────────────
+  engine.registerHandler<SetActivePopupVariantPayload>(
+    CMD_SET_ACTIVE_POPUP_VARIANT,
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      if (!popup || state.editor.activePopupId !== payload.popupId) return state;
+      const valid = payload.variantId
+        ? popup.variants?.some((v) => v.id === payload.variantId && v.rootNodeId)
+        : true;
+      return {
+        ...state,
+        editor: {
+          ...state.editor,
+          activePopupVariantId: valid ? payload.variantId : null,
+          activePopupSelection: "content",
+          selectedNodeIds: [],
+        },
+      };
+    },
+  );
+
   // ── LOAD_COMPONENT (async — no-op in command layer) ────────────────────
   engine.registerHandler(
     "LOAD_COMPONENT",
@@ -995,7 +1664,11 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
 
       return {
         ...state,
-        editor: { ...state.editor, selectedNodeIds: newSelectedIds },
+        editor: {
+          ...state.editor,
+          selectedNodeIds: newSelectedIds,
+          activePopupSelection: isPopupContentSelection(newSelectedIds, state) ? "content" : state.editor.activePopupSelection,
+        },
       };
     },
   );
@@ -1010,7 +1683,11 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
       });
       return {
         ...state,
-        editor: { ...state.editor, selectedNodeIds: validIds },
+        editor: {
+          ...state.editor,
+          selectedNodeIds: validIds,
+          activePopupSelection: isPopupContentSelection(validIds, state) ? "content" : state.editor.activePopupSelection,
+        },
       };
     },
   );
@@ -1189,6 +1866,46 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
       ...state,
       editor: { ...state.editor, canvasMode: payload.canvasMode },
     }),
+  );
+
+  engine.registerHandler<SetActivePopupPayload>(
+    CMD_SET_ACTIVE_POPUP,
+    (state, payload) => {
+      const popup = payload.popupId ? state.document.popups?.[payload.popupId] : undefined;
+      return {
+        ...state,
+        editor: {
+          ...state.editor,
+          activePopupId: payload.popupId,
+          activePopupSelection: popup ? "shell" : null,
+          activePopupVariantId: null,
+          selectedNodeIds: [],
+        },
+      };
+    },
+  );
+
+  engine.registerHandler<SetActivePopupSelectionPayload>(
+    CMD_SET_ACTIVE_POPUP_SELECTION,
+    (state, payload) => {
+      const popup = state.editor.activePopupId
+        ? state.document.popups?.[state.editor.activePopupId]
+        : undefined;
+      const selection = popup ? payload.selection : null;
+      return {
+        ...state,
+        editor: {
+          ...state.editor,
+          activePopupSelection: selection,
+          selectedNodeIds:
+            selection === "content" && popup
+              ? state.editor.selectedNodeIds.length > 0
+                ? state.editor.selectedNodeIds
+                : [popup.rootNodeId]
+              : [],
+        },
+      };
+    },
   );
 
   // ── ENTER_TEXT_EDIT (editor-only, no undo/redo) ──────────────────────────

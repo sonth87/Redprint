@@ -111,6 +111,16 @@ Events are emitted via event bus (subscribable by plugins and consumer).
 | `resize:start`          | `{ operation: ResizeOperation }`       | Begin resize                  |
 | `resize:end`            | `{ operation: ResizeOperation }`       | Complete resize               |
 
+### Popup Events
+
+| Event           | Payload                                                       | Triggered When              |
+| --------------- | ------------------------------------------------------------- | --------------------------- |
+| `popup:created` | `{ popup: PopupDefinition }`                                  | Popup definition is created |
+| `popup:updated` | `{ popupId: string; popup: PopupDefinition }`                 | Popup settings are updated  |
+| `popup:deleted` | `{ popupId: string }`                                         | Popup definition is deleted |
+| `popup:opened`  | `{ popupId, trigger: "interaction" \| "auto" \| "editor" }`  | Popup opens                 |
+| `popup:closed`  | `{ popupId, trigger: "interaction" \| "auto" \| "editor" }`  | Popup closes                |
+
 ### Command & History Events
 
 | Event                   | Payload                            | Triggered When         |

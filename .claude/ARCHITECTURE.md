@@ -3,8 +3,10 @@
 > **This file is project-specific.** It describes the architecture, features, and technical decisions of this project.
 > It may **override or extend** sections from `RULES.md` — see the override mechanism in [Rules Reference](#rules-reference).
 >
-> **Version:** 1.4 | **Last updated:** 2026-04 | **Updated by:** Tech Lead
+> **Version:** 1.5 | **Last updated:** 2026-06 | **Updated by:** Tech Lead
 > **Changelog:**
+> - v1.6 — **Popup System V4** (schema `2.5.0`): conversion **goals** (`PopupGoal`), **A/B variants** (`PopupVariant` with popup-owned content roots — cascade-delete + deep-clone) and **experiment** assignment (`PopupExperiment`: random/sticky/winner). Runtime emits a vendor-neutral `PopupAnalyticsEvent` stream via `RendererConfig.onPopupAnalyticsEvent` + optional `eventBus` (`popup:analytics`), assigns variants at open time (sticky via `popupStorage` or host callbacks), and tracks goal conversions — none of it mutates `BuilderDocument`. Pure assignment helpers in `builder-core/src/popups/experiment.ts`; editor adds Goals + A/B Test panel sections, layer-tree variant groups, and per-variant content editing (`SET_ACTIVE_POPUP_VARIANT`). All V4 fields optional; V2/V3 docs migrate via `popupV4Migration`.
+> - v1.5 — **Popup System V3** (schema `2.4.0`): runtime lifecycle state machine (`opening→open→closing→closed`) with real exit animations, deterministic stacking (`runtimeState.stackMode` + z-index, topmost-only ESC/focus, multi-popup body-lock), optional modal runtime drag/resize (no document mutation), a11y hardening (`inertBackground`, reduced-motion), and editor preview parity via shared `builder-core/src/popups/lifecycle.ts` helpers + a preview debug strip. All V3 fields optional; V2 docs migrate via `popupV3Migration`.
 > - v1.4 — Added **Image Frame Design System**: 5-tab panel (Frame, Shadow, Shape, Border, Special) for applying decorative frames, shadows, clip-paths, and special effects (tape corners, polaroid) to images. New `frameStyle` prop, `clipPath` StyleConfig property, and preset arrays in shared package.
 > - v1.3 — Implemented **Spatial Reparenting**: Component ownership is now determined by geometric position (hit-testing) rather than DOM hierarchy. Updated AI prompts to enforce strict `parentId` assignment to sections, preventing "root" clutter.
 > - v1.2 — Added `builder-components` package (17 built-in ComponentDefinitions, `extendComponent()`, `BASE_COMPONENTS[]`); updated architecture diagram, dependency rules, and package table; added Built-in Component Library section
@@ -480,7 +482,7 @@ interface NodeMetadata {
 ```ts
 interface BuilderDocument {
   id: string;
-  schemaVersion: string;         // semver e.g. "2.1.0"
+  schemaVersion: string;         // semver e.g. "2.5.0"
   createdAt: string;             // ISO 8601
   updatedAt: string;
   name: string;

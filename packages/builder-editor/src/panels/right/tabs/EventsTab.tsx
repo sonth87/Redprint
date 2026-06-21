@@ -2,15 +2,17 @@ import React from "react";
 import { ScrollArea } from "@ui-builder/ui";
 import { Plus, Zap } from "lucide-react";
 import { InteractionRow } from "../components/InteractionRow";
-import type { InteractionConfig } from "@ui-builder/builder-core";
+import type { InteractionConfig, PopupDefinition } from "@ui-builder/builder-core";
 import { useTranslation } from "react-i18next";
 
 export function EventsTab({
   interactions,
   onInteractionsChange,
+  popups = [],
 }: {
   interactions: InteractionConfig[];
   onInteractionsChange?: (interactions: InteractionConfig[]) => void;
+  popups?: PopupDefinition[];
 }) {
   const { t } = useTranslation();
 
@@ -67,6 +69,7 @@ export function EventsTab({
             key={i}
             interaction={interaction}
             index={i}
+            popups={popups}
             onChange={(updated) => handleUpdateInteraction(i, updated)}
             onRemove={() => handleRemoveInteraction(i)}
           />

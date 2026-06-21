@@ -121,6 +121,12 @@ export class InteractionBinder {
       case "toggleVisibility":
         dispatch("TOGGLE_VISIBILITY", { targetId: action.targetId });
         break;
+      case "showModal":
+        dispatch("SHOW_MODAL", { targetId: action.targetId });
+        break;
+      case "hideModal":
+        dispatch("HIDE_MODAL", { targetId: action.targetId });
+        break;
       case "emit":
         dispatch("EMIT_EVENT", { event: action.event, payload: action.payload });
         break;

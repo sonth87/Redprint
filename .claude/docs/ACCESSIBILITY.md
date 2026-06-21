@@ -132,6 +132,40 @@ Critical state changes broadcast to screen reader:
 - Never remove focus outlines without replacement
 - Trapping focus in modals (import/export dialogs)
 
+### Runtime Popups
+
+Runtime popups that behave as modal surfaces must:
+
+- Render with `role="dialog"` and `aria-modal="true"` where applicable
+- Move focus into the popup when opened
+- Trap Tab focus inside the popup while open
+- Close with Escape when `behavior.closeOnEscape` is enabled
+- Restore focus to the previously focused element when closed
+- Lock body scroll when `behavior.lockBodyScroll` is enabled
+- Keep backdrop click optional through `behavior.closeOnBackdropClick`
+
+Announcement bars are not modal by default and should not trap focus unless the
+consumer explicitly configures them to behave like a modal surface.
+
+**V3 hardening (stacking + reduced motion):**
+
+- With multiple popups open, **only the topmost interactive popup** responds to
+  Escape and traps focus; lower popups are inert to keyboard.
+- When the topmost modal-like popup sets `behavior.inertBackground`, the page
+  root behind it is marked `inert` + `aria-hidden` so assistive tech and keyboard
+  navigation stay within the dialog. Non-backdrop popups (bars) never block page
+  pointer events.
+- `behavior.reducedMotion` (default `"respect"`) honors
+  `prefers-reduced-motion: reduce` by skipping enter/exit animations; lifecycle
+  states transition immediately so the popup still opens/closes correctly.
+- A popup with no focusable children does not throw; focus trapping no-ops.
+
+**V4 (A/B variants):** an assigned variant renders alternate content but keeps the
+same surface a11y contract — `role="dialog"`/`aria-modal`, focus trap, ESC, and
+focus restore apply identically regardless of which variant is shown. Variant
+content must independently satisfy modal a11y (focusable close path, labelled
+controls).
+
 ### ARIA Landmarks
 
 Editor shell structure:

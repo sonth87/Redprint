@@ -2,18 +2,20 @@ import React, { useMemo } from "react";
 import { Label, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@ui-builder/ui";
 import { Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import type { InteractionConfig, InteractionTrigger, InteractionAction } from "@ui-builder/builder-core";
+import type { InteractionConfig, InteractionTrigger, InteractionAction, PopupDefinition } from "@ui-builder/builder-core";
 
 export function InteractionRow({
   interaction,
   index,
   onChange,
   onRemove,
+  popups = [],
 }: {
   interaction: InteractionConfig;
   index: number;
   onChange: (updated: InteractionConfig) => void;
   onRemove: () => void;
+  popups?: PopupDefinition[];
 }) {
   const { t } = useTranslation();
   const triggerOptions: { value: InteractionTrigger; label: string }[] = useMemo(
@@ -126,9 +128,46 @@ export function InteractionRow({
         </div>
       )}
 
+      {(interaction.actions[0]?.type === "showModal" ||
+        interaction.actions[0]?.type === "hideModal") && (
+        <div className="grid gap-1">
+          <Label className="text-[10px] text-muted-foreground">Popup</Label>
+          {popups.length > 0 ? (
+            <Select
+              value={(interaction.actions[0] as { targetId?: string }).targetId ?? ""}
+              onValueChange={(targetId) => {
+                const action = interaction.actions[0];
+                const actionType = action?.type as "showModal" | "hideModal";
+                onChange({ ...interaction, actions: [{ type: actionType, targetId }] });
+              }}
+            >
+              <SelectTrigger className="h-7 text-xs">
+                <SelectValue placeholder="Select popup" />
+              </SelectTrigger>
+              <SelectContent>
+                {popups.map((popup) => (
+                  <SelectItem key={popup.id} value={popup.id} className="text-xs">
+                    {popup.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <Input
+              className="h-7 text-xs font-mono"
+              placeholder="popup-id"
+              value={(interaction.actions[0] as { targetId?: string }).targetId ?? ""}
+              onChange={(e) => {
+                const action = interaction.actions[0];
+                const actionType = action?.type as "showModal" | "hideModal";
+                onChange({ ...interaction, actions: [{ type: actionType, targetId: e.target.value }] });
+              }}
+            />
+          )}
+        </div>
+      )}
+
       {(interaction.actions[0]?.type === "toggleVisibility" ||
-        interaction.actions[0]?.type === "showModal" ||
-        interaction.actions[0]?.type === "hideModal" ||
         interaction.actions[0]?.type === "scrollTo") && (
         <div className="grid gap-1">
           <Label className="text-[10px] text-muted-foreground">{t("events.targetId")}</Label>

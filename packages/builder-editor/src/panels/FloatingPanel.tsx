@@ -106,13 +106,17 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
   );
 
   const handlePanelPointerDown = useCallback(() => {
-    setZIndex(bumpZ());
+    setZIndex((current) => {
+      if (current === zCounter) return current;
+      return bumpZ();
+    });
   }, []);
 
   return (
     <div
       ref={panelRef}
       onPointerDownCapture={handlePanelPointerDown}
+      data-floating-panel
       className={cn(
         "fixed flex flex-col overflow-hidden select-none",
         isDragging ? GLASS_PANEL.dragging : GLASS_PANEL.normal,

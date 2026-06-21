@@ -8,6 +8,7 @@ import { CommandEngine } from "./commands/CommandEngine";
 import { HistoryStack } from "./history/HistoryStack";
 import { PluginEngine } from "./plugins/PluginEngine";
 import { MigrationEngine } from "./migration/MigrationEngine";
+import { PopupTemplateRegistry } from "./popups/PopupTemplateRegistry";
 import { registerAllHandlers } from "./commands/handlers";
 import { DEFAULT_BREAKPOINTS } from "./responsive/constants";
 import { CURRENT_SCHEMA_VERSION } from "./document/constants";
@@ -30,6 +31,7 @@ import { v4 as uuidv4 } from "uuid";
 export function createBuilder(config: BuilderConfig = {}): IBuilderAPI {
   const eventBus = new EventBus();
   const registry = new ComponentRegistry();
+  const popupTemplateRegistry = new PopupTemplateRegistry();
   const historyStack = new HistoryStack(config.historyMaxSize ?? 100);
   const migrationEngine = new MigrationEngine();
 
@@ -62,6 +64,7 @@ export function createBuilder(config: BuilderConfig = {}): IBuilderAPI {
     variables: {},
     assets: { version: "1.0", assets: [] },
     plugins: [],
+    popups: {},
     canvasConfig: {
       showGrid: true,
       gridSize: GRID_UNIT_PX,
@@ -89,6 +92,9 @@ export function createBuilder(config: BuilderConfig = {}): IBuilderAPI {
       canvasMode: "single",
       editingNodeId: null,
       editingPropKey: null,
+      activePopupId: null,
+      activePopupSelection: null,
+      activePopupVariantId: null,
     },
     interaction: {
       dragOperation: null,
@@ -130,6 +136,7 @@ export function createBuilder(config: BuilderConfig = {}): IBuilderAPI {
     on: (event, handler) => eventBus.on(event, handler),
     emit: (event, payload) => eventBus.emit(event, payload),
     registerAssetProvider: (provider) => assetProviders.push(provider),
+    registerPopupTemplate: (template) => popupTemplateRegistry.register(template),
     registerMigration: (migration) => migrationEngine.register(migration),
     getPluginData: (pluginId, key) => pluginStorageMap.get(pluginId)?.get(key),
     setPluginData: (pluginId, key, value) => {
@@ -141,6 +148,8 @@ export function createBuilder(config: BuilderConfig = {}): IBuilderAPI {
   };
 
   const pluginEngine = new PluginEngine(pluginAPI);
+
+  popupTemplateRegistry.registerMany(config.popupTemplates ?? []);
 
   // Install initial plugins
   const initialPlugins = config.plugins ?? [];
@@ -183,6 +192,7 @@ export function createBuilder(config: BuilderConfig = {}): IBuilderAPI {
     get canUndo() { return historyStack.canUndo; },
     get canRedo() { return historyStack.canRedo; },
     registry,
+    popupTemplates: popupTemplateRegistry,
     eventBus,
     subscribe: (listener: (state: BuilderState) => void) => {
       stateListeners.add(listener);

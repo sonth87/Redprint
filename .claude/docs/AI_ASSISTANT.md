@@ -267,6 +267,16 @@ interface AIBuilderContext {
     propSchema?: Array<{ key: string; label: string; type: string }>;
   }>;
   activeBreakpoint: string;
+  activeSurface?: { type: "page" } | { type: "popup"; popupId: string; rootNodeId: string; selection: "shell" | "content" | null };
+  availablePopups?: Array<{
+    id: string;
+    name: string;
+    enabled: boolean;
+    kind: string;
+    placement: string;
+    rootNodeId: string;
+    autoTrigger: string;
+  }>;
   pageNodes?: Record<string, AIPageNode>; // full node tree, only when includePageContext = true
   availablePresets?: AIPresetGroup[];     // palette catalog summary, only when paletteCatalog is passed
 }
@@ -445,6 +455,13 @@ const ALLOWED_AI_COMMANDS = new Set([
 **Note:** `REMOVE_NODE` is generated internally by the backend when `fullPageMode=true` to clear
 existing content before regenerating the entire page. The page-generation compiler, not the LLM,
 creates final builder commands for full-page generation. `MOVE_NODE` is excluded.
+
+Popup V2 is AI-aware but not AI-created. AI context includes existing popups,
+the active editing surface, and whether the active popup target is shell or
+content. The assistant may update node interactions to use `showModal` /
+`hideModal` for existing popup IDs. Popup creation/update commands such as
+`CREATE_POPUP` and `UPDATE_POPUP` are intentionally excluded from the AI
+whitelist in V2.
 
 ---
 

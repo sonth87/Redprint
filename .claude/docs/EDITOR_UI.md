@@ -436,6 +436,74 @@ Displays properties of selected node(s):
 
 Tab system is extensible via `PropertyPanelTab` interface.
 
+### Popup Layer
+
+Popups are edited in a document-level overlay layer. The editor has two active
+surfaces:
+
+- **Page surface:** normal page editing under `document.rootNodeId`.
+- **Popup surface:** active popup editing under `document.popups[id].rootNodeId`.
+
+Popup editing also has a selection mode stored at
+`editor.activePopupSelection`:
+
+- `"shell"` selects the popup shell object. The right panel shows popup identity,
+  layout, behavior, triggers, rules, and animation controls.
+- `"content"` targets normal builder nodes inside the popup content root. The
+  right panel shows the selected component properties, and selection overlays,
+  resize handles, contextual toolbars, drag/drop, keyboard shortcuts, and
+  click-to-add behave like page canvas editing.
+
+`SET_ACTIVE_POPUP` selects `"shell"` by default and clears `selectedNodeIds`.
+`SET_ACTIVE_POPUP_SELECTION` switches between shell/content. Exiting popup
+editing clears both `activePopupId` and `activePopupSelection`.
+
+The active popup also renders a popup shell frame above the page. This shell has
+its own mini toolbar and kind-specific resize/drag controls so authors can
+select the popup surface, edit content, duplicate, enable/disable, preview,
+delete, exit popup editing, and adjust shell size without confusing it with the
+`PopupContent` node. Modal drag stores anchored `kindConfig.offsetX/offsetY`;
+shell resize mutates only popup `kindConfig`.
+
+Layer tree renders separate **Page** and **Popups** groups. Selecting Page exits
+popup editing. Selecting a popup name selects the shell; expanding a popup shows
+its `PopupContent` root and children. Popup rows show kind, enabled state, and
+active selection state. **A/B variants** that own a content tree appear as
+nested **Variant ·** groups under the popup, each showing its own content tree.
+
+The floating **Popups** panel supports:
+
+- Create blank popup or create from template
+- Enable/disable, duplicate, delete, and select popup shell
+- Filter template cards by category, with kind and trigger metadata
+- Save the active popup as a template through the popup template registry
+
+Editor preview mode is UI-only and does not mutate the document (no history
+entries). It hides editor handles/overlays and renders close button, Escape
+close, and backdrop close close to runtime behavior.
+
+**Preview parity (V3):** preview drives the *same* lifecycle state machine as the
+runtime, sourced from `builder-core/src/popups/lifecycle.ts` (via
+`usePopupPreviewLifecycle`). Enter/exit animations, ESC, backdrop, and close
+button all play through `opening→open→closing→closed`, so what authors see
+matches production. A **preview debug strip** (`PopupPreviewController`) shows the
+current lifecycle state and the active trigger/frequency-rule summary, with
+Open (replay enter), Close (play exit), Reset, and Exit controls.
+
+**Analytics & A/B (V4):** the popup shell property panel adds two sections after
+Rules. **Goals** lists conversion goals (add/edit/remove; type click/submit/close/
+customEvent/urlVisit; click/submit goals pick a target content node). **A/B Test**
+toggles the experiment, sets assignment (random/sticky) + seed, and manages a
+variant list — add "copy content" (popup-owned content root) or "patch only"
+variants, set weight/enabled, **Edit content** (dispatches
+`SET_ACTIVE_POPUP_VARIANT` so the canvas edits that variant's tree), mark a
+winner, or remove. The preview debug strip shows a badge with goal/variant counts
+and the active assignment mode. All edits go through commands (undoable); the
+active-variant selection is editor-only (no undo).
+
+Events tab actions `showModal` and `hideModal` present a popup picker while
+preserving the serialized action shape `{ type, targetId }`.
+
 ### Top Toolbar
 
 ```

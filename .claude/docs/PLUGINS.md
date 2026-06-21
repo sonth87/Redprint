@@ -88,6 +88,7 @@ dispatch(command: Command): Promise<CommandResult>;
 
 ```ts
 registerAssetProvider(provider: AssetProvider): void;
+registerPopupTemplate(template: PopupTemplate): void;
 registerShortcut(shortcut: ShortcutDefinition): void;
 ```
 

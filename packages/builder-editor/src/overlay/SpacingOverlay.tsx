@@ -28,27 +28,28 @@ const Strip = memo(function Strip({ rect, color, zIndex }: StripProps) {
 
 export interface SpacingOverlayProps {
   spacingRects: SpacingStrips;
+  zIndexBase?: number;
 }
 
-export const SpacingOverlay = memo(function SpacingOverlay({ spacingRects }: SpacingOverlayProps) {
+export const SpacingOverlay = memo(function SpacingOverlay({ spacingRects, zIndexBase = 44 }: SpacingOverlayProps) {
   const { padding, margin } = spacingRects;
 
   return (
     <>
       {margin && (
         <>
-          <Strip rect={margin.top}    color={`hsl(${SPACING_MARGIN_COLOR} / ${SPACING_OVERLAY_OPACITY})`} zIndex={44} />
-          <Strip rect={margin.bottom} color={`hsl(${SPACING_MARGIN_COLOR} / ${SPACING_OVERLAY_OPACITY})`} zIndex={44} />
-          <Strip rect={margin.left}   color={`hsl(${SPACING_MARGIN_COLOR} / ${SPACING_OVERLAY_OPACITY})`} zIndex={44} />
-          <Strip rect={margin.right}  color={`hsl(${SPACING_MARGIN_COLOR} / ${SPACING_OVERLAY_OPACITY})`} zIndex={44} />
+          <Strip rect={margin.top}    color={`hsl(${SPACING_MARGIN_COLOR} / ${SPACING_OVERLAY_OPACITY})`} zIndex={zIndexBase} />
+          <Strip rect={margin.bottom} color={`hsl(${SPACING_MARGIN_COLOR} / ${SPACING_OVERLAY_OPACITY})`} zIndex={zIndexBase} />
+          <Strip rect={margin.left}   color={`hsl(${SPACING_MARGIN_COLOR} / ${SPACING_OVERLAY_OPACITY})`} zIndex={zIndexBase} />
+          <Strip rect={margin.right}  color={`hsl(${SPACING_MARGIN_COLOR} / ${SPACING_OVERLAY_OPACITY})`} zIndex={zIndexBase} />
         </>
       )}
       {padding && (
         <>
-          <Strip rect={padding.top}    color={`hsl(${SPACING_PADDING_COLOR} / ${SPACING_OVERLAY_OPACITY})`} zIndex={45} />
-          <Strip rect={padding.bottom} color={`hsl(${SPACING_PADDING_COLOR} / ${SPACING_OVERLAY_OPACITY})`} zIndex={45} />
-          <Strip rect={padding.left}   color={`hsl(${SPACING_PADDING_COLOR} / ${SPACING_OVERLAY_OPACITY})`} zIndex={45} />
-          <Strip rect={padding.right}  color={`hsl(${SPACING_PADDING_COLOR} / ${SPACING_OVERLAY_OPACITY})`} zIndex={45} />
+          <Strip rect={padding.top}    color={`hsl(${SPACING_PADDING_COLOR} / ${SPACING_OVERLAY_OPACITY})`} zIndex={zIndexBase + 1} />
+          <Strip rect={padding.bottom} color={`hsl(${SPACING_PADDING_COLOR} / ${SPACING_OVERLAY_OPACITY})`} zIndex={zIndexBase + 1} />
+          <Strip rect={padding.left}   color={`hsl(${SPACING_PADDING_COLOR} / ${SPACING_OVERLAY_OPACITY})`} zIndex={zIndexBase + 1} />
+          <Strip rect={padding.right}  color={`hsl(${SPACING_PADDING_COLOR} / ${SPACING_OVERLAY_OPACITY})`} zIndex={zIndexBase + 1} />
         </>
       )}
     </>

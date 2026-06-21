@@ -21,6 +21,9 @@ import {
   type ComponentDefinition,
   type GroupRegistry,
   type PaletteCatalog,
+  type PopupDefinition,
+  type PopupGoal,
+  type PopupTemplate,
 } from "@ui-builder/builder-core";
 import {
   TRANSITION_FAST_CSS,
@@ -69,6 +72,11 @@ import { useTranslation } from "react-i18next";
 import { type RemotePaletteProvider } from "./types/remote-palette";
 import { MediaManager } from "./panels/MediaManager";
 import { GalleryMediaManager } from "./panels/gallery";
+import { PopupManagerPanel } from "./popups/PopupManagerPanel";
+import { PopupEditorSurface } from "./popups/PopupEditorSurface";
+import { PopupPropertyPanel } from "./popups/PopupPropertyPanel";
+import { usePopupShellResize } from "./popups/usePopupShellResize";
+import { usePopupShellDrag } from "./popups/usePopupShellDrag";
 
 import { useViewport } from "./hooks/useViewport";
 import { useResizeGesture } from "./hooks/useResizeGesture";
@@ -106,9 +114,6 @@ import {
   DEFAULT_PROPERTIES_PANEL_POS,
   DUAL_GAP_PX,
 } from "./constants";
-
-
-
 // ── Context for Remote Palette Provider ─────────────────────────────────────
 
 const RemotePaletteContext = React.createContext<RemotePaletteProvider | null>(null);
@@ -241,6 +246,16 @@ function EditorInner({
   const canvasMode: CanvasMode = state.editor.canvasMode ?? "single";
   const editingNodeId  = state.editor.editingNodeId  ?? null;
   const editingPropKey = state.editor.editingPropKey ?? null;
+  const activePopupId = state.editor.activePopupId ?? null;
+  const activePopupSelection = state.editor.activePopupSelection ?? null;
+  const activePopupVariantId = state.editor.activePopupVariantId ?? null;
+  const activePopup = activePopupId ? (document.popups?.[activePopupId] ?? null) : null;
+  // V4: when editing a variant that owns its own content tree, the canvas
+  // targets that variant's root; otherwise the popup's base root.
+  const activeVariantRootNodeId = activePopupVariantId
+    ? activePopup?.variants?.find((v) => v.id === activePopupVariantId)?.rootNodeId
+    : undefined;
+  const activeRootNodeId = activeVariantRootNodeId ?? activePopup?.rootNodeId ?? document.rootNodeId;
 
   // ── Panel state ──────────────────────────────────────────────────────────
   const {
@@ -251,6 +266,172 @@ function EditorInner({
   const { aiOpen, setAiOpen, aiConfig, handleAIConfigChange } = useAIConfig();
   const [pageGeneratorOpen, setPageGeneratorOpen] = React.useState(false);
   const [figmaOpen, setFigmaOpen] = React.useState(false);
+  const [popupsOpen, setPopupsOpen] = React.useState(false);
+  const [popupPreviewOpen, setPopupPreviewOpen] = React.useState(false);
+  const [popupTemplateVersion, setPopupTemplateVersion] = React.useState(0);
+
+  React.useEffect(() => {
+    setPopupPreviewOpen(false);
+  }, [activePopupId]);
+
+  const popupTemplates = useMemo(
+    () => builder.popupTemplates.list(),
+    [builder.popupTemplates, popupTemplateVersion],
+  );
+
+  const dispatchPopupCommand = React.useCallback((command: Parameters<typeof dispatch>[0]) => {
+    const result = dispatch(command);
+    if (!result.success) {
+      toast.error(result.error ?? "Popup action failed");
+    }
+    return result;
+  }, [dispatch]);
+
+  const handleCreatePopupFromTemplate = React.useCallback((template: PopupTemplate) => {
+    const popupId = uuidv4();
+    const rootNodeId = uuidv4();
+    dispatchPopupCommand({
+      type: "CREATE_POPUP",
+      payload: {
+        popupId,
+        rootNodeId,
+        name: template.popup.name ?? template.name,
+        kind: template.popup.kind,
+        placement: template.popup.placement,
+        popup: template.popup,
+        root: template.root,
+      },
+      description: `Create popup: ${template.name}`,
+    });
+  }, [dispatchPopupCommand]);
+
+  const handleCreateBlankPopup = React.useCallback(() => {
+    const popupId = uuidv4();
+    const rootNodeId = uuidv4();
+    dispatchPopupCommand({
+      type: "CREATE_POPUP",
+      payload: { popupId, rootNodeId, name: "New Popup", kind: "modal", placement: "center" },
+      description: "Create popup",
+    });
+  }, [dispatchPopupCommand]);
+
+  const handleEditPopup = React.useCallback((popupId: string | null) => {
+    dispatchPopupCommand({ type: "SET_ACTIVE_POPUP", payload: { popupId }, description: popupId ? "Edit popup" : "Exit popup" });
+    setPopupPreviewOpen(false);
+  }, [dispatchPopupCommand]);
+
+  const handleSelectPopupShell = React.useCallback(() => {
+    dispatchPopupCommand({ type: "SET_ACTIVE_POPUP_SELECTION", payload: { selection: "shell" }, description: "Select popup shell" });
+  }, [dispatchPopupCommand]);
+
+  const handleSelectPopupContent = React.useCallback(() => {
+    dispatchPopupCommand({ type: "SET_ACTIVE_POPUP_SELECTION", payload: { selection: "content" }, description: "Edit popup content" });
+  }, [dispatchPopupCommand]);
+
+  const handleUpdatePopup = React.useCallback((
+    popupId: string,
+    popup: Partial<Omit<PopupDefinition, "id" | "rootNodeId" | "metadata">>,
+    groupId?: string,
+    description = "Update popup",
+  ) => {
+    dispatchPopupCommand({ type: "UPDATE_POPUP", payload: { popupId, popup }, groupId, description });
+  }, [dispatchPopupCommand]);
+
+  // ── V4: goals / variants / experiment ──────────────────────────────────
+  const handleAddGoal = React.useCallback((popupId: string) => {
+    dispatchPopupCommand({ type: "ADD_POPUP_GOAL", payload: { popupId, goalId: uuidv4(), goal: { name: "New goal", type: "click" } }, description: "Add popup goal" });
+  }, [dispatchPopupCommand]);
+
+  const handleUpdateGoal = React.useCallback((popupId: string, goalId: string, goal: Partial<Omit<PopupGoal, "id">>) => {
+    dispatchPopupCommand({ type: "UPDATE_POPUP_GOAL", payload: { popupId, goalId, goal }, description: "Update popup goal" });
+  }, [dispatchPopupCommand]);
+
+  const handleRemoveGoal = React.useCallback((popupId: string, goalId: string) => {
+    dispatchPopupCommand({ type: "REMOVE_POPUP_GOAL", payload: { popupId, goalId }, description: "Remove popup goal" });
+  }, [dispatchPopupCommand]);
+
+  const handleAddVariant = React.useCallback((popupId: string, cloneFromBase: boolean) => {
+    dispatchPopupCommand({ type: "ADD_POPUP_VARIANT", payload: { popupId, variantId: uuidv4(), rootNodeId: cloneFromBase ? uuidv4() : undefined, cloneFromBase }, description: "Add popup variant" });
+  }, [dispatchPopupCommand]);
+
+  const handleUpdateVariant = React.useCallback((popupId: string, variantId: string, variant: Record<string, unknown>) => {
+    dispatchPopupCommand({ type: "UPDATE_POPUP_VARIANT", payload: { popupId, variantId, variant }, description: "Update popup variant" });
+  }, [dispatchPopupCommand]);
+
+  const handleRemoveVariant = React.useCallback((popupId: string, variantId: string) => {
+    dispatchPopupCommand({ type: "REMOVE_POPUP_VARIANT", payload: { popupId, variantId }, description: "Remove popup variant" });
+  }, [dispatchPopupCommand]);
+
+  const handleEditVariantContent = React.useCallback((popupId: string, variantId: string | null) => {
+    dispatchPopupCommand({ type: "SET_ACTIVE_POPUP_VARIANT", payload: { popupId, variantId }, description: "Edit variant content" });
+  }, [dispatchPopupCommand]);
+
+  const handleUpdateExperiment = React.useCallback((popupId: string, experiment: Record<string, unknown>) => {
+    dispatchPopupCommand({ type: "UPDATE_POPUP_EXPERIMENT", payload: { popupId, experiment }, description: "Update experiment" });
+  }, [dispatchPopupCommand]);
+
+  const handleDuplicatePopup = React.useCallback((popupId: string) => {
+    dispatchPopupCommand({
+      type: "DUPLICATE_POPUP",
+      payload: { popupId, newPopupId: uuidv4(), newRootNodeId: uuidv4() },
+      description: "Duplicate popup",
+    });
+    setPopupPreviewOpen(false);
+  }, [dispatchPopupCommand]);
+
+  const handleDeletePopup = React.useCallback((popupId: string) => {
+    dispatchPopupCommand({ type: "DELETE_POPUP", payload: { popupId }, description: "Delete popup" });
+    setPopupPreviewOpen(false);
+  }, [dispatchPopupCommand]);
+
+  const handleTogglePopupEnabled = React.useCallback((popupId: string, enabled: boolean) => {
+    dispatchPopupCommand({ type: enabled ? "ENABLE_POPUP" : "DISABLE_POPUP", payload: { popupId }, description: enabled ? "Enable popup" : "Disable popup" });
+  }, [dispatchPopupCommand]);
+
+  const handleSavePopupTemplate = React.useCallback((popupId: string) => {
+    const popup = document.popups?.[popupId];
+    const root = popup ? document.nodes[popup.rootNodeId] : null;
+    if (!popup || !root) return;
+
+    const buildTemplateNode = (nodeId: string): import("@ui-builder/builder-core").PopupNodeTemplate => {
+      const node = document.nodes[nodeId]!;
+      const children = Object.values(document.nodes)
+        .filter((child) => child.parentId === nodeId)
+        .sort((a, b) => a.order - b.order)
+        .map((child) => buildTemplateNode(child.id));
+      return {
+        componentType: node.type,
+        name: node.name,
+        props: node.props,
+        style: node.style,
+        responsiveStyle: node.responsiveStyle,
+        responsiveProps: node.responsiveProps,
+        children: children.length > 0 ? children : undefined,
+      };
+    };
+
+    builder.popupTemplates.register({
+      id: `custom-${popup.id}`,
+      name: popup.name,
+      category: "Custom",
+      description: "Saved from editor",
+      tags: ["custom", popup.kind],
+      popup: {
+        name: popup.name,
+        enabled: popup.enabled,
+        kind: popup.kind,
+        placement: popup.placement,
+        kindConfig: popup.kindConfig,
+        autoTrigger: popup.autoTrigger,
+        behavior: popup.behavior,
+        animation: popup.animation,
+        rules: popup.rules,
+      },
+      root: buildTemplateNode(root.id),
+    });
+    setPopupTemplateVersion((v) => v + 1);
+    toast.success(`Saved "${popup.name}" as template`);
+  }, [builder.popupTemplates, document]);
 
   const [remoteCatalog, setRemoteCatalog] = React.useState<PaletteCatalog | undefined>();
   const [loadedGroups, setLoadedGroups] = React.useState<Set<string>>(new Set());
@@ -312,11 +493,32 @@ function EditorInner({
   const canvasAreaRef      = useRef<HTMLDivElement>(null);
   const canvasFrameRef     = useRef<HTMLDivElement>(null);
   const mobileFrameRef     = useRef<HTMLDivElement>(null);
+  const popupFrameRef      = useRef<HTMLDivElement>(null);
   const activeFrameRef = useRef<HTMLDivElement | null>(null);
   activeFrameRef.current =
-    canvasMode === "dual" && breakpoint === "mobile" && mobileFrameRef.current
+    activePopup && popupFrameRef.current
+      ? popupFrameRef.current
+      : canvasMode === "dual" && breakpoint === "mobile" && mobileFrameRef.current
       ? mobileFrameRef.current
       : canvasFrameRef.current;
+
+  useEffect(() => {
+    if (activePopup && popupFrameRef.current) {
+      activeFrameRef.current = popupFrameRef.current;
+    }
+  }, [activePopup]);
+
+  const handlePopupShellResizeStart = usePopupShellResize({
+    popup: activePopup,
+    popupFrameRef,
+    zoom,
+    updatePopup: handleUpdatePopup,
+  });
+  const handlePopupShellDragStart = usePopupShellDrag({
+    popup: activePopup,
+    zoom,
+    updatePopup: handleUpdatePopup,
+  });
 
   const desktopWidth = document.canvasConfig.width ?? DEVICE_VIEWPORT_PRESETS.desktop.width;
   const mobileWidth = DEVICE_VIEWPORT_PRESETS.mobile.width;
@@ -365,11 +567,11 @@ function EditorInner({
   });
 
   const { handleRubberBandSelect } = useRubberBandSelect({
-    document, zoom, selectedNodeIds, select, clearSelection, canvasFrameRef,
+    document: { nodes: document.nodes, rootNodeId: activeRootNodeId }, zoom, selectedNodeIds, select, clearSelection, canvasFrameRef: activeFrameRef,
   });
 
   const selectedSectionNode =
-    selectedNodeId && document.nodes[selectedNodeId]?.type === "Section"
+    !activePopup && selectedNodeId && document.nodes[selectedNodeId]?.type === "Section"
       ? document.nodes[selectedNodeId]
       : null;
   const currentSectionChildIds = selectedSectionNode
@@ -397,7 +599,7 @@ function EditorInner({
   const { rubberBanding, setRubberBanding, rubberBandRect } = useRubberBand({ zoom, canvasFrameRef, onSelectionEnd: handleRubberBandSelect });
 
   const { moving, setMoving, dragStartedRef, snapGuides: moveSnapGuides, distanceGuides: moveDistanceGuides, liveDimensions: moveLiveDimensions, flowDragOffset, flowDropTarget, highlightedNodeIds } =
-    useMoveGesture({ zoom, breakpoint, snapEnabled: showGrid, snapEngine, nodes: document.nodes, canvasFrameRef, activeFrameRef, dispatch, rootNodeId: document.rootNodeId, getContainerConfig });
+    useMoveGesture({ zoom, breakpoint, snapEnabled: showGrid, snapEngine, nodes: document.nodes, canvasFrameRef, activeFrameRef, dispatch, rootNodeId: activeRootNodeId, getContainerConfig });
 
   useEffect(() => {
     const frameEl = activeFrameRef?.current ?? canvasFrameRef.current;
@@ -429,7 +631,7 @@ function EditorInner({
 
 
   const { hoverRect, handleMouseOver, handleMouseOut, setHoveredNodeIdFromLayer } = useHoverRect({
-    selectedNodeIds, rootNodeId: document.rootNodeId, zoom, panOffset, nodes: document.nodes, canvasFrameRef, nodeQueryRef: activeFrameRef,
+    selectedNodeIds, rootNodeId: activeRootNodeId, zoom, panOffset, nodes: document.nodes, canvasFrameRef, nodeQueryRef: activeFrameRef,
   });
 
   const { spacingRects } = useSpacingOverlay({
@@ -441,12 +643,12 @@ function EditorInner({
 
   // ── Interaction hooks ────────────────────────────────────────────────────
   const { handleDragStart, handlePaletteDragStart, handleDrop, handleDragOver, handleDragEnter, handleDragLeave, isDSDragging, paletteFlowDropTarget } =
-    useDragHandlers({ rootNodeId: document.rootNodeId, zoom, canvasFrameRef, dispatch, nodes: document.nodes, getContainerConfig, onAfterDrop: handlePaletteClose });
+    useDragHandlers({ rootNodeId: activeRootNodeId, zoom, canvasFrameRef: activeFrameRef, dispatch, nodes: document.nodes, getContainerConfig, onAfterDrop: handlePaletteClose });
 
-  const { addItem: handlePaletteItemClick } = useClickToAdd({ rootNodeId: document.rootNodeId, nodes: document.nodes, selectedNodeIds, pendingTargetSectionId, zoom, breakpoint, canvasContainerRef, canvasFrameRef: activeFrameRef, resolveComponentDefinition: (componentType) => registry?.getComponent(componentType), dispatch, onAfterAdd: handlePaletteClose });
+  const { addItem: handlePaletteItemClick } = useClickToAdd({ rootNodeId: activeRootNodeId, nodes: document.nodes, selectedNodeIds, pendingTargetSectionId: activePopup ? activeRootNodeId : pendingTargetSectionId, zoom, breakpoint, canvasContainerRef, canvasFrameRef: activeFrameRef, resolveComponentDefinition: (componentType) => registry?.getComponent(componentType), dispatch, onAfterAdd: handlePaletteClose });
 
   const { handlePointerDown } = usePointerDown({
-    activeTool, zoom, rootNodeId: document.rootNodeId, nodes: document.nodes, canvasFrameRef, activeFrameRef,
+    activeTool, zoom, rootNodeId: activeRootNodeId, nodes: document.nodes, canvasFrameRef, activeFrameRef,
     dragStartedRef, dispatch, clearSelection, setMoving, setRubberBanding, selectedNodeIds,
   });
 
@@ -467,7 +669,7 @@ function EditorInner({
 
   // ── Delete with confirmation ──────────────────────────────────────────────
   const { deleteConfirmNodeId, setDeleteConfirmNodeId, deleteConfirmChildCount, handleDeleteNode, handleDeleteNodes, executeConfirmedDelete } =
-    useDeleteConfirm({ nodes: document.nodes, rootNodeId: document.rootNodeId, sectionNodes, registry, dispatch });
+    useDeleteConfirm({ nodes: document.nodes, rootNodeId: activeRootNodeId, sectionNodes, registry, dispatch });
 
   // ── Drag handle gesture ───────────────────────────────────────────────────
   const { handleDragHandlePointerDown } = useDragHandleGesture({
@@ -476,7 +678,7 @@ function EditorInner({
 
   // ── Keyboard shortcuts ────────────────────────────────────────────────────
   useKeyboardShortcuts({
-    selectedNodeIds, rootNodeId: document.rootNodeId, nodes: document.nodes, clipboard: state.editor.clipboard,
+    selectedNodeIds, rootNodeId: activeRootNodeId, nodes: document.nodes, clipboard: state.editor.clipboard,
     breakpoint, editingNodeId, canvasContainerRef, dispatch, clearSelection, undo, redo, setBreakpoint, 
     onDeleteNode: handleDeleteNode, onDeleteNodes: handleDeleteNodes,
   });
@@ -540,6 +742,18 @@ function EditorInner({
           onFigmaOpen={() => setFigmaOpen(true)}
         />
 
+        <button
+          type="button"
+          className={cn(
+            "absolute left-14 top-14 z-20 flex h-9 w-9 items-center justify-center rounded-md border bg-background/80 text-muted-foreground shadow-sm backdrop-blur transition-colors hover:text-foreground",
+            popupsOpen && "border-primary text-primary",
+          )}
+          title="Popups"
+          onClick={() => setPopupsOpen((open) => !open)}
+        >
+          <Layers className="h-4 w-4" />
+        </button>
+
         {/* Palette */}
         {paletteMode === "floating" && (effectiveCatalog || remotePaletteProvider) && (
           <FloatingPalette
@@ -568,9 +782,38 @@ function EditorInner({
         {layersOpen && (
           <FloatingPanel id="layers" title="Layers" icon={<Layers className="h-3.5 w-3.5" />} defaultPosition={layersPanelPos} onClose={handleLayersToggle}>
             <div className="h-[48vh] min-h-[250px] overflow-hidden">
-              <LayerTree document={document} selectedIds={selectedNodeIds} onSelect={select}
+              <LayerTree
+                document={document}
+                rootNodeId={activeRootNodeId}
+                selectedIds={selectedNodeIds}
+                activePopupId={activePopupId}
+                activePopupSelection={activePopupSelection}
+                onSelect={select}
+                onSelectPage={() => handleEditPopup(null)}
+                onSelectPopup={handleEditPopup}
+                onTogglePopupEnabled={handleTogglePopupEnabled}
                 onToggleHidden={handleToggleHidden} onToggleLocked={handleToggleLocked}
                 onNodeHover={setHoveredNodeIdFromLayer} />
+            </div>
+          </FloatingPanel>
+        )}
+
+        {popupsOpen && (
+          <FloatingPanel id="popups" title="Popups" icon={<Layers className="h-3.5 w-3.5" />} defaultPosition={{ x: 84, y: 140 }} onClose={() => setPopupsOpen(false)}>
+            <div className="h-[62vh] min-h-[420px] overflow-hidden">
+              <PopupManagerPanel
+                document={document}
+                activePopupId={activePopupId}
+                registryTemplates={popupTemplates}
+                onCreateFromTemplate={handleCreatePopupFromTemplate}
+                onCreateBlank={handleCreateBlankPopup}
+                onEdit={handleEditPopup}
+                onDuplicate={handleDuplicatePopup}
+                onDelete={handleDeletePopup}
+                onToggleEnabled={handleTogglePopupEnabled}
+                onUpdatePopup={(popupId, popup) => handleUpdatePopup(popupId, popup)}
+                onSaveTemplate={handleSavePopupTemplate}
+              />
             </div>
           </FloatingPanel>
         )}
@@ -578,15 +821,37 @@ function EditorInner({
         {/* Properties / Page settings */}
         <FloatingPanel
           id="properties"
-          title={selectedNode ? "Properties" : "Page Settings"}
+          title={activePopup && activePopupSelection === "shell" ? "Popup" : selectedNode ? "Properties" : "Page Settings"}
           defaultPosition={DEFAULT_PROPERTIES_PANEL_POS}
           dockable
           dockOffset={{ top: 48, right: 12, bottom: 12 }}
         >
           <div className="flex h-[70vh] max-h-[calc(100vh-72px)] min-h-[500px] flex-col overflow-hidden">
-            {selectedNode ? (
+            {activePopup && activePopupSelection === "shell" ? (
+              <PopupPropertyPanel
+                popup={activePopup}
+                document={document}
+                onChange={(popup) => handleUpdatePopup(activePopup.id, popup)}
+                v4={{
+                  onAddGoal: handleAddGoal,
+                  onUpdateGoal: handleUpdateGoal,
+                  onRemoveGoal: handleRemoveGoal,
+                  onAddVariant: handleAddVariant,
+                  onUpdateVariant: handleUpdateVariant,
+                  onRemoveVariant: handleRemoveVariant,
+                  onEditVariantContent: handleEditVariantContent,
+                  onUpdateExperiment: handleUpdateExperiment,
+                  activeVariantId: state.editor.activePopupVariantId ?? null,
+                }}
+              />
+            ) : selectedNode ? (
               <PropertyPanel selectedNode={selectedNode} definition={selectedDefinition} breakpoint={breakpoint}
                 onPropChange={handlePropChange} onStyleChange={handleStyleChange}
+                onInteractionsChange={(interactions) => {
+                  if (!selectedNodeId) return;
+                  dispatch({ type: "UPDATE_INTERACTIONS", payload: { nodeId: selectedNodeId, interactions }, description: "Update interactions" });
+                }}
+                popups={Object.values(document.popups ?? {})}
                 assets={assets}
                 onOpenMediaManager={handleOpenMediaManager}
                 elementSize={spacingRects?.elementSize} />
@@ -652,8 +917,26 @@ function EditorInner({
                         {...frameEventHandlers}
                       >
                         <div className="pointer-events-none absolute inset-y-0 left-1/2 z-0 w-[1200px] -translate-x-1/2 border-x border-dashed border-blue-400/20" />
-                        <NodeRenderer nodeId={document.rootNodeId} />
-                        <SectionOverlay {...sharedSectionOverlayProps} canvasFrameRef={canvasFrameRef} />
+                        <div style={{ opacity: activePopup ? 0.42 : 1, pointerEvents: activePopup ? "none" : undefined }}>
+                          <NodeRenderer nodeId={document.rootNodeId} />
+                          {!activePopup && <SectionOverlay {...sharedSectionOverlayProps} canvasFrameRef={canvasFrameRef} />}
+                        </div>
+                        <PopupEditorSurface
+                          popup={activePopup}
+                          popupFrameRef={popupFrameRef}
+                          frameEventHandlers={frameEventHandlers}
+                          selectionMode={activePopupSelection}
+                          previewMode={popupPreviewOpen}
+                          onSelectShell={handleSelectPopupShell}
+                          onSelectContent={handleSelectPopupContent}
+                          onExit={() => handleEditPopup(null)}
+                          onDuplicate={() => activePopup && handleDuplicatePopup(activePopup.id)}
+                          onDelete={() => activePopup && handleDeletePopup(activePopup.id)}
+                          onToggleEnabled={() => activePopup && handleTogglePopupEnabled(activePopup.id, !activePopup.enabled)}
+                          onTogglePreview={() => setPopupPreviewOpen((open) => !open)}
+                          onResizeStart={handlePopupShellResizeStart}
+                          onDragStart={handlePopupShellDragStart}
+                        />
                       </div>
                     </div>
                   </BreakpointOverrideProvider>
@@ -670,10 +953,28 @@ function EditorInner({
                     {...frameEventHandlers}
                   >
                     <div className="pointer-events-none absolute inset-y-0 left-1/2 z-0 w-[1200px] -translate-x-1/2 border-x border-dashed border-blue-400/20" />
-                    <NodeRenderer nodeId={document.rootNodeId} />
-                    <SectionOverlay {...sharedSectionOverlayProps} canvasFrameRef={canvasFrameRef} />
+                    <div style={{ opacity: activePopup ? 0.42 : 1, pointerEvents: activePopup ? "none" : undefined }}>
+                      <NodeRenderer nodeId={document.rootNodeId} />
+                      {!activePopup && <SectionOverlay {...sharedSectionOverlayProps} canvasFrameRef={canvasFrameRef} />}
+                    </div>
+                    <PopupEditorSurface
+                      popup={activePopup}
+                      popupFrameRef={popupFrameRef}
+                      frameEventHandlers={frameEventHandlers}
+                      selectionMode={activePopupSelection}
+                      previewMode={popupPreviewOpen}
+                      onSelectShell={handleSelectPopupShell}
+                      onSelectContent={handleSelectPopupContent}
+                      onExit={() => handleEditPopup(null)}
+                      onDuplicate={() => activePopup && handleDuplicatePopup(activePopup.id)}
+                      onDelete={() => activePopup && handleDeletePopup(activePopup.id)}
+                      onToggleEnabled={() => activePopup && handleTogglePopupEnabled(activePopup.id, !activePopup.enabled)}
+                      onTogglePreview={() => setPopupPreviewOpen((open) => !open)}
+                      onResizeStart={handlePopupShellResizeStart}
+                      onDragStart={handlePopupShellDragStart}
+                    />
                     {/* Empty canvas prompt */}
-                    {sectionNodes.length === 0 && (
+                    {sectionNodes.length === 0 && !activePopup && (
                       <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
                         <div className="pointer-events-auto flex flex-col items-center gap-4 rounded-2xl border border-dashed border-border/60 bg-background/70 px-10 py-8 text-center backdrop-blur-sm shadow-sm">
                           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
@@ -726,8 +1027,26 @@ function EditorInner({
                         onDoubleClick={handleCanvasDoubleClick} onMouseOver={handleMouseOver} onMouseOut={handleMouseOut}
                         onDragEnter={handleDragEnter} onDragOver={handleDragOver} onDrop={handleDrop}
                       >
-                        <NodeRenderer nodeId={document.rootNodeId} mode="editor" />
-                        <SectionOverlay {...sharedSectionOverlayProps} canvasFrameRef={mobileFrameRef} />
+                        <div style={{ opacity: activePopup ? 0.42 : 1, pointerEvents: activePopup ? "none" : undefined }}>
+                          <NodeRenderer nodeId={document.rootNodeId} mode="editor" />
+                          {!activePopup && <SectionOverlay {...sharedSectionOverlayProps} canvasFrameRef={mobileFrameRef} />}
+                        </div>
+                        <PopupEditorSurface
+                          popup={activePopup}
+                          popupFrameRef={popupFrameRef}
+                          frameEventHandlers={frameEventHandlers}
+                          selectionMode={activePopupSelection}
+                          previewMode={popupPreviewOpen}
+                          onSelectShell={handleSelectPopupShell}
+                          onSelectContent={handleSelectPopupContent}
+                          onExit={() => handleEditPopup(null)}
+                          onDuplicate={() => activePopup && handleDuplicatePopup(activePopup.id)}
+                          onDelete={() => activePopup && handleDeletePopup(activePopup.id)}
+                          onToggleEnabled={() => activePopup && handleTogglePopupEnabled(activePopup.id, !activePopup.enabled)}
+                          onTogglePreview={() => setPopupPreviewOpen((open) => !open)}
+                          onResizeStart={handlePopupShellResizeStart}
+                          onDragStart={handlePopupShellDragStart}
+                        />
                       </div>
                     </BreakpointOverrideProvider>
                   </div>
@@ -737,8 +1056,9 @@ function EditorInner({
 
             {/* Overlays */}
             <SelectionOverlay
-              selection={{ selectedIds: selectedNodeIds, boundingBox: selectionRect, isRubberBanding: !!rubberBanding, rubberBandRect }}
+              selection={{ selectedIds: popupPreviewOpen ? [] : selectedNodeIds, boundingBox: popupPreviewOpen ? null : selectionRect, isRubberBanding: !popupPreviewOpen && !!rubberBanding, rubberBandRect }}
               zoom={zoom} rotation={currentRotation} isSection={!!selectedSectionNode}
+              zIndex={activePopup ? 180 : undefined}
               onDoubleClick={handleCanvasDoubleClick}
               onResizeStart={(handle, e) => {
                 e.preventDefault();
@@ -766,7 +1086,7 @@ function EditorInner({
               }}
             />
 
-            {hoverRect && <HoverOutline rect={hoverRect} zoom={zoom} />}
+            {!popupPreviewOpen && hoverRect && <HoverOutline rect={hoverRect} zoom={zoom} zIndex={activePopup ? 170 : undefined} />}
 
             <SnapGuides
               guides={document.canvasConfig.showHelperLines ? snapGuides : []}
@@ -775,8 +1095,8 @@ function EditorInner({
               helperLineColor={document.canvasConfig.helperLineColor}
             />
             <DistanceGuides guides={distanceGuides} zoom={zoom} />
-            {selectionRect && liveDimensions && (
-              <LiveDimensionsDisplay bounds={selectionRect} dimensions={liveDimensions} zoom={zoom} />
+            {!popupPreviewOpen && selectionRect && liveDimensions && (
+              <LiveDimensionsDisplay bounds={selectionRect} dimensions={liveDimensions} zoom={zoom} zIndex={activePopup ? 190 : undefined} />
             )}
 
             <FlowDropPlaceholderLayer
@@ -793,8 +1113,8 @@ function EditorInner({
           </CanvasRoot>
 
           {/* Spacing overlay (screen-space, outside CanvasRoot to avoid double-scaling) */}
-          {spacingRects && selectedNodeIds.length === 1 && !selectedSectionNode && (
-            <SpacingOverlay spacingRects={spacingRects} />
+          {!popupPreviewOpen && spacingRects && selectedNodeIds.length === 1 && !selectedSectionNode && (
+            <SpacingOverlay spacingRects={spacingRects} zIndexBase={activePopup ? 172 : undefined} />
           )}
 
           {/* Section toolbar (screen-space) */}
@@ -811,9 +1131,10 @@ function EditorInner({
             />
           )}
 
-          {selectedNodeIds.length === 1 && selectionRect && !selectedSectionNode && !editingNodeId && (
+          {!popupPreviewOpen && selectedNodeIds.length === 1 && selectionRect && !selectedSectionNode && !editingNodeId && (
             <ContextualToolbar
               nodeId={selectedNodeIds[0]!} rect={selectionRect} zoom={zoom} panOffset={panOffset}
+              zIndex={activePopup ? 220 : undefined}
               onDelete={() => handleDeleteNode(selectedNodeIds[0]!)}
               onDuplicate={() => dispatch({
                 type: "DUPLICATE_NODE",
@@ -827,12 +1148,13 @@ function EditorInner({
             />
           )}
 
-          {selectedNodeIds.length > 1 && selectionRect && !editingNodeId && (
+          {!popupPreviewOpen && selectedNodeIds.length > 1 && selectionRect && !editingNodeId && (
             <MultiSelectToolbar
               count={selectedNodeIds.length}
               rect={selectionRect}
               zoom={zoom}
               panOffset={panOffset}
+              zIndex={activePopup ? 220 : undefined}
               onDelete={() => handleDeleteNodes(selectedNodeIds)}
               onDuplicate={() => {
                 const newNodeIds = selectedNodeIds.map(() => uuidv4());

@@ -18,6 +18,7 @@ export { ShapeComponent } from "./components/Shape";
 export { NavigationMenuComponent } from "./components/NavigationMenu";
 export { RepeaterComponent } from "./components/Repeater";
 export { AnchorComponent } from "./components/Anchor";
+export { PopupContentComponent } from "./components/PopupContent";
 
 // Utility
 export { extendComponent } from "./utils/extendComponent";
@@ -47,6 +48,7 @@ import { ShapeComponent } from "./components/Shape";
 import { NavigationMenuComponent } from "./components/NavigationMenu";
 import { RepeaterComponent } from "./components/Repeater";
 import { AnchorComponent } from "./components/Anchor";
+import { PopupContentComponent } from "./components/PopupContent";
 import { extendComponent } from "./utils/extendComponent";
 import { DEFAULT_GALLERY_ITEMS } from "@ui-builder/shared";
 
@@ -190,4 +192,5 @@ export const BASE_COMPONENTS: ComponentDefinition[] = [
   NavigationMenuComponent,
   RepeaterComponent,
   AnchorComponent,
+  PopupContentComponent,
 ];

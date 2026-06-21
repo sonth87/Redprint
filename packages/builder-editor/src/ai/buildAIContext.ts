@@ -194,6 +194,23 @@ export function buildAIContext(
       defaultProps: c.defaultProps,
     })),
     activeBreakpoint: state.editor.activeBreakpoint,
+    activeSurface: state.editor.activePopupId && doc.popups?.[state.editor.activePopupId]
+      ? {
+          type: "popup",
+          popupId: state.editor.activePopupId,
+          rootNodeId: doc.popups[state.editor.activePopupId]!.rootNodeId,
+          selection: state.editor.activePopupSelection ?? null,
+        }
+      : { type: "page" },
+    availablePopups: Object.values(doc.popups ?? {}).map((popup) => ({
+      id: popup.id,
+      name: popup.name,
+      enabled: popup.enabled,
+      kind: popup.kind,
+      placement: popup.placement,
+      rootNodeId: popup.rootNodeId,
+      autoTrigger: popup.autoTrigger.type,
+    })),
     pageNodes,
     pageNodesSummary,
     availablePresets,

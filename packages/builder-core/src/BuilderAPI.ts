@@ -4,6 +4,8 @@ import type { Command, CommandResult } from "./commands/types";
 import type { BuilderPlugin } from "./plugins/types";
 import type { ComponentRegistry } from "./registry/ComponentRegistry";
 import type { EventBus } from "./events/EventBus";
+import type { PopupTemplate } from "./document/popups";
+import type { PopupTemplateRegistry } from "./popups/PopupTemplateRegistry";
 
 
 /**
@@ -24,6 +26,7 @@ export interface BuilderConfig {
   document?: Partial<BuilderDocument>;
   permissions?: Partial<BuilderPermissions>;
   plugins?: BuilderPlugin[];
+  popupTemplates?: PopupTemplate[];
   historyMaxSize?: number;
 }
 
@@ -41,6 +44,7 @@ export interface BuilderAPI {
 
   // Core instances
   registry: ComponentRegistry;
+  popupTemplates: PopupTemplateRegistry;
   eventBus: EventBus;
 
   // Plugins

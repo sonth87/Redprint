@@ -90,6 +90,7 @@ export interface UIState {
 // ── Editor state ──────────────────────────────────────────────────────────
 
 export type CanvasMode = "single" | "dual";
+export type PopupSelectionMode = "shell" | "content" | null;
 
 export interface EditorState {
   selectedNodeIds: string[];
@@ -109,6 +110,15 @@ export interface EditorState {
   editingNodeId: string | null;
   /** The prop key being edited inline (defaults to the first richtext prop). */
   editingPropKey: string | null;
+  /** Active popup being edited in the document-level popup layer. */
+  activePopupId: string | null;
+  /** Whether popup authoring is targeting the popup shell or its content tree. */
+  activePopupSelection: PopupSelectionMode;
+  /**
+   * V4: which A/B variant's content tree the canvas is editing. `null`/absent
+   * means the base content. Cleared whenever the active popup changes.
+   */
+  activePopupVariantId?: string | null;
 }
 
 // ── Interaction state ─────────────────────────────────────────────────────

@@ -163,6 +163,16 @@ export interface AIBuilderContext {
     defaultProps?: Record<string, unknown>;
   }[];
   activeBreakpoint: string;
+  activeSurface?: { type: "page" } | { type: "popup"; popupId: string; rootNodeId: string; selection: "shell" | "content" | null };
+  availablePopups?: Array<{
+    id: string;
+    name: string;
+    enabled: boolean;
+    kind: string;
+    placement: string;
+    rootNodeId: string;
+    autoTrigger: string;
+  }>;
   /** Full page node map. Only present when config.includePageContext is enabled. */
   pageNodes?: Record<string, AIPageNode>;
   /** Hierarchical page context: slim tree + focused nodes. Phase 3A optimization. */

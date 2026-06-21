@@ -57,6 +57,7 @@ export interface SelectionOverlayProps {
   zoom: number;
   rotation?: number;
   isSection?: boolean;
+  zIndex?: number;
   onResizeStart: (handle: ResizeHandleType, e: React.MouseEvent) => void;
   onRotateStart: (e: React.MouseEvent) => void;
   onDoubleClick?: (e: React.MouseEvent) => void;
@@ -71,6 +72,7 @@ export const SelectionOverlay = memo(function SelectionOverlay({
   zoom,
   rotation = 0,
   isSection = false,
+  zIndex,
   onResizeStart,
   onRotateStart,
   onDoubleClick,
@@ -99,7 +101,7 @@ export const SelectionOverlay = memo(function SelectionOverlay({
             height: boundingBox.height,
             outline: `${borderWidth}px dashed hsl(var(--selection-color, 221.2 83.2% 53.3%))`,
             transform: applyRotation ? `rotate(${rotation}deg)` : undefined,
-            zIndex: isSection ? 40 : 51,
+            zIndex: zIndex ?? (isSection ? 40 : 51),
             backgroundColor: "transparent",
           }}
           onDoubleClick={!isSection ? onDoubleClick : undefined}
@@ -271,9 +273,10 @@ export const SnapGuides = memo(function SnapGuides({
 export interface HoverOutlineProps {
   rect: Rect;
   zoom: number;
+  zIndex?: number;
 }
 
-export const HoverOutline = memo(function HoverOutline({ rect, zoom }: HoverOutlineProps) {
+export const HoverOutline = memo(function HoverOutline({ rect, zoom, zIndex = 30 }: HoverOutlineProps) {
   const borderWidth = Math.max(1, 1 / zoom);
   return (
     <div
@@ -284,7 +287,7 @@ export const HoverOutline = memo(function HoverOutline({ rect, zoom }: HoverOutl
         width: rect.width,
         height: rect.height,
         outline: `${borderWidth}px solid hsl(var(--hover-color, 221.2 83.2% 53.3% / 0.4))`,
-        zIndex: 30,
+        zIndex,
       }}
     />
   );
@@ -444,6 +447,7 @@ export interface LiveDimensionsDisplayProps {
   /** Current width/height to display */
   dimensions: LiveDimensions;
   zoom: number;
+  zIndex?: number;
 }
 
 /**
@@ -455,6 +459,7 @@ export const LiveDimensionsDisplay = memo(function LiveDimensionsDisplay({
   bounds,
   dimensions,
   zoom,
+  zIndex = 60,
 }: LiveDimensionsDisplayProps) {
   const fontSize = Math.max(8, 9 / zoom);
   const paddingV = Math.max(1, 1.5 / zoom);
@@ -477,7 +482,7 @@ export const LiveDimensionsDisplay = memo(function LiveDimensionsDisplay({
         padding: `${paddingV}px ${paddingH}px`,
         borderRadius: radius,
         whiteSpace: "nowrap",
-        zIndex: 60,
+        zIndex,
       }}
     >
       {Math.round(dimensions.width)} × {Math.round(dimensions.height)}

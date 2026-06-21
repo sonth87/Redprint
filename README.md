@@ -114,6 +114,7 @@ Complete technical reference organized by domain:
 - **Multi-select & bulk operations**
 - **Keyboard shortcuts** for power users
 - **Node tree inspector** for hierarchy management
+- **Popup layer management** — create, edit, template, trigger, and render document-level popups, with conversion goals, A/B variants, and a vendor-neutral analytics event stream
 - **Property controls** (text, number, color, select, slider, rich-text)
 
 ### Developer Experience

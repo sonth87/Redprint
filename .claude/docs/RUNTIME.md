@@ -22,6 +22,7 @@ Runtime renderer must:
 - Apply style merge: base + responsive per breakpoint
 - Bind interactions
 - Render via `runtimeRenderer`
+- Render active document popups through the popup runtime layer
 - Exclude editor code from bundle
 
 ### Rendering Pipeline
@@ -36,6 +37,117 @@ Document
     → Render call (editorRenderer | runtimeRenderer)
       → Output DOM
 ```
+
+### Popup Runtime Layer
+
+`RuntimeRenderer` renders the page root and then a document-level popup layer.
+Popup content roots are normal builder nodes, but they are detached from page flow
+and are rendered only when the popup is open.
+
+Runtime responsibilities:
+
+- Maintain a local **popup lifecycle stack** (see below)
+- Execute `showModal` / `hideModal` interaction actions
+- Register auto triggers: page-load delay, scroll depth, and section visible
+- Apply popup frequency rules using runtime storage
+- Render backdrop, shell placement, enter/exit animation, close button, Escape close,
+  backdrop click close, body scroll lock, focus trap, and focus restore
+
+Runtime popup shell dimensions are resolved from `kindConfig`: modal
+`width`/`height` plus anchored `offsetX`/`offsetY`, drawer `width`, bottom sheet
+`initialHeight`, and bar `height`. These values are produced by the editor popup
+shell resize/drag controls and are honored by preview/runtime rendering.
+
+Opening/closing a popup at runtime does not mutate `BuilderDocument`.
+
+### Popup Lifecycle State Machine (V3)
+
+Each open popup is tracked as a `PopupStackEntry` with a lifecycle state:
+`opening → open → closing → closed`. The **pure transition logic lives in
+`builder-core`** (`src/popups/lifecycle.ts`) so the renderer and the editor
+preview share identical behavior; the renderer only owns timers + DOM.
+
+- **Opening** plays the enter animation, then transitions to **open** after
+  `animation.durationMs`.
+- **Closing** plays the exit animation (`animation.exit`, falling back to
+  `animation.enter`); the surface stays mounted until the duration elapses, then
+  the entry is removed (**closed**). This fixes the V2 bug where exit animations
+  never ran because the surface unmounted immediately.
+- Re-opening a popup that is `closing` **cancels** the close and returns it to
+  `opening`. Closing during `opening` transitions to `closing`.
+- A popup deleted or disabled while mounted is force-removed from the stack.
+
+### Stacking & Z-Index (V3)
+
+`PopupDefinition.runtimeState` (optional) controls stacking:
+
+- `stackMode`: `"single"` (default — opening one closes others),
+  `"multiple"` (stack on top), or `"replace-same-kind"` (close only same-`kind`
+  popups). The latest opened popup is topmost.
+- `zIndexBase` (default `10000`): each stack depth gets `base + depth * 10`.
+- **ESC** closes only the topmost interactive popup; **focus trap** applies only
+  to the topmost. **Body scroll** stays locked while any mounted popup requests
+  `lockBodyScroll`.
+
+### Runtime Drag/Resize (V3, modal)
+
+Opt-in, runtime-only, never mutates the document:
+
+- `kindConfig.runtimeDraggable` adds a drag handle bar (top of the modal); the
+  offset composes with the document `offsetX/offsetY` transform. `dragBounds:
+  "viewport"` (default) clamps the surface on-screen.
+- `kindConfig.runtimeResizable` adds a bottom-right resize handle (runtime width/
+  height held in component state).
+- Gestures use pointer events (touch + mouse). Editor shell drag/resize remains
+  document-mutating via `UPDATE_POPUP`.
+- *BottomSheet runtime snap-drag* (`runtimeDraggable`, `closeBelowSnapPoint`):
+  schema is in place; the gesture is a planned follow-up.
+
+### Accessibility & Reduced Motion (V3)
+
+- Modal-like popups keep `role="dialog"` + `aria-modal`. When the topmost
+  modal-like popup has `behavior.inertBackground`, the page root wrapper is set
+  `inert` + `aria-hidden` so AT/keyboard stay inside the dialog.
+- Non-backdrop popups (bar) no longer block page pointer events; only the
+  surface captures them.
+- `behavior.reducedMotion` (`"respect"` default) honors
+  `prefers-reduced-motion: reduce` by skipping animation and transitioning
+  lifecycle states immediately.
+
+### A/B Variant Assignment & Analytics (V4)
+
+**Variant assignment** happens at open time, runtime-only, and never mutates the
+document. The renderer calls `resolveVariantAssignment` (pure, from
+`builder-core`):
+
+- `experiment.winnerVariantId` forces that variant (concluded experiment).
+- `assignment: "sticky"` reuses a stored assignment; a stale one (variant deleted
+  or disabled) is dropped and re-picked. Sticky reads/writes go through
+  `RendererConfig.getVariantAssignment`/`setVariantAssignment` first, then fall
+  back to `popupStorage` key `ui-builder:popup:{docId}:{popupId}:variant`.
+- `assignment: "random"` makes a fresh weighted pick (`pickVariant`); an
+  `experiment.seed` yields deterministic assignment via `seededRng`.
+- When no variant is eligible (none enabled, or experiment off), the **base**
+  content renders. The chosen variant's `popupPatch` is applied and its
+  `rootNodeId` (or the base root) is rendered via `resolvePopupForVariant`.
+
+**Analytics** is vendor-neutral. The renderer emits `PopupAnalyticsEvent`s through
+`RendererConfig.onPopupAnalyticsEvent` **and**, if supplied, `RendererConfig.eventBus`
+(`popup:analytics`). A throwing host handler is caught and never breaks the UI.
+Emission points:
+
+- `popup_variant_assigned` — on assignment (when a variant is chosen).
+- `popup_open` — at opening start (carries `triggerType`, `variantId`).
+- `popup_impression` — once per open lifecycle, on reaching `open`.
+- `popup_close` — on close, with `closeReason`
+  (`button|escape|backdrop|action|routeChange|programmatic`).
+- `popup_dismiss` — on user-initiated close (escape/backdrop/button).
+- `popup_cta_click` / `popup_submit` + `popup_conversion` — when a `click`/`submit`
+  goal's `targetNodeId` is hit (delegated listener on the surface; each goal fires
+  once per open lifecycle). A `close`-type goal converts on close.
+
+When `RendererConfig.isPreview` is true, every event is tagged
+`metadata.preview = true` so hosts can drop preview traffic.
 
 ### Performance Optimization
 

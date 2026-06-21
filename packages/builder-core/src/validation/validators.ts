@@ -32,6 +32,82 @@ const BuilderNodeSchema = z.object({
   metadata: NodeMetadataSchema,
 });
 
+const PopupSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  enabled: z.boolean(),
+  rootNodeId: z.string(),
+  kind: z.enum(["modal", "drawer", "bottomSheet", "bar", "fullscreen"]),
+  placement: z.enum(["center", "top", "bottom", "left", "right"]),
+  kindConfig: z.object({ kind: z.string() }).passthrough(),
+  autoTrigger: z.object({ type: z.string() }).passthrough(),
+  behavior: z.object({
+    backdrop: z.object({
+      enabled: z.boolean(),
+      color: z.string(),
+      opacity: z.number(),
+      blur: z.string().optional(),
+    }),
+    closeOnEscape: z.boolean(),
+    closeOnBackdropClick: z.boolean(),
+    showCloseButton: z.boolean(),
+    lockBodyScroll: z.boolean(),
+    trapFocus: z.boolean(),
+    restoreFocus: z.boolean(),
+    // V3 — all optional so V2 documents validate unchanged
+    closeOnRouteChange: z.boolean().optional(),
+    closeOnOutsideInteraction: z.boolean().optional(),
+    preventBackgroundInteraction: z.boolean().optional(),
+    inertBackground: z.boolean().optional(),
+    reducedMotion: z.enum(["respect", "ignore"]).optional(),
+  }).passthrough(),
+  animation: z.object({
+    enter: z.string(),
+    exit: z.string().optional(),
+    durationMs: z.number(),
+    easing: z.string().optional(),
+  }).passthrough(),
+  rules: z.object({}).passthrough(),
+  // V3 — optional runtime stacking policy
+  runtimeState: z.object({
+    stackMode: z.enum(["single", "multiple", "replace-same-kind"]).optional(),
+    zIndexBase: z.number().optional(),
+  }).passthrough().optional(),
+  // V4 — optional goals/variants/experiment (absent = base behavior)
+  goals: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      type: z.enum(["click", "submit", "close", "customEvent", "urlVisit"]),
+      targetNodeId: z.string().optional(),
+      eventName: z.string().optional(),
+      urlPattern: z.string().optional(),
+    }).passthrough()
+  ).optional(),
+  variants: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      weight: z.number(),
+      enabled: z.boolean(),
+      popupPatch: z.record(z.unknown()).optional(),
+      rootNodeId: z.string().optional(),
+    }).passthrough()
+  ).optional(),
+  experiment: z.object({
+    enabled: z.boolean(),
+    assignment: z.enum(["random", "sticky"]),
+    seed: z.string().optional(),
+    winnerVariantId: z.string().optional(),
+  }).passthrough().optional(),
+  metadata: z.object({
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    tags: z.array(z.string()).optional(),
+    pluginData: z.record(z.unknown()).optional(),
+  }),
+}).passthrough();
+
 const BuilderDocumentSchema = z.object({
   id: z.string(),
   schemaVersion: z.string(),
@@ -40,6 +116,7 @@ const BuilderDocumentSchema = z.object({
   name: z.string().min(1),
   nodes: z.record(BuilderNodeSchema),
   rootNodeId: z.string(),
+  popups: z.record(PopupSchema).default({}),
   breakpoints: z.array(
     z.object({
       breakpoint: z.enum(["desktop", "tablet", "mobile"]),

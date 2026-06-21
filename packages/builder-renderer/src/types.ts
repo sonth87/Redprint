@@ -6,6 +6,16 @@
 import type { BuilderDocument, BuilderNode, StyleConfig } from "@ui-builder/builder-core";
 import type { Breakpoint } from "@ui-builder/builder-core";
 import type { ComponentDefinition } from "@ui-builder/builder-core";
+import type { PopupAnalyticsEvent } from "@ui-builder/builder-core";
+
+/**
+ * Minimal structural EventBus contract — lets a host that already owns a
+ * builder EventBus receive popup analytics without the renderer importing the
+ * concrete class. Compatible with builder-core's `EventBus`.
+ */
+export interface PopupAnalyticsEventBus {
+  emit(event: "popup:analytics", payload: PopupAnalyticsEvent): void;
+}
 
 // ── Component manifest for remote/dynamic loading ─────────────────────────
 
@@ -69,4 +79,28 @@ export interface RendererConfig {
   missingComponentFallback?: ComponentDefinition;
   /** Whether to add data-node-id attributes to DOM output. Default: false */
   attachNodeIds?: boolean;
+  /** Runtime popup lifecycle callback. */
+  onPopupOpen?: (popupId: string) => void;
+  /** Runtime popup lifecycle callback. */
+  onPopupClose?: (popupId: string) => void;
+  /** Storage used for popup frequency rules. Defaults to browser local/session storage. */
+  popupStorage?: Storage;
+
+  // ── V4: analytics + A/B experiments ──────────────────────────────────────
+  /** Vendor-neutral popup analytics callback (GA/Segment/etc. wiring lives here). */
+  onPopupAnalyticsEvent?: (event: PopupAnalyticsEvent) => void;
+  /**
+   * Optional EventBus to also emit `popup:analytics` on (e.g. a host's builder
+   * EventBus). Fired in addition to `onPopupAnalyticsEvent`.
+   */
+  eventBus?: PopupAnalyticsEventBus;
+  /**
+   * Host override to read a sticky A/B variant assignment (e.g. server cookie).
+   * When omitted, sticky assignment falls back to `popupStorage`.
+   */
+  getVariantAssignment?: (popupId: string) => string | null | undefined;
+  /** Host override to persist a sticky A/B variant assignment. */
+  setVariantAssignment?: (popupId: string, variantId: string) => void;
+  /** When true, analytics events are tagged `metadata.preview = true` (editor preview). */
+  isPreview?: boolean;
 }

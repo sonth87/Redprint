@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useMemo } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent, Badge, Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@ui-builder/ui";
-import type { Asset, BuilderNode, Breakpoint, ComponentDefinition, InteractionConfig } from "@ui-builder/builder-core";
+import type { Asset, BuilderNode, Breakpoint, ComponentDefinition, InteractionConfig, PopupDefinition } from "@ui-builder/builder-core";
 import { resolveStyle, resolveProps } from "@ui-builder/builder-core";
 import {
   Paintbrush,
@@ -27,6 +27,7 @@ export interface PropertyPanelProps {
   onOpenMediaManager?: (onSelect: (asset: Asset) => void) => void;
   /** Actual rendered size of selected element in CSS pixels (for SpacingVisualizer) */
   elementSize?: { width: number; height: number };
+  popups?: PopupDefinition[];
 }
 
 import { DesignTab } from "./tabs/DesignTab";
@@ -55,6 +56,7 @@ export const PropertyPanel = memo(function PropertyPanel({
   assets = [],
   onOpenMediaManager = () => {},
   elementSize,
+  popups = [],
 }: PropertyPanelProps) {
   const { t } = useTranslation();
   const mediaCtx: MediaContextValue = useMemo(
@@ -163,6 +165,7 @@ export const PropertyPanel = memo(function PropertyPanel({
           <EventsTab
             interactions={interactions}
             onInteractionsChange={onInteractionsChange}
+            popups={popups}
           />
         </TabsContent>
 

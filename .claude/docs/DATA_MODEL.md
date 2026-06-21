@@ -185,7 +185,7 @@ interface Condition {
 ```ts
 interface BuilderDocument {
   id: string;
-  schemaVersion: string; // semver e.g. "2.1.0"
+  schemaVersion: string; // semver e.g. "2.5.0"
   createdAt: string; // ISO 8601
   updatedAt: string;
   name: string;
@@ -196,6 +196,7 @@ interface BuilderDocument {
   variables: Record<string, VariableDefinition>;
   assets: AssetManifest;
   plugins: PluginReference[];
+  popups: Record<string, PopupDefinition>;
   canvasConfig: CanvasConfig;
   metadata: DocumentMetadata;
 }
@@ -224,6 +225,132 @@ interface DocumentMetadata {
   pluginData?: Record<string, unknown>;
 }
 ```
+
+---
+
+## Popup Model
+
+Popups are document-level overlay surfaces, not page-flow nodes. A popup owns a
+detached content root in `nodes` through `PopupDefinition.rootNodeId`; that root
+is rendered only by the popup layer and is not a child of the page `rootNodeId`.
+
+```ts
+type PopupKind = "modal" | "drawer" | "bottomSheet" | "bar" | "fullscreen";
+type PopupPlacement = "center" | "top" | "bottom" | "left" | "right";
+
+interface PopupDefinition {
+  id: string;
+  name: string;
+  enabled: boolean;
+  rootNodeId: string;
+  kind: PopupKind;
+  placement: PopupPlacement;
+  kindConfig: PopupKindConfig;
+  autoTrigger:
+    | { type: "manual" }
+    | { type: "pageLoad"; delayMs?: number }
+    | { type: "scrollDepth"; percent: number }
+    | { type: "sectionVisible"; targetNodeId: string; threshold?: number };
+  behavior: PopupBehavior;
+  animation: PopupAnimation;
+  rules: PopupRules;
+  runtimeState?: PopupRuntimeStateConfig; // V3 — stacking/z-index policy
+  goals?: PopupGoal[];                    // V4 — conversion goals
+  variants?: PopupVariant[];             // V4 — A/B variants (popup-owned content)
+  experiment?: PopupExperiment;          // V4 — assignment policy
+  metadata: PopupMetadata;
+}
+```
+
+`kind` describes the surface type; `placement` describes where it appears. V1
+supports modal, drawer, bottom sheet, bar, and fullscreen. Popup content uses
+normal builder nodes under a built-in `PopupContent` root.
+
+Kind-specific sizing belongs in `kindConfig`. Modal configs may carry `width`,
+`height`, `draggable`, `resizable`, and anchored `offsetX`/`offsetY`; drawers
+carry `width`; bottom sheets carry `initialHeight`/`snapPoints`; bars carry
+`height`, `sticky`, and `pushPageContent`. The editor popup shell resize/drag
+controls update these config fields rather than mutating `PopupContent` styles.
+
+### V3 optional fields (schema 2.4.0)
+
+All optional and defaulted — V2 documents remain valid (`popupV3Migration`
+fills behavior defaults and bumps the version).
+
+```ts
+interface PopupBehavior {
+  // ...V2 fields...
+  closeOnRouteChange?: boolean;
+  closeOnOutsideInteraction?: boolean;
+  preventBackgroundInteraction?: boolean;
+  inertBackground?: boolean;           // inert + aria-hidden the page behind topmost modal
+  reducedMotion?: "respect" | "ignore"; // default "respect"
+}
+
+interface PopupRuntimeStateConfig {     // PopupDefinition.runtimeState
+  stackMode?: "single" | "multiple" | "replace-same-kind"; // default "single"
+  zIndexBase?: number;                  // default 10000
+}
+
+interface PopupModalConfig {
+  // ...V2 fields...
+  runtimeDraggable?: boolean;           // end-user drag at runtime (runtime-only)
+  runtimeResizable?: boolean;
+  dragBounds?: "viewport" | "none";     // default "viewport"
+}
+
+interface PopupBottomSheetConfig {
+  // ...V2 fields...
+  runtimeDraggable?: boolean;           // snap-drag (gesture is a planned follow-up)
+  closeBelowSnapPoint?: string;
+}
+```
+
+The runtime lifecycle (`opening→open→closing→closed`), stacking, and reduced-
+motion logic are pure helpers in `builder-core/src/popups/lifecycle.ts`, shared by
+the runtime renderer and the editor preview. Runtime drag/resize and lifecycle
+state never mutate `BuilderDocument`. See RUNTIME.md → Popup Lifecycle State Machine.
+
+### V4 optional fields (schema 2.5.0)
+
+All optional — V2/V3 documents remain valid (`popupV4Migration` only bumps the
+version; absence of these fields means "base behavior, no experiment").
+
+```ts
+interface PopupGoal {
+  id: string;
+  name: string;
+  type: "click" | "submit" | "close" | "customEvent" | "urlVisit";
+  targetNodeId?: string;  // click/submit — a node inside popup content
+  eventName?: string;     // customEvent — matches runtime popup:goal emit
+  urlPattern?: string;    // urlVisit
+}
+
+interface PopupVariant {
+  id: string;
+  name: string;
+  weight: number;         // normalized at runtime; <= 0 excluded
+  enabled: boolean;
+  popupPatch?: Partial<…>; // config patch over base (no identity/content/variants)
+  rootNodeId?: string;    // optional popup-owned content root; omit → reuse base
+}
+
+interface PopupExperiment {
+  enabled: boolean;
+  assignment: "random" | "sticky";
+  seed?: string;
+  winnerVariantId?: string; // forces this variant (experiment concluded)
+}
+```
+
+**Node ownership (V4):** variant `rootNodeId` trees are **owned by the popup**.
+`DELETE_POPUP` cascade-deletes every variant content root (snapshotted for undo);
+`DUPLICATE_POPUP` deep-clones each variant root with fresh ids and copies
+goals/experiment (goal ids regenerated). Pure assignment helpers
+(`normalizeWeights`, `pickVariant`, `resolveVariantAssignment`,
+`resolvePopupForVariant`) live in `builder-core/src/popups/experiment.ts` and are
+shared by runtime + editor preview. Runtime variant assignment and analytics
+never mutate `BuilderDocument`. See RUNTIME.md → A/B Variant Assignment & Analytics.
 
 ---
 

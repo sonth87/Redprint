@@ -22,7 +22,9 @@ export type {
   RenderContext,
   ResolvedNode,
   RendererConfig,
+  PopupAnalyticsEventBus,
 } from "./types";
+export type { PopupAnalyticsEvent } from "@ui-builder/builder-core";
 
 // Loader
 export { DynamicLoader } from "./loader/DynamicLoader";

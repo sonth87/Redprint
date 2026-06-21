@@ -3,6 +3,7 @@
  */
 
 import type { BuilderDocument, BuilderNode, CanvasConfig } from "../document/types";
+import type { PopupDefinition, PopupAnalyticsEvent } from "../document/popups";
 import type { Breakpoint } from "../responsive/types";
 import type { Command, CommandResult } from "../commands/types";
 import type { HistoryEntry } from "../history/types";
@@ -18,6 +19,13 @@ export interface BuilderEventMap {
   "node:removed": { nodeId: string };
   "node:moved": { nodeId: string; fromParentId: string | null; toParentId: string | null };
   "node:updated": { nodeId: string; changes: Partial<BuilderNode> };
+  "popup:created": { popup: PopupDefinition };
+  "popup:deleted": { popupId: string };
+  "popup:updated": { popupId: string; popup: PopupDefinition };
+  "popup:opened": { popupId: string; trigger: "interaction" | "auto" | "editor" };
+  "popup:closed": { popupId: string; trigger: "interaction" | "auto" | "editor" };
+  /** V4: vendor-neutral popup analytics event stream. */
+  "popup:analytics": PopupAnalyticsEvent;
   "selection:changed": { selectedIds: string[] };
   "breakpoint:changed": { breakpoint: Breakpoint };
   "command:executed": { command: Command; result: CommandResult };

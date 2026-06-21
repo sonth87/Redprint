@@ -20,6 +20,7 @@ Build a **UI Builder Library** — a modular, extensible platform enabling drag-
 - Snap components together during drag (magnetic snap)
 - View helper lines indicating container/wrapper bounds
 - Configure responsive designs across multiple breakpoints (desktop/tablet/mobile)
+- Create and manage document-level popups in a dedicated popup layer
 - Load third-party components dynamically
 - Undo/redo all operations
 - Import/export document schemas

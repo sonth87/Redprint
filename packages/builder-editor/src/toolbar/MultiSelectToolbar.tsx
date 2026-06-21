@@ -12,6 +12,7 @@ interface MultiSelectToolbarProps {
   onDuplicate: () => void;
   onDragHandlePointerDown: (e: React.PointerEvent) => void;
   count: number;
+  zIndex?: number;
 }
 
 export const MultiSelectToolbar: React.FC<MultiSelectToolbarProps> = ({
@@ -22,6 +23,7 @@ export const MultiSelectToolbar: React.FC<MultiSelectToolbarProps> = ({
   onDuplicate,
   onDragHandlePointerDown,
   count,
+  zIndex = 30,
 }) => {
   const { t } = useTranslation();
   const TOOLBAR_HEIGHT = 40;
@@ -38,10 +40,11 @@ export const MultiSelectToolbar: React.FC<MultiSelectToolbarProps> = ({
   return (
     <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>
       <div
-        className="absolute z-30 flex items-center bg-background/95 backdrop-blur-md rounded-md border shadow-md p-1 gap-1"
+        className="absolute flex items-center bg-background/95 backdrop-blur-md rounded-md border shadow-md p-1 gap-1"
         style={{
           left: xPos,
           top: yPos,
+          zIndex,
         }}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}

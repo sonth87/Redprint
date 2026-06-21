@@ -51,11 +51,27 @@ interface ReversibleCommand<T = unknown> extends Command<T> {
 | `SET_VARIABLE`       | `{ key, value }`                                             | Set document variable   |
 | `UPDATE_CANVAS_CONFIG` | `{ config }`                                               | Update canvas settings  |
 | `LOAD_COMPONENT`     | `{ manifestUrl, componentType }`                             | Load remote component   || `TOGGLE_RESPONSIVE_HIDDEN` | `{ nodeId, breakpoint }`                                           | Toggle hidden at breakpoint |
+| `CREATE_POPUP`       | `{ popupId?, rootNodeId?, name, kind?, placement?, popup?, root? }` | Create popup + content root |
+| `UPDATE_POPUP`       | `{ popupId, popup }`                                        | Update popup settings |
+| `DELETE_POPUP`       | `{ popupId }`                                               | Delete popup + content subtree |
+| `DUPLICATE_POPUP`    | `{ popupId, newPopupId?, newRootNodeId?, name? }`           | Duplicate popup + subtree |
+| `ENABLE_POPUP`       | `{ popupId }`                                               | Enable popup |
+| `DISABLE_POPUP`      | `{ popupId }`                                               | Disable popup |
+| `ADD_POPUP_GOAL`     | `{ popupId, goalId?, goal? }`                               | V4 — add a conversion goal |
+| `UPDATE_POPUP_GOAL`  | `{ popupId, goalId, goal }`                                 | V4 — edit a goal |
+| `REMOVE_POPUP_GOAL`  | `{ popupId, goalId }`                                       | V4 — remove a goal |
+| `ADD_POPUP_VARIANT`  | `{ popupId, variantId?, rootNodeId?, name?, weight?, cloneFromBase?, popupPatch? }` | V4 — add A/B variant (clones base content if `cloneFromBase`) |
+| `UPDATE_POPUP_VARIANT` | `{ popupId, variantId, variant }`                        | V4 — edit a variant |
+| `REMOVE_POPUP_VARIANT` | `{ popupId, variantId }`                                 | V4 — remove a variant (cascade-deletes its content root) |
+| `UPDATE_POPUP_EXPERIMENT` | `{ popupId, experiment }`                             | V4 — update experiment/assignment config |
+| `SET_ACTIVE_POPUP_VARIANT` | `{ popupId, variantId: string \| null }`             | V4 — edit a variant's content on canvas (no undo) |
 | `UPDATE_RESPONSIVE_PROPS` | `{ nodeId, breakpoint, props }`                                     | Breakpoint-specific props override |
 | `RESET_RESPONSIVE_STYLE` | `{ nodeId, breakpoint }`                                             | Clear all breakpoint style overrides |
 | `ENTER_TEXT_EDIT`    | `{ nodeId }`                                                                 | Enter inline text edit mode (no undo) |
 | `EXIT_TEXT_EDIT`     | `{ nodeId }`                                                                 | Exit inline text edit mode (no undo) |
 | `SET_CANVAS_MODE`    | `{ mode }`                                                                   | Set canvas edit mode (no undo) |
+| `SET_ACTIVE_POPUP`   | `{ popupId: string \| null }`                                                 | Enter/exit popup edit layer (no undo) |
+| `SET_ACTIVE_POPUP_SELECTION` | `{ selection: "shell" \| "content" \| null }`                         | Select popup shell vs content editing target (no undo) |
 | `SELECT_NODE`        | `{ nodeId, multi? }`                                                         | Select node (editor-only, no undo) |
 | `DESELECT_NODE`      | `{ nodeId }`                                                                 | Deselect node (editor-only, no undo) |
 | `CLEAR_SELECTION`    | `{}`                                                                         | Clear all selection (editor-only, no undo) |
@@ -119,6 +135,11 @@ interface QuickToolbarState {
 - State is immutable — each command produces new state object
 - Subscriptions trigger re-renders only on affected subtrees
 
+**Popup runtime note:** opening or closing a popup in production runtime is local
+runtime UI state, not a document mutation and not an undoable command. Creating,
+editing, enabling, disabling, duplicating, and deleting popup definitions in the
+editor must still go through the command engine.
+
 ---
 
 ## History System
@@ -172,6 +193,11 @@ interface MigrationEngine {
   getMigrationPath(fromVersion: string, toVersion: string): SchemaMigration[];
 }
 ```
+
+Current `CURRENT_SCHEMA_VERSION` is `2.5.0`. Consumer-registered popup
+migrations: `popupV3Migration` (`2.3.0 → 2.4.0`, fills behavior defaults) and
+`popupV4Migration` (`2.4.0 → 2.5.0`, additive — goals/variants/experiment are
+optional, so it only bumps the version).
 
 **Migration Contracts:**
 

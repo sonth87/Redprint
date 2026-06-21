@@ -199,6 +199,27 @@ const myPlugin: BuilderPlugin = {
 | Undo-safe | ✅ | ✅ (dispatches ADD_NODE) |
 | Plugin-contributed | Via registry | Via plugin |
 
+## Popup Templates
+
+Popup templates are reusable popup definitions plus a popup content tree. They
+are managed through `PopupTemplateRegistry`, not stored inside
+`BuilderDocument`. Creating a popup from a template dispatches one atomic
+`CREATE_POPUP` command containing the popup config and initial content root.
+
+```ts
+interface PopupTemplate {
+  id: string;
+  name: string;
+  category?: string;
+  popup: Omit<PopupDefinition, "id" | "rootNodeId" | "metadata">;
+  root: PopupNodeTemplate;
+}
+```
+
+The editor ships starter templates for newsletter modal, promo drawer, mobile
+bottom sheet, announcement bar, and fullscreen lead capture. Consumers or plugins
+can register additional templates via the registry API.
+
 ---
 
 _For the component types presets reference, see [DATA_MODEL.md](./DATA_MODEL.md).  
