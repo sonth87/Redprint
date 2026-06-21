@@ -23,6 +23,11 @@ import {
   resolveVariantAssignment,
   resolvePopupForVariant,
   seededRng,
+  evaluateSchedule,
+  evaluateTargeting,
+  evaluateFrequency,
+  recordFrequencyImpression,
+  resolveLocaleContent,
 } from "@ui-builder/builder-core";
 import { ANIMATION_KEYFRAMES_CSS, PRESET_KEYFRAME, PRESET_INITIAL } from "@ui-builder/shared";
 import type { RendererConfig } from "./types";
@@ -268,6 +273,10 @@ export function RuntimeRenderer({ document, registry, config = {} }: RuntimeRend
     getVariantAssignment,
     setVariantAssignment,
     isPreview = false,
+    popupContext = {},
+    locale,
+    getFrequencyCount,
+    setFrequencyCount,
   } = config;
   const hasSectionVisibleTrigger = Object.values(document.popups ?? {}).some(
     (popup) => popup.autoTrigger.type === "sectionVisible",
@@ -349,6 +358,36 @@ export function RuntimeRenderer({ document, registry, config = {} }: RuntimeRend
     [onPopupAnalyticsEvent, eventBus, isPreview],
   );
 
+  // ── V5: frequency storage helpers ─────────────────────────────────────────
+  const readFrequencyCount = useCallback(
+    (key: string): { count: number; storedAt: number } | undefined => {
+      if (getFrequencyCount) return getFrequencyCount(key);
+      if (typeof window === "undefined") return undefined;
+      const storage = key.includes(":session:") ? window.sessionStorage : (popupStorage ?? window.localStorage);
+      const raw = storage.getItem(key);
+      if (!raw) return undefined;
+      try {
+        return JSON.parse(raw) as { count: number; storedAt: number };
+      } catch {
+        return undefined;
+      }
+    },
+    [getFrequencyCount, popupStorage],
+  );
+
+  const writeFrequencyCount = useCallback(
+    (key: string, count: number, expiresAt?: number) => {
+      if (setFrequencyCount) { setFrequencyCount(key, count, expiresAt); return; }
+      if (typeof window === "undefined") return;
+      const storage = key.includes(":session:") ? window.sessionStorage : (popupStorage ?? window.localStorage);
+      storage.setItem(key, JSON.stringify({ count, storedAt: Date.now(), ...(expiresAt ? { expiresAt } : {}) }));
+    },
+    [setFrequencyCount, popupStorage],
+  );
+
+  // ── V5: resolved locale state (runtime-only) ───────────────────────────────
+  const [localeAssignments, setLocaleAssignments] = useState<Record<string, string | null>>({});
+
   // ── V4: A/B variant assignment (runtime-only; never mutates the document) ─
   // Resolved per popup at open time and held in component state so the surface
   // renders the right content. Sticky reads/writes go through the host
@@ -398,11 +437,35 @@ export function RuntimeRenderer({ document, registry, config = {} }: RuntimeRend
   const openPopup = useCallback((popupId: string) => {
     const popup = document.popups?.[popupId];
     if (!popup?.enabled) return;
+
+    // V5: pre-open eligibility — schedule → targeting → frequency
+    const now = Date.now();
+    const effectiveLocale = locale ?? (typeof navigator !== "undefined" ? navigator.language : undefined);
+    if (!evaluateSchedule(popup.rules.scheduling, now)) {
+      emitPopupEvent({ type: "popup_rules_blocked", popupId, popupName: popup.name, rulesBlockReason: "schedule" });
+      return;
+    }
+    if (!evaluateTargeting(popup.rules.targeting, popupContext)) {
+      emitPopupEvent({ type: "popup_rules_blocked", popupId, popupName: popup.name, rulesBlockReason: "targeting" });
+      return;
+    }
+    if (!evaluateFrequency(popup.rules.frequency, popup.rules, readFrequencyCount, popupId, document.id, now)) {
+      emitPopupEvent({ type: "popup_rules_blocked", popupId, popupName: popup.name, rulesBlockReason: "frequency" });
+      return;
+    }
+
     const zIndexBase = popup.runtimeState?.zIndexBase ?? DEFAULT_POPUP_Z_INDEX_BASE;
     // Reopen cancels a pending close.
     clearTimer(closeTimers, popupId);
     // V4: resolve the A/B variant before showing the surface.
     const variantId = assignVariant(popup);
+
+    // V5: resolve locale content.
+    const { resolvedLocale } = resolveLocaleContent(popup, effectiveLocale);
+    if (resolvedLocale) {
+      setLocaleAssignments((prev) => ({ ...prev, [popupId]: resolvedLocale }));
+      emitPopupEvent({ type: "popup_locale_resolved", popupId, popupName: popup.name, locale: resolvedLocale });
+    }
     setPopupStack((prev) =>
       applyPopupOpen(prev, {
         popupId,
@@ -413,12 +476,17 @@ export function RuntimeRenderer({ document, registry, config = {} }: RuntimeRend
       }),
     );
     markPopupShown(popupId);
+    // V5: record frequency impression
+    const { key: freqKey } = recordFrequencyImpression(popupId, document.id, popup.rules.frequency, now);
+    const existing = readFrequencyCount(freqKey);
+    writeFrequencyCount(freqKey, (existing?.count ?? 0) + 1);
     onPopupOpen?.(popupId);
     emitPopupEvent({
       type: "popup_open",
       popupId,
       popupName: popup.name,
       ...(variantId ? { variantId } : {}),
+      ...(resolvedLocale ? { locale: resolvedLocale } : {}),
       triggerType: popup.autoTrigger.type,
     });
     // Promote opening → open after the enter animation, then count impression.
@@ -436,7 +504,7 @@ export function RuntimeRenderer({ document, registry, config = {} }: RuntimeRend
     };
     if (duration <= 0) finishOpen();
     else openTimers.current.set(popupId, setTimeout(finishOpen, duration));
-  }, [document.popups, markPopupShown, onPopupOpen, clearTimer, effectiveDurationMs, assignVariant, emitPopupEvent]);
+  }, [document.popups, markPopupShown, onPopupOpen, clearTimer, effectiveDurationMs, assignVariant, emitPopupEvent, locale, popupContext, readFrequencyCount, writeFrequencyCount, document.id]);
 
   const closePopup = useCallback(
     (popupId: string, closeReason: PopupAnalyticsEvent["closeReason"] = "programmatic") => {
@@ -579,6 +647,7 @@ export function RuntimeRenderer({ document, registry, config = {} }: RuntimeRend
       onOpenPopup: openPopup,
       onClosePopup: closePopup,
       assignments,
+      localeAssignments,
       emitPopupEvent,
     }),
   );
@@ -637,6 +706,7 @@ function PopupRuntimeLayer({
   onOpenPopup,
   onClosePopup,
   assignments,
+  localeAssignments,
   emitPopupEvent,
 }: {
   popupStack: PopupStackEntry[];
@@ -645,6 +715,7 @@ function PopupRuntimeLayer({
   onOpenPopup: (popupId: string) => void;
   onClosePopup: (popupId: string, reason?: PopupAnalyticsEvent["closeReason"]) => void;
   assignments: Record<string, string | null>;
+  localeAssignments: Record<string, string | null>;
   emitPopupEvent: (event: Omit<PopupAnalyticsEvent, "timestamp"> & { timestamp?: number }) => void;
 }) {
   const ctx = useRuntimeContext();
@@ -718,6 +789,7 @@ function PopupRuntimeLayer({
         zIndex: entry.zIndex,
         isTopmost: topInteractive?.popupId === entry.popupId,
         variantId: assignments[entry.popupId] ?? null,
+        resolvedLocale: localeAssignments[entry.popupId] ?? null,
         emitPopupEvent,
         onClose: (reason?: PopupAnalyticsEvent["closeReason"]) => onClosePopup(entry.popupId, reason),
       });
@@ -731,6 +803,7 @@ function PopupSurface({
   zIndex,
   isTopmost,
   variantId,
+  resolvedLocale,
   emitPopupEvent,
   onClose,
 }: {
@@ -739,6 +812,7 @@ function PopupSurface({
   zIndex: number;
   isTopmost: boolean;
   variantId: string | null;
+  resolvedLocale: string | null;
   emitPopupEvent: (event: Omit<PopupAnalyticsEvent, "timestamp"> & { timestamp?: number }) => void;
   onClose: (reason?: PopupAnalyticsEvent["closeReason"]) => void;
 }) {
@@ -746,8 +820,16 @@ function PopupSurface({
   const basePopup = ctx.document.popups?.[popupId];
   // V4: apply the assigned variant's patch + pick its content root.
   const resolved = basePopup ? resolvePopupForVariant(basePopup, variantId) : null;
-  const popup = resolved?.popup;
-  const contentRootId = resolved?.rootNodeId ?? basePopup?.rootNodeId;
+  // V5: apply locale patch on top of variant-resolved popup.
+  const localeResolved = resolved?.popup && resolvedLocale
+    ? resolveLocaleContent(basePopup!, resolvedLocale)
+    : null;
+  const popup: PopupDefinition | undefined = (localeResolved?.patch && resolved?.popup)
+    ? { ...resolved.popup, ...localeResolved.patch }
+    : resolved?.popup;
+  const contentRootId = localeResolved?.rootNodeId !== basePopup?.rootNodeId
+    ? localeResolved?.rootNodeId
+    : (resolved?.rootNodeId ?? basePopup?.rootNodeId);
   const surfaceRef = useRef<HTMLDivElement | null>(null);
   const restoreFocusRef = useRef<Element | null>(null);
   const isClosing = lifecycle === "closing";

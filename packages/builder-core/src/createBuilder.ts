@@ -95,6 +95,7 @@ export function createBuilder(config: BuilderConfig = {}): IBuilderAPI {
       activePopupId: null,
       activePopupSelection: null,
       activePopupVariantId: null,
+      activePopupLocale: null,
     },
     interaction: {
       dragOperation: null,

@@ -46,6 +46,16 @@ export type {
   PopupVariant,
   PopupExperiment,
   PopupAnalyticsEvent,
+  // V5
+  FrequencyUnit,
+  PopupFrequencyRule,
+  PopupFrequencyConfig,
+  PopupConditionOperator,
+  PopupTargetingCondition,
+  PopupTargetingGroup,
+  PopupTargeting,
+  PopupSchedule,
+  PopupLocaleContent,
 } from "./document/popups";
 export {
   createDefaultPopupDefinition,
@@ -67,6 +77,13 @@ export {
   resolvePopupForVariant,
   seededRng,
 } from "./popups/experiment";
+export {
+  evaluateTargeting,
+  evaluateSchedule,
+  evaluateFrequency,
+  recordFrequencyImpression,
+  resolveLocaleContent,
+} from "./popups/rules";
 export {
   DEFAULT_POPUP_Z_INDEX_BASE,
   POPUP_Z_INDEX_STEP,
@@ -187,10 +204,18 @@ export {
   CMD_UPDATE_POPUP_VARIANT,
   CMD_REMOVE_POPUP_VARIANT,
   CMD_UPDATE_POPUP_EXPERIMENT,
+  CMD_ADD_POPUP_LOCALE,
+  CMD_UPDATE_POPUP_LOCALE,
+  CMD_REMOVE_POPUP_LOCALE,
+  CMD_RESTORE_POPUP_LOCALE,
+  CMD_UPDATE_POPUP_TARGETING,
+  CMD_UPDATE_POPUP_SCHEDULE,
+  CMD_UPDATE_POPUP_FREQUENCY,
   CMD_SET_CANVAS_MODE,
   CMD_SET_ACTIVE_POPUP,
   CMD_SET_ACTIVE_POPUP_SELECTION,
   CMD_SET_ACTIVE_POPUP_VARIANT,
+  CMD_SET_ACTIVE_POPUP_LOCALE,
   CMD_ENTER_TEXT_EDIT,
   CMD_EXIT_TEXT_EDIT,
   CMD_SET_THEME_COLORS,
@@ -226,6 +251,14 @@ export type {
   RemovePopupVariantPayload,
   UpdatePopupExperimentPayload,
   SetActivePopupVariantPayload,
+  AddPopupLocalePayload,
+  UpdatePopupLocalePayload,
+  RemovePopupLocalePayload,
+  RestorePopupLocalePayload,
+  UpdatePopupTargetingPayload,
+  UpdatePopupSchedulePayload,
+  UpdatePopupFrequencyPayload,
+  SetActivePopupLocalePayload,
   EnterTextEditPayload,
   ExitTextEditPayload,
   SetThemeColorsPayload,
@@ -268,6 +301,7 @@ export { MigrationEngine } from "./migration/MigrationEngine";
 export type { SchemaMigration } from "./migration/types";
 export { popupV3Migration } from "./migration/popupV3Migration";
 export { popupV4Migration } from "./migration/popupV4Migration";
+export { popupV5Migration } from "./migration/popupV5Migration";
 
 // ── Properties (shared descriptor system) ──────────────────────────────────
 export {

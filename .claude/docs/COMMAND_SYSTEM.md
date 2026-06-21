@@ -65,6 +65,13 @@ interface ReversibleCommand<T = unknown> extends Command<T> {
 | `REMOVE_POPUP_VARIANT` | `{ popupId, variantId }`                                 | V4 — remove a variant (cascade-deletes its content root) |
 | `UPDATE_POPUP_EXPERIMENT` | `{ popupId, experiment }`                             | V4 — update experiment/assignment config |
 | `SET_ACTIVE_POPUP_VARIANT` | `{ popupId, variantId: string \| null }`             | V4 — edit a variant's content on canvas (no undo) |
+| `ADD_POPUP_LOCALE`   | `{ popupId, locale, rootNodeId?, cloneFromBase?, popupPatch? }`    | V5 — add locale (clones base content if `cloneFromBase`) |
+| `UPDATE_POPUP_LOCALE` | `{ popupId, locale, patch }`                                       | V5 — edit a locale entry |
+| `REMOVE_POPUP_LOCALE` | `{ popupId, locale }`                                              | V5 — remove a locale (cascade-deletes its content root) |
+| `UPDATE_POPUP_TARGETING` | `{ popupId, targeting: Partial<PopupTargeting> }`             | V5 — update targeting condition groups |
+| `UPDATE_POPUP_SCHEDULE` | `{ popupId, schedule: Partial<PopupSchedule> }`                | V5 — update scheduling config |
+| `UPDATE_POPUP_FREQUENCY` | `{ popupId, frequency: Partial<PopupFrequencyConfig> }`       | V5 — update frequency cap config |
+| `SET_ACTIVE_POPUP_LOCALE` | `{ popupId, locale: string \| null }`                        | V5 — edit a locale's content on canvas (no undo) |
 | `UPDATE_RESPONSIVE_PROPS` | `{ nodeId, breakpoint, props }`                                     | Breakpoint-specific props override |
 | `RESET_RESPONSIVE_STYLE` | `{ nodeId, breakpoint }`                                             | Clear all breakpoint style overrides |
 | `ENTER_TEXT_EDIT`    | `{ nodeId }`                                                                 | Enter inline text edit mode (no undo) |
@@ -194,10 +201,11 @@ interface MigrationEngine {
 }
 ```
 
-Current `CURRENT_SCHEMA_VERSION` is `2.5.0`. Consumer-registered popup
-migrations: `popupV3Migration` (`2.3.0 → 2.4.0`, fills behavior defaults) and
-`popupV4Migration` (`2.4.0 → 2.5.0`, additive — goals/variants/experiment are
-optional, so it only bumps the version).
+Current `CURRENT_SCHEMA_VERSION` is `2.6.0`. Consumer-registered popup
+migrations: `popupV3Migration` (`2.3.0 → 2.4.0`, fills behavior defaults),
+`popupV4Migration` (`2.4.0 → 2.5.0`, additive — goals/variants/experiment), and
+`popupV5Migration` (`2.5.0 → 2.6.0`, additive — locales/targeting/scheduling/
+frequency are all optional, so it only bumps the version).
 
 **Migration Contracts:**
 

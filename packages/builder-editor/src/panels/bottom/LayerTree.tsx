@@ -371,6 +371,28 @@ function PopupLayerItem({
               />
             </div>
           ))}
+      {/* V5: Locale content roots appear as their own group. */}
+      {expanded &&
+        (popup.locales ?? [])
+          .filter((lc) => lc.rootNodeId && document.nodes[lc.rootNodeId])
+          .map((lc) => (
+            <div key={lc.locale} className="w-full min-w-0">
+              <div className="flex h-6 items-center gap-1 pl-8 text-[10px] uppercase tracking-wide text-muted-foreground">
+                <span className="truncate">Locale · {lc.locale}</span>
+              </div>
+              <LayerItem
+                node={document.nodes[lc.rootNodeId!]!}
+                depth={3}
+                document={document}
+                selectedIds={selectedIds}
+                onSelect={onSelect}
+                onToggleHidden={onToggleHidden}
+                onToggleLocked={onToggleLocked}
+                onNodeHover={onNodeHover}
+                searchText={searchText}
+              />
+            </div>
+          ))}
     </div>
   );
 }

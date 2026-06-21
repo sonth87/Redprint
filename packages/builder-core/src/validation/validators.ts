@@ -67,7 +67,44 @@ const PopupSchema = z.object({
     durationMs: z.number(),
     easing: z.string().optional(),
   }).passthrough(),
-  rules: z.object({}).passthrough(),
+  rules: z.object({
+    devices: z.array(z.string()).optional(),
+    showOncePerSession: z.boolean().optional(),
+    showOnceEveryDays: z.number().optional(),
+    maxShows: z.number().optional(),
+    hideAfterSubmit: z.boolean().optional(),
+    // V5
+    frequency: z.object({
+      cap: z.object({
+        maxShows: z.number(),
+        per: z.enum(["session", "hour", "day", "week", "month"]),
+      }).optional(),
+      suppressAfterGoalIds: z.array(z.string()).optional(),
+      storageKeyPrefix: z.string().optional(),
+    }).passthrough().optional(),
+    targeting: z.object({
+      enabled: z.boolean(),
+      groups: z.array(z.object({
+        match: z.enum(["all", "any"]),
+        conditions: z.array(z.object({
+          variable: z.string(),
+          operator: z.enum(["eq","neq","gt","lt","gte","lte","contains","truthy","falsy","in","notIn","matches"]),
+          value: z.unknown().optional(),
+        }).passthrough()),
+      }).passthrough()).optional(),
+    }).passthrough().optional(),
+    scheduling: z.object({
+      enabled: z.boolean(),
+      startDate: z.string().optional(),
+      endDate: z.string().optional(),
+      timezone: z.string().optional(),
+      timeWindow: z.object({
+        startHour: z.number(),
+        endHour: z.number(),
+        daysOfWeek: z.array(z.number()).optional(),
+      }).optional(),
+    }).passthrough().optional(),
+  }).passthrough(),
   // V3 — optional runtime stacking policy
   runtimeState: z.object({
     stackMode: z.enum(["single", "multiple", "replace-same-kind"]).optional(),
@@ -100,6 +137,15 @@ const PopupSchema = z.object({
     seed: z.string().optional(),
     winnerVariantId: z.string().optional(),
   }).passthrough().optional(),
+  // V5 — optional locale/targeting/scheduling/frequency (absent = base behavior)
+  locales: z.array(
+    z.object({
+      locale: z.string(),
+      rootNodeId: z.string().optional(),
+      popupPatch: z.record(z.unknown()).optional(),
+    }).passthrough()
+  ).optional(),
+  fallbackLocale: z.string().optional(),
   metadata: z.object({
     createdAt: z.string(),
     updatedAt: z.string(),

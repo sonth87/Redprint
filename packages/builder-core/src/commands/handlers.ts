@@ -10,7 +10,7 @@
 import { v4 as uuidv4 } from "uuid";
 import type { BuilderState, ClipboardData } from "../state/types";
 import type { BuilderNode, NodeMetadata, StyleConfig } from "../document/types";
-import type { PopupDefinition, PopupNodeTemplate } from "../document/popups";
+import type { PopupDefinition, PopupNodeTemplate, PopupLocaleContent } from "../document/popups";
 import { createDefaultPopupDefinition } from "../document/popups";
 import type { CommandEngine } from "./CommandEngine";
 import type { ComponentRegistry } from "../registry/ComponentRegistry";
@@ -55,10 +55,18 @@ import {
   CMD_REMOVE_POPUP_VARIANT,
   CMD_RESTORE_POPUP_VARIANT,
   CMD_UPDATE_POPUP_EXPERIMENT,
+  CMD_ADD_POPUP_LOCALE,
+  CMD_UPDATE_POPUP_LOCALE,
+  CMD_REMOVE_POPUP_LOCALE,
+  CMD_RESTORE_POPUP_LOCALE,
+  CMD_UPDATE_POPUP_TARGETING,
+  CMD_UPDATE_POPUP_SCHEDULE,
+  CMD_UPDATE_POPUP_FREQUENCY,
   CMD_SET_CANVAS_MODE,
   CMD_SET_ACTIVE_POPUP,
   CMD_SET_ACTIVE_POPUP_SELECTION,
   CMD_SET_ACTIVE_POPUP_VARIANT,
+  CMD_SET_ACTIVE_POPUP_LOCALE,
   CMD_ENTER_TEXT_EDIT,
   CMD_EXIT_TEXT_EDIT,
   CMD_SET_THEME_COLORS,
@@ -97,11 +105,19 @@ import {
   type RestorePopupVariantPayload,
   type UpdatePopupExperimentPayload,
   type SetActivePopupVariantPayload,
+  type AddPopupLocalePayload,
+  type UpdatePopupLocalePayload,
+  type RemovePopupLocalePayload,
+  type RestorePopupLocalePayload,
+  type UpdatePopupTargetingPayload,
+  type UpdatePopupSchedulePayload,
+  type UpdatePopupFrequencyPayload,
+  type SetActivePopupLocalePayload,
   type EnterTextEditPayload,
   type ExitTextEditPayload,
   type SetThemeColorsPayload,
 } from "./built-in";
-import type { PopupGoal, PopupVariant } from "../document/popups";
+import type { PopupGoal, PopupVariant, PopupTargeting, PopupSchedule, PopupFrequencyConfig } from "../document/popups";
 
 // ── Editor-only command types (no undo/redo) ─────────────────────────────
 
@@ -212,14 +228,16 @@ function collectSubtreeSnapshot(
 }
 
 /**
- * V4: all content roots owned by a popup — the base root plus every variant's
- * own `rootNodeId` (patch-only variants own no root). Used for cascade delete
- * and deep-clone-on-duplicate so variant content never orphans.
+ * V4+V5: all content roots owned by a popup — base root + variant roots + locale roots.
+ * Used for cascade-delete and deep-clone-on-duplicate so no content orphans.
  */
 function popupOwnedRoots(popup: PopupDefinition): string[] {
   const roots = [popup.rootNodeId];
   for (const variant of popup.variants ?? []) {
     if (variant.rootNodeId) roots.push(variant.rootNodeId);
+  }
+  for (const locale of popup.locales ?? []) {
+    if (locale.rootNodeId) roots.push(locale.rootNodeId);
   }
   return roots;
 }
@@ -1305,6 +1323,14 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
       // V4: regenerate goal ids so the duplicate has independent goals.
       const newGoals = popup.goals?.map((goal) => ({ ...goal, id: uuidv4() }));
 
+      // V5: deep-clone each locale's owned content root and remap locale roots.
+      const newLocales = popup.locales?.map((locale) => {
+        if (!locale.rootNodeId) return { ...locale };
+        const cloned = cloneSubtree(locale.rootNodeId, state.document.nodes, { x: 0, y: 0 });
+        Object.assign(allNewNodes, cloned.newNodes);
+        return { ...locale, rootNodeId: cloned.newRootId };
+      });
+
       const duplicated: PopupDefinition = {
         ...popup,
         id: newPopupId,
@@ -1313,6 +1339,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
         ...(newVariants ? { variants: newVariants } : {}),
         ...(newGoals ? { goals: newGoals } : {}),
         ...(popup.experiment ? { experiment: { ...popup.experiment } } : {}),
+        ...(newLocales ? { locales: newLocales } : {}),
         metadata: { ...popup.metadata, createdAt: timestamp, updatedAt: timestamp },
       };
       return {
@@ -1634,6 +1661,231 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
     },
   );
 
+  // ── V5: locale commands ────────────────────────────────────────────────────
+
+  engine.registerHandler<AddPopupLocalePayload>(
+    CMD_ADD_POPUP_LOCALE,
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      if (!popup) return state;
+      const existing = popup.locales?.find((l) => l.locale === payload.locale);
+      if (existing) return state; // locale already exists
+      let rootNodeId: string | undefined;
+      let newNodes = {};
+      if (payload.cloneFromBase) {
+        const cloned = cloneSubtree(
+          popup.rootNodeId,
+          state.document.nodes,
+          { x: 0, y: 0 },
+          payload.rootNodeId,
+        );
+        rootNodeId = cloned.newRootId;
+        newNodes = cloned.newNodes;
+      } else {
+        rootNodeId = payload.rootNodeId;
+      }
+      const localeEntry: PopupLocaleContent = {
+        locale: payload.locale,
+        ...(rootNodeId ? { rootNodeId } : {}),
+        ...(payload.popupPatch ? { popupPatch: payload.popupPatch } : {}),
+      };
+      return {
+        ...setPopup(state, payload.popupId, {
+          locales: [...(popup.locales ?? []), localeEntry],
+        }),
+        document: {
+          ...setPopup(state, payload.popupId, {
+            locales: [...(popup.locales ?? []), localeEntry],
+          }).document,
+          nodes: { ...state.document.nodes, ...newNodes },
+        },
+      };
+    },
+    (state, payload) => ({
+      type: CMD_REMOVE_POPUP_LOCALE,
+      payload: { popupId: payload.popupId, locale: payload.locale } as RemovePopupLocalePayload,
+    }),
+  );
+
+  engine.registerHandler<UpdatePopupLocalePayload>(
+    CMD_UPDATE_POPUP_LOCALE,
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      if (!popup) return state;
+      const oldEntry = popup.locales?.find((l) => l.locale === payload.locale);
+      if (!oldEntry) return state;
+      return setPopup(state, payload.popupId, {
+        locales: (popup.locales ?? []).map((l) =>
+          l.locale === payload.locale ? { ...l, ...payload.patch } : l,
+        ),
+      });
+    },
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      const oldEntry = popup?.locales?.find((l) => l.locale === payload.locale);
+      if (!oldEntry) return undefined;
+      return {
+        type: CMD_UPDATE_POPUP_LOCALE,
+        payload: {
+          popupId: payload.popupId,
+          locale: payload.locale,
+          patch: { rootNodeId: oldEntry.rootNodeId, popupPatch: oldEntry.popupPatch },
+        } as UpdatePopupLocalePayload,
+      };
+    },
+  );
+
+  engine.registerHandler<RemovePopupLocalePayload>(
+    CMD_REMOVE_POPUP_LOCALE,
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      if (!popup) return state;
+      const entry = popup.locales?.find((l) => l.locale === payload.locale);
+      if (!entry) return state;
+      let newNodes = { ...state.document.nodes };
+      if (entry.rootNodeId && newNodes[entry.rootNodeId]) {
+        const toRemove = new Set<string>([
+          entry.rootNodeId,
+          ...collectDescendants(entry.rootNodeId, newNodes),
+        ]);
+        for (const id of toRemove) delete newNodes[id];
+      }
+      const nextState = setPopup(state, payload.popupId, {
+        locales: (popup.locales ?? []).filter((l) => l.locale !== payload.locale),
+      });
+      return { ...nextState, document: { ...nextState.document, nodes: newNodes } };
+    },
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      const entry = popup?.locales?.find((l) => l.locale === payload.locale);
+      if (!entry) return undefined;
+      const index = popup?.locales?.findIndex((l) => l.locale === payload.locale) ?? -1;
+      const nodeSnapshot = entry.rootNodeId
+        ? collectSubtreeSnapshot(entry.rootNodeId, state.document.nodes)
+        : undefined;
+      return {
+        type: CMD_RESTORE_POPUP_LOCALE,
+        payload: {
+          popupId: payload.popupId,
+          localeContent: entry,
+          nodes: nodeSnapshot,
+          index,
+        } as RestorePopupLocalePayload,
+      };
+    },
+  );
+
+  engine.registerHandler<RestorePopupLocalePayload>(
+    CMD_RESTORE_POPUP_LOCALE,
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      if (!popup) return state;
+      const locales = [...(popup.locales ?? [])];
+      const insertAt = payload.index !== undefined && payload.index >= 0
+        ? Math.min(payload.index, locales.length)
+        : locales.length;
+      locales.splice(insertAt, 0, payload.localeContent);
+      const nextState = setPopup(state, payload.popupId, { locales });
+      const restoredNodes = payload.nodes ?? {};
+      return {
+        ...nextState,
+        document: {
+          ...nextState.document,
+          nodes: { ...nextState.document.nodes, ...restoredNodes },
+        },
+      };
+    },
+    (state, payload) => ({
+      type: CMD_REMOVE_POPUP_LOCALE,
+      payload: { popupId: payload.popupId, locale: payload.localeContent.locale } as RemovePopupLocalePayload,
+    }),
+  );
+
+  engine.registerHandler<UpdatePopupTargetingPayload>(
+    CMD_UPDATE_POPUP_TARGETING,
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      if (!popup) return state;
+      const prev = popup.rules.targeting as PopupTargeting | undefined;
+      return setPopup(state, payload.popupId, {
+        rules: { ...popup.rules, targeting: prev ? { ...prev, ...payload.targeting } : (payload.targeting as PopupTargeting) },
+      });
+    },
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      if (!popup) return undefined;
+      // Restore exact prior rules (including undefined fields) via UPDATE_POPUP
+      const prevRules = popup.rules;
+      return {
+        type: CMD_UPDATE_POPUP,
+        payload: { popupId: payload.popupId, popup: { rules: prevRules } } as UpdatePopupPayload,
+      };
+    },
+  );
+
+  engine.registerHandler<UpdatePopupSchedulePayload>(
+    CMD_UPDATE_POPUP_SCHEDULE,
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      if (!popup) return state;
+      const prev = popup.rules.scheduling as PopupSchedule | undefined;
+      return setPopup(state, payload.popupId, {
+        rules: { ...popup.rules, scheduling: prev ? { ...prev, ...payload.schedule } : (payload.schedule as PopupSchedule) },
+      });
+    },
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      if (!popup) return undefined;
+      const prevRules = popup.rules;
+      return {
+        type: CMD_UPDATE_POPUP,
+        payload: { popupId: payload.popupId, popup: { rules: prevRules } } as UpdatePopupPayload,
+      };
+    },
+  );
+
+  engine.registerHandler<UpdatePopupFrequencyPayload>(
+    CMD_UPDATE_POPUP_FREQUENCY,
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      if (!popup) return state;
+      const prev = popup.rules.frequency as PopupFrequencyConfig | undefined;
+      return setPopup(state, payload.popupId, {
+        rules: { ...popup.rules, frequency: prev ? { ...prev, ...payload.frequency } : (payload.frequency as PopupFrequencyConfig) },
+      });
+    },
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      if (!popup) return undefined;
+      const prevRules = popup.rules;
+      return {
+        type: CMD_UPDATE_POPUP,
+        payload: { popupId: payload.popupId, popup: { rules: prevRules } } as UpdatePopupPayload,
+      };
+    },
+  );
+
+  // ── V5: editor-only — active locale being edited (no undo) ────────────────
+  engine.registerHandler<SetActivePopupLocalePayload>(
+    CMD_SET_ACTIVE_POPUP_LOCALE,
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      if (!popup || state.editor.activePopupId !== payload.popupId) return state;
+      const valid = payload.locale
+        ? popup.locales?.some((l) => l.locale === payload.locale && l.rootNodeId)
+        : true;
+      return {
+        ...state,
+        editor: {
+          ...state.editor,
+          activePopupLocale: valid ? payload.locale : null,
+          activePopupSelection: "content",
+          selectedNodeIds: [],
+        },
+      };
+    },
+  );
+
   // ── LOAD_COMPONENT (async — no-op in command layer) ────────────────────
   engine.registerHandler(
     "LOAD_COMPONENT",
@@ -1879,6 +2131,7 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
           activePopupId: payload.popupId,
           activePopupSelection: popup ? "shell" : null,
           activePopupVariantId: null,
+          activePopupLocale: null,
           selectedNodeIds: [],
         },
       };

@@ -55,11 +55,21 @@ export const CMD_REMOVE_POPUP_VARIANT = "REMOVE_POPUP_VARIANT" as const;
 export const CMD_RESTORE_POPUP_VARIANT = "RESTORE_POPUP_VARIANT" as const;
 export const CMD_UPDATE_POPUP_EXPERIMENT = "UPDATE_POPUP_EXPERIMENT" as const;
 
+// Popups — V5 locales / targeting / scheduling / frequency
+export const CMD_ADD_POPUP_LOCALE = "ADD_POPUP_LOCALE" as const;
+export const CMD_UPDATE_POPUP_LOCALE = "UPDATE_POPUP_LOCALE" as const;
+export const CMD_REMOVE_POPUP_LOCALE = "REMOVE_POPUP_LOCALE" as const;
+export const CMD_RESTORE_POPUP_LOCALE = "RESTORE_POPUP_LOCALE" as const;
+export const CMD_UPDATE_POPUP_TARGETING = "UPDATE_POPUP_TARGETING" as const;
+export const CMD_UPDATE_POPUP_SCHEDULE = "UPDATE_POPUP_SCHEDULE" as const;
+export const CMD_UPDATE_POPUP_FREQUENCY = "UPDATE_POPUP_FREQUENCY" as const;
+
 // Editor UI
 export const CMD_SET_CANVAS_MODE = "SET_CANVAS_MODE" as const;
 export const CMD_SET_ACTIVE_POPUP = "SET_ACTIVE_POPUP" as const;
 export const CMD_SET_ACTIVE_POPUP_SELECTION = "SET_ACTIVE_POPUP_SELECTION" as const;
 export const CMD_SET_ACTIVE_POPUP_VARIANT = "SET_ACTIVE_POPUP_VARIANT" as const;
+export const CMD_SET_ACTIVE_POPUP_LOCALE = "SET_ACTIVE_POPUP_LOCALE" as const;
 
 // Document theme
 export const CMD_SET_THEME_COLORS = "SET_THEME_COLORS" as const;
@@ -78,6 +88,10 @@ import type {
   PopupGoal,
   PopupVariant,
   PopupExperiment,
+  PopupLocaleContent,
+  PopupTargeting,
+  PopupSchedule,
+  PopupFrequencyConfig,
 } from "../document/popups";
 import type { BuilderNode } from "../document/types";
 import type { PopupSelectionMode } from "../state/types";
@@ -334,4 +348,57 @@ export interface ExitTextEditPayload {
 
 export interface SetThemeColorsPayload {
   colors: string[];
+}
+
+// ── V5: locales / targeting / scheduling / frequency ───────────────────────────
+
+export interface AddPopupLocalePayload {
+  popupId: string;
+  locale: string;
+  /** Pre-generated content root id (only used when cloneFromBase). */
+  rootNodeId?: string;
+  /** When true, deep-clone base content into an owned locale root. */
+  cloneFromBase?: boolean;
+  popupPatch?: PopupLocaleContent["popupPatch"];
+}
+
+export interface UpdatePopupLocalePayload {
+  popupId: string;
+  locale: string;
+  patch: Partial<Omit<PopupLocaleContent, "locale">>;
+}
+
+export interface RemovePopupLocalePayload {
+  popupId: string;
+  locale: string;
+}
+
+/** Internal inverse of REMOVE_POPUP_LOCALE — restores the locale entry + its nodes. */
+export interface RestorePopupLocalePayload {
+  popupId: string;
+  localeContent: PopupLocaleContent;
+  /** Snapshot of the locale's owned content nodes (if any). */
+  nodes?: Record<string, BuilderNode>;
+  /** Index at which to reinsert the locale entry. */
+  index?: number;
+}
+
+export interface UpdatePopupTargetingPayload {
+  popupId: string;
+  targeting: Partial<PopupTargeting>;
+}
+
+export interface UpdatePopupSchedulePayload {
+  popupId: string;
+  schedule: Partial<PopupSchedule>;
+}
+
+export interface UpdatePopupFrequencyPayload {
+  popupId: string;
+  frequency: Partial<PopupFrequencyConfig>;
+}
+
+export interface SetActivePopupLocalePayload {
+  popupId: string;
+  locale: string | null;
 }

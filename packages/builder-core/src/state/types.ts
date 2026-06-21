@@ -119,6 +119,11 @@ export interface EditorState {
    * means the base content. Cleared whenever the active popup changes.
    */
   activePopupVariantId?: string | null;
+  /**
+   * V5: which locale content tree the canvas is editing. `null`/absent means
+   * the base content. Cleared whenever the active popup changes.
+   */
+  activePopupLocale?: string | null;
 }
 
 // ── Interaction state ─────────────────────────────────────────────────────

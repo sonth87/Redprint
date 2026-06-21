@@ -249,13 +249,16 @@ function EditorInner({
   const activePopupId = state.editor.activePopupId ?? null;
   const activePopupSelection = state.editor.activePopupSelection ?? null;
   const activePopupVariantId = state.editor.activePopupVariantId ?? null;
+  const activePopupLocale = state.editor.activePopupLocale ?? null;
   const activePopup = activePopupId ? (document.popups?.[activePopupId] ?? null) : null;
-  // V4: when editing a variant that owns its own content tree, the canvas
-  // targets that variant's root; otherwise the popup's base root.
+  // Priority chain: variant root → locale root → base popup root.
   const activeVariantRootNodeId = activePopupVariantId
     ? activePopup?.variants?.find((v) => v.id === activePopupVariantId)?.rootNodeId
     : undefined;
-  const activeRootNodeId = activeVariantRootNodeId ?? activePopup?.rootNodeId ?? document.rootNodeId;
+  const activeLocaleRootNodeId = !activeVariantRootNodeId && activePopupLocale
+    ? activePopup?.locales?.find((lc) => lc.locale === activePopupLocale)?.rootNodeId
+    : undefined;
+  const activeRootNodeId = activeVariantRootNodeId ?? activeLocaleRootNodeId ?? activePopup?.rootNodeId ?? document.rootNodeId;
 
   // ── Panel state ──────────────────────────────────────────────────────────
   const {
@@ -368,6 +371,36 @@ function EditorInner({
 
   const handleUpdateExperiment = React.useCallback((popupId: string, experiment: Record<string, unknown>) => {
     dispatchPopupCommand({ type: "UPDATE_POPUP_EXPERIMENT", payload: { popupId, experiment }, description: "Update experiment" });
+  }, [dispatchPopupCommand]);
+
+  // ── V5: Locale handlers ──────────────────────────────────────────────────
+  const handleAddLocale = React.useCallback((popupId: string, locale: string, opts: { cloneFromBase?: boolean }) => {
+    dispatchPopupCommand({ type: "ADD_POPUP_LOCALE", payload: { popupId, locale, rootNodeId: opts.cloneFromBase ? uuidv4() : undefined, cloneFromBase: opts.cloneFromBase }, description: "Add popup locale" });
+  }, [dispatchPopupCommand]);
+
+  const handleUpdateLocale = React.useCallback((popupId: string, locale: string, patch: Record<string, unknown>) => {
+    dispatchPopupCommand({ type: "UPDATE_POPUP_LOCALE", payload: { popupId, locale, patch }, description: "Update popup locale" });
+  }, [dispatchPopupCommand]);
+
+  const handleRemoveLocale = React.useCallback((popupId: string, locale: string) => {
+    dispatchPopupCommand({ type: "REMOVE_POPUP_LOCALE", payload: { popupId, locale }, description: "Remove popup locale" });
+  }, [dispatchPopupCommand]);
+
+  const handleEditLocaleContent = React.useCallback((popupId: string, locale: string | null) => {
+    dispatchPopupCommand({ type: "SET_ACTIVE_POPUP_LOCALE", payload: { popupId, locale }, description: "Edit locale content" });
+  }, [dispatchPopupCommand]);
+
+  // ── V5: Targeting / Schedule / Frequency handlers ────────────────────────
+  const handleUpdateTargeting = React.useCallback((popupId: string, targeting: Record<string, unknown>) => {
+    dispatchPopupCommand({ type: "UPDATE_POPUP_TARGETING", payload: { popupId, targeting }, description: "Update popup targeting" });
+  }, [dispatchPopupCommand]);
+
+  const handleUpdateSchedule = React.useCallback((popupId: string, schedule: Record<string, unknown>) => {
+    dispatchPopupCommand({ type: "UPDATE_POPUP_SCHEDULE", payload: { popupId, schedule }, description: "Update popup schedule" });
+  }, [dispatchPopupCommand]);
+
+  const handleUpdateFrequency = React.useCallback((popupId: string, frequency: Record<string, unknown>) => {
+    dispatchPopupCommand({ type: "UPDATE_POPUP_FREQUENCY", payload: { popupId, frequency }, description: "Update popup frequency" });
   }, [dispatchPopupCommand]);
 
   const handleDuplicatePopup = React.useCallback((popupId: string) => {
@@ -842,6 +875,16 @@ function EditorInner({
                   onEditVariantContent: handleEditVariantContent,
                   onUpdateExperiment: handleUpdateExperiment,
                   activeVariantId: state.editor.activePopupVariantId ?? null,
+                }}
+                v5={{
+                  onAddLocale: handleAddLocale,
+                  onUpdateLocale: handleUpdateLocale,
+                  onRemoveLocale: handleRemoveLocale,
+                  onEditLocaleContent: handleEditLocaleContent,
+                  activeLocale: activePopupLocale,
+                  onUpdateTargeting: handleUpdateTargeting,
+                  onUpdateSchedule: handleUpdateSchedule,
+                  onUpdateFrequency: handleUpdateFrequency,
                 }}
               />
             ) : selectedNode ? (

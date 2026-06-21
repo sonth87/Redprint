@@ -149,6 +149,46 @@ Emission points:
 When `RendererConfig.isPreview` is true, every event is tagged
 `metadata.preview = true` so hosts can drop preview traffic.
 
+### V5 Pre-open Eligibility & Localization
+
+Before a popup opens, the runtime runs three pure eligibility checks in order
+(from `builder-core/src/popups/rules.ts`). If any fails, the popup does not open
+and a `popup_rules_blocked` analytics event is emitted with `rulesBlockReason`:
+
+1. **Schedule** — `evaluateSchedule(popup.rules.scheduling, Date.now())`. Checks
+   `startDate`/`endDate` in the configured IANA timezone (via `Intl.DateTimeFormat`),
+   then `timeWindow` (hours + days of week). Absent or `enabled: false` = pass.
+2. **Targeting** — `evaluateTargeting(popup.rules.targeting, popupContext)`. Evaluates
+   composable condition groups (AND across groups; configurable match within each group).
+   Context variables are read from `RendererConfig.popupContext` via dot-notation.
+   Absent or `enabled: false` = pass.
+3. **Frequency** — `evaluateFrequency(popup.rules.frequency, legacyRules, getCount, …)`.
+   Checks frequency cap (`maxShows` per `FrequencyUnit`) and `suppressAfterGoalIds`.
+   Falls back to legacy `showOncePerSession`/`showOnceEveryDays`/`maxShows` fields.
+   Absent cap = pass. After a popup opens, `recordFrequencyImpression` returns the
+   storage key + new count for the runtime to persist.
+
+**Frequency storage.** `per: "session"` uses `sessionStorage`; all other units use
+`localStorage` with a `storedAt` epoch for window-expiry. Host can override both
+read and write via `RendererConfig.getFrequencyCount`/`setFrequencyCount`.
+
+**Locale resolution.** After eligibility passes, `resolveLocaleContent(popup, locale)`
+selects the content root and patch. Priority: `RendererConfig.locale` → 
+`navigator.language` → `popup.fallbackLocale` → base content. Match order:
+exact locale tag → language-prefix match ("fr" matches "fr-CA") → fallback → base.
+Locale-specific `popupPatch` is applied on top of the variant-resolved popup config.
+Locale `rootNodeId` takes precedence over the base root when a content tree is
+present. A `popup_locale_resolved` analytics event carries the resolved locale tag.
+
+**New `RendererConfig` fields (V5):**
+
+| Field | Type | Default | Purpose |
+|---|---|---|---|
+| `popupContext` | `Record<string, unknown>` | `{}` | Variables for targeting evaluation |
+| `locale` | `string` | `navigator.language` | BCP-47 tag for locale resolution |
+| `getFrequencyCount` | `(key) => { count, storedAt } \| undefined` | localStorage | Override frequency storage read |
+| `setFrequencyCount` | `(key, count, expiresAt?) => void` | localStorage | Override frequency storage write |
+
 ### Performance Optimization
 
 - Memoize component renders by node id + props hash

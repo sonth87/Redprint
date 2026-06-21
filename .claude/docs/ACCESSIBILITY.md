@@ -166,6 +166,13 @@ focus restore apply identically regardless of which variant is shown. Variant
 content must independently satisfy modal a11y (focusable close path, labelled
 controls).
 
+**V5 (locale content):** locale-specific content roots are subject to the same
+modal a11y contract as base and variant content. When a locale root is active,
+the rendered content must include a focusable close path, correctly labelled
+controls, and unbroken focus trap. The locale patch (`popupPatch`) may not remove
+or override `behavior.trapFocus`, `behavior.closeOnEscape`, or the close button
+without providing an equivalent accessible path.
+
 ### ARIA Landmarks
 
 Editor shell structure:

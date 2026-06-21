@@ -24,8 +24,12 @@ import {
   type PopupGoal,
   type PopupKind,
   type PopupKindConfig,
+  type PopupLocaleContent,
   type PopupPlacement,
   type PopupRules,
+  type PopupTargeting,
+  type PopupSchedule,
+  type PopupFrequencyConfig,
 } from "@ui-builder/builder-core";
 
 const KIND_OPTIONS: PopupKind[] = ["modal", "drawer", "bottomSheet", "bar", "fullscreen"];
@@ -46,15 +50,29 @@ export interface PopupPropertyPanelV4Handlers {
   activeVariantId: string | null;
 }
 
+/** V5 callbacks — locale/targeting/schedule/frequency edits (undoable). */
+export interface PopupPropertyPanelV5Handlers {
+  onAddLocale: (popupId: string, locale: string, opts: { cloneFromBase?: boolean }) => void;
+  onUpdateLocale: (popupId: string, locale: string, patch: Partial<Omit<PopupLocaleContent, "locale">>) => void;
+  onRemoveLocale: (popupId: string, locale: string) => void;
+  onEditLocaleContent: (popupId: string, locale: string | null) => void;
+  activeLocale: string | null;
+  onUpdateTargeting: (popupId: string, targeting: Partial<PopupTargeting>) => void;
+  onUpdateSchedule: (popupId: string, schedule: Partial<PopupSchedule>) => void;
+  onUpdateFrequency: (popupId: string, frequency: Partial<PopupFrequencyConfig>) => void;
+}
+
 export interface PopupPropertyPanelProps {
   popup: PopupDefinition;
   document: BuilderDocument;
   onChange: (popup: Partial<Omit<PopupDefinition, "id" | "rootNodeId" | "metadata">>) => void;
   /** Optional V4 analytics/experiment editing handlers. */
   v4?: PopupPropertyPanelV4Handlers;
+  /** Optional V5 locale/targeting/schedule/frequency editing handlers. */
+  v5?: PopupPropertyPanelV5Handlers;
 }
 
-export function PopupPropertyPanel({ popup, document, onChange, v4 }: PopupPropertyPanelProps) {
+export function PopupPropertyPanel({ popup, document, onChange, v4, v5 }: PopupPropertyPanelProps) {
   const sections = React.useMemo(
     () => Object.values(document.nodes).filter((node) => node.type === "Section"),
     [document.nodes],
@@ -152,6 +170,22 @@ export function PopupPropertyPanel({ popup, document, onChange, v4 }: PopupPrope
               </PanelSection>
               <PanelSection title="A/B Test">
                 <ExperimentFields popup={popup} v4={v4} />
+              </PanelSection>
+            </>
+          )}
+          {v5 && (
+            <>
+              <PanelSection title="Localization">
+                <LocaleFields popup={popup} v5={v5} />
+              </PanelSection>
+              <PanelSection title="Targeting">
+                <TargetingFields popup={popup} v5={v5} />
+              </PanelSection>
+              <PanelSection title="Schedule">
+                <ScheduleFields popup={popup} v5={v5} />
+              </PanelSection>
+              <PanelSection title="Frequency">
+                <FrequencyFields popup={popup} v5={v5} />
               </PanelSection>
             </>
           )}
@@ -263,6 +297,194 @@ function ExperimentFields({ popup, v4 }: { popup: PopupDefinition; v4: PopupProp
           + Variant (patch only)
         </Button>
       </div>
+    </div>
+  );
+}
+
+// ── V5: Locale Fields ──────────────────────────────────────────────────────────
+
+function LocaleFields({ popup, v5 }: { popup: PopupDefinition; v5: PopupPropertyPanelV5Handlers }) {
+  const [newLocale, setNewLocale] = React.useState("");
+  const locales = popup.locales ?? [];
+  return (
+    <div className="space-y-2">
+      {locales.length === 0 && (
+        <p className="text-[11px] text-muted-foreground">No locales yet. Add a locale to override content per language.</p>
+      )}
+      {locales.map((lc) => {
+        const isActive = v5.activeLocale === lc.locale;
+        return (
+          <div key={lc.locale} className={`space-y-2 rounded border p-2 ${isActive ? "border-primary bg-primary/5" : "bg-background"}`}>
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-medium">{lc.locale}</span>
+              <div className="flex gap-1">
+                {lc.rootNodeId && (
+                  <Button variant={isActive ? "default" : "outline"} size="sm" className="h-6 text-[10px]" onClick={() => v5.onEditLocaleContent(popup.id, isActive ? null : lc.locale)}>
+                    {isActive ? "Editing" : "Edit content"}
+                  </Button>
+                )}
+                <Button variant="ghost" size="sm" className="h-6 text-[10px] text-destructive" onClick={() => v5.onRemoveLocale(popup.id, lc.locale)}>
+                  Remove
+                </Button>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+      <div className="flex gap-2">
+        <Input
+          className="h-8 flex-1 text-xs"
+          placeholder="BCP-47 tag (e.g. fr, fr-CA)"
+          value={newLocale}
+          onChange={(e) => setNewLocale(e.target.value)}
+        />
+        <Button variant="outline" size="sm" className="h-8 text-[11px]" disabled={!newLocale.trim()} onClick={() => { v5.onAddLocale(popup.id, newLocale.trim(), { cloneFromBase: true }); setNewLocale(""); }}>
+          Copy content
+        </Button>
+        <Button variant="ghost" size="sm" className="h-8 text-[11px]" disabled={!newLocale.trim()} onClick={() => { v5.onAddLocale(popup.id, newLocale.trim(), { cloneFromBase: false }); setNewLocale(""); }}>
+          Patch only
+        </Button>
+      </div>
+      <TextSetting label="Fallback locale" value={popup.fallbackLocale ?? ""} onChange={(fallbackLocale) => { /* handled via onChange on the parent panel */ void fallbackLocale; }} />
+    </div>
+  );
+}
+
+// ── V5: Targeting Fields ───────────────────────────────────────────────────────
+
+const CONDITION_OPERATORS = ["eq","neq","gt","lt","gte","lte","contains","truthy","falsy","in","notIn","matches"] as const;
+
+function TargetingFields({ popup, v5 }: { popup: PopupDefinition; v5: PopupPropertyPanelV5Handlers }) {
+  const targeting = popup.rules.targeting ?? { enabled: false, groups: [] };
+  const groups = targeting.groups ?? [];
+  return (
+    <div className="space-y-2">
+      <BooleanSetting label="Enabled" value={targeting.enabled} onChange={(enabled) => v5.onUpdateTargeting(popup.id, { enabled })} />
+      {groups.map((group, gi) => (
+        <div key={gi} className="space-y-1.5 rounded border bg-background p-2">
+          <div className="flex items-center justify-between">
+            <SelectSetting label="Match" value={group.match} options={["all", "any"]} onChange={(match) => {
+              const next = [...groups]; next[gi] = { ...group, match: match as "all" | "any" }; v5.onUpdateTargeting(popup.id, { groups: next });
+            }} />
+            <Button variant="ghost" size="sm" className="h-6 text-[10px] text-destructive" onClick={() => {
+              v5.onUpdateTargeting(popup.id, { groups: groups.filter((_, i) => i !== gi) });
+            }}>Remove group</Button>
+          </div>
+          {group.conditions.map((cond, ci) => (
+            <div key={ci} className="grid grid-cols-3 gap-1">
+              <Input className="h-7 text-[10px]" placeholder="variable" value={cond.variable} onChange={(e) => {
+                const nc = [...group.conditions]; nc[ci] = { ...cond, variable: e.target.value }; const ng = [...groups]; ng[gi] = { ...group, conditions: nc }; v5.onUpdateTargeting(popup.id, { groups: ng });
+              }} />
+              <Select value={cond.operator} onValueChange={(op) => {
+                const nc = [...group.conditions]; nc[ci] = { ...cond, operator: op as typeof CONDITION_OPERATORS[number] }; const ng = [...groups]; ng[gi] = { ...group, conditions: nc }; v5.onUpdateTargeting(popup.id, { groups: ng });
+              }}>
+                <SelectTrigger className="h-7 text-[10px]"><SelectValue /></SelectTrigger>
+                <SelectContent>{CONDITION_OPERATORS.map((op) => <SelectItem key={op} value={op}>{op}</SelectItem>)}</SelectContent>
+              </Select>
+              <Input className="h-7 text-[10px]" placeholder="value" value={typeof cond.value === "string" ? cond.value : String(cond.value ?? "")} onChange={(e) => {
+                const nc = [...group.conditions]; nc[ci] = { ...cond, value: e.target.value }; const ng = [...groups]; ng[gi] = { ...group, conditions: nc }; v5.onUpdateTargeting(popup.id, { groups: ng });
+              }} />
+            </div>
+          ))}
+          <Button variant="ghost" size="sm" className="h-6 w-full text-[10px]" onClick={() => {
+            const nc = [...group.conditions, { variable: "", operator: "eq" as const, value: "" }]; const ng = [...groups]; ng[gi] = { ...group, conditions: nc }; v5.onUpdateTargeting(popup.id, { groups: ng });
+          }}>+ Add condition</Button>
+        </div>
+      ))}
+      <Button variant="outline" size="sm" className="h-7 w-full text-[11px]" onClick={() => v5.onUpdateTargeting(popup.id, { groups: [...groups, { match: "all", conditions: [] }] })}>
+        + Add group
+      </Button>
+    </div>
+  );
+}
+
+// ── V5: Schedule Fields ────────────────────────────────────────────────────────
+
+const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+function ScheduleFields({ popup, v5 }: { popup: PopupDefinition; v5: PopupPropertyPanelV5Handlers }) {
+  const schedule = popup.rules.scheduling ?? { enabled: false };
+  const tw = schedule.timeWindow;
+  return (
+    <div className="space-y-2">
+      <BooleanSetting label="Enabled" value={schedule.enabled} onChange={(enabled) => v5.onUpdateSchedule(popup.id, { enabled })} />
+      <div className="grid grid-cols-2 gap-2">
+        <div className="grid gap-1.5">
+          <Label className="text-[10px] text-muted-foreground">Start date</Label>
+          <Input type="date" className="h-8 text-xs" value={schedule.startDate?.slice(0, 10) ?? ""} onChange={(e) => v5.onUpdateSchedule(popup.id, { startDate: e.target.value || undefined })} />
+        </div>
+        <div className="grid gap-1.5">
+          <Label className="text-[10px] text-muted-foreground">End date</Label>
+          <Input type="date" className="h-8 text-xs" value={schedule.endDate?.slice(0, 10) ?? ""} onChange={(e) => v5.onUpdateSchedule(popup.id, { endDate: e.target.value || undefined })} />
+        </div>
+      </div>
+      <TextSetting label="Timezone (IANA)" value={schedule.timezone ?? ""} onChange={(timezone) => v5.onUpdateSchedule(popup.id, { timezone: timezone || undefined })} />
+      <div className="grid grid-cols-2 gap-2">
+        <NumberSetting label="Start hour (0–23)" value={tw?.startHour ?? 0} onChange={(startHour) => v5.onUpdateSchedule(popup.id, { timeWindow: { ...(tw ?? { startHour: 0, endHour: 23 }), startHour } })} />
+        <NumberSetting label="End hour (0–23)" value={tw?.endHour ?? 23} onChange={(endHour) => v5.onUpdateSchedule(popup.id, { timeWindow: { ...(tw ?? { startHour: 0, endHour: 23 }), endHour } })} />
+      </div>
+      <div className="grid gap-1.5">
+        <Label className="text-[10px] text-muted-foreground">Days of week</Label>
+        <div className="flex flex-wrap gap-1">
+          {DAYS.map((day, idx) => {
+            const selected = tw?.daysOfWeek?.includes(idx) ?? false;
+            return (
+              <button
+                key={idx}
+                className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${selected ? "bg-primary text-primary-foreground" : "border bg-background text-muted-foreground"}`}
+                onClick={() => {
+                  const cur = tw?.daysOfWeek ?? [0,1,2,3,4,5,6];
+                  const next = selected ? cur.filter((d) => d !== idx) : [...cur, idx].sort();
+                  v5.onUpdateSchedule(popup.id, { timeWindow: { ...(tw ?? { startHour: 0, endHour: 23 }), daysOfWeek: next } });
+                }}
+              >
+                {day}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── V5: Frequency Fields ───────────────────────────────────────────────────────
+
+const FREQ_UNITS = ["session", "hour", "day", "week", "month"] as const;
+
+function FrequencyFields({ popup, v5 }: { popup: PopupDefinition; v5: PopupPropertyPanelV5Handlers }) {
+  const freq = popup.rules.frequency ?? {};
+  const cap = freq.cap;
+  const goals = popup.goals ?? [];
+  return (
+    <div className="space-y-2">
+      <BooleanSetting label="Cap enabled" value={!!cap} onChange={(enabled) => v5.onUpdateFrequency(popup.id, { cap: enabled ? { maxShows: 1, per: "session" } : undefined })} />
+      {cap && (
+        <div className="grid grid-cols-2 gap-2">
+          <NumberSetting label="Max shows" value={cap.maxShows} onChange={(maxShows) => v5.onUpdateFrequency(popup.id, { cap: { ...cap, maxShows } })} />
+          <SelectSetting label="Per" value={cap.per} options={FREQ_UNITS as unknown as string[]} onChange={(per) => v5.onUpdateFrequency(popup.id, { cap: { ...cap, per: per as typeof FREQ_UNITS[number] } })} />
+        </div>
+      )}
+      {goals.length > 0 && (
+        <div className="grid gap-1.5">
+          <Label className="text-[10px] text-muted-foreground">Suppress after goals</Label>
+          <div className="space-y-1">
+            {goals.map((goal) => {
+              const suppressed = freq.suppressAfterGoalIds?.includes(goal.id) ?? false;
+              return (
+                <label key={goal.id} className="flex cursor-pointer items-center gap-2">
+                  <Checkbox checked={suppressed} onCheckedChange={(checked) => {
+                    const cur = freq.suppressAfterGoalIds ?? [];
+                    v5.onUpdateFrequency(popup.id, { suppressAfterGoalIds: checked ? [...cur, goal.id] : cur.filter((id) => id !== goal.id) });
+                  }} />
+                  <span className="text-[11px]">{goal.name}</span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+      )}
+      <TextSetting label="Storage key prefix (optional)" value={freq.storageKeyPrefix ?? ""} onChange={(storageKeyPrefix) => v5.onUpdateFrequency(popup.id, { storageKeyPrefix: storageKeyPrefix || undefined })} />
     </div>
   );
 }

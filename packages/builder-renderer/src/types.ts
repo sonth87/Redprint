@@ -103,4 +103,28 @@ export interface RendererConfig {
   setVariantAssignment?: (popupId: string, variantId: string) => void;
   /** When true, analytics events are tagged `metadata.preview = true` (editor preview). */
   isPreview?: boolean;
+
+  // ── V5: targeting context, locale, frequency storage ──────────────────────
+  /**
+   * Arbitrary context object used for popup targeting rule evaluation.
+   * Access fields via dot-notation in condition `variable` (e.g. "user.trait.plan").
+   */
+  popupContext?: Record<string, unknown>;
+  /**
+   * BCP-47 locale tag (e.g. "fr-CA"). Used to resolve locale-specific popup
+   * content. Falls back to navigator.language, then popup.fallbackLocale, then
+   * base content.
+   */
+  locale?: string;
+  /**
+   * Host override to read a stored frequency impression count.
+   * Receives the storage key; returns `{ count, storedAt }` or `undefined`.
+   * When omitted, falls back to localStorage/sessionStorage.
+   */
+  getFrequencyCount?: (key: string) => { count: number; storedAt: number } | undefined;
+  /**
+   * Host override to persist a frequency impression count.
+   * When omitted, falls back to localStorage/sessionStorage.
+   */
+  setFrequencyCount?: (key: string, count: number, expiresAt?: number) => void;
 }

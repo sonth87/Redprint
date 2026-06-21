@@ -501,6 +501,32 @@ winner, or remove. The preview debug strip shows a badge with goal/variant count
 and the active assignment mode. All edits go through commands (undoable); the
 active-variant selection is editor-only (no undo).
 
+**Localization, Targeting, Scheduling & Frequency (V5):** four additional panel
+sections added after A/B Test.
+
+- **Localization** — locale list (BCP-47 tags); **Copy content** clones the base
+  content tree as a popup-owned root (`ADD_POPUP_LOCALE cloneFromBase:true`);
+  **Patch only** adds a patch-only locale without its own tree. **Edit content**
+  dispatches `SET_ACTIVE_POPUP_LOCALE` so the canvas edits that locale's tree (same
+  pattern as `SET_ACTIVE_POPUP_VARIANT`). The layer tree shows locale roots as
+  sub-groups beneath variant groups.
+
+- **Targeting** — enable toggle; add/remove `TargetingGroup`; within each group:
+  `match` select (all/any), condition rows (variable dot-path, operator, value).
+  All operators from `PopupConditionOperator` are available including `in`,
+  `notIn`, `matches` (regex).
+
+- **Schedule** — enable toggle; startDate, endDate (ISO date inputs), IANA
+  timezone text input, `timeWindow` hour range and day-of-week checkboxes.
+
+- **Frequency** — cap enable toggle; `maxShows` number and `per` unit select
+  (session/hour/day/week/month); `suppressAfterGoalIds` multi-select from defined
+  goals; custom storage key prefix.
+
+`activePopupLocale` in `EditorState` tracks which locale content tree the canvas
+edits. Priority chain for `activeRootNodeId`: variant root → locale root → base.
+Locale editing is cleared when `SET_ACTIVE_POPUP` fires (same as variant editing).
+
 Events tab actions `showModal` and `hideModal` present a popup picker while
 preserving the serialized action shape `{ type, targetId }`.
 

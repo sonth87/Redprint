@@ -354,6 +354,90 @@ never mutate `BuilderDocument`. See RUNTIME.md → A/B Variant Assignment & Anal
 
 ---
 
+### V5 optional fields (schema 2.6.0)
+
+All optional — V4 documents remain valid (`popupV5Migration` only bumps the
+version; absence of these fields means "no targeting, no scheduling, no frequency
+cap, no localization").
+
+```ts
+// Localization — locale-owned content root (same ownership rule as V4 variants)
+interface PopupLocaleContent {
+  locale: string;          // BCP-47 tag, e.g. "fr", "fr-CA", "zh-Hans"
+  rootNodeId?: string;     // popup-owned content root; omit → reuse base + patch only
+  popupPatch?: Partial<…>; // config patch applied on top of base (excludes identity/locales/variants)
+}
+
+// Targeting — composable condition groups
+type PopupConditionOperator =
+  | "eq" | "neq" | "gt" | "lt" | "gte" | "lte"
+  | "contains" | "truthy" | "falsy"
+  | "in" | "notIn" | "matches";
+
+interface PopupTargetingCondition {
+  variable: string;         // dot-notation key from RendererConfig.popupContext
+  operator: PopupConditionOperator;
+  value?: unknown;
+}
+
+interface PopupTargetingGroup {
+  match: "all" | "any";    // AND / OR within the group
+  conditions: PopupTargetingCondition[];
+}
+
+interface PopupTargeting {
+  enabled: boolean;
+  groups?: PopupTargetingGroup[]; // groups combined with AND across groups
+}
+
+// Scheduling
+interface PopupSchedule {
+  enabled: boolean;
+  startDate?: string;       // ISO 8601 — hide before this date
+  endDate?: string;         // ISO 8601 — hide after this date
+  timezone?: string;        // IANA timezone string (e.g. "America/New_York")
+  timeWindow?: {
+    startHour: number;      // 0–23, inclusive
+    endHour: number;        // 0–23, inclusive
+    daysOfWeek?: number[];  // 0=Sunday … 6=Saturday; omit = every day
+  };
+}
+
+// Frequency
+type FrequencyUnit = "session" | "hour" | "day" | "week" | "month";
+
+interface PopupFrequencyRule {
+  maxShows: number;
+  per: FrequencyUnit;
+}
+
+interface PopupFrequencyConfig {
+  cap?: PopupFrequencyRule;
+  suppressAfterGoalIds?: string[]; // suppress if any listed goal already converted
+  storageKeyPrefix?: string;       // custom storage key namespace
+}
+
+// PopupRules extended (V5 additions, all optional):
+// frequency?: PopupFrequencyConfig;
+// targeting?: PopupTargeting;
+// scheduling?: PopupSchedule;
+
+// PopupDefinition extended (V5 additions, all optional):
+// locales?: PopupLocaleContent[];
+// fallbackLocale?: string;  // used when navigator locale matches nothing
+```
+
+**Node ownership (V5):** locale `rootNodeId` trees follow the **same popup-ownership
+rule as V4 variants** — `DELETE_POPUP` cascade-deletes them (snapshotted for undo);
+`DUPLICATE_POPUP` deep-clones each locale root with fresh ids. Locale resolution
+order: exact match → language-prefix match ("fr" matches "fr-CA") → `fallbackLocale`
+→ base content. Pure evaluation helpers (`evaluateTargeting`, `evaluateSchedule`,
+`evaluateFrequency`, `resolveLocaleContent`) live in
+`builder-core/src/popups/rules.ts`. Runtime evaluation never mutates
+`BuilderDocument`. See RUNTIME.md → V5 Pre-open Eligibility.
+
+---
+
 ## ComponentDefinition
 
 ```ts

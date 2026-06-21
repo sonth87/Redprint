@@ -7,8 +7,8 @@ import { CURRENT_SCHEMA_VERSION } from "../../src/document/constants";
 import type { BuilderDocument } from "../../src/document/types";
 
 describe("Popup V4 — schema + migration", () => {
-  it("current schema version is 2.5.0", () => {
-    expect(CURRENT_SCHEMA_VERSION).toBe("2.5.0");
+  it("popupV4Migration targets version 2.5.0", () => {
+    expect(popupV4Migration.toVersion).toBe("2.5.0");
   });
 
   it("validates a popup carrying V4 goals/variants/experiment", () => {

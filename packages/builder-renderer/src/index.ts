@@ -24,7 +24,25 @@ export type {
   RendererConfig,
   PopupAnalyticsEventBus,
 } from "./types";
-export type { PopupAnalyticsEvent } from "@ui-builder/builder-core";
+export type {
+  PopupAnalyticsEvent,
+  PopupLocaleContent,
+  PopupTargeting,
+  PopupTargetingGroup,
+  PopupTargetingCondition,
+  PopupConditionOperator,
+  PopupSchedule,
+  PopupFrequencyConfig,
+  PopupFrequencyRule,
+  FrequencyUnit,
+} from "@ui-builder/builder-core";
+export {
+  evaluateTargeting,
+  evaluateSchedule,
+  evaluateFrequency,
+  recordFrequencyImpression,
+  resolveLocaleContent,
+} from "@ui-builder/builder-core";
 
 // Loader
 export { DynamicLoader } from "./loader/DynamicLoader";
