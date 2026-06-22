@@ -67,6 +67,14 @@ import {
   CMD_SET_ACTIVE_POPUP_SELECTION,
   CMD_SET_ACTIVE_POPUP_VARIANT,
   CMD_SET_ACTIVE_POPUP_LOCALE,
+  CMD_CREATE_CAMPAIGN,
+  CMD_UPDATE_CAMPAIGN,
+  CMD_DELETE_CAMPAIGN,
+  CMD_RESTORE_CAMPAIGN,
+  CMD_SET_CAMPAIGN_STATUS,
+  CMD_ASSIGN_POPUP_CAMPAIGN,
+  CMD_SET_POPUP_PRIORITY,
+  CMD_SET_ACTIVE_CAMPAIGN,
   CMD_ENTER_TEXT_EDIT,
   CMD_EXIT_TEXT_EDIT,
   CMD_SET_THEME_COLORS,
@@ -113,11 +121,19 @@ import {
   type UpdatePopupSchedulePayload,
   type UpdatePopupFrequencyPayload,
   type SetActivePopupLocalePayload,
+  type CreateCampaignPayload,
+  type UpdateCampaignPayload,
+  type DeleteCampaignPayload,
+  type RestoreCampaignPayload,
+  type SetCampaignStatusPayload,
+  type AssignPopupCampaignPayload,
+  type SetPopupPriorityPayload,
+  type SetActiveCampaignPayload,
   type EnterTextEditPayload,
   type ExitTextEditPayload,
   type SetThemeColorsPayload,
 } from "./built-in";
-import type { PopupGoal, PopupVariant, PopupTargeting, PopupSchedule, PopupFrequencyConfig } from "../document/popups";
+import type { PopupGoal, PopupVariant, PopupTargeting, PopupSchedule, PopupFrequencyConfig, PopupCampaign, PopupCampaignStatus } from "../document/popups";
 
 // ── Editor-only command types (no undo/redo) ─────────────────────────────
 
@@ -2223,6 +2239,229 @@ export function registerAllHandlers(engine: CommandEngine, registry: ComponentRe
     (state) => ({
       type: CMD_SET_THEME_COLORS,
       payload: { colors: state.document.themeColors ?? [] },
+    }),
+  );
+
+  // ── V6: Campaign helpers ───────────────────────────────────────────────────
+
+  function setCampaign(
+    state: BuilderState,
+    campaignId: string,
+    patch: Partial<Omit<PopupCampaign, "id" | "metadata">>,
+  ): BuilderState {
+    const campaign = state.document.popupCampaigns?.[campaignId];
+    if (!campaign) return state;
+    const timestamp = now();
+    return {
+      ...state,
+      document: {
+        ...state.document,
+        updatedAt: timestamp,
+        popupCampaigns: {
+          ...(state.document.popupCampaigns ?? {}),
+          [campaignId]: {
+            ...campaign,
+            ...patch,
+            id: campaign.id,
+            metadata: { ...campaign.metadata, updatedAt: timestamp },
+          },
+        },
+      },
+    };
+  }
+
+  // ── CREATE_CAMPAIGN ────────────────────────────────────────────────────────
+  engine.registerHandler<CreateCampaignPayload>(
+    CMD_CREATE_CAMPAIGN,
+    (state, payload) => {
+      const id = payload.campaignId ?? uuidv4();
+      const timestamp = now();
+      const campaign: PopupCampaign = {
+        id,
+        name: payload.name,
+        description: payload.description,
+        status: payload.status ?? "draft",
+        priority: payload.priority,
+        conflictPolicy: payload.conflictPolicy,
+        metadata: { createdAt: timestamp, updatedAt: timestamp },
+      };
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: timestamp,
+          popupCampaigns: {
+            ...(state.document.popupCampaigns ?? {}),
+            [id]: campaign,
+          },
+        },
+      };
+    },
+    (_state, payload) => {
+      // campaignId is always set by the forward handler into the local `id` variable.
+      // If the caller supplied it, use it directly; otherwise the undo is best-effort.
+      if (!payload.campaignId) return undefined;
+      return { type: CMD_DELETE_CAMPAIGN, payload: { campaignId: payload.campaignId } };
+    },
+  );
+
+  // ── UPDATE_CAMPAIGN ────────────────────────────────────────────────────────
+  engine.registerHandler<UpdateCampaignPayload>(
+    CMD_UPDATE_CAMPAIGN,
+    (state, payload) => setCampaign(state, payload.campaignId, payload.patch),
+    (state, payload) => {
+      const campaign = state.document.popupCampaigns?.[payload.campaignId];
+      if (!campaign) return undefined;
+      const { metadata: _m, id: _i, ...prior } = campaign;
+      return {
+        type: CMD_UPDATE_CAMPAIGN,
+        payload: { campaignId: payload.campaignId, patch: prior } as UpdateCampaignPayload,
+      };
+    },
+  );
+
+  // ── DELETE_CAMPAIGN ────────────────────────────────────────────────────────
+  engine.registerHandler<DeleteCampaignPayload>(
+    CMD_DELETE_CAMPAIGN,
+    (state, payload) => {
+      const campaigns = { ...(state.document.popupCampaigns ?? {}) };
+      delete campaigns[payload.campaignId];
+      const timestamp = now();
+      // Clear campaignId on all member popups (orphan, not cascade).
+      const popups = state.document.popups
+        ? Object.fromEntries(
+            Object.entries(state.document.popups).map(([id, popup]) =>
+              popup.campaignId === payload.campaignId
+                ? [id, { ...popup, campaignId: undefined, metadata: { ...popup.metadata, updatedAt: timestamp } }]
+                : [id, popup],
+            ),
+          )
+        : state.document.popups;
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: timestamp,
+          popupCampaigns: campaigns,
+          popups,
+        },
+      };
+    },
+    (state, payload) => {
+      const campaign = state.document.popupCampaigns?.[payload.campaignId];
+      if (!campaign) return undefined;
+      const memberPopupIds = Object.values(state.document.popups ?? {})
+        .filter((p) => p.campaignId === payload.campaignId)
+        .map((p) => p.id);
+      return {
+        type: CMD_RESTORE_CAMPAIGN,
+        payload: { campaign, memberPopupIds } as RestoreCampaignPayload,
+      };
+    },
+  );
+
+  // ── RESTORE_CAMPAIGN (internal inverse of DELETE) ──────────────────────────
+  engine.registerHandler<RestoreCampaignPayload>(
+    CMD_RESTORE_CAMPAIGN,
+    (state, payload) => {
+      const timestamp = now();
+      // Re-link member popups.
+      const popups = state.document.popups
+        ? Object.fromEntries(
+            Object.entries(state.document.popups).map(([id, popup]) =>
+              payload.memberPopupIds.includes(id)
+                ? [id, { ...popup, campaignId: payload.campaign.id, metadata: { ...popup.metadata, updatedAt: timestamp } }]
+                : [id, popup],
+            ),
+          )
+        : state.document.popups;
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: timestamp,
+          popupCampaigns: {
+            ...(state.document.popupCampaigns ?? {}),
+            [payload.campaign.id]: payload.campaign,
+          },
+          popups,
+        },
+      };
+    },
+  );
+
+  // ── SET_CAMPAIGN_STATUS ────────────────────────────────────────────────────
+  engine.registerHandler<SetCampaignStatusPayload>(
+    CMD_SET_CAMPAIGN_STATUS,
+    (state, payload) => {
+      const campaign = state.document.popupCampaigns?.[payload.campaignId];
+      if (!campaign) return state;
+      const timestamp = now();
+      const statusHistory = [
+        ...(campaign.metadata.statusHistory ?? []),
+        { status: payload.status as PopupCampaignStatus, at: timestamp },
+      ];
+      return {
+        ...state,
+        document: {
+          ...state.document,
+          updatedAt: timestamp,
+          popupCampaigns: {
+            ...(state.document.popupCampaigns ?? {}),
+            [payload.campaignId]: {
+              ...campaign,
+              status: payload.status,
+              metadata: { ...campaign.metadata, updatedAt: timestamp, statusHistory },
+            },
+          },
+        },
+      };
+    },
+    (state, payload) => {
+      const campaign = state.document.popupCampaigns?.[payload.campaignId];
+      if (!campaign) return undefined;
+      return {
+        type: CMD_SET_CAMPAIGN_STATUS,
+        payload: { campaignId: payload.campaignId, status: campaign.status } as SetCampaignStatusPayload,
+      };
+    },
+  );
+
+  // ── ASSIGN_POPUP_CAMPAIGN ──────────────────────────────────────────────────
+  engine.registerHandler<AssignPopupCampaignPayload>(
+    CMD_ASSIGN_POPUP_CAMPAIGN,
+    (state, payload) =>
+      setPopup(state, payload.popupId, { campaignId: payload.campaignId ?? undefined }),
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      if (!popup) return undefined;
+      return {
+        type: CMD_ASSIGN_POPUP_CAMPAIGN,
+        payload: { popupId: payload.popupId, campaignId: popup.campaignId ?? null } as AssignPopupCampaignPayload,
+      };
+    },
+  );
+
+  // ── SET_POPUP_PRIORITY ─────────────────────────────────────────────────────
+  engine.registerHandler<SetPopupPriorityPayload>(
+    CMD_SET_POPUP_PRIORITY,
+    (state, payload) => setPopup(state, payload.popupId, { priority: payload.priority }),
+    (state, payload) => {
+      const popup = state.document.popups?.[payload.popupId];
+      if (!popup) return undefined;
+      return {
+        type: CMD_SET_POPUP_PRIORITY,
+        payload: { popupId: payload.popupId, priority: popup.priority ?? 0 } as SetPopupPriorityPayload,
+      };
+    },
+  );
+
+  // ── SET_ACTIVE_CAMPAIGN (editor-only, no undo) ─────────────────────────────
+  engine.registerHandler<SetActiveCampaignPayload>(
+    CMD_SET_ACTIVE_CAMPAIGN,
+    (state, payload) => ({
+      ...state,
+      editor: { ...state.editor, activeCampaignId: payload.campaignId },
     }),
   );
 }

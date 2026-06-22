@@ -28,6 +28,11 @@ import {
   evaluateFrequency,
   recordFrequencyImpression,
   resolveLocaleContent,
+  evaluateCampaignGate,
+  effectivePriority,
+  resolveConflictPolicy,
+  arbitrate,
+  mountedPopupEntries,
 } from "@ui-builder/builder-core";
 import { ANIMATION_KEYFRAMES_CSS, PRESET_KEYFRAME, PRESET_INITIAL } from "@ui-builder/shared";
 import type { RendererConfig } from "./types";
@@ -298,6 +303,10 @@ export function RuntimeRenderer({ document, registry, config = {} }: RuntimeRend
   // Runtime popup lifecycle stack (opening → open → closing → closed).
   // Pure transitions live in builder-core; this hook owns timers + callbacks.
   const [popupStack, setPopupStack] = useState<PopupStackEntry[]>([]);
+  // V6: queue for "queue" conflict policy — popups waiting for a slot to open.
+  const [popupQueue, setPopupQueue] = useState<string[]>([]);
+  // V6: stable ref so openPopup can call closePopup without a circular dep.
+  const closePopupRef = useRef<((id: string, reason?: PopupAnalyticsEvent["closeReason"]) => void) | null>(null);
   const openTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const closeTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
@@ -438,9 +447,23 @@ export function RuntimeRenderer({ document, registry, config = {} }: RuntimeRend
     const popup = document.popups?.[popupId];
     if (!popup?.enabled) return;
 
-    // V5: pre-open eligibility — schedule → targeting → frequency
     const now = Date.now();
     const effectiveLocale = locale ?? (typeof navigator !== "undefined" ? navigator.language : undefined);
+
+    // V6: campaign gate — runs first (before V5 checks).
+    const gate = evaluateCampaignGate(popup, document.popupCampaigns);
+    if (!gate.allowed) {
+      emitPopupEvent({
+        type: "popup_rules_blocked",
+        popupId,
+        popupName: popup.name,
+        rulesBlockReason: "campaign",
+        campaignId: gate.campaignId,
+      });
+      return;
+    }
+
+    // V5: pre-open eligibility — schedule → targeting → frequency
     if (!evaluateSchedule(popup.rules.scheduling, now)) {
       emitPopupEvent({ type: "popup_rules_blocked", popupId, popupName: popup.name, rulesBlockReason: "schedule" });
       return;
@@ -452,6 +475,37 @@ export function RuntimeRenderer({ document, registry, config = {} }: RuntimeRend
     if (!evaluateFrequency(popup.rules.frequency, popup.rules, readFrequencyCount, popupId, document.id, now)) {
       emitPopupEvent({ type: "popup_rules_blocked", popupId, popupName: popup.name, rulesBlockReason: "frequency" });
       return;
+    }
+
+    // V6: conflict arbitration — only for popups belonging to a campaign.
+    if (popup.campaignId) {
+      const policy = resolveConflictPolicy(popup, document.popupCampaigns);
+      const candidatePriority = effectivePriority(popup, document.popupCampaigns);
+      const openCampaignPopups = mountedPopupEntries(popupStack)
+        .map((e) => document.popups?.[e.popupId])
+        .filter((p): p is NonNullable<typeof p> => !!p?.campaignId)
+        .map((p) => ({ popupId: p.id, priority: effectivePriority(p, document.popupCampaigns) }));
+
+      const decision = arbitrate({ candidatePopupId: popupId, candidatePolicy: policy, candidatePriority, openCampaignPopups });
+
+      if (decision.action === "suppress") {
+        emitPopupEvent({
+          type: "popup_rules_blocked",
+          popupId,
+          popupName: popup.name,
+          rulesBlockReason: "conflict",
+          campaignId: gate.campaignId,
+        });
+        return;
+      }
+      if (decision.action === "queue") {
+        setPopupQueue((q) => (q.includes(popupId) ? q : [...q, popupId]));
+        return;
+      }
+      if (decision.action === "replace") {
+        decision.closePopupIds.forEach((id) => closePopupRef.current?.(id, "programmatic"));
+      }
+      // "open" falls through below.
     }
 
     const zIndexBase = popup.runtimeState?.zIndexBase ?? DEFAULT_POPUP_Z_INDEX_BASE;
@@ -504,7 +558,7 @@ export function RuntimeRenderer({ document, registry, config = {} }: RuntimeRend
     };
     if (duration <= 0) finishOpen();
     else openTimers.current.set(popupId, setTimeout(finishOpen, duration));
-  }, [document.popups, markPopupShown, onPopupOpen, clearTimer, effectiveDurationMs, assignVariant, emitPopupEvent, locale, popupContext, readFrequencyCount, writeFrequencyCount, document.id]);
+  }, [document.popups, document.popupCampaigns, document.id, popupStack, markPopupShown, onPopupOpen, clearTimer, effectiveDurationMs, assignVariant, emitPopupEvent, locale, popupContext, readFrequencyCount, writeFrequencyCount, setPopupQueue]);
 
   const closePopup = useCallback(
     (popupId: string, closeReason: PopupAnalyticsEvent["closeReason"] = "programmatic") => {
@@ -555,6 +609,36 @@ export function RuntimeRenderer({ document, registry, config = {} }: RuntimeRend
     },
     [document.popups, onPopupClose, clearTimer, effectiveDurationMs, assignments, emitPopupEvent],
   );
+
+  // V6: keep the ref in sync so openPopup can use it without circular deps.
+  useEffect(() => {
+    closePopupRef.current = closePopup;
+  });
+
+  // V6: drain the queue whenever the stack changes — open the highest-priority
+  // queued popup whose campaign is still published, re-checking gate at drain time.
+  useEffect(() => {
+    if (popupQueue.length === 0) return;
+    const hasMountedCampaignPopup = mountedPopupEntries(popupStack).some(
+      (e) => document.popups?.[e.popupId]?.campaignId,
+    );
+    if (hasMountedCampaignPopup) return;
+    // Pick the highest-priority queued popup that still passes the campaign gate.
+    let bestId: string | null = null;
+    let bestPriority = -Infinity;
+    for (const id of popupQueue) {
+      const p = document.popups?.[id];
+      if (!p) continue;
+      const gate = evaluateCampaignGate(p, document.popupCampaigns);
+      if (!gate.allowed) continue;
+      const pri = effectivePriority(p, document.popupCampaigns);
+      if (pri > bestPriority) { bestPriority = pri; bestId = id; }
+    }
+    if (!bestId) return;
+    const nextId = bestId;
+    setPopupQueue((q) => q.filter((id) => id !== nextId));
+    openPopup(nextId);
+  }, [popupStack, popupQueue, document.popups, document.popupCampaigns, openPopup]);
 
   // Clean up all timers on unmount.
   useEffect(() => {

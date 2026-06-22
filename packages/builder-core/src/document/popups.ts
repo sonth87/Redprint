@@ -272,6 +272,44 @@ export interface PopupLocaleContent {
   >;
 }
 
+// ── V6: Campaigns ──────────────────────────────────────────────────────────
+
+export type PopupCampaignStatus =
+  | "draft"
+  | "review"
+  | "published"
+  | "paused"
+  | "archived";
+
+/**
+ * Decides what happens when more than one eligible popup wants to open at the
+ * same time (campaign-level conflict resolution).
+ *  - "queue":    open the highest-priority popup now; open the rest one-by-one as each closes.
+ *  - "suppress": open only the highest-priority popup; drop the others.
+ *  - "replace":  a newly-eligible higher-priority popup closes any open campaign popup and takes its place.
+ *  - "stack":    no arbitration — defer to each popup's runtimeState.stackMode.
+ */
+export type PopupConflictPolicy = "queue" | "suppress" | "replace" | "stack";
+
+export interface PopupCampaignMetadata {
+  createdAt: string;
+  updatedAt: string;
+  /** Audit trail of status transitions (most-recent last). */
+  statusHistory?: Array<{ status: PopupCampaignStatus; at: string }>;
+}
+
+export interface PopupCampaign {
+  id: string;
+  name: string;
+  description?: string;
+  status: PopupCampaignStatus;
+  /** Higher wins arbitration. Default 0. Ties broken by popup-level priority then id. */
+  priority?: number;
+  /** Default "stack" (back-compatible no-op). */
+  conflictPolicy?: PopupConflictPolicy;
+  metadata: PopupCampaignMetadata;
+}
+
 /**
  * V4: vendor-neutral analytics event emitted by the runtime. Serializable;
  * lives in builder-core so editor preview and renderer share one contract.
@@ -301,8 +339,10 @@ export interface PopupAnalyticsEvent {
   visitorId?: string;
   /** V5: resolved locale tag (e.g. "fr-CA"). */
   locale?: string;
-  /** V5: reason a popup was suppressed by rules. */
-  rulesBlockReason?: "targeting" | "schedule" | "frequency";
+  /** V5/V6: reason a popup was suppressed by rules. */
+  rulesBlockReason?: "targeting" | "schedule" | "frequency" | "campaign" | "conflict";
+  /** V6: campaign that gated or suppressed this popup. */
+  campaignId?: string;
   metadata?: Record<string, unknown>;
 }
 
@@ -330,6 +370,10 @@ export interface PopupDefinition {
   locales?: PopupLocaleContent[];
   /** V5: fallback locale tag when no exact/prefix match found. */
   fallbackLocale?: string;
+  /** V6: campaign this popup belongs to. Absent = ungrouped (always eligible re: campaign). */
+  campaignId?: string;
+  /** V6: per-popup arbitration weight within its campaign. Higher wins. Default 0. */
+  priority?: number;
   metadata: PopupMetadata;
 }
 

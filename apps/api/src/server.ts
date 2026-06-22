@@ -7,6 +7,7 @@ import path from "path";
 import { aiRouter } from "./routes/ai.routes.js";
 import { paletteRouter } from "./routes/palette.routes.js";
 import { mediaRouter, UPLOADS_DIR } from "./routes/media.routes.js";
+import { popupRouter } from "./routes/popup.routes.js";
 
 const PORT = parseInt(process.env.PORT ?? "3002", 10);
 
@@ -18,7 +19,7 @@ app.use(
   cors({
     // Allow playground (3000) and website (3001) in dev
     origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:5173", "http://localhost:5174"],
-    methods: ["GET", "POST", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type"],
   })
 );
@@ -33,6 +34,7 @@ app.use("/uploads", express.static(UPLOADS_DIR));
 app.use("/api/ai", aiRouter);
 app.use("/api/palette", paletteRouter);
 app.use("/api/media", mediaRouter);
+app.use("/api/popups", popupRouter);
 
 app.get("/health", (_req, res) => {
   res.json({

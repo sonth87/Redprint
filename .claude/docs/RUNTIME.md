@@ -149,6 +149,41 @@ Emission points:
 When `RendererConfig.isPreview` is true, every event is tagged
 `metadata.preview = true` so hosts can drop preview traffic.
 
+### V6 Campaign Gate & Conflict Arbitration
+
+V6 adds a **campaign gate** and **conflict arbitration** step that runs **before** all
+V5 eligibility checks. Pure helpers live in `builder-core/src/popups/campaigns.ts`.
+
+**Campaign gate** (`evaluateCampaignGate`):
+- Popup with no `campaignId` → passes (ungrouped popups are never gated).
+- Popup with unknown `campaignId` → passes (orphaned popups are lenient).
+- Popup in `published` campaign → passes; `campaignId` propagated downstream.
+- Popup in `draft`, `review`, `paused`, or `archived` campaign → blocked;
+  emits `popup_rules_blocked` with `rulesBlockReason: "campaign"`.
+
+**Conflict arbitration** (`arbitrate`): runs after the gate, but only for popups that
+belong to a campaign. Compares the incoming popup against currently-mounted campaign
+popups using `effectivePriority = (campaign.priority ?? 0) * 1000 + (popup.priority ?? 0)`.
+
+| Policy | Decision |
+|--------|----------|
+| `stack` (default) | Always `open` |
+| `suppress` | `open` if candidate priority ≥ max open; else `suppress` (emits `conflict` block reason) |
+| `replace` | Closes all lower-priority open campaign popups (`replace`), then opens |
+| `queue` | Defers to `popupQueue` if any campaign popup is mounted; drained when slot frees |
+
+**Queue draining:** a `useEffect` on `popupStack` changes selects the highest-priority
+eligible queued popup and calls `openPopup` when no campaign popups are mounted.
+
+**Full pre-open order (V6):**
+1. **Campaign gate** (`evaluateCampaignGate`) — V6 only
+2. **Conflict arbitration** (`arbitrate`) — V6 only, for campaign-grouped popups
+3. **Schedule** (`evaluateSchedule`) — V5
+4. **Targeting** (`evaluateTargeting`) — V5
+5. **Frequency** (`evaluateFrequency`) — V5
+6. **Variant assignment** — V4
+7. **Locale resolution** — V5
+
 ### V5 Pre-open Eligibility & Localization
 
 Before a popup opens, the runtime runs three pure eligibility checks in order

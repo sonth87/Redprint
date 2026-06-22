@@ -146,11 +146,31 @@ const PopupSchema = z.object({
     }).passthrough()
   ).optional(),
   fallbackLocale: z.string().optional(),
+  // V6 — campaign membership (optional, additive)
+  campaignId: z.string().optional(),
+  priority: z.number().optional(),
   metadata: z.object({
     createdAt: z.string(),
     updatedAt: z.string(),
     tags: z.array(z.string()).optional(),
     pluginData: z.record(z.unknown()).optional(),
+  }),
+}).passthrough();
+
+const PopupCampaignSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().optional(),
+  status: z.enum(["draft", "review", "published", "paused", "archived"]),
+  priority: z.number().optional(),
+  conflictPolicy: z.enum(["queue", "suppress", "replace", "stack"]).optional(),
+  metadata: z.object({
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    statusHistory: z.array(z.object({
+      status: z.enum(["draft", "review", "published", "paused", "archived"]),
+      at: z.string(),
+    })).optional(),
   }),
 }).passthrough();
 
@@ -163,6 +183,7 @@ const BuilderDocumentSchema = z.object({
   nodes: z.record(BuilderNodeSchema),
   rootNodeId: z.string(),
   popups: z.record(PopupSchema).default({}),
+  popupCampaigns: z.record(PopupCampaignSchema).optional(),
   breakpoints: z.array(
     z.object({
       breakpoint: z.enum(["desktop", "tablet", "mobile"]),

@@ -527,6 +527,28 @@ sections added after A/B Test.
 edits. Priority chain for `activeRootNodeId`: variant root → locale root → base.
 Locale editing is cleared when `SET_ACTIVE_POPUP` fires (same as variant editing).
 
+**Campaigns (V6):** an additional panel section in the popup property panel:
+
+- **Campaign** — dropdown to assign/unassign the popup to a campaign
+  (`ASSIGN_POPUP_CAMPAIGN`). Shows current campaign status/policy as read-only text.
+  Amber warning badge when the popup belongs to a non-published campaign (it will be
+  blocked at runtime). Priority number input dispatches `SET_POPUP_PRIORITY`.
+
+The floating **Campaigns** panel (`CampaignPanel.tsx`) is opened via a toolbar button
+at the top of the editor. Features:
+
+- Create new campaign (name input + Add button)
+- Per-campaign row: inline name editing, status badge, member-popup count
+- Expandable details per row: status dropdown (transitions via `SET_CAMPAIGN_STATUS`),
+  conflict policy dropdown (`UPDATE_CAMPAIGN`), delete button (`DELETE_CAMPAIGN`)
+
+The layer tree groups popups under their campaign headers (with status badge) when any
+campaign exists. Ungrouped popups are listed last. Campaign grouping is read-only in the
+layer tree — assignment is done in the property panel or the Campaigns floating panel.
+
+`activeCampaignId` in `EditorState` tracks which campaign is focused in the Campaigns
+panel. Dispatched via `SET_ACTIVE_CAMPAIGN` (no undo, editor-only).
+
 Events tab actions `showModal` and `hideModal` present a popup picker while
 preserving the serialized action shape `{ type, targetId }`.
 

@@ -1,0 +1,374 @@
+[
+  {
+    "id": "newsletter-modal",
+    "name": "Newsletter Modal",
+    "description": "Centered signup modal with headline, copy, and CTA.",
+    "category": "Lead Capture",
+    "tags": ["newsletter", "modal", "lead", "email"],
+    "thumbnail": null,
+    "popup": {
+      "name": "Newsletter Modal",
+      "enabled": true,
+      "kind": "modal",
+      "placement": "center",
+      "kindConfig": { "kind": "modal", "size": "md", "maxWidth": "560px", "maxHeight": "90vh" },
+      "autoTrigger": { "type": "manual" },
+      "behavior": {
+        "backdrop": { "enabled": true, "color": "#020617", "opacity": 0.5, "blur": "3px" },
+        "closeOnEscape": true,
+        "closeOnBackdropClick": true,
+        "showCloseButton": true,
+        "lockBodyScroll": true,
+        "trapFocus": true,
+        "restoreFocus": true
+      },
+      "animation": { "enter": "scale", "exit": "scale", "durationMs": 200, "easing": "ease" },
+      "rules": {}
+    },
+    "root": {
+      "componentType": "PopupContent",
+      "style": { "borderRadius": "18px", "padding": "36px", "gap": "18px", "alignItems": "center", "textAlign": "center" },
+      "children": [
+        {
+          "componentType": "Text",
+          "props": { "tag": "h2", "text": "<h2>Join the list</h2>" },
+          "style": { "fontSize": "32px", "fontWeight": 700, "lineHeight": "1.1", "width": "100%", "color": "#0f172a" }
+        },
+        {
+          "componentType": "Text",
+          "props": { "tag": "p", "text": "<p>Get launch notes, design ideas, and useful updates in your inbox.</p>" },
+          "style": { "fontSize": "15px", "color": "#475569", "width": "100%", "maxWidth": "420px" }
+        },
+        {
+          "componentType": "Button",
+          "props": { "label": "<span>Subscribe</span>", "variant": "primary" },
+          "style": { "width": "180px" }
+        }
+      ]
+    }
+  },
+  {
+    "id": "promo-drawer",
+    "name": "Promo Drawer",
+    "description": "Right-side offer drawer with discount and CTA.",
+    "category": "Promotion",
+    "tags": ["promo", "drawer", "offer", "discount"],
+    "thumbnail": null,
+    "popup": {
+      "name": "Promo Drawer",
+      "enabled": true,
+      "kind": "drawer",
+      "placement": "right",
+      "kindConfig": { "kind": "drawer", "width": "380px" },
+      "autoTrigger": { "type": "manual" },
+      "behavior": {
+        "backdrop": { "enabled": true, "color": "#000", "opacity": 0.4 },
+        "closeOnEscape": true,
+        "closeOnBackdropClick": true,
+        "showCloseButton": true,
+        "lockBodyScroll": true,
+        "trapFocus": true,
+        "restoreFocus": true
+      },
+      "animation": { "enter": "slideRight", "exit": "slideRight", "durationMs": 250, "easing": "ease" },
+      "rules": {}
+    },
+    "root": {
+      "componentType": "PopupContent",
+      "style": { "padding": "32px", "gap": "16px" },
+      "children": [
+        {
+          "componentType": "Text",
+          "props": { "tag": "h3", "text": "<h3>Special Offer 🎉</h3>" },
+          "style": { "fontSize": "24px", "fontWeight": 700, "color": "#0f172a" }
+        },
+        {
+          "componentType": "Text",
+          "props": { "tag": "p", "text": "<p>Get 20% off your first order. Limited time only.</p>" },
+          "style": { "fontSize": "14px", "color": "#64748b" }
+        },
+        {
+          "componentType": "Button",
+          "props": { "label": "<span>Claim Offer</span>", "variant": "primary" },
+          "style": { "width": "100%" }
+        }
+      ]
+    }
+  },
+  {
+    "id": "announcement-bar",
+    "name": "Announcement Bar",
+    "description": "Top announcement bar for site-wide messages.",
+    "category": "Announcement",
+    "tags": ["bar", "announcement", "banner", "top"],
+    "thumbnail": null,
+    "popup": {
+      "name": "Announcement Bar",
+      "enabled": true,
+      "kind": "bar",
+      "placement": "top",
+      "kindConfig": { "kind": "bar", "height": "48px", "sticky": true, "pushPageContent": false },
+      "autoTrigger": { "type": "pageLoad", "delayMs": 0 },
+      "behavior": {
+        "backdrop": { "enabled": false, "color": "#000", "opacity": 0 },
+        "closeOnEscape": true,
+        "closeOnBackdropClick": false,
+        "showCloseButton": true,
+        "lockBodyScroll": false,
+        "trapFocus": false,
+        "restoreFocus": true
+      },
+      "animation": { "enter": "slideDown", "exit": "slideUp", "durationMs": 200, "easing": "ease" },
+      "rules": {}
+    },
+    "root": {
+      "componentType": "PopupContent",
+      "style": { "flexDirection": "row", "alignItems": "center", "justifyContent": "center", "padding": "0 16px", "gap": "12px", "backgroundColor": "#0f172a" },
+      "children": [
+        {
+          "componentType": "Text",
+          "props": { "tag": "p", "text": "<p>🎉 Free shipping on orders over $50! Use code <strong>FREE50</strong></p>" },
+          "style": { "fontSize": "13px", "color": "#f8fafc" }
+        }
+      ]
+    }
+  },
+  {
+    "id": "mobile-bottom-sheet",
+    "name": "Mobile Bottom Sheet",
+    "description": "Draggable bottom sheet for mobile-first experiences.",
+    "category": "Mobile",
+    "tags": ["mobile", "bottom-sheet", "drawer", "gesture"],
+    "thumbnail": null,
+    "popup": {
+      "name": "Mobile Bottom Sheet",
+      "enabled": true,
+      "kind": "bottomSheet",
+      "placement": "bottom",
+      "kindConfig": {
+        "kind": "bottomSheet",
+        "initialHeight": "45vh",
+        "minHeight": "160px",
+        "maxHeight": "90vh",
+        "snapPoints": ["25vh", "50vh", "85vh"],
+        "draggable": true,
+        "dragToClose": true
+      },
+      "autoTrigger": { "type": "manual" },
+      "behavior": {
+        "backdrop": { "enabled": true, "color": "#000", "opacity": 0.3 },
+        "closeOnEscape": true,
+        "closeOnBackdropClick": true,
+        "showCloseButton": true,
+        "lockBodyScroll": true,
+        "trapFocus": true,
+        "restoreFocus": true
+      },
+      "animation": { "enter": "slideUp", "exit": "slideDown", "durationMs": 300, "easing": "ease" },
+      "rules": {}
+    },
+    "root": {
+      "componentType": "PopupContent",
+      "style": { "padding": "24px", "gap": "16px" },
+      "children": [
+        {
+          "componentType": "Text",
+          "props": { "tag": "h3", "text": "<h3>Choose an option</h3>" },
+          "style": { "fontSize": "18px", "fontWeight": 600, "color": "#0f172a" }
+        },
+        {
+          "componentType": "Button",
+          "props": { "label": "<span>Confirm</span>", "variant": "primary" },
+          "style": { "width": "100%" }
+        }
+      ]
+    }
+  },
+  {
+    "id": "exit-intent-modal",
+    "name": "Exit Intent Modal",
+    "description": "Catch users before they leave with a compelling offer.",
+    "category": "Lead Capture",
+    "tags": ["exit-intent", "modal", "retention", "lead"],
+    "thumbnail": null,
+    "popup": {
+      "name": "Exit Intent Modal",
+      "enabled": true,
+      "kind": "modal",
+      "placement": "center",
+      "kindConfig": { "kind": "modal", "size": "md", "maxWidth": "500px" },
+      "autoTrigger": { "type": "manual" },
+      "behavior": {
+        "backdrop": { "enabled": true, "color": "#020617", "opacity": 0.6 },
+        "closeOnEscape": true,
+        "closeOnBackdropClick": false,
+        "showCloseButton": true,
+        "lockBodyScroll": true,
+        "trapFocus": true,
+        "restoreFocus": true
+      },
+      "animation": { "enter": "scale", "exit": "fade", "durationMs": 250 },
+      "rules": {}
+    },
+    "root": {
+      "componentType": "PopupContent",
+      "style": { "padding": "40px", "gap": "20px", "alignItems": "center", "textAlign": "center" },
+      "children": [
+        {
+          "componentType": "Text",
+          "props": { "tag": "h2", "text": "<h2>Wait! Don't leave yet 👋</h2>" },
+          "style": { "fontSize": "28px", "fontWeight": 700, "color": "#0f172a" }
+        },
+        {
+          "componentType": "Text",
+          "props": { "tag": "p", "text": "<p>Get 15% off if you complete your purchase today.</p>" },
+          "style": { "fontSize": "15px", "color": "#64748b" }
+        },
+        {
+          "componentType": "Button",
+          "props": { "label": "<span>Get 15% Off</span>", "variant": "primary" },
+          "style": { "width": "200px" }
+        }
+      ]
+    }
+  },
+  {
+    "id": "cookie-consent",
+    "name": "Cookie Consent",
+    "description": "GDPR-compliant cookie consent bottom bar.",
+    "category": "Legal",
+    "tags": ["cookie", "gdpr", "legal", "consent", "bar"],
+    "thumbnail": null,
+    "popup": {
+      "name": "Cookie Consent",
+      "enabled": true,
+      "kind": "bar",
+      "placement": "bottom",
+      "kindConfig": { "kind": "bar", "height": "auto", "sticky": true, "pushPageContent": false },
+      "autoTrigger": { "type": "pageLoad", "delayMs": 500 },
+      "behavior": {
+        "backdrop": { "enabled": false, "color": "#000", "opacity": 0 },
+        "closeOnEscape": false,
+        "closeOnBackdropClick": false,
+        "showCloseButton": false,
+        "lockBodyScroll": false,
+        "trapFocus": false,
+        "restoreFocus": true
+      },
+      "animation": { "enter": "slideUp", "exit": "slideDown", "durationMs": 200 },
+      "rules": {}
+    },
+    "root": {
+      "componentType": "PopupContent",
+      "style": { "flexDirection": "row", "alignItems": "center", "justifyContent": "space-between", "padding": "16px 24px", "gap": "16px", "backgroundColor": "#1e293b", "flexWrap": "wrap" },
+      "children": [
+        {
+          "componentType": "Text",
+          "props": { "tag": "p", "text": "<p>We use cookies to improve your experience. By continuing, you agree to our <a href='#'>Privacy Policy</a>.</p>" },
+          "style": { "fontSize": "13px", "color": "#cbd5e1", "flex": "1" }
+        },
+        {
+          "componentType": "Button",
+          "props": { "label": "<span>Accept All</span>", "variant": "primary" },
+          "style": { "whiteSpace": "nowrap" }
+        }
+      ]
+    }
+  },
+  {
+    "id": "fullscreen-welcome",
+    "name": "Fullscreen Welcome",
+    "description": "Full-page welcome overlay for onboarding or splash screens.",
+    "category": "Onboarding",
+    "tags": ["fullscreen", "welcome", "onboarding", "splash"],
+    "thumbnail": null,
+    "popup": {
+      "name": "Fullscreen Welcome",
+      "enabled": true,
+      "kind": "fullscreen",
+      "placement": "center",
+      "kindConfig": { "kind": "fullscreen" },
+      "autoTrigger": { "type": "pageLoad", "delayMs": 0 },
+      "behavior": {
+        "backdrop": { "enabled": false, "color": "#000", "opacity": 0 },
+        "closeOnEscape": true,
+        "closeOnBackdropClick": false,
+        "showCloseButton": true,
+        "lockBodyScroll": true,
+        "trapFocus": true,
+        "restoreFocus": true
+      },
+      "animation": { "enter": "fade", "exit": "fade", "durationMs": 400 },
+      "rules": {}
+    },
+    "root": {
+      "componentType": "PopupContent",
+      "style": { "alignItems": "center", "justifyContent": "center", "gap": "24px", "backgroundColor": "#0f172a", "textAlign": "center", "padding": "40px" },
+      "children": [
+        {
+          "componentType": "Text",
+          "props": { "tag": "h1", "text": "<h1>Welcome 👋</h1>" },
+          "style": { "fontSize": "48px", "fontWeight": 800, "color": "#f8fafc" }
+        },
+        {
+          "componentType": "Text",
+          "props": { "tag": "p", "text": "<p>Let's get you set up in just a few steps.</p>" },
+          "style": { "fontSize": "18px", "color": "#94a3b8", "maxWidth": "480px" }
+        },
+        {
+          "componentType": "Button",
+          "props": { "label": "<span>Get Started</span>", "variant": "primary" },
+          "style": { "width": "200px" }
+        }
+      ]
+    }
+  },
+  {
+    "id": "survey-modal",
+    "name": "Survey Modal",
+    "description": "Quick NPS or feedback survey modal.",
+    "category": "Feedback",
+    "tags": ["survey", "nps", "feedback", "modal"],
+    "thumbnail": null,
+    "popup": {
+      "name": "Survey Modal",
+      "enabled": true,
+      "kind": "modal",
+      "placement": "center",
+      "kindConfig": { "kind": "modal", "size": "sm", "maxWidth": "440px" },
+      "autoTrigger": { "type": "manual" },
+      "behavior": {
+        "backdrop": { "enabled": true, "color": "#000", "opacity": 0.4 },
+        "closeOnEscape": true,
+        "closeOnBackdropClick": true,
+        "showCloseButton": true,
+        "lockBodyScroll": false,
+        "trapFocus": true,
+        "restoreFocus": true
+      },
+      "animation": { "enter": "slideUp", "exit": "fade", "durationMs": 200 },
+      "rules": {}
+    },
+    "root": {
+      "componentType": "PopupContent",
+      "style": { "padding": "28px", "gap": "16px" },
+      "children": [
+        {
+          "componentType": "Text",
+          "props": { "tag": "h3", "text": "<h3>How are we doing?</h3>" },
+          "style": { "fontSize": "20px", "fontWeight": 600, "color": "#0f172a" }
+        },
+        {
+          "componentType": "Text",
+          "props": { "tag": "p", "text": "<p>Rate your experience from 1 to 10.</p>" },
+          "style": { "fontSize": "14px", "color": "#64748b" }
+        },
+        {
+          "componentType": "Button",
+          "props": { "label": "<span>Submit</span>", "variant": "primary" },
+          "style": { "width": "100%" }
+        }
+      ]
+    }
+  }
+]

@@ -173,6 +173,15 @@ controls, and unbroken focus trap. The locale patch (`popupPatch`) may not remov
 or override `behavior.trapFocus`, `behavior.closeOnEscape`, or the close button
 without providing an equivalent accessible path.
 
+**V6 (campaigns — queue/replace):** when conflict arbitration closes a popup (`replace`
+policy) or dequeues a queued popup, focus restore must be correct:
+
+- `replace`: the closed popup's `behavior.restoreFocus` target still fires before the
+  replacement opens. The replacement then captures focus and traps it independently.
+- `queue`: the queued popup opens only after the prior popup is fully unmounted; focus
+  is restored to the prior trigger before the queued popup captures it.
+- Campaign-gated popups blocked before mounting never alter the focus stack.
+
 ### ARIA Landmarks
 
 Editor shell structure:

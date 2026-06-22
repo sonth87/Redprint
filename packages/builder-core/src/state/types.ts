@@ -124,6 +124,11 @@ export interface EditorState {
    * the base content. Cleared whenever the active popup changes.
    */
   activePopupLocale?: string | null;
+  /**
+   * V6: which campaign is focused in the editor campaign panel (for filtering /
+   * highlight). Independent of activePopupId.
+   */
+  activeCampaignId?: string | null;
 }
 
 // ── Interaction state ─────────────────────────────────────────────────────

@@ -75,6 +75,7 @@ import { GalleryMediaManager } from "./panels/gallery";
 import { PopupManagerPanel } from "./popups/PopupManagerPanel";
 import { PopupEditorSurface } from "./popups/PopupEditorSurface";
 import { PopupPropertyPanel } from "./popups/PopupPropertyPanel";
+import { CampaignPanel } from "./popups/CampaignPanel";
 import { usePopupShellResize } from "./popups/usePopupShellResize";
 import { usePopupShellDrag } from "./popups/usePopupShellDrag";
 
@@ -270,6 +271,7 @@ function EditorInner({
   const [pageGeneratorOpen, setPageGeneratorOpen] = React.useState(false);
   const [figmaOpen, setFigmaOpen] = React.useState(false);
   const [popupsOpen, setPopupsOpen] = React.useState(false);
+  const [campaignsOpen, setCampaignsOpen] = React.useState(false);
   const [popupPreviewOpen, setPopupPreviewOpen] = React.useState(false);
   const [popupTemplateVersion, setPopupTemplateVersion] = React.useState(0);
 
@@ -403,6 +405,36 @@ function EditorInner({
     dispatchPopupCommand({ type: "UPDATE_POPUP_FREQUENCY", payload: { popupId, frequency }, description: "Update popup frequency" });
   }, [dispatchPopupCommand]);
 
+  // ── V6: Campaign handlers ──────────────────────────────────────────────────
+
+  const handleCreateCampaign = React.useCallback((name: string) => {
+    dispatchPopupCommand({ type: "CREATE_CAMPAIGN", payload: { name }, description: "Create campaign" });
+  }, [dispatchPopupCommand]);
+
+  const handleUpdateCampaign = React.useCallback((campaignId: string, patch: Record<string, unknown>) => {
+    dispatchPopupCommand({ type: "UPDATE_CAMPAIGN", payload: { campaignId, patch }, description: "Update campaign" });
+  }, [dispatchPopupCommand]);
+
+  const handleSetCampaignStatus = React.useCallback((campaignId: string, status: string) => {
+    dispatchPopupCommand({ type: "SET_CAMPAIGN_STATUS", payload: { campaignId, status }, description: "Set campaign status" });
+  }, [dispatchPopupCommand]);
+
+  const handleDeleteCampaign = React.useCallback((campaignId: string) => {
+    dispatchPopupCommand({ type: "DELETE_CAMPAIGN", payload: { campaignId }, description: "Delete campaign" });
+  }, [dispatchPopupCommand]);
+
+  const handleAssignCampaign = React.useCallback((popupId: string, campaignId: string | null) => {
+    dispatchPopupCommand({ type: "ASSIGN_POPUP_CAMPAIGN", payload: { popupId, campaignId }, description: "Assign campaign" });
+  }, [dispatchPopupCommand]);
+
+  const handleSetPopupPriority = React.useCallback((popupId: string, priority: number) => {
+    dispatchPopupCommand({ type: "SET_POPUP_PRIORITY", payload: { popupId, priority }, description: "Set popup priority" });
+  }, [dispatchPopupCommand]);
+
+  const handleSetActiveCampaign = React.useCallback((campaignId: string | null) => {
+    dispatch({ type: "SET_ACTIVE_CAMPAIGN", payload: { campaignId } });
+  }, [dispatch]);
+
   const handleDuplicatePopup = React.useCallback((popupId: string) => {
     dispatchPopupCommand({
       type: "DUPLICATE_POPUP",
@@ -421,7 +453,7 @@ function EditorInner({
     dispatchPopupCommand({ type: enabled ? "ENABLE_POPUP" : "DISABLE_POPUP", payload: { popupId }, description: enabled ? "Enable popup" : "Disable popup" });
   }, [dispatchPopupCommand]);
 
-  const handleSavePopupTemplate = React.useCallback((popupId: string) => {
+  const handleSavePopupTemplate = React.useCallback(async (popupId: string) => {
     const popup = document.popups?.[popupId];
     const root = popup ? document.nodes[popup.rootNodeId] : null;
     if (!popup || !root) return;
@@ -443,28 +475,52 @@ function EditorInner({
       };
     };
 
+    const popupConfig = {
+      name: popup.name,
+      enabled: popup.enabled,
+      kind: popup.kind,
+      placement: popup.placement,
+      kindConfig: popup.kindConfig,
+      autoTrigger: popup.autoTrigger,
+      behavior: popup.behavior,
+      animation: popup.animation,
+      rules: popup.rules,
+    };
+    const rootNode = buildTemplateNode(root.id);
+
+    // Register in-memory (always)
     builder.popupTemplates.register({
       id: `custom-${popup.id}`,
       name: popup.name,
-      category: "Custom",
+      category: "My Library",
       description: "Saved from editor",
       tags: ["custom", popup.kind],
-      popup: {
-        name: popup.name,
-        enabled: popup.enabled,
-        kind: popup.kind,
-        placement: popup.placement,
-        kindConfig: popup.kindConfig,
-        autoTrigger: popup.autoTrigger,
-        behavior: popup.behavior,
-        animation: popup.animation,
-        rules: popup.rules,
-      },
-      root: buildTemplateNode(root.id),
+      popup: popupConfig,
+      root: rootNode,
     });
     setPopupTemplateVersion((v) => v + 1);
-    toast.success(`Saved "${popup.name}" as template`);
-  }, [builder.popupTemplates, document]);
+
+    // Persist to server if backendUrl is available
+    if (aiConfig.backendUrl) {
+      try {
+        const { popupApiClient } = await import("./popups/popupApiClient");
+        await popupApiClient.saveToLibrary(aiConfig.backendUrl, {
+          name: popup.name,
+          category: "My Library",
+          description: "Saved from editor",
+          tags: ["custom", popup.kind],
+          thumbnail: null,
+          popup: popupConfig,
+          root: rootNode,
+        });
+        toast.success(`Saved "${popup.name}" to library`);
+      } catch {
+        toast.success(`Saved "${popup.name}" as template (local only)`);
+      }
+    } else {
+      toast.success(`Saved "${popup.name}" as template`);
+    }
+  }, [builder.popupTemplates, document, aiConfig.backendUrl]);
 
   const [remoteCatalog, setRemoteCatalog] = React.useState<PaletteCatalog | undefined>();
   const [loadedGroups, setLoadedGroups] = React.useState<Set<string>>(new Set());
@@ -787,6 +843,27 @@ function EditorInner({
           <Layers className="h-4 w-4" />
         </button>
 
+        <button
+          type="button"
+          className={cn(
+            "absolute left-14 top-24 z-20 flex h-9 w-9 items-center justify-center rounded-md border bg-background/80 text-muted-foreground shadow-sm backdrop-blur transition-colors hover:text-foreground",
+            campaignsOpen && "border-primary text-primary",
+          )}
+          title="Campaigns"
+          onClick={() => setCampaignsOpen((open) => !open)}
+        >
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/>
+            <path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+            <path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/>
+            <path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/>
+            <path d="M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z"/>
+            <path d="M15.5 9H17v1.5c0 .83-.67 1.5-1.5 1.5S14 11.33 14 10.5v-1c0-.28.22-.5.5-.5h1z"/>
+            <path d="M10 9.5c0 .83-.67 1.5-1.5 1.5h-5C2.67 11 2 10.33 2 9.5S2.67 8 3.5 8h5c.83 0 1.5.67 1.5 1.5z"/>
+            <path d="M8.5 15H7v-1.5c0-.83.67-1.5 1.5-1.5S10 12.67 10 13.5v1c0 .28-.22.5-.5.5h-1z"/>
+          </svg>
+        </button>
+
         {/* Palette */}
         {paletteMode === "floating" && (effectiveCatalog || remotePaletteProvider) && (
           <FloatingPalette
@@ -831,6 +908,24 @@ function EditorInner({
           </FloatingPanel>
         )}
 
+        {campaignsOpen && (
+          <FloatingPanel id="campaigns" title="Campaigns" defaultPosition={{ x: 84, y: 200 }} onClose={() => setCampaignsOpen(false)}>
+            <div className="h-[52vh] min-h-[360px] w-72 overflow-hidden">
+              <CampaignPanel
+                document={document}
+                handlers={{
+                  onCreateCampaign: handleCreateCampaign,
+                  onUpdateCampaign: (id, patch) => handleUpdateCampaign(id, patch as Record<string, unknown>),
+                  onSetCampaignStatus: handleSetCampaignStatus,
+                  onDeleteCampaign: handleDeleteCampaign,
+                  onSetActiveCampaign: handleSetActiveCampaign,
+                  activeCampaignId: state.editor.activeCampaignId ?? null,
+                }}
+              />
+            </div>
+          </FloatingPanel>
+        )}
+
         {popupsOpen && (
           <FloatingPanel id="popups" title="Popups" icon={<Layers className="h-3.5 w-3.5" />} defaultPosition={{ x: 84, y: 140 }} onClose={() => setPopupsOpen(false)}>
             <div className="h-[62vh] min-h-[420px] overflow-hidden">
@@ -838,6 +933,7 @@ function EditorInner({
                 document={document}
                 activePopupId={activePopupId}
                 registryTemplates={popupTemplates}
+                backendUrl={aiConfig.backendUrl}
                 onCreateFromTemplate={handleCreatePopupFromTemplate}
                 onCreateBlank={handleCreateBlankPopup}
                 onEdit={handleEditPopup}
@@ -845,7 +941,7 @@ function EditorInner({
                 onDelete={handleDeletePopup}
                 onToggleEnabled={handleTogglePopupEnabled}
                 onUpdatePopup={(popupId, popup) => handleUpdatePopup(popupId, popup)}
-                onSaveTemplate={handleSavePopupTemplate}
+                onSaveToLibrary={async (popupId) => handleSavePopupTemplate(popupId)}
               />
             </div>
           </FloatingPanel>
@@ -885,6 +981,11 @@ function EditorInner({
                   onUpdateTargeting: handleUpdateTargeting,
                   onUpdateSchedule: handleUpdateSchedule,
                   onUpdateFrequency: handleUpdateFrequency,
+                }}
+                v6={{
+                  campaigns: document.popupCampaigns ?? {},
+                  onAssignCampaign: handleAssignCampaign,
+                  onSetPriority: handleSetPopupPriority,
                 }}
               />
             ) : selectedNode ? (

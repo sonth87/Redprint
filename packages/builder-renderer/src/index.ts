@@ -35,6 +35,13 @@ export type {
   PopupFrequencyConfig,
   PopupFrequencyRule,
   FrequencyUnit,
+  // V6
+  PopupCampaign,
+  PopupCampaignStatus,
+  PopupCampaignMetadata,
+  PopupConflictPolicy,
+  ArbitrationInput,
+  ArbitrationDecision,
 } from "@ui-builder/builder-core";
 export {
   evaluateTargeting,
@@ -42,6 +49,11 @@ export {
   evaluateFrequency,
   recordFrequencyImpression,
   resolveLocaleContent,
+  // V6
+  evaluateCampaignGate,
+  effectivePriority,
+  resolveConflictPolicy,
+  arbitrate,
 } from "@ui-builder/builder-core";
 
 // Loader

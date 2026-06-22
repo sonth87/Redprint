@@ -30,6 +30,7 @@ import {
   type PopupTargeting,
   type PopupSchedule,
   type PopupFrequencyConfig,
+  type PopupCampaign,
 } from "@ui-builder/builder-core";
 
 const KIND_OPTIONS: PopupKind[] = ["modal", "drawer", "bottomSheet", "bar", "fullscreen"];
@@ -62,6 +63,13 @@ export interface PopupPropertyPanelV5Handlers {
   onUpdateFrequency: (popupId: string, frequency: Partial<PopupFrequencyConfig>) => void;
 }
 
+/** V6 callbacks — campaign membership editing. */
+export interface PopupPropertyPanelV6Handlers {
+  campaigns: Record<string, PopupCampaign>;
+  onAssignCampaign: (popupId: string, campaignId: string | null) => void;
+  onSetPriority: (popupId: string, priority: number) => void;
+}
+
 export interface PopupPropertyPanelProps {
   popup: PopupDefinition;
   document: BuilderDocument;
@@ -70,9 +78,11 @@ export interface PopupPropertyPanelProps {
   v4?: PopupPropertyPanelV4Handlers;
   /** Optional V5 locale/targeting/schedule/frequency editing handlers. */
   v5?: PopupPropertyPanelV5Handlers;
+  /** Optional V6 campaign membership editing handlers. */
+  v6?: PopupPropertyPanelV6Handlers;
 }
 
-export function PopupPropertyPanel({ popup, document, onChange, v4, v5 }: PopupPropertyPanelProps) {
+export function PopupPropertyPanel({ popup, document, onChange, v4, v5, v6 }: PopupPropertyPanelProps) {
   const sections = React.useMemo(
     () => Object.values(document.nodes).filter((node) => node.type === "Section"),
     [document.nodes],
@@ -188,6 +198,11 @@ export function PopupPropertyPanel({ popup, document, onChange, v4, v5 }: PopupP
                 <FrequencyFields popup={popup} v5={v5} />
               </PanelSection>
             </>
+          )}
+          {v6 && (
+            <PanelSection title="Campaign">
+              <CampaignMembershipFields popup={popup} v6={v6} />
+            </PanelSection>
           )}
         </div>
       </ScrollArea>
@@ -686,4 +701,65 @@ function getDefaultPlacement(kind: PopupKind): PopupPlacement {
   if (kind === "drawer") return "right";
   if (kind === "bar" || kind === "bottomSheet") return "bottom";
   return "center";
+}
+
+// ── V6: Campaign membership ────────────────────────────────────────────────────
+
+const CAMPAIGN_STATUS_LABELS: Record<string, string> = {
+  draft: "Draft",
+  review: "In Review",
+  published: "Published",
+  paused: "Paused",
+  archived: "Archived",
+};
+
+const CONFLICT_POLICY_LABELS: Record<string, string> = {
+  queue: "Queue",
+  suppress: "Suppress",
+  replace: "Replace",
+  stack: "Stack",
+};
+
+function CampaignMembershipFields({ popup, v6 }: { popup: PopupDefinition; v6: PopupPropertyPanelV6Handlers }) {
+  const campaigns = Object.values(v6.campaigns);
+  const activeCampaign = popup.campaignId ? v6.campaigns[popup.campaignId] : undefined;
+
+  return (
+    <div className="space-y-2">
+      <div className="grid gap-1.5">
+        <Label className="text-[10px] text-muted-foreground">Campaign</Label>
+        <Select
+          value={popup.campaignId ?? "__none__"}
+          onValueChange={(val) => v6.onAssignCampaign(popup.id, val === "__none__" ? null : val)}
+        >
+          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__none__">— No campaign —</SelectItem>
+            {campaigns.map((c) => (
+              <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      {activeCampaign && (
+        <div className="rounded-md border bg-muted/30 px-2 py-1.5 text-[10px] text-muted-foreground space-y-0.5">
+          <div>Status: <span className="text-foreground font-medium">{CAMPAIGN_STATUS_LABELS[activeCampaign.status] ?? activeCampaign.status}</span></div>
+          <div>Conflict policy: <span className="text-foreground">{CONFLICT_POLICY_LABELS[activeCampaign.conflictPolicy ?? "stack"] ?? activeCampaign.conflictPolicy}</span></div>
+          {activeCampaign.status !== "published" && (
+            <div className="text-amber-600 dark:text-amber-400">This popup will be gated (not published)</div>
+          )}
+        </div>
+      )}
+      <div className="grid gap-1.5">
+        <Label className="text-[10px] text-muted-foreground">Priority</Label>
+        <input
+          type="number"
+          className="h-8 w-full rounded-md border bg-background px-2 text-xs"
+          value={popup.priority ?? 0}
+          onChange={(e) => v6.onSetPriority(popup.id, Number(e.target.value))}
+        />
+        <p className="text-[9px] text-muted-foreground">Higher value = wins arbitration within campaign.</p>
+      </div>
+    </div>
+  );
 }

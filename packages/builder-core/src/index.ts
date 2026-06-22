@@ -56,6 +56,11 @@ export type {
   PopupTargeting,
   PopupSchedule,
   PopupLocaleContent,
+  // V6
+  PopupCampaignStatus,
+  PopupConflictPolicy,
+  PopupCampaignMetadata,
+  PopupCampaign,
 } from "./document/popups";
 export {
   createDefaultPopupDefinition,
@@ -84,6 +89,13 @@ export {
   recordFrequencyImpression,
   resolveLocaleContent,
 } from "./popups/rules";
+export {
+  evaluateCampaignGate,
+  effectivePriority,
+  resolveConflictPolicy,
+  arbitrate,
+} from "./popups/campaigns";
+export type { ArbitrationInput, ArbitrationDecision } from "./popups/campaigns";
 export {
   DEFAULT_POPUP_Z_INDEX_BASE,
   POPUP_Z_INDEX_STEP,
@@ -216,6 +228,14 @@ export {
   CMD_SET_ACTIVE_POPUP_SELECTION,
   CMD_SET_ACTIVE_POPUP_VARIANT,
   CMD_SET_ACTIVE_POPUP_LOCALE,
+  CMD_CREATE_CAMPAIGN,
+  CMD_UPDATE_CAMPAIGN,
+  CMD_DELETE_CAMPAIGN,
+  CMD_RESTORE_CAMPAIGN,
+  CMD_SET_CAMPAIGN_STATUS,
+  CMD_ASSIGN_POPUP_CAMPAIGN,
+  CMD_SET_POPUP_PRIORITY,
+  CMD_SET_ACTIVE_CAMPAIGN,
   CMD_ENTER_TEXT_EDIT,
   CMD_EXIT_TEXT_EDIT,
   CMD_SET_THEME_COLORS,
@@ -259,6 +279,14 @@ export type {
   UpdatePopupSchedulePayload,
   UpdatePopupFrequencyPayload,
   SetActivePopupLocalePayload,
+  CreateCampaignPayload,
+  UpdateCampaignPayload,
+  DeleteCampaignPayload,
+  RestoreCampaignPayload,
+  SetCampaignStatusPayload,
+  AssignPopupCampaignPayload,
+  SetPopupPriorityPayload,
+  SetActiveCampaignPayload,
   EnterTextEditPayload,
   ExitTextEditPayload,
   SetThemeColorsPayload,
@@ -302,6 +330,7 @@ export type { SchemaMigration } from "./migration/types";
 export { popupV3Migration } from "./migration/popupV3Migration";
 export { popupV4Migration } from "./migration/popupV4Migration";
 export { popupV5Migration } from "./migration/popupV5Migration";
+export { popupV6Migration } from "./migration/popupV6Migration";
 
 // ── Properties (shared descriptor system) ──────────────────────────────────
 export {

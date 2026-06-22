@@ -3,4 +3,4 @@
  */
 
 /** Current schema version — bump on breaking document schema changes. */
-export const CURRENT_SCHEMA_VERSION = "2.6.0" as const;
+export const CURRENT_SCHEMA_VERSION = "2.7.0" as const;

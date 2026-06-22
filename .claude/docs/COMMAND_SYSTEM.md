@@ -72,6 +72,14 @@ interface ReversibleCommand<T = unknown> extends Command<T> {
 | `UPDATE_POPUP_SCHEDULE` | `{ popupId, schedule: Partial<PopupSchedule> }`                | V5 — update scheduling config |
 | `UPDATE_POPUP_FREQUENCY` | `{ popupId, frequency: Partial<PopupFrequencyConfig> }`       | V5 — update frequency cap config |
 | `SET_ACTIVE_POPUP_LOCALE` | `{ popupId, locale: string \| null }`                        | V5 — edit a locale's content on canvas (no undo) |
+| `CREATE_CAMPAIGN`    | `{ campaignId?, name, description?, status?, conflictPolicy?, priority? }` | V6 — create popup campaign |
+| `UPDATE_CAMPAIGN`    | `{ campaignId, patch: Partial<PopupCampaign> }`             | V6 — update campaign fields |
+| `DELETE_CAMPAIGN`    | `{ campaignId }`                                            | V6 — delete campaign; orphans members (clears campaignId) |
+| `RESTORE_CAMPAIGN`   | `{ campaign, memberPopupIds }` (internal undo target)       | V6 — restore deleted campaign + re-link members |
+| `SET_CAMPAIGN_STATUS` | `{ campaignId, status: PopupCampaignStatus }`              | V6 — transition status; appends statusHistory entry |
+| `ASSIGN_POPUP_CAMPAIGN` | `{ popupId, campaignId: string \| null }`               | V6 — assign/unassign popup to campaign |
+| `SET_POPUP_PRIORITY` | `{ popupId, priority: number }`                             | V6 — set popup-level priority |
+| `SET_ACTIVE_CAMPAIGN` | `{ campaignId: string \| null }`                           | V6 — focus campaign in editor panel (no undo) |
 | `UPDATE_RESPONSIVE_PROPS` | `{ nodeId, breakpoint, props }`                                     | Breakpoint-specific props override |
 | `RESET_RESPONSIVE_STYLE` | `{ nodeId, breakpoint }`                                             | Clear all breakpoint style overrides |
 | `ENTER_TEXT_EDIT`    | `{ nodeId }`                                                                 | Enter inline text edit mode (no undo) |
@@ -201,11 +209,13 @@ interface MigrationEngine {
 }
 ```
 
-Current `CURRENT_SCHEMA_VERSION` is `2.6.0`. Consumer-registered popup
+Current `CURRENT_SCHEMA_VERSION` is `2.7.0`. Consumer-registered popup
 migrations: `popupV3Migration` (`2.3.0 → 2.4.0`, fills behavior defaults),
-`popupV4Migration` (`2.4.0 → 2.5.0`, additive — goals/variants/experiment), and
+`popupV4Migration` (`2.4.0 → 2.5.0`, additive — goals/variants/experiment),
 `popupV5Migration` (`2.5.0 → 2.6.0`, additive — locales/targeting/scheduling/
-frequency are all optional, so it only bumps the version).
+frequency are all optional, so it only bumps the version), and
+`popupV6Migration` (`2.6.0 → 2.7.0`, additive — campaigns/conflict policy/priority;
+rollback strips `popupCampaigns` and clears `campaignId`/`priority` from all popups).
 
 **Migration Contracts:**
 

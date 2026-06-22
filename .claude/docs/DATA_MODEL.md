@@ -185,7 +185,7 @@ interface Condition {
 ```ts
 interface BuilderDocument {
   id: string;
-  schemaVersion: string; // semver e.g. "2.5.0"
+  schemaVersion: string; // semver e.g. "2.7.0"
   createdAt: string; // ISO 8601
   updatedAt: string;
   name: string;
@@ -197,6 +197,7 @@ interface BuilderDocument {
   assets: AssetManifest;
   plugins: PluginReference[];
   popups: Record<string, PopupDefinition>;
+  popupCampaigns?: Record<string, PopupCampaign>; // V6
   canvasConfig: CanvasConfig;
   metadata: DocumentMetadata;
 }
@@ -258,6 +259,10 @@ interface PopupDefinition {
   goals?: PopupGoal[];                    // V4 — conversion goals
   variants?: PopupVariant[];             // V4 — A/B variants (popup-owned content)
   experiment?: PopupExperiment;          // V4 — assignment policy
+  locales?: PopupLocaleContent[];        // V5 — locale-specific content
+  fallbackLocale?: string;               // V5 — BCP-47 tag used when locale unmatched
+  campaignId?: string;                   // V6 — references PopupCampaign.id
+  priority?: number;                     // V6 — popup-level priority (effectivePriority formula)
   metadata: PopupMetadata;
 }
 ```
@@ -435,6 +440,80 @@ order: exact match → language-prefix match ("fr" matches "fr-CA") → `fallbac
 `evaluateFrequency`, `resolveLocaleContent`) live in
 `builder-core/src/popups/rules.ts`. Runtime evaluation never mutates
 `BuilderDocument`. See RUNTIME.md → V5 Pre-open Eligibility.
+
+---
+
+### V6 optional fields (schema 2.7.0)
+
+All optional and additive — V5 documents remain valid (`popupV6Migration` only bumps
+the version; absence of all V6 fields means "no campaigns, ungrouped popups").
+
+#### PopupCampaign
+
+Campaigns group popups into a named lifecycle-managed unit. The document holds a flat
+`popupCampaigns` record; each popup opts in by setting `campaignId`.
+
+```ts
+type PopupCampaignStatus = "draft" | "review" | "published" | "paused" | "archived";
+type PopupConflictPolicy = "queue" | "suppress" | "replace" | "stack";
+
+interface PopupCampaignMetadata {
+  createdAt: string;
+  updatedAt: string;
+  statusHistory?: Array<{ status: PopupCampaignStatus; at: string }>;
+}
+
+interface PopupCampaign {
+  id: string;
+  name: string;
+  description?: string;
+  status: PopupCampaignStatus;
+  priority?: number;           // campaign-level priority (0 = lowest)
+  conflictPolicy?: PopupConflictPolicy; // default "stack"
+  metadata: PopupCampaignMetadata;
+}
+```
+
+**Conflict policies:**
+
+| Policy | Behavior |
+|--------|----------|
+| `stack` (default) | Campaign popups stack freely on top of each other |
+| `suppress` | Lower-priority popup is blocked when a higher-priority campaign popup is open |
+| `replace` | Candidate closes lower-priority open campaign popups and opens |
+| `queue` | Candidate is deferred until all open campaign popups close |
+
+**Effective priority** formula: `(campaign.priority ?? 0) * 1000 + (popup.priority ?? 0)`.
+Campaign priority dominates; popup priority breaks ties within the same campaign.
+
+#### BuilderDocument.popupCampaigns
+
+```ts
+interface BuilderDocument {
+  // ...existing fields...
+  popupCampaigns?: Record<string, PopupCampaign>; // V6
+}
+```
+
+#### PopupDefinition V6 additions
+
+```ts
+// PopupDefinition extended (V6 additions, all optional):
+// campaignId?: string;   // references a PopupCampaign.id
+// priority?: number;     // popup-level priority (used in effectivePriority formula)
+```
+
+**Membership pattern:** the popup holds `campaignId`; the campaign holds no member list.
+`DELETE_CAMPAIGN` orphans members (clears `campaignId`) but does NOT cascade-delete
+popups. Undo of `DELETE_CAMPAIGN` re-links all previous members.
+
+**Runtime gate:** only `published` campaign popups render at runtime. Popups in
+`draft`, `review`, `paused`, or `archived` campaigns emit `popup_rules_blocked` with
+`rulesBlockReason: "campaign"`. Orphaned popups (unknown `campaignId`) pass through.
+
+Pure campaign helpers (`evaluateCampaignGate`, `effectivePriority`,
+`resolveConflictPolicy`, `arbitrate`) live in `builder-core/src/popups/campaigns.ts`.
+See RUNTIME.md → V6 Campaign Gate & Conflict Arbitration.
 
 ---
 

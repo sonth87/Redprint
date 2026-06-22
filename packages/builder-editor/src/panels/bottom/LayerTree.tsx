@@ -422,6 +422,11 @@ export const LayerTree = memo(function LayerTree({
     () => Object.values(document.popups ?? {}).sort((a, b) => a.name.localeCompare(b.name)),
     [document.popups],
   );
+  const campaigns = useMemo(
+    () => Object.values(document.popupCampaigns ?? {}),
+    [document.popupCampaigns],
+  );
+  const hasCampaigns = campaigns.length > 0;
 
   return (
     <div className="flex flex-col h-full">
@@ -464,23 +469,76 @@ export const LayerTree = memo(function LayerTree({
 
           {popups.length > 0 && (
             <LayerGroup icon={<Layers className="h-3.5 w-3.5" />} label="Popups" active={!!activePopupId}>
-              {popups.map((popup) => (
-                <PopupLayerItem
-                  key={popup.id}
-                  popup={popup}
-                  document={document}
-                  selectedIds={activePopupId === popup.id ? selectedIds : []}
-                  active={activePopupId === popup.id}
-                  shellSelected={activePopupId === popup.id && activePopupSelection === "shell"}
-                  onSelect={onSelect}
-                  onSelectPopup={onSelectPopup}
-                  onToggleEnabled={onTogglePopupEnabled}
-                  onToggleHidden={onToggleHidden}
-                  onToggleLocked={onToggleLocked}
-                  onNodeHover={onNodeHover}
-                  searchText={searchText}
-                />
-              ))}
+              {hasCampaigns ? (
+                <>
+                  {/* V6: popups grouped by campaign */}
+                  {campaigns.map((campaign) => {
+                    const members = popups.filter((p) => (p as PopupDefinition & { campaignId?: string }).campaignId === campaign.id);
+                    if (members.length === 0) return null;
+                    return (
+                      <div key={campaign.id} className="w-full min-w-0">
+                        <div className="flex h-6 items-center gap-1.5 pl-4 text-[10px] uppercase tracking-wide text-muted-foreground">
+                          <span className="truncate font-medium">{campaign.name}</span>
+                          <span className="rounded bg-muted px-1 py-0.5 font-mono text-[9px]">{campaign.status}</span>
+                        </div>
+                        {members.map((popup) => (
+                          <PopupLayerItem
+                            key={popup.id}
+                            popup={popup}
+                            document={document}
+                            selectedIds={activePopupId === popup.id ? selectedIds : []}
+                            active={activePopupId === popup.id}
+                            shellSelected={activePopupId === popup.id && activePopupSelection === "shell"}
+                            onSelect={onSelect}
+                            onSelectPopup={onSelectPopup}
+                            onToggleEnabled={onTogglePopupEnabled}
+                            onToggleHidden={onToggleHidden}
+                            onToggleLocked={onToggleLocked}
+                            onNodeHover={onNodeHover}
+                            searchText={searchText}
+                          />
+                        ))}
+                      </div>
+                    );
+                  })}
+                  {/* Ungrouped popups */}
+                  {popups.filter((p) => !(p as PopupDefinition & { campaignId?: string }).campaignId).map((popup) => (
+                    <PopupLayerItem
+                      key={popup.id}
+                      popup={popup}
+                      document={document}
+                      selectedIds={activePopupId === popup.id ? selectedIds : []}
+                      active={activePopupId === popup.id}
+                      shellSelected={activePopupId === popup.id && activePopupSelection === "shell"}
+                      onSelect={onSelect}
+                      onSelectPopup={onSelectPopup}
+                      onToggleEnabled={onTogglePopupEnabled}
+                      onToggleHidden={onToggleHidden}
+                      onToggleLocked={onToggleLocked}
+                      onNodeHover={onNodeHover}
+                      searchText={searchText}
+                    />
+                  ))}
+                </>
+              ) : (
+                popups.map((popup) => (
+                  <PopupLayerItem
+                    key={popup.id}
+                    popup={popup}
+                    document={document}
+                    selectedIds={activePopupId === popup.id ? selectedIds : []}
+                    active={activePopupId === popup.id}
+                    shellSelected={activePopupId === popup.id && activePopupSelection === "shell"}
+                    onSelect={onSelect}
+                    onSelectPopup={onSelectPopup}
+                    onToggleEnabled={onTogglePopupEnabled}
+                    onToggleHidden={onToggleHidden}
+                    onToggleLocked={onToggleLocked}
+                    onNodeHover={onNodeHover}
+                    searchText={searchText}
+                  />
+                ))
+              )}
             </LayerGroup>
           )}
 

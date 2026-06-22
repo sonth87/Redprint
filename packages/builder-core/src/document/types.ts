@@ -7,7 +7,7 @@ import type { Breakpoint, BreakpointConfig } from "../responsive/types";
 import type { BoxValue, BorderValue } from "@ui-builder/shared";
 import type { InteractionConfig } from "./interactions";
 import type { Asset, AssetManifest } from "./assets";
-import type { PopupDefinition } from "./popups";
+import type { PopupDefinition, PopupCampaign } from "./popups";
 
 // ── StyleConfig ───────────────────────────────────────────────────────────
 
@@ -217,6 +217,8 @@ export interface BuilderDocument {
   plugins: PluginReference[];
   /** Document-level overlay surfaces. Popup content roots live in nodes but outside rootNodeId flow. */
   popups?: Record<string, PopupDefinition>;
+  /** V6: popup campaigns keyed by campaign.id. */
+  popupCampaigns?: Record<string, PopupCampaign>;
   canvasConfig: CanvasConfig;
   metadata: DocumentMetadata;
   /** Project-level color palette shown in all color pickers. Defaults applied by createBuilder. */

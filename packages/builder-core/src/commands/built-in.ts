@@ -64,12 +64,22 @@ export const CMD_UPDATE_POPUP_TARGETING = "UPDATE_POPUP_TARGETING" as const;
 export const CMD_UPDATE_POPUP_SCHEDULE = "UPDATE_POPUP_SCHEDULE" as const;
 export const CMD_UPDATE_POPUP_FREQUENCY = "UPDATE_POPUP_FREQUENCY" as const;
 
+// Popups — V6 campaigns / membership / status
+export const CMD_CREATE_CAMPAIGN = "CREATE_CAMPAIGN" as const;
+export const CMD_UPDATE_CAMPAIGN = "UPDATE_CAMPAIGN" as const;
+export const CMD_DELETE_CAMPAIGN = "DELETE_CAMPAIGN" as const;
+export const CMD_RESTORE_CAMPAIGN = "RESTORE_CAMPAIGN" as const;
+export const CMD_SET_CAMPAIGN_STATUS = "SET_CAMPAIGN_STATUS" as const;
+export const CMD_ASSIGN_POPUP_CAMPAIGN = "ASSIGN_POPUP_CAMPAIGN" as const;
+export const CMD_SET_POPUP_PRIORITY = "SET_POPUP_PRIORITY" as const;
+
 // Editor UI
 export const CMD_SET_CANVAS_MODE = "SET_CANVAS_MODE" as const;
 export const CMD_SET_ACTIVE_POPUP = "SET_ACTIVE_POPUP" as const;
 export const CMD_SET_ACTIVE_POPUP_SELECTION = "SET_ACTIVE_POPUP_SELECTION" as const;
 export const CMD_SET_ACTIVE_POPUP_VARIANT = "SET_ACTIVE_POPUP_VARIANT" as const;
 export const CMD_SET_ACTIVE_POPUP_LOCALE = "SET_ACTIVE_POPUP_LOCALE" as const;
+export const CMD_SET_ACTIVE_CAMPAIGN = "SET_ACTIVE_CAMPAIGN" as const;
 
 // Document theme
 export const CMD_SET_THEME_COLORS = "SET_THEME_COLORS" as const;
@@ -92,6 +102,9 @@ import type {
   PopupTargeting,
   PopupSchedule,
   PopupFrequencyConfig,
+  PopupCampaign,
+  PopupCampaignStatus,
+  PopupConflictPolicy,
 } from "../document/popups";
 import type { BuilderNode } from "../document/types";
 import type { PopupSelectionMode } from "../state/types";
@@ -401,4 +414,52 @@ export interface UpdatePopupFrequencyPayload {
 export interface SetActivePopupLocalePayload {
   popupId: string;
   locale: string | null;
+}
+
+// ── V6: campaign CRUD / membership / editor focus ─────────────────────────────
+
+export interface CreateCampaignPayload {
+  /** Pre-generated campaign id for predictable undo/redo. */
+  campaignId?: string;
+  name: string;
+  description?: string;
+  status?: PopupCampaignStatus;
+  priority?: number;
+  conflictPolicy?: PopupConflictPolicy;
+}
+
+export interface UpdateCampaignPayload {
+  campaignId: string;
+  patch: Partial<Omit<PopupCampaign, "id" | "metadata">>;
+}
+
+export interface DeleteCampaignPayload {
+  campaignId: string;
+}
+
+/** Internal inverse of DELETE_CAMPAIGN — restores the campaign and re-links orphaned members. */
+export interface RestoreCampaignPayload {
+  campaign: PopupCampaign;
+  /** Popup ids whose campaignId was cleared by the delete (to re-link on undo). */
+  memberPopupIds: string[];
+}
+
+export interface SetCampaignStatusPayload {
+  campaignId: string;
+  status: PopupCampaignStatus;
+}
+
+export interface AssignPopupCampaignPayload {
+  popupId: string;
+  /** null = remove from campaign (ungrouped). */
+  campaignId: string | null;
+}
+
+export interface SetPopupPriorityPayload {
+  popupId: string;
+  priority: number;
+}
+
+export interface SetActiveCampaignPayload {
+  campaignId: string | null;
 }

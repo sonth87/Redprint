@@ -10,8 +10,8 @@ import type { BuilderDocument } from "../../src/document/types";
 // ── Schema version ────────────────────────────────────────────────────────────
 
 describe("Popup V5 — schema version", () => {
-  it("current schema version is 2.6.0", () => {
-    expect(CURRENT_SCHEMA_VERSION).toBe("2.6.0");
+  it("popupV5Migration targets 2.6.0 (decoupled from CURRENT)", () => {
+    expect(popupV5Migration.toVersion).toBe("2.6.0");
   });
 
   it("popupV5Migration migrates from 2.5.0 to 2.6.0", () => {
