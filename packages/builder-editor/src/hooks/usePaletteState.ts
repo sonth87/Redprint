@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 
 export interface UsePaletteStateReturn {
   paletteMode: "floating" | "docked";
+  setPaletteMode: (mode: "floating" | "docked") => void;
   activePaletteGroupId: string | null;
   setActivePaletteGroupId: (id: string | null) => void;
   handleGroupSelect: (groupId: string, sectionId?: string) => void;
@@ -43,6 +44,7 @@ export function usePaletteState(): UsePaletteStateReturn {
 
   return {
     paletteMode,
+    setPaletteMode,
     activePaletteGroupId,
     setActivePaletteGroupId,
     handleGroupSelect,

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import * as LucideIcons from "lucide-react";
-import { Layers } from "lucide-react";
+import { AppWindow, Layers } from "lucide-react";
 import { cn, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@ui-builder/ui";
 import type { PaletteCatalog, PaletteGroup } from "@ui-builder/builder-core";
 import { useTranslation } from "react-i18next";
@@ -29,6 +29,10 @@ export interface FloatingPaletteProps {
   layersOpen?: boolean;
   /** Called when the Layers button is clicked; receives the button's screen position */
   onLayersToggle?: (pos: { x: number; y: number }) => void;
+  /** Whether the Popups panel is currently open */
+  popupsOpen?: boolean;
+  /** Called when the Popups button is clicked */
+  onPopupsToggle?: () => void;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────
@@ -40,6 +44,8 @@ export const FloatingPalette: React.FC<FloatingPaletteProps> = ({
   locale,
   layersOpen = false,
   onLayersToggle,
+  popupsOpen = false,
+  onPopupsToggle,
 }) => {
   const { t } = useTranslation();
 
@@ -181,34 +187,45 @@ export const FloatingPalette: React.FC<FloatingPaletteProps> = ({
                     <Icon className="w-4 h-4" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent
-                  side="right"
-                  className={GLASS_TOOLTIP.light}
-                >
+                <TooltipContent side="right" className={GLASS_TOOLTIP.light}>
                   {label}
                 </TooltipContent>
               </Tooltip>
             );
           })}
 
-        {/* Separator + open-first-group button */}
-        {/* <div className="w-5 h-px bg-border/60 my-0.5" />
-        <button
-          type="button"
-          title={t("palette.title", { defaultValue: "Add Elements" })}
-          aria-label={t("palette.title", { defaultValue: "Add Elements" })}
-          onClick={() => onGroupSelect(groups[0]?.id ?? "")}
-          className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent/70 transition-all"
-        >
-          <Plus className="w-4 h-4" />
-        </button> */}
-      </div>
+          {/* Divider + Popups button — same card as group icons */}
+          {onPopupsToggle && (
+            <>
+              <div className="w-6 h-px bg-border/60 my-0.5" />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Popups"
+                    onClick={onPopupsToggle}
+                    className={cn(
+                      "w-9 h-9 rounded-lg flex items-center justify-center transition-all",
+                      "text-muted-foreground hover:text-foreground hover:bg-accent/70",
+                      popupsOpen && "bg-primary/10 text-primary ring-1 ring-primary/30",
+                    )}
+                  >
+                    <AppWindow className="w-4 h-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right" className={GLASS_TOOLTIP.dark}>
+                  Popups
+                </TooltipContent>
+              </Tooltip>
+            </>
+          )}
+        </div>
 
         {/* ── Layers button — separate floating card ── */}
         {onLayersToggle && (
           <div
             className={cn(
-              "flex flex-col items-center py-1.5 px-1.5",
+              "flex flex-col items-center py-1.5 px-1.5 gap-1",
               isDragging ? GLASS_PANEL.dragging : GLASS_PANEL.normal,
             )}
           >
@@ -232,10 +249,7 @@ export const FloatingPalette: React.FC<FloatingPaletteProps> = ({
                   <Layers className="w-4 h-4" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent
-                side="right"
-                className={GLASS_TOOLTIP.dark}
-              >
+              <TooltipContent side="right" className={GLASS_TOOLTIP.dark}>
                 Layers
               </TooltipContent>
             </Tooltip>

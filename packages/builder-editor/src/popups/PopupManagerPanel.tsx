@@ -25,7 +25,20 @@ import type {
   PopupTemplate,
 } from "@ui-builder/builder-core";
 import { popupApiClient, type SavedPopupEntry } from "./popupApiClient";
-import { BookMarked, CloudUpload, Copy, Eye, EyeOff, Layers, LayoutTemplate, Loader2, Plus, RefreshCw, Trash2, X } from "lucide-react";
+import {
+  BookMarked,
+  CloudUpload,
+  Copy,
+  Eye,
+  EyeOff,
+  LayoutTemplate,
+  Layers,
+  Loader2,
+  Plus,
+  RefreshCw,
+  Trash2,
+  X,
+} from "lucide-react";
 
 export interface PopupManagerPanelProps {
   document: BuilderDocument;
@@ -55,109 +68,48 @@ const KIND_BADGE_COLOR: Record<PopupKind, string> = {
   fullscreen: "bg-rose-500/10 text-rose-600",
 };
 
-// ── My Popups Tab ─────────────────────────────────────────────────────────
+// ── In-page Popups Tab ────────────────────────────────────────────────────
 
-function MyPopupsTab({
+function PagePopupsTab({
   document,
   activePopupId,
-  backendUrl,
   onCreateBlank,
   onEdit,
   onDuplicate,
   onDelete,
   onToggleEnabled,
-  onUpdatePopup,
-  onCreateFromTemplate,
-  onSaveToLibrary,
 }: Pick<
   PopupManagerPanelProps,
-  | "document"
-  | "activePopupId"
-  | "backendUrl"
-  | "onCreateBlank"
-  | "onEdit"
-  | "onDuplicate"
-  | "onDelete"
-  | "onToggleEnabled"
-  | "onUpdatePopup"
-  | "onCreateFromTemplate"
-  | "onSaveToLibrary"
+  "document" | "activePopupId" | "onCreateBlank" | "onEdit" | "onDuplicate" | "onDelete" | "onToggleEnabled"
 >) {
-  const [library, setLibrary] = useState<SavedPopupEntry[]>([]);
-  const [libraryLoading, setLibraryLoading] = useState(false);
-  const [libraryError, setLibraryError] = useState<string | null>(null);
-  const [savingId, setSavingId] = useState<string | null>(null);
-
   const popups = useMemo(
     () => Object.values(document.popups ?? {}).sort((a, b) => a.name.localeCompare(b.name)),
     [document.popups],
   );
 
-  const loadLibrary = useCallback(async () => {
-    if (!backendUrl) return;
-    setLibraryLoading(true);
-    setLibraryError(null);
-    try {
-      const entries = await popupApiClient.listLibrary(backendUrl);
-      setLibrary(entries);
-    } catch (e) {
-      setLibraryError("Could not load library");
-    } finally {
-      setLibraryLoading(false);
-    }
-  }, [backendUrl]);
-
-  useEffect(() => {
-    loadLibrary();
-  }, [loadLibrary]);
-
-  const handleSaveToLibrary = async (popup: PopupDefinition) => {
-    if (!onSaveToLibrary) return;
-    setSavingId(popup.id);
-    try {
-      await onSaveToLibrary(popup.id);
-      // Reload library to show newly saved entry
-      await loadLibrary();
-    } catch {
-      // silently fail
-    } finally {
-      setSavingId(null);
-    }
-  };
-
-  const handleDeleteFromLibrary = async (id: string) => {
-    if (!backendUrl) return;
-    try {
-      await popupApiClient.deleteFromLibrary(backendUrl, id);
-      setLibrary((prev) => prev.filter((e) => e.id !== id));
-    } catch {
-      // ignore
-    }
-  };
-
   return (
-    <div className="flex h-full min-h-0 flex-col gap-0">
-      {/* In-document popups */}
-      <div className="border-b p-3">
-        <div className="mb-2 flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-            <Layers className="h-3.5 w-3.5" />
-            In this document
-            <span className="ml-1 rounded bg-muted px-1.5 py-0.5 text-[10px] font-normal">{popups.length}</span>
-          </div>
-          <Button size="sm" className="h-7 gap-1 text-xs" onClick={onCreateBlank}>
-            <Plus className="h-3.5 w-3.5" />
-            Blank
-          </Button>
+    <div className="flex h-full min-h-0 flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between px-3 py-2 border-b flex-shrink-0">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+          <Layers className="h-3.5 w-3.5" />
+          <span>Trang này</span>
+          <span className="ml-1 rounded bg-muted px-1.5 py-0.5 text-[10px] font-normal">{popups.length}</span>
         </div>
+        <Button size="sm" className="h-7 gap-1 text-xs" onClick={onCreateBlank}>
+          <Plus className="h-3.5 w-3.5" />
+          Tạo mới
+        </Button>
+      </div>
 
-        {popups.length === 0 ? (
-          <p className="rounded-md border border-dashed p-3 text-center text-xs text-muted-foreground">
-            No popups yet. Create one below or use a template.
-          </p>
-        ) : (
-          <div className="space-y-1.5">
-            {popups.map((popup) => (
+      <ScrollArea className="flex-1 min-h-0">
+        <div className="p-3 space-y-1.5">
+          {popups.length === 0 ? (
+            <p className="rounded-md border border-dashed p-4 text-center text-xs text-muted-foreground">
+              Chưa có popup nào. Tạo mới hoặc dùng template.
+            </p>
+          ) : (
+            popups.map((popup) => (
               <div
                 key={popup.id}
                 className={cn(
@@ -178,34 +130,21 @@ function MyPopupsTab({
                   <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                     <button
                       className="rounded p-0.5 text-muted-foreground hover:text-foreground"
-                      title={popup.enabled ? "Disable" : "Enable"}
+                      title={popup.enabled ? "Tắt" : "Bật"}
                       onClick={() => onToggleEnabled(popup.id, !popup.enabled)}
                     >
                       {popup.enabled ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
                     </button>
                     <button
                       className="rounded p-0.5 text-muted-foreground hover:text-foreground"
-                      title="Duplicate"
+                      title="Nhân bản"
                       onClick={() => onDuplicate(popup.id)}
                     >
                       <Copy className="h-3.5 w-3.5" />
                     </button>
-                    {backendUrl && (
-                      <button
-                        className="rounded p-0.5 text-muted-foreground hover:text-primary"
-                        title="Save to library"
-                        disabled={savingId === popup.id}
-                        onClick={() => handleSaveToLibrary(popup)}
-                      >
-                        {savingId === popup.id
-                          ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          : <CloudUpload className="h-3.5 w-3.5" />
-                        }
-                      </button>
-                    )}
                     <button
                       className="rounded p-0.5 text-muted-foreground hover:text-destructive"
-                      title="Delete"
+                      title="Xóa"
                       onClick={() => onDelete(popup.id)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -213,80 +152,168 @@ function MyPopupsTab({
                   </div>
                 </div>
               </div>
+            ))
+          )}
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}
+
+// ── My Library Tab ────────────────────────────────────────────────────────
+
+function MyLibraryTab({
+  document,
+  activePopupId,
+  backendUrl,
+  onCreateFromTemplate,
+  onSaveToLibrary,
+}: Pick<
+  PopupManagerPanelProps,
+  "document" | "activePopupId" | "backendUrl" | "onCreateFromTemplate" | "onSaveToLibrary"
+>) {
+  const [library, setLibrary] = useState<SavedPopupEntry[]>([]);
+  const [libraryLoading, setLibraryLoading] = useState(false);
+  const [libraryError, setLibraryError] = useState<string | null>(null);
+  const [savingId, setSavingId] = useState<string | null>(null);
+
+  const popups = useMemo(
+    () => Object.values(document.popups ?? {}).sort((a, b) => a.name.localeCompare(b.name)),
+    [document.popups],
+  );
+
+  const loadLibrary = useCallback(async () => {
+    if (!backendUrl) return;
+    setLibraryLoading(true);
+    setLibraryError(null);
+    try {
+      const entries = await popupApiClient.listLibrary(backendUrl);
+      setLibrary(entries);
+    } catch {
+      setLibraryError("Không tải được thư viện");
+    } finally {
+      setLibraryLoading(false);
+    }
+  }, [backendUrl]);
+
+  useEffect(() => { loadLibrary(); }, [loadLibrary]);
+
+  const handleSaveToLibrary = async (popup: PopupDefinition) => {
+    if (!onSaveToLibrary) return;
+    setSavingId(popup.id);
+    try {
+      await onSaveToLibrary(popup.id);
+      await loadLibrary();
+    } catch {
+      // ignore
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const handleDeleteFromLibrary = async (id: string) => {
+    if (!backendUrl) return;
+    try {
+      await popupApiClient.deleteFromLibrary(backendUrl, id);
+      setLibrary((prev) => prev.filter((e) => e.id !== id));
+    } catch {
+      // ignore
+    }
+  };
+
+  return (
+    <div className="flex h-full min-h-0 flex-col">
+      {/* Save from document section */}
+      {onSaveToLibrary && popups.length > 0 && (
+        <div className="border-b px-3 py-2 flex-shrink-0">
+          <p className="text-[11px] text-muted-foreground mb-1.5">Lưu popup từ trang vào thư viện:</p>
+          <div className="space-y-1">
+            {popups.map((popup) => (
+              <div key={popup.id} className="flex items-center justify-between gap-2">
+                <span className="truncate text-xs">{popup.name}</span>
+                <button
+                  className="shrink-0 rounded p-1 text-muted-foreground hover:text-primary"
+                  title="Lưu vào thư viện"
+                  disabled={savingId === popup.id}
+                  onClick={() => handleSaveToLibrary(popup)}
+                >
+                  {savingId === popup.id
+                    ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    : <CloudUpload className="h-3.5 w-3.5" />}
+                </button>
+              </div>
             ))}
           </div>
-        )}
+        </div>
+      )}
+
+      {/* Library list */}
+      <div className="flex items-center justify-between px-3 py-2 border-b flex-shrink-0">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+          <BookMarked className="h-3.5 w-3.5" />
+          <span>Thư viện của tôi</span>
+          {library.length > 0 && (
+            <span className="ml-1 rounded bg-muted px-1.5 py-0.5 text-[10px] font-normal">{library.length}</span>
+          )}
+        </div>
+        <button
+          className="rounded p-0.5 text-muted-foreground hover:text-foreground"
+          title="Tải lại"
+          onClick={loadLibrary}
+        >
+          <RefreshCw className={cn("h-3.5 w-3.5", libraryLoading && "animate-spin")} />
+        </button>
       </div>
 
-      {/* Saved library */}
-      {backendUrl && (
-        <div className="flex min-h-0 flex-1 flex-col p-3">
-          <div className="mb-2 flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-              <BookMarked className="h-3.5 w-3.5" />
-              My library
-              {library.length > 0 && (
-                <span className="ml-1 rounded bg-muted px-1.5 py-0.5 text-[10px] font-normal">{library.length}</span>
-              )}
-            </div>
-            <button
-              className="rounded p-0.5 text-muted-foreground hover:text-foreground"
-              title="Refresh"
-              onClick={loadLibrary}
-            >
-              <RefreshCw className={cn("h-3.5 w-3.5", libraryLoading && "animate-spin")} />
-            </button>
-          </div>
-
+      <ScrollArea className="flex-1 min-h-0">
+        <div className="p-3">
           {libraryLoading && library.length === 0 ? (
-            <div className="flex items-center justify-center py-6 text-xs text-muted-foreground">
+            <div className="flex items-center justify-center py-8 text-xs text-muted-foreground">
               <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-              Loading...
+              Đang tải...
             </div>
           ) : libraryError ? (
             <p className="rounded border border-destructive/30 bg-destructive/5 p-2 text-center text-xs text-destructive">
               {libraryError}
             </p>
           ) : library.length === 0 ? (
-            <p className="rounded-md border border-dashed p-3 text-center text-xs text-muted-foreground">
-              Save a popup from the document to build your library.
+            <p className="rounded-md border border-dashed p-4 text-center text-xs text-muted-foreground">
+              Chưa có popup nào trong thư viện.
             </p>
           ) : (
-            <ScrollArea className="min-h-0 flex-1">
-              <div className="space-y-1.5">
-                {library.map((entry) => (
-                  <div key={entry.id} className="group rounded-md border bg-background px-2.5 py-2">
-                    <div className="flex items-center gap-2">
-                      <button
-                        className="min-w-0 flex-1 text-left"
-                        onClick={() => onCreateFromTemplate(entry)}
-                        title="Insert into document"
-                      >
-                        <div className="truncate text-xs font-semibold">{entry.name}</div>
-                        <div className="mt-0.5 flex items-center gap-1.5">
-                          <span className={cn("rounded px-1.5 py-0.5 text-[10px] font-medium", KIND_BADGE_COLOR[(entry.popup as PopupDefinition).kind])}>
-                            {(entry.popup as PopupDefinition).kind}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground">
-                            {new Date(entry.savedAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </button>
-                      <button
-                        className="shrink-0 rounded p-0.5 text-muted-foreground opacity-0 hover:text-destructive group-hover:opacity-100"
-                        title="Delete from library"
-                        onClick={() => handleDeleteFromLibrary(entry.id)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
+            <div className="space-y-1.5">
+              {library.map((entry) => (
+                <div key={entry.id} className="group rounded-md border bg-background px-2.5 py-2">
+                  <div className="flex items-center gap-2">
+                    <button
+                      className="min-w-0 flex-1 text-left"
+                      onClick={() => onCreateFromTemplate(entry)}
+                      title="Chèn vào trang"
+                    >
+                      <div className="truncate text-xs font-semibold">{entry.name}</div>
+                      <div className="mt-0.5 flex items-center gap-1.5">
+                        <span className={cn("rounded px-1.5 py-0.5 text-[10px] font-medium", KIND_BADGE_COLOR[(entry.popup as PopupDefinition).kind])}>
+                          {(entry.popup as PopupDefinition).kind}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {new Date(entry.savedAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </button>
+                    <button
+                      className="shrink-0 rounded p-0.5 text-muted-foreground opacity-0 hover:text-destructive group-hover:opacity-100"
+                      title="Xóa khỏi thư viện"
+                      onClick={() => handleDeleteFromLibrary(entry.id)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
                   </div>
-                ))}
-              </div>
-            </ScrollArea>
+                </div>
+              ))}
+            </div>
           )}
         </div>
-      )}
+      </ScrollArea>
     </div>
   );
 }
@@ -300,8 +327,7 @@ function TemplatesTab({
 }: Pick<PopupManagerPanelProps, "registryTemplates" | "backendUrl" | "onCreateFromTemplate">) {
   const [serverTemplates, setServerTemplates] = useState<PopupTemplate[]>([]);
   const [loading, setLoading] = useState(false);
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("all");
+  const [activeCategory, setActiveCategory] = useState("all");
   const [previewTemplate, setPreviewTemplate] = useState<PopupTemplate | null>(null);
 
   useEffect(() => {
@@ -328,83 +354,67 @@ function TemplatesTab({
   }, [allTemplates]);
 
   const filtered = useMemo(() => {
-    let list = allTemplates;
-    if (category !== "all") list = list.filter((t) => (t.category ?? "Other") === category);
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter(
-        (t) =>
-          t.name.toLowerCase().includes(q) ||
-          t.description?.toLowerCase().includes(q) ||
-          t.tags?.some((tag) => tag.toLowerCase().includes(q)),
-      );
-    }
-    return list;
-  }, [allTemplates, category, search]);
+    if (activeCategory === "all") return allTemplates;
+    return allTemplates.filter((t) => (t.category ?? "Other") === activeCategory);
+  }, [allTemplates, activeCategory]);
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      {/* Filter bar */}
-      <div className="border-b p-3 space-y-2">
-        <Input
-          className="h-8 text-xs"
-          placeholder="Search templates..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <div className="flex flex-wrap gap-1">
+    <div className="flex h-full min-h-0">
+      {/* ── Left: category nav ── */}
+      <div className="flex flex-col w-[110px] flex-shrink-0 border-r bg-muted/20 overflow-y-auto py-1">
+        <button
+          onClick={() => setActiveCategory("all")}
+          className={cn(
+            "text-left px-3 py-2 text-xs transition-colors",
+            activeCategory === "all"
+              ? "bg-primary/10 text-primary font-semibold border-r-2 border-primary"
+              : "text-muted-foreground hover:text-foreground hover:bg-accent/40",
+          )}
+        >
+          Tất cả
+        </button>
+        {categories.map((cat) => (
           <button
-            onClick={() => setCategory("all")}
+            key={cat}
+            onClick={() => setActiveCategory(cat)}
             className={cn(
-              "rounded-full border px-2.5 py-0.5 text-[11px] transition-colors",
-              category === "all"
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border text-muted-foreground hover:border-primary/50",
+              "text-left px-3 py-2 text-xs transition-colors",
+              activeCategory === cat
+                ? "bg-primary/10 text-primary font-semibold border-r-2 border-primary"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent/40",
             )}
           >
-            All
+            {cat}
           </button>
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setCategory(cat)}
-              className={cn(
-                "rounded-full border px-2.5 py-0.5 text-[11px] transition-colors",
-                category === cat
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border text-muted-foreground hover:border-primary/50",
-              )}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+        ))}
       </div>
 
-      {/* Template grid */}
-      <ScrollArea className="min-h-0 flex-1">
+      {/* ── Right: template list ── */}
+      <div className="flex flex-col flex-1 min-w-0 min-h-0">
         {loading && allTemplates.length === 0 ? (
           <div className="flex items-center justify-center py-10 text-xs text-muted-foreground">
             <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-            Loading templates...
+            Đang tải...
           </div>
         ) : filtered.length === 0 ? (
-          <div className="py-10 text-center text-xs text-muted-foreground">No templates found.</div>
+          <div className="py-10 text-center text-xs text-muted-foreground">Không có template.</div>
         ) : (
-          <div className="grid grid-cols-2 gap-2 p-3">
-            {filtered.map((template) => (
-              <TemplateCard
-                key={template.id}
-                template={template}
-                onUse={() => onCreateFromTemplate(template)}
-                onPreview={() => setPreviewTemplate(template)}
-              />
-            ))}
-          </div>
+          <ScrollArea className="flex-1 min-h-0">
+            <div className="p-2 space-y-2">
+              {filtered.map((template) => (
+                <TemplateCard
+                  key={template.id}
+                  template={template}
+                  onUse={() => onCreateFromTemplate(template)}
+                  onPreview={() => setPreviewTemplate(template)}
+                />
+              ))}
+            </div>
+          </ScrollArea>
         )}
-      </ScrollArea>
+      </div>
 
-      {/* Preview modal */}
+      {/* Preview overlay */}
       {previewTemplate && (
         <TemplatePreviewModal
           template={previewTemplate}
@@ -419,6 +429,8 @@ function TemplatesTab({
   );
 }
 
+// ── Template Card — horizontal layout with thumbnail ─────────────────────
+
 function TemplateCard({
   template,
   onUse,
@@ -429,50 +441,57 @@ function TemplateCard({
   onPreview: () => void;
 }) {
   return (
-    <div className="group flex flex-col overflow-hidden rounded-md border bg-background transition-colors hover:border-primary/50">
-      {/* Thumbnail / placeholder */}
+    <div className="group flex overflow-hidden rounded-md border bg-background transition-colors hover:border-primary/50">
+      {/* Thumbnail — left side */}
       <button
-        className="relative flex h-24 w-full items-center justify-center overflow-hidden bg-muted"
+        className="relative flex h-20 w-[90px] flex-shrink-0 items-center justify-center overflow-hidden bg-muted"
         onClick={onPreview}
-        title="Preview"
+        title="Xem trước"
       >
         {template.thumbnail ? (
-          <img src={template.thumbnail} alt={template.name} className="h-full w-full object-cover" />
+          <img
+            src={template.thumbnail}
+            alt={template.name}
+            className="h-full w-full object-cover"
+          />
         ) : (
-          <div className="flex flex-col items-center gap-1 text-muted-foreground/50">
-            <LayoutTemplate className="h-6 w-6" />
-            <span className={cn("rounded px-1.5 py-0.5 text-[10px] font-medium", KIND_BADGE_COLOR[(template.popup as PopupDefinition).kind])}>
+          <div className="flex flex-col items-center gap-1 text-muted-foreground/40">
+            <LayoutTemplate className="h-7 w-7" />
+            <span className={cn("rounded px-1.5 py-0.5 text-[9px] font-medium", KIND_BADGE_COLOR[(template.popup as PopupDefinition).kind])}>
               {(template.popup as PopupDefinition).kind}
             </span>
           </div>
         )}
+        {/* Hover overlay */}
         <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-          <span className="rounded bg-white/90 px-2 py-0.5 text-[11px] font-medium text-foreground">Preview</span>
+          <span className="rounded bg-white/90 px-2 py-0.5 text-[10px] font-medium text-foreground">Xem</span>
         </div>
       </button>
 
-      {/* Info */}
-      <div className="flex flex-1 flex-col gap-1 p-2">
-        <div className="truncate text-xs font-semibold">{template.name}</div>
-        {template.description && (
-          <div className="line-clamp-2 text-[10px] text-muted-foreground">{template.description}</div>
-        )}
-        {template.tags && template.tags.length > 0 && (
-          <div className="mt-auto flex flex-wrap gap-0.5 pt-1">
-            {template.tags.slice(0, 3).map((tag) => (
-              <span key={tag} className="rounded bg-muted px-1.5 py-0.5 text-[9px] text-muted-foreground">
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
-        <Button size="sm" className="mt-1.5 h-6 w-full text-[11px]" onClick={onUse}>
-          Use template
+      {/* Info — right side */}
+      <div className="flex flex-1 min-w-0 flex-col justify-between p-2 gap-1">
+        <div className="min-w-0">
+          <div className="truncate text-xs font-semibold">{template.name}</div>
+          {template.description && (
+            <div className="line-clamp-2 text-[10px] text-muted-foreground leading-tight mt-0.5">
+              {template.description}
+            </div>
+          )}
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-6 w-full text-[10px] px-2"
+          onClick={onUse}
+        >
+          Dùng template
         </Button>
       </div>
     </div>
   );
 }
+
+// ── Template Preview Modal ────────────────────────────────────────────────
 
 function TemplatePreviewModal({
   template,
@@ -493,28 +512,36 @@ function TemplatePreviewModal({
         <div className="flex items-center justify-between border-b px-4 py-3">
           <div className="min-w-0">
             <div className="truncate text-sm font-semibold">{template.name}</div>
-            <div className="text-xs text-muted-foreground">{template.category}</div>
+            {template.category && (
+              <div className="text-xs text-muted-foreground">{template.category}</div>
+            )}
           </div>
           <button onClick={onClose} className="rounded p-1 text-muted-foreground hover:text-foreground">
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Thumbnail */}
-        <div className="flex h-40 items-center justify-center bg-muted">
+        {/* Thumbnail — large */}
+        <div className="flex h-48 items-center justify-center bg-muted overflow-hidden">
           {template.thumbnail ? (
-            <img src={template.thumbnail} alt={template.name} className="h-full w-full object-contain" />
+            <img
+              src={template.thumbnail}
+              alt={template.name}
+              className="h-full w-full object-contain"
+            />
           ) : (
-            <div className="flex flex-col items-center gap-2 text-muted-foreground/50">
-              <LayoutTemplate className="h-10 w-10" />
-              <span className="text-xs">No preview available</span>
+            <div className="flex flex-col items-center gap-2 text-muted-foreground/40">
+              <LayoutTemplate className="h-12 w-12" />
+              <span className="text-xs">Chưa có ảnh xem trước</span>
             </div>
           )}
         </div>
 
         {/* Details */}
         <div className="space-y-2 px-4 py-3">
-          {template.description && <p className="text-xs text-muted-foreground">{template.description}</p>}
+          {template.description && (
+            <p className="text-xs text-muted-foreground">{template.description}</p>
+          )}
           <div className="flex flex-wrap gap-1">
             <span className={cn("rounded px-2 py-0.5 text-[11px] font-medium", KIND_BADGE_COLOR[(template.popup as PopupDefinition).kind])}>
               {(template.popup as PopupDefinition).kind}
@@ -530,7 +557,7 @@ function TemplatePreviewModal({
         {/* Action */}
         <div className="border-t px-4 py-3">
           <Button className="w-full" onClick={onUse}>
-            Use this template
+            Dùng template này
           </Button>
         </div>
       </div>
@@ -556,29 +583,39 @@ export function PopupManagerPanel({
 }: PopupManagerPanelProps) {
   return (
     <div className="relative flex h-full min-h-0 flex-col">
-      <Tabs defaultValue="my-popups" className="flex min-h-0 flex-1 flex-col">
-        <TabsList className="mx-3 mt-2 mb-0 grid w-auto grid-cols-2 rounded-md">
-          <TabsTrigger value="my-popups" className="gap-1.5 text-xs">
-            <Layers className="h-3.5 w-3.5" />
-            My Popups
+      <Tabs defaultValue="page-popups" className="flex min-h-0 flex-1 flex-col">
+        <TabsList className="mx-3 mt-2 mb-0 grid w-auto grid-cols-3 rounded-md">
+          <TabsTrigger value="page-popups" className="gap-1 text-[11px] px-1">
+            <Layers className="h-3 w-3" />
+            Danh sách
           </TabsTrigger>
-          <TabsTrigger value="templates" className="gap-1.5 text-xs">
-            <LayoutTemplate className="h-3.5 w-3.5" />
+          <TabsTrigger value="my-library" className="gap-1 text-[11px] px-1">
+            <BookMarked className="h-3 w-3" />
+            Popup của tôi
+          </TabsTrigger>
+          <TabsTrigger value="templates" className="gap-1 text-[11px] px-1">
+            <LayoutTemplate className="h-3 w-3" />
             Templates
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="my-popups" className="mt-0 min-h-0 flex-1 overflow-hidden">
-          <MyPopupsTab
+        <TabsContent value="page-popups" className="mt-0 min-h-0 flex-1 overflow-hidden">
+          <PagePopupsTab
             document={document}
             activePopupId={activePopupId}
-            backendUrl={backendUrl}
             onCreateBlank={onCreateBlank}
             onEdit={onEdit}
             onDuplicate={onDuplicate}
             onDelete={onDelete}
             onToggleEnabled={onToggleEnabled}
-            onUpdatePopup={onUpdatePopup}
+          />
+        </TabsContent>
+
+        <TabsContent value="my-library" className="mt-0 min-h-0 flex-1 overflow-hidden">
+          <MyLibraryTab
+            document={document}
+            activePopupId={activePopupId}
+            backendUrl={backendUrl}
             onCreateFromTemplate={onCreateFromTemplate}
             onSaveToLibrary={onSaveToLibrary}
           />

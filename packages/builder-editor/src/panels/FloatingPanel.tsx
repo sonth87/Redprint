@@ -3,6 +3,23 @@ import { Minus, PanelRightClose, PanelRightOpen, Plus, X } from "lucide-react";
 import { cn } from "@ui-builder/ui";
 import { GLASS_PANEL } from "../constants/panel-styles";
 
+function readDockedFromStorage(panelId: string | undefined, fallback: boolean): boolean {
+  if (!panelId) return fallback;
+  try {
+    const raw = localStorage.getItem(`floating-panel-docked:${panelId}`);
+    if (raw === "true") return true;
+    if (raw === "false") return false;
+  } catch { /* ignore */ }
+  return fallback;
+}
+
+function writeDockedToStorage(panelId: string | undefined, value: boolean): void {
+  if (!panelId) return;
+  try {
+    localStorage.setItem(`floating-panel-docked:${panelId}`, String(value));
+  } catch { /* ignore */ }
+}
+
 // Module-level counter — increments each time a panel is focused/dragged so
 // the most-recently-interacted panel always renders on top.
 let zCounter = 50;
@@ -30,6 +47,7 @@ export interface FloatingPanelProps {
 }
 
 export const FloatingPanel: React.FC<FloatingPanelProps> = ({
+  id,
   title,
   children,
   defaultPosition,
@@ -60,9 +78,17 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
   const panelRef = useRef<HTMLDivElement>(null);
 
   const [isExpanded, setIsExpanded] = useState(onClose ? true : defaultExpanded);
-  const [isDocked, setIsDocked] = useState(defaultDocked);
+  const [isDocked, setIsDocked] = useState(() => readDockedFromStorage(id, defaultDocked));
   const [isDragging, setIsDragging] = useState(false);
   const [zIndex, setZIndex] = useState(() => bumpZ());
+
+  const handleDockToggle = useCallback(() => {
+    setIsDocked((current) => {
+      const next = !current;
+      writeDockedToStorage(id, next);
+      return next;
+    });
+  }, [id]);
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
@@ -150,7 +176,7 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
           {dockable && !onClose && (
             <button
               type="button"
-              onClick={() => setIsDocked((current) => !current)}
+              onClick={handleDockToggle}
               className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground"
               onPointerDown={(e) => e.stopPropagation()}
               title={isDocked ? "Float panel" : "Dock to right"}

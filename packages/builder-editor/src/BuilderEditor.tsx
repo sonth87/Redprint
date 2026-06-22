@@ -23,6 +23,7 @@ import {
   type PaletteCatalog,
   type PopupDefinition,
   type PopupGoal,
+  type PopupNodeTemplate,
   type PopupTemplate,
 } from "@ui-builder/builder-core";
 import {
@@ -30,7 +31,7 @@ import {
   TRANSITION_MID_CSS,
   type GalleryItem,
 } from "@ui-builder/shared";
-import { Monitor, Smartphone, LocateFixed, LayoutTemplate, Sparkles, Layers } from "lucide-react";
+import { Monitor, Smartphone, LocateFixed, LayoutTemplate, Sparkles, X } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { cn, Toaster, toast } from "@ui-builder/ui";
 
@@ -75,7 +76,6 @@ import { GalleryMediaManager } from "./panels/gallery";
 import { PopupManagerPanel } from "./popups/PopupManagerPanel";
 import { PopupEditorSurface } from "./popups/PopupEditorSurface";
 import { PopupPropertyPanel } from "./popups/PopupPropertyPanel";
-import { CampaignPanel } from "./popups/CampaignPanel";
 import { usePopupShellResize } from "./popups/usePopupShellResize";
 import { usePopupShellDrag } from "./popups/usePopupShellDrag";
 
@@ -263,7 +263,7 @@ function EditorInner({
 
   // ── Panel state ──────────────────────────────────────────────────────────
   const {
-    paletteMode, activePaletteGroupId, setActivePaletteGroupId, handleGroupSelect, handlePaletteClose,
+    paletteMode, setPaletteMode, activePaletteGroupId, setActivePaletteGroupId, handleGroupSelect, handlePaletteClose,
     pendingTargetSectionId, handleDSButtonClick,
   } = usePaletteState();
   const { layersOpen, layersPanelPos, handleLayersToggle } = useLayersPanel();
@@ -271,18 +271,40 @@ function EditorInner({
   const [pageGeneratorOpen, setPageGeneratorOpen] = React.useState(false);
   const [figmaOpen, setFigmaOpen] = React.useState(false);
   const [popupsOpen, setPopupsOpen] = React.useState(false);
-  const [campaignsOpen, setCampaignsOpen] = React.useState(false);
+  const handlePopupsToggle = React.useCallback(() => {
+    setPopupsOpen((v) => {
+      const next = !v;
+      if (next) setPaletteMode("docked");
+      return next;
+    });
+  }, [setPaletteMode]);
   const [popupPreviewOpen, setPopupPreviewOpen] = React.useState(false);
+  // Left/right panel collapse state for Ctrl+\ shortcut
+  const [leftPanelVisible, setLeftPanelVisible] = React.useState(true);
+  const [rightPanelVisible, setRightPanelVisible] = React.useState(true);
   const [popupTemplateVersion, setPopupTemplateVersion] = React.useState(0);
+
+  React.useEffect(() => {
+    const handlePanelToggle = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) return;
+      if ((e.ctrlKey || e.metaKey) && e.key === "\\") {
+        e.preventDefault();
+        setLeftPanelVisible((v) => !v);
+        setRightPanelVisible((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", handlePanelToggle);
+    return () => window.removeEventListener("keydown", handlePanelToggle);
+  }, []);
 
   React.useEffect(() => {
     setPopupPreviewOpen(false);
   }, [activePopupId]);
 
-  const popupTemplates = useMemo(
-    () => builder.popupTemplates.list(),
-    [builder.popupTemplates, popupTemplateVersion],
-  );
+  // popupTemplateVersion is a manual invalidation counter incremented after register()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const popupTemplates = useMemo(() => builder.popupTemplates.list(), [builder.popupTemplates, popupTemplateVersion]);
 
   const dispatchPopupCommand = React.useCallback((command: Parameters<typeof dispatch>[0]) => {
     const result = dispatch(command);
@@ -405,23 +427,7 @@ function EditorInner({
     dispatchPopupCommand({ type: "UPDATE_POPUP_FREQUENCY", payload: { popupId, frequency }, description: "Update popup frequency" });
   }, [dispatchPopupCommand]);
 
-  // ── V6: Campaign handlers ──────────────────────────────────────────────────
-
-  const handleCreateCampaign = React.useCallback((name: string) => {
-    dispatchPopupCommand({ type: "CREATE_CAMPAIGN", payload: { name }, description: "Create campaign" });
-  }, [dispatchPopupCommand]);
-
-  const handleUpdateCampaign = React.useCallback((campaignId: string, patch: Record<string, unknown>) => {
-    dispatchPopupCommand({ type: "UPDATE_CAMPAIGN", payload: { campaignId, patch }, description: "Update campaign" });
-  }, [dispatchPopupCommand]);
-
-  const handleSetCampaignStatus = React.useCallback((campaignId: string, status: string) => {
-    dispatchPopupCommand({ type: "SET_CAMPAIGN_STATUS", payload: { campaignId, status }, description: "Set campaign status" });
-  }, [dispatchPopupCommand]);
-
-  const handleDeleteCampaign = React.useCallback((campaignId: string) => {
-    dispatchPopupCommand({ type: "DELETE_CAMPAIGN", payload: { campaignId }, description: "Delete campaign" });
-  }, [dispatchPopupCommand]);
+  // ── V6: Campaign handlers (used by PopupPropertyPanel v6 section) ─────────
 
   const handleAssignCampaign = React.useCallback((popupId: string, campaignId: string | null) => {
     dispatchPopupCommand({ type: "ASSIGN_POPUP_CAMPAIGN", payload: { popupId, campaignId }, description: "Assign campaign" });
@@ -431,9 +437,6 @@ function EditorInner({
     dispatchPopupCommand({ type: "SET_POPUP_PRIORITY", payload: { popupId, priority }, description: "Set popup priority" });
   }, [dispatchPopupCommand]);
 
-  const handleSetActiveCampaign = React.useCallback((campaignId: string | null) => {
-    dispatch({ type: "SET_ACTIVE_CAMPAIGN", payload: { campaignId } });
-  }, [dispatch]);
 
   const handleDuplicatePopup = React.useCallback((popupId: string) => {
     dispatchPopupCommand({
@@ -458,7 +461,7 @@ function EditorInner({
     const root = popup ? document.nodes[popup.rootNodeId] : null;
     if (!popup || !root) return;
 
-    const buildTemplateNode = (nodeId: string): import("@ui-builder/builder-core").PopupNodeTemplate => {
+    const buildTemplateNode = (nodeId: string): PopupNodeTemplate => {
       const node = document.nodes[nodeId]!;
       const children = Object.values(document.nodes)
         .filter((child) => child.parentId === nodeId)
@@ -831,56 +834,75 @@ function EditorInner({
           onFigmaOpen={() => setFigmaOpen(true)}
         />
 
-        <button
-          type="button"
-          className={cn(
-            "absolute left-14 top-14 z-20 flex h-9 w-9 items-center justify-center rounded-md border bg-background/80 text-muted-foreground shadow-sm backdrop-blur transition-colors hover:text-foreground",
-            popupsOpen && "border-primary text-primary",
-          )}
-          title="Popups"
-          onClick={() => setPopupsOpen((open) => !open)}
-        >
-          <Layers className="h-4 w-4" />
-        </button>
-
-        <button
-          type="button"
-          className={cn(
-            "absolute left-14 top-24 z-20 flex h-9 w-9 items-center justify-center rounded-md border bg-background/80 text-muted-foreground shadow-sm backdrop-blur transition-colors hover:text-foreground",
-            campaignsOpen && "border-primary text-primary",
-          )}
-          title="Campaigns"
-          onClick={() => setCampaignsOpen((open) => !open)}
-        >
-          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/>
-            <path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
-            <path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/>
-            <path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/>
-            <path d="M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z"/>
-            <path d="M15.5 9H17v1.5c0 .83-.67 1.5-1.5 1.5S14 11.33 14 10.5v-1c0-.28.22-.5.5-.5h1z"/>
-            <path d="M10 9.5c0 .83-.67 1.5-1.5 1.5h-5C2.67 11 2 10.33 2 9.5S2.67 8 3.5 8h5c.83 0 1.5.67 1.5 1.5z"/>
-            <path d="M8.5 15H7v-1.5c0-.83.67-1.5 1.5-1.5S10 12.67 10 13.5v1c0 .28-.22.5-.5.5h-1z"/>
-          </svg>
-        </button>
-
         {/* Palette */}
-        {paletteMode === "floating" && (effectiveCatalog || remotePaletteProvider) && (
+        {leftPanelVisible && paletteMode === "floating" && (effectiveCatalog || remotePaletteProvider) && (
           <FloatingPalette
             catalog={effectiveCatalog!} activeGroupId={activePaletteGroupId}
             onGroupSelect={handleGroupSelect} locale={locale}
             layersOpen={layersOpen} onLayersToggle={handleLayersToggle}
+            popupsOpen={popupsOpen} onPopupsToggle={handlePopupsToggle}
           />
         )}
-        {paletteMode === "docked" && (effectiveCatalog || remotePaletteProvider) && (
+        {leftPanelVisible && paletteMode === "floating" && popupsOpen && (
+          <div className="fixed left-14 top-0 bottom-0 z-50 flex" style={{ width: 398 }}>
+            <div className="flex flex-col flex-1 bg-background/50 backdrop-blur-md border-r border-border/50 shadow-xl overflow-hidden">
+              <div className="flex items-center justify-between px-3 py-2.5 border-b border-border/50 flex-shrink-0">
+                <span className="text-sm font-semibold text-foreground">Popups</span>
+                <button
+                  type="button"
+                  aria-label="Close"
+                  onClick={handlePopupsToggle}
+                  className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent/70 transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <div className="flex-1 min-h-0 overflow-hidden">
+                <PopupManagerPanel
+                  document={document}
+                  activePopupId={activePopupId}
+                  registryTemplates={popupTemplates}
+                  backendUrl={aiConfig.backendUrl}
+                  onCreateFromTemplate={handleCreatePopupFromTemplate}
+                  onCreateBlank={handleCreateBlankPopup}
+                  onEdit={handleEditPopup}
+                  onDuplicate={handleDuplicatePopup}
+                  onDelete={handleDeletePopup}
+                  onToggleEnabled={handleTogglePopupEnabled}
+                  onUpdatePopup={(popupId, popup) => handleUpdatePopup(popupId, popup)}
+                  onSaveToLibrary={async (popupId) => handleSavePopupTemplate(popupId)}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+        {leftPanelVisible && paletteMode === "docked" && (effectiveCatalog || remotePaletteProvider) && (
           <AddElementsPanel
             catalog={effectiveCatalog} activeGroupId={activePaletteGroupId}
             onGroupChange={setActivePaletteGroupId} onClose={handlePaletteClose}
             onItemDragStart={handlePaletteDragStart} onItemClick={handlePaletteItemClick} locale={locale}
             isLoading={isCatalogLoading || isGroupLoading}
+            popupsOpen={popupsOpen}
+            onPopupsToggle={handlePopupsToggle}
+            popupContent={
+              <PopupManagerPanel
+                document={document}
+                activePopupId={activePopupId}
+                registryTemplates={popupTemplates}
+                backendUrl={aiConfig.backendUrl}
+                onCreateFromTemplate={handleCreatePopupFromTemplate}
+                onCreateBlank={handleCreateBlankPopup}
+                onEdit={handleEditPopup}
+                onDuplicate={handleDuplicatePopup}
+                onDelete={handleDeletePopup}
+                onToggleEnabled={handleTogglePopupEnabled}
+                onUpdatePopup={(popupId, popup) => handleUpdatePopup(popupId, popup)}
+                onSaveToLibrary={async (popupId) => handleSavePopupTemplate(popupId)}
+              />
+            }
           />
         )}
-        {!(effectiveCatalog || remotePaletteProvider) && (
+        {leftPanelVisible && !(effectiveCatalog || remotePaletteProvider) && !popupsOpen && (
           <FloatingPanel id="components" title="Components" defaultPosition={DEFAULT_COMPONENTS_PANEL_POS}>
             <div className="h-[40vh] min-h-[300px] overflow-hidden">
               <ComponentPalette components={allComponents} onDragStart={handleDragStart} groupRegistry={groupRegistry} />
@@ -889,8 +911,8 @@ function EditorInner({
         )}
 
         {/* Layers */}
-        {layersOpen && (
-          <FloatingPanel id="layers" title="Layers" icon={<Layers className="h-3.5 w-3.5" />} defaultPosition={layersPanelPos} onClose={handleLayersToggle}>
+        {leftPanelVisible && layersOpen && (
+          <FloatingPanel id="layers" title="Layers" defaultPosition={layersPanelPos} onClose={handleLayersToggle}>
             <div className="h-[48vh] min-h-[250px] overflow-hidden">
               <LayerTree
                 document={document}
@@ -908,47 +930,8 @@ function EditorInner({
           </FloatingPanel>
         )}
 
-        {campaignsOpen && (
-          <FloatingPanel id="campaigns" title="Campaigns" defaultPosition={{ x: 84, y: 200 }} onClose={() => setCampaignsOpen(false)}>
-            <div className="h-[52vh] min-h-[360px] w-72 overflow-hidden">
-              <CampaignPanel
-                document={document}
-                handlers={{
-                  onCreateCampaign: handleCreateCampaign,
-                  onUpdateCampaign: (id, patch) => handleUpdateCampaign(id, patch as Record<string, unknown>),
-                  onSetCampaignStatus: handleSetCampaignStatus,
-                  onDeleteCampaign: handleDeleteCampaign,
-                  onSetActiveCampaign: handleSetActiveCampaign,
-                  activeCampaignId: state.editor.activeCampaignId ?? null,
-                }}
-              />
-            </div>
-          </FloatingPanel>
-        )}
-
-        {popupsOpen && (
-          <FloatingPanel id="popups" title="Popups" icon={<Layers className="h-3.5 w-3.5" />} defaultPosition={{ x: 84, y: 140 }} onClose={() => setPopupsOpen(false)}>
-            <div className="h-[62vh] min-h-[420px] overflow-hidden">
-              <PopupManagerPanel
-                document={document}
-                activePopupId={activePopupId}
-                registryTemplates={popupTemplates}
-                backendUrl={aiConfig.backendUrl}
-                onCreateFromTemplate={handleCreatePopupFromTemplate}
-                onCreateBlank={handleCreateBlankPopup}
-                onEdit={handleEditPopup}
-                onDuplicate={handleDuplicatePopup}
-                onDelete={handleDeletePopup}
-                onToggleEnabled={handleTogglePopupEnabled}
-                onUpdatePopup={(popupId, popup) => handleUpdatePopup(popupId, popup)}
-                onSaveToLibrary={async (popupId) => handleSavePopupTemplate(popupId)}
-              />
-            </div>
-          </FloatingPanel>
-        )}
-
         {/* Properties / Page settings */}
-        <FloatingPanel
+        {rightPanelVisible && <FloatingPanel
           id="properties"
           title={activePopup && activePopupSelection === "shell" ? "Popup" : selectedNode ? "Properties" : "Page Settings"}
           defaultPosition={DEFAULT_PROPERTIES_PANEL_POS}
@@ -1008,7 +991,7 @@ function EditorInner({
               </div>
             )}
           </div>
-        </FloatingPanel>
+        </FloatingPanel>}
 
         <AIAssistant open={aiOpen} onOpenChange={setAiOpen} config={aiConfig} context={aiContext} />
         <PageGeneratorModal open={pageGeneratorOpen} onOpenChange={setPageGeneratorOpen} config={aiConfig} context={aiContext} />
