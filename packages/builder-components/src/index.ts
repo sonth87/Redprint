@@ -22,6 +22,7 @@ export { PopupContentComponent } from "./components/PopupContent";
 
 // Utility
 export { extendComponent } from "./utils/extendComponent";
+export { normalizeLegacyPadding } from "./utils/normalizeLegacyPadding";
 
 // Re-export defineComponent for convenience
 export { defineComponent } from "@ui-builder/builder-core";

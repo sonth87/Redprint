@@ -40,9 +40,8 @@ export const GridComponent: ComponentDefinition = {
     { key: "customTemplate", label: "Custom Template", type: "string", default: "1fr 1fr 1fr" },
     { key: "columnGap", label: "Column Gap", type: "number", default: 16, min: 0, max: 128, step: 4, unit: "px" },
     { key: "rowGap", label: "Row Gap", type: "number", default: 16, min: 0, max: 128, step: 4, unit: "px" },
-    { key: "padding", label: "Padding", type: "number", default: 16, min: 0, max: 128, step: 4, unit: "px" },
   ],
-  defaultProps: { columns: 3, rows: 1, columnTemplate: "equal", customTemplate: "1fr 1fr 1fr", columnGap: 16, rowGap: 16, padding: 16 },
+  defaultProps: { columns: 3, rows: 1, columnTemplate: "equal", customTemplate: "1fr 1fr 1fr", columnGap: 16, rowGap: 16 },
   defaultStyle: {
     display: "grid",
     columnGap: "16px",
@@ -56,7 +55,6 @@ export const GridComponent: ComponentDefinition = {
     const rows = Number(node.props.rows ?? 1);
     const columnGap = Number(node.props.columnGap ?? 16);
     const rowGap = Number(node.props.rowGap ?? 16);
-    const padding = Number(node.props.padding ?? 16);
     const tpl = String(node.props.columnTemplate ?? "equal");
     const gridTemplateColumns =
       tpl === "custom"         ? String(node.props.customTemplate ?? "1fr 1fr 1fr")
@@ -66,13 +64,14 @@ export const GridComponent: ComponentDefinition = {
 
     const resolvedStyle = style as React.CSSProperties;
     const gridStyle: React.CSSProperties = {
+      // Padding comes from style.padding (Spacing panel); legacy props.padding is
+      // normalized into style on load (see normalizeLegacyPadding).
       ...resolvedStyle,
       display: "grid",
       gridTemplateColumns,
       gridTemplateRows: `repeat(${rows}, auto)`,
       columnGap: `${columnGap}px`,
       rowGap: `${rowGap}px`,
-      padding: `${padding}px`,
       width: resolvedStyle.width ?? "100%",
       minHeight: resolvedStyle.minHeight ?? "80px",
       boxSizing: "border-box",
@@ -116,7 +115,6 @@ export const GridComponent: ComponentDefinition = {
     const rows = Number(node.props.rows ?? 1);
     const columnGap = Number(node.props.columnGap ?? 16);
     const rowGap = Number(node.props.rowGap ?? 16);
-    const padding = Number(node.props.padding ?? 16);
     const tpl = String(node.props.columnTemplate ?? "equal");
     const gridTemplateColumns =
       tpl === "custom"         ? String(node.props.customTemplate ?? "1fr 1fr 1fr")
@@ -134,7 +132,6 @@ export const GridComponent: ComponentDefinition = {
           gridTemplateRows: `repeat(${rows}, auto)`,
           columnGap: `${columnGap}px`,
           rowGap: `${rowGap}px`,
-          padding: `${padding}px`,
           width: runtimeStyle.width ?? "100%",
         }}
       >

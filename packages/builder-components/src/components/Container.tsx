@@ -47,19 +47,13 @@ export const ContainerComponent: ComponentDefinition = {
       default: "8px",
     },
     {
-      key: "padding",
-      label: "Padding",
-      type: "string",
-      default: "16px",
-    },
-    {
       key: "showPlaceholder",
       label: "Show Placeholder",
       type: "boolean",
       default: true,
     },
   ],
-  defaultProps: { display: "flex", direction: "column", gap: "8px", padding: "16px", showPlaceholder: true },
+  defaultProps: { display: "flex", direction: "column", gap: "8px", showPlaceholder: true },
   defaultStyle: {
     display: "flex",
     flexDirection: "column",
@@ -72,14 +66,16 @@ export const ContainerComponent: ComponentDefinition = {
     <div
       data-node-id={node.id}
       style={{
+        // Padding is driven by style.padding (Spacing panel) — the single source of
+        // truth. Legacy nodes that stored padding in props.padding are normalized into
+        // style.padding on load (see normalizeLegacyPadding).
         ...(style as React.CSSProperties),
         display: (node.props.display as string) ?? "flex",
         flexDirection: (node.props.direction as "row" | "column") ?? "column",
         gap: node.props.gap !== undefined ? String(node.props.gap) : "8px",
-        padding: node.props.padding !== undefined ? String(node.props.padding) : "16px",
       }}
     >
-      {(children as React.ReactNode) ?? 
+      {(children as React.ReactNode) ??
         (node.props.showPlaceholder !== false ? (
           <div className="flex items-center justify-center h-10 text-xs text-muted-foreground border-2 border-dashed border-border rounded">
             Drop components here
@@ -94,7 +90,6 @@ export const ContainerComponent: ComponentDefinition = {
         display: (node.props.display as string) ?? "flex",
         flexDirection: (node.props.direction as "row" | "column") ?? "column",
         gap: node.props.gap !== undefined ? String(node.props.gap) : "8px",
-        padding: node.props.padding !== undefined ? String(node.props.padding) : "16px",
       }}
     >
       {children as React.ReactNode}

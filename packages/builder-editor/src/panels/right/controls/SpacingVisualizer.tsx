@@ -19,8 +19,38 @@ function parseSpacingValue(raw: string | undefined): { num: number; unit: string
   return { num, unit, isAuto: false };
 }
 
-function resolveValue(style: Record<string, any>, individual: string, shorthand: string): string {
-  return String(style[individual] ?? style[shorthand] ?? "");
+/**
+ * Expand a CSS box shorthand (`padding` / `margin`) into its four sides,
+ * following the 1–4 value CSS rule (top, right, bottom, left).
+ * Returns undefined when there is no shorthand to expand.
+ */
+function expandShorthand(
+  raw: string | undefined,
+): { top: string; right: string; bottom: string; left: string } | undefined {
+  if (!raw || typeof raw !== "string") return undefined;
+  const parts = raw.trim().split(/\s+/);
+  if (parts.length === 0 || parts[0] === "") return undefined;
+  const [a, b = a, c = a, d = b] = parts;
+  return { top: a!, right: b!, bottom: c!, left: d! };
+}
+
+/**
+ * Resolve the value for one side, preferring an explicit longhand but falling
+ * back to the matching side of a shorthand so e.g. "80px 24px" shows 80 on the
+ * vertical sides and 24 on the horizontal ones (not 80 everywhere).
+ */
+function resolveValue(
+  style: Record<string, any>,
+  individual: string,
+  shorthand: string,
+  side: "top" | "right" | "bottom" | "left",
+): string {
+  if (style[individual] !== undefined && style[individual] !== null) {
+    return String(style[individual]);
+  }
+  const expanded = expandShorthand(style[shorthand]);
+  if (expanded) return expanded[side];
+  return "";
 }
 
 function displayNum(num: number): string {
@@ -122,21 +152,42 @@ export interface SpacingVisualizerProps {
 
 export function SpacingVisualizer({ style, onStyleChange, elementSize }: SpacingVisualizerProps) {
   const m = {
-    top:    resolveValue(style, "marginTop",    "margin"),
-    right:  resolveValue(style, "marginRight",  "margin"),
-    bottom: resolveValue(style, "marginBottom", "margin"),
-    left:   resolveValue(style, "marginLeft",   "margin"),
+    top:    resolveValue(style, "marginTop",    "margin", "top"),
+    right:  resolveValue(style, "marginRight",  "margin", "right"),
+    bottom: resolveValue(style, "marginBottom", "margin", "bottom"),
+    left:   resolveValue(style, "marginLeft",   "margin", "left"),
   };
   const p = {
-    top:    resolveValue(style, "paddingTop",    "padding"),
-    right:  resolveValue(style, "paddingRight",  "padding"),
-    bottom: resolveValue(style, "paddingBottom", "padding"),
-    left:   resolveValue(style, "paddingLeft",   "padding"),
+    top:    resolveValue(style, "paddingTop",    "padding", "top"),
+    right:  resolveValue(style, "paddingRight",  "padding", "right"),
+    bottom: resolveValue(style, "paddingBottom", "padding", "bottom"),
+    left:   resolveValue(style, "paddingLeft",   "padding", "left"),
   };
 
   const sizeLabel = elementSize
     ? `${elementSize.width} × ${elementSize.height}`
     : null;
+
+  /**
+   * Build the onChange for one side of padding/margin. The editor works in
+   * per-side longhands, but stored styles may use a `padding`/`margin` shorthand
+   * (e.g. "80px 24px"). Writing a longhand while the shorthand remains is
+   * ambiguous in inline CSS (the shorthand wins), so on edit we expand the
+   * shorthand into all four sides, clear it, then apply the edited side.
+   */
+  const makeSideHandler =
+    (prop: "padding" | "margin", side: "Top" | "Right" | "Bottom" | "Left") =>
+    (v: string | undefined) => {
+      const shorthand = expandShorthand(style[prop]);
+      if (shorthand) {
+        onStyleChange(prop, undefined);
+        onStyleChange(`${prop}Top`, style[`${prop}Top`] ?? shorthand.top);
+        onStyleChange(`${prop}Right`, style[`${prop}Right`] ?? shorthand.right);
+        onStyleChange(`${prop}Bottom`, style[`${prop}Bottom`] ?? shorthand.bottom);
+        onStyleChange(`${prop}Left`, style[`${prop}Left`] ?? shorthand.left);
+      }
+      onStyleChange(`${prop}${side}`, v);
+    };
 
   return (
     <div className="w-full select-none font-mono text-[10px]">
@@ -155,22 +206,22 @@ export function SpacingVisualizer({ style, onStyleChange, elementSize }: Spacing
         {/* Margin scrub labels */}
         <div className="absolute top-0 left-0 right-0 flex justify-center" style={{ height: 18 }}>
           <div className="flex items-center h-full">
-            <ScrubLabel value={m.top} side="top" allowAuto onChange={(v) => onStyleChange("marginTop", v)} />
+            <ScrubLabel value={m.top} side="top" allowAuto onChange={makeSideHandler("margin", "Top")} />
           </div>
         </div>
         <div className="absolute bottom-0 left-0 right-0 flex justify-center" style={{ height: 18 }}>
           <div className="flex items-center h-full">
-            <ScrubLabel value={m.bottom} side="bottom" allowAuto onChange={(v) => onStyleChange("marginBottom", v)} />
+            <ScrubLabel value={m.bottom} side="bottom" allowAuto onChange={makeSideHandler("margin", "Bottom")} />
           </div>
         </div>
         <div className="absolute top-0 bottom-0 left-0 flex items-center" style={{ width: 14 }}>
           <div className="flex justify-center w-full">
-            <ScrubLabel value={m.left} side="left" allowAuto onChange={(v) => onStyleChange("marginLeft", v)} />
+            <ScrubLabel value={m.left} side="left" allowAuto onChange={makeSideHandler("margin", "Left")} />
           </div>
         </div>
         <div className="absolute top-0 bottom-0 right-0 flex items-center" style={{ width: 14 }}>
           <div className="flex justify-center w-full">
-            <ScrubLabel value={m.right} side="right" allowAuto onChange={(v) => onStyleChange("marginRight", v)} />
+            <ScrubLabel value={m.right} side="right" allowAuto onChange={makeSideHandler("margin", "Right")} />
           </div>
         </div>
 
@@ -189,22 +240,22 @@ export function SpacingVisualizer({ style, onStyleChange, elementSize }: Spacing
           {/* Padding scrub labels */}
           <div className="absolute top-0 left-0 right-0 flex justify-center" style={{ height: 18 }}>
             <div className="flex items-center h-full">
-              <ScrubLabel value={p.top} side="top" onChange={(v) => onStyleChange("paddingTop", v)} />
+              <ScrubLabel value={p.top} side="top" onChange={makeSideHandler("padding", "Top")} />
             </div>
           </div>
           <div className="absolute bottom-0 left-0 right-0 flex justify-center" style={{ height: 18 }}>
             <div className="flex items-center h-full">
-              <ScrubLabel value={p.bottom} side="bottom" onChange={(v) => onStyleChange("paddingBottom", v)} />
+              <ScrubLabel value={p.bottom} side="bottom" onChange={makeSideHandler("padding", "Bottom")} />
             </div>
           </div>
           <div className="absolute top-0 bottom-0 left-0 flex items-center" style={{ width: 14 }}>
             <div className="flex justify-center w-full">
-              <ScrubLabel value={p.left} side="left" onChange={(v) => onStyleChange("paddingLeft", v)} />
+              <ScrubLabel value={p.left} side="left" onChange={makeSideHandler("padding", "Left")} />
             </div>
           </div>
           <div className="absolute top-0 bottom-0 right-0 flex items-center" style={{ width: 14 }}>
             <div className="flex justify-center w-full">
-              <ScrubLabel value={p.right} side="right" onChange={(v) => onStyleChange("paddingRight", v)} />
+              <ScrubLabel value={p.right} side="right" onChange={makeSideHandler("padding", "Right")} />
             </div>
           </div>
 

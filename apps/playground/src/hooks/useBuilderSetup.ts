@@ -1,7 +1,7 @@
 import { useMemo, useEffect } from "react";
 import { createBuilder, GroupRegistry, BUILT_IN_GROUPS, BUILT_IN_SUB_GROUPS } from "@ui-builder/builder-core";
 import type { BuilderAPI, AssetProvider, AssetListResult } from "@ui-builder/builder-core";
-import { BASE_COMPONENTS } from "@ui-builder/builder-components";
+import { BASE_COMPONENTS, normalizeLegacyPadding } from "@ui-builder/builder-components";
 import { CUSTOM_COMPONENTS } from "../components/sample-components";
 import { FIXTURE_DOCUMENT } from "../fixtures/fixture-document";
 
@@ -52,7 +52,7 @@ const localAssetProvider: AssetProvider = {
 export function useBuilderSetup(): { builder: BuilderAPI; groupRegistry: GroupRegistry; useRemotePalette: boolean; assetProvider: AssetProvider } {
   const builder = useMemo(() => {
     const b = createBuilder({
-      document: FIXTURE_DOCUMENT,
+      document: normalizeLegacyPadding(FIXTURE_DOCUMENT),
       permissions: {
         canEdit: true,
         canDelete: true,
