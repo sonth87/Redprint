@@ -3,8 +3,10 @@
 > **This file is project-specific.** It describes the architecture, features, and technical decisions of this project.
 > It may **override or extend** sections from `RULES.md` — see the override mechanism in [Rules Reference](#rules-reference).
 >
-> **Version:** 1.7 | **Last updated:** 2026-06 | **Updated by:** Tech Lead
+> **Version:** 2.0 | **Last updated:** 2026-06 | **Updated by:** Tech Lead
 > **Changelog:**
+> - v2.0 — **AI P2: Real streaming + closed-loop repair** (`apps/api` + `builder-editor/src/ai`): Added `POST /api/ai/chat/stream` — a real SSE endpoint that streams LLM tokens via `callLLMStream()` (new streaming variant in `llm-client.ts` for all 3 providers: OpenAI `stream: true`, Claude `stream: true` with `cache_control` preserved, Gemini `alt=sse`). `streamAIMessage` in `AIService.ts` replaced — now reads real SSE `token`/`complete`/`error` events from `/chat/stream` instead of emitting a fake single-token response. Added **closed-loop repair** in `repairDroppedCommands()` (ai.routes.ts): when `validateCompiledCommandsWithReport` drops ≥1 command, a targeted 1-retry re-prompt describes each rejection with human-readable hints (per `REPAIR_HINTS` table) and re-validates; only irreparable drops surface in `droppedCommands`. Repair is wired into both `/chat` (JSON) and `/chat/stream` (SSE). SSE helpers extracted to `services/sse.ts` (shared by both endpoints).
+> - v1.9 — **AI subsystem hardening** (`apps/api` + `builder-editor/src/ai`): the `/api/ai/chat` path now runs LLM output through the **same validation gate** as `/generate-page` (`validateCompiledCommandsWithReport` in `section-plan-compiler.ts`) — unknown component types, leaf-parent nesting, missing required / invalid enum props are rejected and **reported** (not silent-dropped) via a `droppedCommands` field surfaced as a non-blocking editor toast (`ai.commandsSkipped`). Added a **perimeter** on `/api/ai/*`: shared-bearer auth (`requireApiKey`, env `AI_API_KEY` — open with a startup warning when unset) + per-IP rate limiting (`express-rate-limit`, env `AI_RATE_LIMIT_WINDOW_MS`/`AI_RATE_LIMIT_MAX`). **SSRF hardening** for AI-supplied URLs via `services/url-guard.ts` (`safeMediaUrl`/`safeLinkUrl` — block private/loopback/link-local hosts, reject `http:`/`javascript:`) applied at image `src`, nav `href`, gallery `link`. **Claude prompt caching** (`cache_control: ephemeral` on the static system prompt) in `llm-client.ts`. Client threads `AIConfig.backendAuthToken` as a bearer header on both AI fetch sites.
 > - v1.8 — **Popup System V6** (schema `2.7.0`): `PopupCampaign` lifecycle model (`draft→review→published→paused→archived`) groups popups via `campaignId` on `PopupDefinition`. Runtime campaign gate: only `published` campaigns render; others emit `popup_rules_blocked` with `rulesBlockReason: "campaign"`. Conflict arbitration (`arbitrate`) resolves simultaneously-eligible campaign popups via four policies: `stack`, `suppress`, `replace`, `queue`. Effective priority formula: `(campaign.priority ?? 0) * 1000 + (popup.priority ?? 0)`. Queue draining via `useEffect` on `popupStack`. Pure helpers in `builder-core/src/popups/campaigns.ts`. Eight V6 commands: `CREATE/UPDATE/DELETE/RESTORE_CAMPAIGN`, `SET_CAMPAIGN_STATUS`, `ASSIGN_POPUP_CAMPAIGN`, `SET_POPUP_PRIORITY`, `SET_ACTIVE_CAMPAIGN`. `CampaignPanel.tsx` floating editor panel; campaign grouping in layer tree; popup property panel V6 membership section. `activeCampaignId` editor state. `popupV6Migration` (`2.6.0 → 2.7.0`, additive with rollback). All V6 fields optional; V5 docs migrate automatically.
 > - v1.7 — **Popup System V5** (schema `2.6.0`): locale-specific content roots (`PopupLocaleContent`, BCP-47, popup-owned cascade-delete/deep-clone), composable targeting (`PopupTargeting` condition groups — AND across groups, configurable match within), scheduling (`PopupSchedule` — date range, IANA timezone, time window), granular frequency caps (`PopupFrequencyConfig` with `suppressAfterGoalIds` and host storage override). Pre-open eligibility chain in runtime (schedule → targeting → frequency); `popup_rules_blocked` analytics event. Pure evaluation helpers in `builder-core/src/popups/rules.ts`. `activePopupLocale` editor state, `SET_ACTIVE_POPUP_LOCALE` (no undo). `popupV5Migration` (`2.5.0 → 2.6.0`, additive). All V5 fields optional; V4 docs migrate automatically.
 > - v1.6 — **Popup System V4** (schema `2.5.0`): conversion **goals** (`PopupGoal`), **A/B variants** (`PopupVariant` with popup-owned content roots — cascade-delete + deep-clone) and **experiment** assignment (`PopupExperiment`: random/sticky/winner). Runtime emits a vendor-neutral `PopupAnalyticsEvent` stream via `RendererConfig.onPopupAnalyticsEvent` + optional `eventBus` (`popup:analytics`), assigns variants at open time (sticky via `popupStorage` or host callbacks), and tracks goal conversions — none of it mutates `BuilderDocument`. Pure assignment helpers in `builder-core/src/popups/experiment.ts`; editor adds Goals + A/B Test panel sections, layer-tree variant groups, and per-variant content editing (`SET_ACTIVE_POPUP_VARIANT`). All V4 fields optional; V2/V3 docs migrate via `popupV4Migration`.
@@ -445,6 +447,63 @@ Drag file → handleDrop() → queue with preview → sequential upload
   → status: pending → uploading → done/error
   → after all: switch to Library tab, show new assets
 ```
+
+---
+
+## AI Generation Subsystem
+
+**Location:** `apps/api/src/routes/ai.routes.ts` + `apps/api/src/services/*` (backend),
+`packages/builder-editor/src/ai/*` (client). Provider keys live **only** on the backend
+(`llm-client.ts`); the browser never holds an LLM key.
+
+### Paradigm
+
+This is a **one-shot generator**, not a conversational agent loop — the right model for
+"generate a lot from one description" (a web builder). Two entry points:
+
+- **`POST /api/ai/generate-page`** — multi-stage SSE pipeline: `generatePagePlan` →
+  `generateSectionPlan` → deterministic `compileSection` → prop validation/repair → per-section
+  fallback. The LLM proposes *intent*; deterministic code emits the actual builder commands.
+- **`POST /api/ai/chat`** — single-turn edit/build; returns `{ message, commands, droppedCommands? }`.
+
+### Validation gate (both paths)
+
+LLM output is **untrusted**. All `ADD_NODE` commands pass through
+`validateCompiledCommandsWithReport(commands, availableTypes, initialParentIds, contractsByType, initialParentTypes?)`
+in `section-plan-compiler.ts`, which checks: type-exists, parent-exists, nesting (no leaf
+parents), prop validation + repair (`validatePropsAgainstContract`), required props, valid enums.
+Rejected commands are **reported** (`droppedCommands`, with a reason such as `unknown_type` /
+`leaf_parent` / `missing_required_props`) — never silent-dropped. The chat handler builds
+`initialParentTypes` from the current page so existing leaf nodes correctly reject children.
+The client surfaces drops as a non-blocking toast (`ai.commandsSkipped`); valid commands still apply.
+
+### Perimeter security (`/api/ai/*`)
+
+- **Auth:** `requireApiKey` (`middleware/auth.ts`) requires `Authorization: Bearer <AI_API_KEY>`.
+  When `AI_API_KEY` is unset the endpoints are open **with a startup warning** (dev convenience).
+- **Rate limit:** `aiRateLimiter` (`middleware/rateLimit.ts`, `express-rate-limit`) caps per-IP
+  requests (`AI_RATE_LIMIT_WINDOW_MS` / `AI_RATE_LIMIT_MAX`). SSE responses count once at entry.
+- **SSRF:** `services/url-guard.ts` (`safeMediaUrl` / `safeLinkUrl`) validates every AI-supplied
+  URL — blocks loopback/private/link-local hosts and rejects `http:` / `javascript:`. Applied at
+  image `src`, nav `href`, and gallery `link`.
+- Mounted as `app.use("/api/ai", requireApiKey, aiRateLimiter, aiRouter)`; CORS allows `Authorization`.
+
+### Cost / performance
+
+- **Prompt caching:** the Claude provider marks the large static system prompt
+  `cache_control: { type: "ephemeral" }` (`llm-client.ts`); cache token usage is logged.
+- Context is compacted before sending (compact manifest, slim node tree, compact presets); the
+  backend owns the system prompt so it isn't re-sent from the client.
+
+### Client config
+
+`AIConfig` (`builder-editor/src/ai/types.ts`): `backendUrl`, `backendAuthToken` (bearer for the
+perimeter). Auth header is built once via `buildBackendHeaders()` and reused by both fetch sites
+(`AIService.ts`, `page-generator/usePageGenerator.ts`).
+
+> **Note:** `streamingEnabled` chat "streaming" is currently a client-side simulation (the chat
+> endpoint returns JSON); only `/generate-page` is true SSE. Real chat token-streaming and
+> closed-loop LLM repair are deferred (P2).
 
 ---
 

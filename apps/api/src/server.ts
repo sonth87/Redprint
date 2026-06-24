@@ -8,6 +8,8 @@ import { aiRouter } from "./routes/ai.routes.js";
 import { paletteRouter } from "./routes/palette.routes.js";
 import { mediaRouter, UPLOADS_DIR } from "./routes/media.routes.js";
 import { popupRouter } from "./routes/popup.routes.js";
+import { requireApiKey } from "./middleware/auth.js";
+import { aiRateLimiter } from "./middleware/rateLimit.js";
 
 const PORT = parseInt(process.env.PORT ?? "3002", 10);
 
@@ -20,7 +22,7 @@ app.use(
     // Allow playground (3000) and website (3001) in dev
     origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:5173", "http://localhost:5174"],
     methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
@@ -31,7 +33,7 @@ app.use("/uploads", express.static(UPLOADS_DIR));
 
 // ── Routes ────────────────────────────────────────────────────────────────
 
-app.use("/api/ai", aiRouter);
+app.use("/api/ai", requireApiKey, aiRateLimiter, aiRouter);
 app.use("/api/palette", paletteRouter);
 app.use("/api/media", mediaRouter);
 app.use("/api/popups", popupRouter);

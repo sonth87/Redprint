@@ -418,7 +418,7 @@ export function getDefaultPopupKindConfig(kind: PopupKind): PopupKindConfig {
       return { kind };
     case "modal":
     default:
-      return { kind: "modal", size: "md", maxWidth: "640px", maxHeight: "90vh" };
+      return { kind: "modal", size: "md", maxWidth: "100%", maxHeight: "90vh" };
   }
 }
 

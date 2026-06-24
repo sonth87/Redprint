@@ -16,6 +16,7 @@ import type {
 } from "../types/ai.types.js";
 import { resolveComponentContracts, type ComponentContract } from "./component-contract-resolver.js";
 import { validatePropsAgainstContract } from "./prop-schema-validator.js";
+import { safeLinkUrl, safeMediaUrl } from "./url-guard.js";
 
 interface CompileContext {
   availableTypes: Set<string>;
@@ -133,13 +134,6 @@ function adapterCandidatesFor(section: PagePlanSection, plan: SectionPlan): stri
   return plan.preferredComponents ?? defaultPreferredComponents(section.type);
 }
 
-function validUrlLike(value: string | undefined): boolean {
-  if (!value) return false;
-  const trimmed = value.trim();
-  if (/^(https?:\/\/|data:image\/|\/)/i.test(trimmed)) return true;
-  return false;
-}
-
 function fallbackImagePool(brief: CreativeBrief): string[] {
   return isPetCare(brief) ? PET_IMAGES : GENERIC_IMAGES;
 }
@@ -172,13 +166,13 @@ function normalizeMediaItem(
   pool: string[],
 ): Required<Pick<SectionPlanMediaItem, "src" | "alt">> & Pick<SectionPlanMediaItem, "caption" | "link"> {
   const fallback = pool[index % pool.length] ?? DEFAULT_IMAGE;
-  const src = validUrlLike(item?.src) ? item!.src!.trim() : fallback;
+  const src = safeMediaUrl(item?.src) ?? fallback;
   const alt = item?.alt?.trim() || fallbackAlt(section, plan, index);
   return {
     src,
     alt,
     caption: item?.caption?.trim() || undefined,
-    link: item?.link?.trim() || undefined,
+    link: safeLinkUrl(item?.link) ?? undefined,
   };
 }
 
@@ -386,12 +380,11 @@ function navMenuCommand(
 ): AICommandSuggestion {
   const c = colors(ctx.designTokens);
   const toTarget = (href: string) => {
-    if (href.startsWith("#")) return { type: "anchor", anchorId: href.slice(1), behavior: "smooth" };
-    if (href.startsWith("/")) return { type: "page", path: href };
-    if (href.startsWith("http://") || href.startsWith("https://") || href.startsWith("mailto:") || href.startsWith("tel:")) {
-      return { type: "url", url: href, target: "_self" };
-    }
-    return { type: "none" };
+    const safe = safeLinkUrl(href);
+    if (!safe) return { type: "none" };
+    if (safe.startsWith("#")) return { type: "anchor", anchorId: safe.slice(1), behavior: "smooth" };
+    if (safe.startsWith("/")) return { type: "page", path: safe };
+    return { type: "url", url: safe, target: "_self" };
   };
   return command(
     "ADD_NODE",
@@ -1441,16 +1434,47 @@ export function compileSectionPlan(plan: SectionPlan, section: PagePlanSection, 
   return compileGenericSection(plan, section, ctx);
 }
 
-export function validateCompiledCommands(
+/** Why a command was rejected by the validation gate. Written for both logs and AI/user feedback. */
+export type DroppedCommandReason =
+  | "missing_fields"
+  | "duplicate_id"
+  | "unknown_type"
+  | "root_non_section"
+  | "orphan_parent"
+  | "leaf_parent"
+  | "invalid_props"
+  | "missing_required_props"
+  | "invalid_enum";
+
+export interface DroppedCommand {
+  type: string;
+  componentType?: string;
+  reason: DroppedCommandReason;
+}
+
+export interface ValidateCommandsReport {
+  valid: AICommandSuggestion[];
+  dropped: DroppedCommand[];
+}
+
+/**
+ * Same validation as {@link validateCompiledCommands} but also reports *which* commands were
+ * dropped and *why*, so callers can surface rejections loudly (blueprint 18: "reject loud,
+ * never silent-drop") instead of silently discarding LLM output.
+ */
+export function validateCompiledCommandsWithReport(
   commands: AICommandSuggestion[],
   availableTypes: Set<string>,
   initialParentIds: Set<string>,
   contractsByType: Map<string, ComponentContract> = new Map(),
-): AICommandSuggestion[] {
+  /** Real types of pre-existing nodes (chat path). Defaults each known id to "Section". */
+  initialParentTypes: Map<string, string> = new Map(),
+): ValidateCommandsReport {
   const knownIds = new Set(initialParentIds);
   const knownTypes = new Map<string, string>();
-  for (const id of initialParentIds) knownTypes.set(id, "Section");
+  for (const id of initialParentIds) knownTypes.set(id, initialParentTypes.get(id) ?? "Section");
   const valid: AICommandSuggestion[] = [];
+  const dropped: DroppedCommand[] = [];
 
   for (const cmd of commands) {
     if (cmd.type !== "ADD_NODE") {
@@ -1462,28 +1486,41 @@ export function validateCompiledCommands(
     const parentId = String(cmd.payload.parentId ?? "");
     const nodeId = String(cmd.payload.nodeId ?? "");
 
-    if (!componentType || !nodeId || !parentId) continue;
-    if (knownIds.has(nodeId)) continue;
-    if (availableTypes.size > 0 && !availableTypes.has(componentType)) continue;
-    if (parentId === "root" && componentType !== "Section") continue;
-    if (!knownIds.has(parentId) && parentId !== "root") continue;
+    const drop = (reason: DroppedCommandReason) => {
+      dropped.push({ type: cmd.type, componentType: componentType || undefined, reason });
+    };
+
+    if (!componentType || !nodeId || !parentId) { drop("missing_fields"); continue; }
+    if (knownIds.has(nodeId)) { drop("duplicate_id"); continue; }
+    if (availableTypes.size > 0 && !availableTypes.has(componentType)) { drop("unknown_type"); continue; }
+    if (parentId === "root" && componentType !== "Section") { drop("root_non_section"); continue; }
+    if (!knownIds.has(parentId) && parentId !== "root") { drop("orphan_parent"); continue; }
     const parentType = knownTypes.get(parentId);
-    if (parentType && LEAF_COMPONENT_TYPES.has(parentType)) continue;
+    if (parentType && LEAF_COMPONENT_TYPES.has(parentType)) { drop("leaf_parent"); continue; }
     const props = cmd.payload.props && typeof cmd.payload.props === "object"
       ? (cmd.payload.props as Record<string, unknown>)
       : {};
     const propValidation = validatePropsAgainstContract(contractsByType.get(componentType), props);
-    if (!propValidation.valid) continue;
+    if (!propValidation.valid) { drop("invalid_props"); continue; }
     cmd.payload.props = propValidation.repairedProps;
-    if (!hasRequiredProps(componentType, cmd.payload.props)) continue;
-    if (!hasValidEnumProps(componentType, cmd.payload.props)) continue;
+    if (!hasRequiredProps(componentType, cmd.payload.props)) { drop("missing_required_props"); continue; }
+    if (!hasValidEnumProps(componentType, cmd.payload.props)) { drop("invalid_enum"); continue; }
 
     knownIds.add(nodeId);
     knownTypes.set(nodeId, componentType);
     valid.push(cmd);
   }
 
-  return valid;
+  return { valid, dropped };
+}
+
+export function validateCompiledCommands(
+  commands: AICommandSuggestion[],
+  availableTypes: Set<string>,
+  initialParentIds: Set<string>,
+  contractsByType: Map<string, ComponentContract> = new Map(),
+): AICommandSuggestion[] {
+  return validateCompiledCommandsWithReport(commands, availableTypes, initialParentIds, contractsByType).valid;
 }
 
 function hasRequiredProps(componentType: string, props: unknown): boolean {
@@ -1539,13 +1576,26 @@ export function compileSection(sectionPlan: SectionPlan, section: PagePlanSectio
   return compileSectionPlan(normalizeComponentIntentPreferences(sectionPlan), section, ctx);
 }
 
+/**
+ * Resolve a `componentType → ComponentContract` map from the request's available components.
+ * Shared by the generate-page compiler and the chat validation gate (which has no PagePlan).
+ */
+export function buildContractsByType(
+  availableComponents: GeneratePageRequest["availableComponents"],
+): Map<string, ComponentContract> {
+  const contracts = resolveComponentContracts(
+    availableComponents,
+    availableComponents.map((component) => component.type),
+  );
+  return new Map(contracts.map((contract) => [contract.type, contract]));
+}
+
 function buildCompileContext(pagePlan: PagePlan, request: GeneratePageRequest): CompileContext {
-  const contracts = resolveComponentContracts(request.availableComponents, request.availableComponents.map((component) => component.type));
   return {
     availableTypes: new Set(request.availableComponents.map((c) => c.type)),
     designTokens: request.designTokens ?? {},
     brief: pagePlan.brief,
-    contractsByType: new Map(contracts.map((contract) => [contract.type, contract])),
+    contractsByType: buildContractsByType(request.availableComponents),
   };
 }
 

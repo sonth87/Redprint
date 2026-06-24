@@ -380,6 +380,7 @@
     "send": "Send",
     "generate": "Generate",
     "generating": "Generating…",
+    "commandsSkipped": "{{count}} AI suggestion(s) were skipped because they didn't match a valid component or props.",
     "generateDescription": "Describe the page or component you want to create (e.g., \"A contact form with email and message fields\").",
     "thinking": "AI is thinking…",
     "configTitle": "AI Configuration",

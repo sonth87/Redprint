@@ -169,9 +169,18 @@ export interface ChatRequest {
   };
 }
 
+/** A command rejected by the chat validation gate, with the reason. */
+export interface DroppedChatCommand {
+  type: string;
+  componentType?: string;
+  reason: string;
+}
+
 export interface ChatResponse {
   message: string;
   commands: AICommandSuggestion[];
+  /** Present only when the validation gate rejected one or more AI commands. */
+  droppedCommands?: DroppedChatCommand[];
 }
 
 export interface DesignTokens {

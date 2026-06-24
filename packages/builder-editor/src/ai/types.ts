@@ -10,6 +10,12 @@ export interface AIConfig {
    * Defaults to http://localhost:3002 in development.
    */
   backendUrl: string;
+  /**
+   * Bearer token for the AI backend (matches the server's AI_API_KEY).
+   * Sent as `Authorization: Bearer <token>` on every AI request. Optional in
+   * local dev when the backend has no AI_API_KEY configured.
+   */
+  backendAuthToken?: string;
   /** @deprecated — kept for migration period, ignored by the backend adapter */
   provider?: AIProvider;
   /** @deprecated — kept for migration period, ignored. Keys are set on the backend. */
@@ -221,9 +227,18 @@ export interface AICommandSuggestion {
   description: string;
 }
 
+/** A command the backend validation gate rejected, surfaced to the user. */
+export interface DroppedAICommand {
+  type: string;
+  componentType?: string;
+  reason: string;
+}
+
 export interface AIResponse {
   message: string;
   suggestions?: AICommandSuggestion[];
+  /** Present when the backend rejected one or more AI commands (validation gate). */
+  droppedCommands?: DroppedAICommand[];
 }
 
 /** Callbacks for streaming (SSE) responses */

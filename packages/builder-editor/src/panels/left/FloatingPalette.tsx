@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import * as LucideIcons from "lucide-react";
-import { AppWindow, Layers } from "lucide-react";
+import { Layers2, Layers } from "lucide-react";
 import { cn, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@ui-builder/ui";
 import type { PaletteCatalog, PaletteGroup } from "@ui-builder/builder-core";
 import { useTranslation } from "react-i18next";
@@ -210,10 +210,10 @@ export const FloatingPalette: React.FC<FloatingPaletteProps> = ({
                       popupsOpen && "bg-primary/10 text-primary ring-1 ring-primary/30",
                     )}
                   >
-                    <AppWindow className="w-4 h-4" />
+                    <Layers2 className="w-4 h-4" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="right" className={GLASS_TOOLTIP.dark}>
+                <TooltipContent side="right" className={GLASS_TOOLTIP.light}>
                   Popups
                 </TooltipContent>
               </Tooltip>
@@ -249,7 +249,7 @@ export const FloatingPalette: React.FC<FloatingPaletteProps> = ({
                   <Layers className="w-4 h-4" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="right" className={GLASS_TOOLTIP.dark}>
+              <TooltipContent side="right" className={GLASS_TOOLTIP.light}>
                 Layers
               </TooltipContent>
             </Tooltip>

@@ -10,8 +10,16 @@ import { classifyAIError } from "../services/ai-error-classifier.js";
 import { buildComponentCapabilityManifest } from "../services/component-capability-manifest.js";
 import { buildDeterministicPagePlan, generatePagePlan } from "../services/page-plan-generator.js";
 import { generateSectionPlan } from "../services/section-plan-generator.js";
-import { buildSkeletonCommands, compileFallbackSection, compileSection } from "../services/section-plan-compiler.js";
-import { callLLM } from "../services/llm-client.js";
+import {
+  buildContractsByType,
+  buildSkeletonCommands,
+  compileFallbackSection,
+  compileSection,
+  validateCompiledCommandsWithReport,
+  type DroppedCommand,
+} from "../services/section-plan-compiler.js";
+import { callLLM, callLLMStream } from "../services/llm-client.js";
+import { initSSE, sendSSE } from "../services/sse.js";
 import { COMMAND_REFERENCE } from "../services/command-reference.js";
 import { logger } from "../services/logger.js";
 import type {
@@ -36,21 +44,6 @@ const RICH_COMPONENT_TYPES = new Set([
   "Repeater",
 ]);
 
-// ── Utility: write SSE event ─────────────────────────────────────────────
-
-function sendSSE(res: Response, event: string, data: unknown) {
-  res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
-}
-
-// ── SSE headers setup ─────────────────────────────────────────────────────
-
-function initSSE(res: Response) {
-  res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Connection", "keep-alive");
-  res.setHeader("X-Accel-Buffering", "no");
-  res.flushHeaders();
-}
 
 function getPositiveIntEnv(name: string, fallback: number): number {
   const value = Number(process.env[name]);
@@ -475,7 +468,56 @@ aiRouter.post("/chat", async (req: Request, res: Response) => {
       }
     }
 
-    res.json({ message: obj.message ?? "", commands });
+    // ── Validation gate ──────────────────────────────────────────────────
+    // The chat path previously shipped raw LLM commands. Route them through the
+    // same validator/repair as generate-page, and report (not silent-drop) any
+    // rejected ADD_NODE commands so the client can surface them.
+    const ctx = body.builderContext;
+    const availableTypes = new Set(ctx.availableComponents.map((c) => c.type));
+    const contractsByType = buildContractsByType(ctx.availableComponents);
+    // initial valid parents: the root node + every existing node in the current page.
+    const initialParentIds = new Set<string>([ctx.document.rootNodeId]);
+    const initialParentTypes = new Map<string, string>();
+    if (ctx.pageNodes) {
+      for (const [id, node] of Object.entries(ctx.pageNodes)) {
+        initialParentIds.add(id);
+        initialParentTypes.set(id, node.type);
+      }
+    }
+
+    const { valid, dropped } = validateCompiledCommandsWithReport(
+      commands,
+      availableTypes,
+      initialParentIds,
+      contractsByType,
+      initialParentTypes,
+    );
+    commands = valid;
+
+    // Repair loop (1 retry)
+    let finalDropped = dropped;
+    if (dropped.length > 0) {
+      logger.decision("CHAT_VALIDATION", `Dropped ${dropped.length} invalid AI command(s), attempting repair`, {
+        dropped,
+        kept: commands.length,
+      });
+      const { repairedValid, stillDropped } = await repairDroppedCommands(
+        messages,
+        dropped,
+        availableTypes,
+        contractsByType,
+        initialParentIds,
+        initialParentTypes,
+      );
+      commands = [...commands, ...repairedValid];
+      finalDropped = stillDropped;
+    }
+
+    res.json({
+      message: obj.message ?? "",
+      commands,
+      ...(finalDropped.length > 0 ? { droppedCommands: finalDropped } : {}),
+    });
   } catch (err) {
     console.error("[AI] chat error:", err);
     if (body.builderContext?.fullPageMode) {
@@ -486,5 +528,211 @@ aiRouter.post("/chat", async (req: Request, res: Response) => {
     res.status(500).json({
       error: err instanceof Error ? err.message : "Internal server error",
     });
+  }
+});
+
+// ── Repair helper ────────────────────────────────────────────────────────
+
+const REPAIR_HINTS: Record<string, (cmd: DroppedCommand, ctx: { availableTypes: Set<string>; contractsByType: Map<string, import("../services/component-contract-resolver.js").ComponentContract> }) => string> = {
+  unknown_type: (_cmd, ctx) =>
+    `Use only these types: ${[...ctx.availableTypes].join(", ")}`,
+  leaf_parent: (cmd) =>
+    `Component ${cmd.componentType ?? "unknown"} cannot have children. Choose a container type (e.g. Section, Column) as parent.`,
+  missing_required_props: (cmd, ctx) => {
+    const contract = cmd.componentType ? ctx.contractsByType.get(cmd.componentType) : undefined;
+    const required = contract?.requiredProps.map((p) => p.key) ?? [];
+    return `Required props missing: ${required.join(", ") || "check contract"}`;
+  },
+  invalid_props: (cmd, ctx) => {
+    const contract = cmd.componentType ? ctx.contractsByType.get(cmd.componentType) : undefined;
+    const required = contract?.requiredProps.map((p) => p.key) ?? [];
+    return `Required props missing: ${required.join(", ") || "check contract"}`;
+  },
+  invalid_enum: () => "Use only the allowed enum values listed in the component schema.",
+  orphan_parent: () => "Parent node id does not exist in the page. Use an existing node id as parent.",
+  duplicate_id: () => "Node id already exists. Generate a unique id.",
+  missing_fields: () => "Command is missing required fields: type, payload, nodeId, componentType, parentId.",
+};
+
+async function repairDroppedCommands(
+  originalMessages: import("../types/ai.types.js").LLMMessage[],
+  dropped: DroppedCommand[],
+  availableTypes: Set<string>,
+  contractsByType: Map<string, import("../services/component-contract-resolver.js").ComponentContract>,
+  initialParentIds: Set<string>,
+  initialParentTypes: Map<string, string>,
+): Promise<{ repairedValid: AICommandSuggestion[]; stillDropped: DroppedCommand[] }> {
+  const ctx = { availableTypes, contractsByType };
+
+  const errorLines = dropped.map((cmd) => {
+    const hint = REPAIR_HINTS[cmd.reason]?.(cmd, ctx) ?? "Invalid command.";
+    return `- ${cmd.type}${cmd.componentType ? ` (${cmd.componentType})` : ""} → reason: ${cmd.reason}. Fix: ${hint}`;
+  });
+
+  const repairMessages: import("../types/ai.types.js").LLMMessage[] = [
+    ...originalMessages,
+    {
+      role: "assistant" as const,
+      content: "(previous response with validation errors)",
+    },
+    {
+      role: "user" as const,
+      content: `The following commands were rejected by the validator:\n${errorLines.join("\n")}\n\nPlease rewrite ONLY the rejected commands to fix them. Return ONLY the corrected commands as JSON: { "commands": [...] }`,
+    },
+  ];
+
+  let repairText: string;
+  try {
+    repairText = await callLLM(repairMessages, true);
+  } catch (err) {
+    logger.decision("REPAIR_FAILED", "Repair LLM call failed", { error: String(err) });
+    return { repairedValid: [], stillDropped: dropped };
+  }
+
+  let repairParsed: unknown;
+  try {
+    repairParsed = JSON.parse(repairText);
+  } catch {
+    const start = repairText.indexOf("{");
+    repairParsed = start >= 0 ? JSON.parse(repairText.slice(start)) : { commands: [] };
+  }
+
+  const repairedCandidates = Array.isArray((repairParsed as Record<string, unknown>).commands)
+    ? ((repairParsed as { commands: unknown[] }).commands).filter(
+        (c): c is AICommandSuggestion =>
+          typeof c === "object" && c !== null && typeof (c as Record<string, unknown>).type === "string",
+      )
+    : [];
+
+  const { valid: repairedValid, dropped: stillDropped } = validateCompiledCommandsWithReport(
+    repairedCandidates,
+    availableTypes,
+    initialParentIds,
+    contractsByType,
+    initialParentTypes,
+  );
+
+  logger.decision("REPAIR_ATTEMPT", `Repair: ${dropped.length} dropped → ${repairedValid.length} recovered, ${stillDropped.length} still invalid`, {
+    recovered: repairedValid.length,
+    stillDropped: stillDropped.length,
+  });
+
+  return { repairedValid, stillDropped };
+}
+
+// ── POST /api/ai/chat/stream ──────────────────────────────────────────────
+
+aiRouter.post("/chat/stream", async (req: Request, res: Response) => {
+  const body = req.body as ChatRequest;
+
+  if (!body.messages?.length) {
+    res.status(400).json({ error: "messages array is required" });
+    return;
+  }
+
+  initSSE(res);
+
+  try {
+    const systemContent = buildChatSystemPrompt(body.builderContext);
+
+    logger.systemMessage(systemContent);
+    logger.debug("CHAT_STREAM_CONTEXT", "Chat stream request context", {
+      documentName: body.builderContext.document.name,
+      nodeCount: body.builderContext.document.nodeCount,
+      fullPageMode: body.builderContext.fullPageMode ?? false,
+      messageCount: body.messages.length,
+    });
+
+    const messages = [
+      { role: "system" as const, content: systemContent },
+      ...body.messages.filter((m) => m.role !== "system"),
+    ];
+
+    // Stream tokens to client as they arrive
+    const rawText = await callLLMStream(messages, (delta) => {
+      sendSSE(res, "token", { delta });
+    }, true);
+
+    // Parse accumulated response
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(rawText);
+    } catch {
+      const start = rawText.indexOf("{");
+      parsed = start >= 0 ? JSON.parse(rawText.slice(start)) : { message: rawText, commands: [] };
+    }
+
+    const obj = parsed as { message?: string; commands?: unknown[] };
+    let commands = Array.isArray(obj.commands)
+      ? obj.commands.filter(
+          (c): c is AICommandSuggestion =>
+            typeof c === "object" && c !== null && typeof (c as Record<string, unknown>).type === "string",
+        )
+      : [];
+
+    // fullPageMode: prepend REMOVE_NODE for root children
+    if (body.builderContext.fullPageMode && body.builderContext.pageNodes) {
+      const rootNodeId = body.builderContext.document.rootNodeId;
+      const childrenToRemove = Object.values(body.builderContext.pageNodes).filter(
+        (node) => node.parentId === rootNodeId,
+      );
+      if (childrenToRemove.length > 0) {
+        const removeCommands: AICommandSuggestion[] = childrenToRemove.map((node) => ({
+          type: "REMOVE_NODE",
+          payload: { nodeId: node.id },
+          description: `Remove ${node.type} node`,
+        }));
+        commands = [...removeCommands, ...commands];
+      }
+    }
+
+    // Validation gate
+    const ctx = body.builderContext;
+    const availableTypes = new Set(ctx.availableComponents.map((c) => c.type));
+    const contractsByType = buildContractsByType(ctx.availableComponents);
+    const initialParentIds = new Set<string>([ctx.document.rootNodeId]);
+    const initialParentTypes = new Map<string, string>();
+    if (ctx.pageNodes) {
+      for (const [id, node] of Object.entries(ctx.pageNodes)) {
+        initialParentIds.add(id);
+        initialParentTypes.set(id, node.type);
+      }
+    }
+
+    const { valid, dropped } = validateCompiledCommandsWithReport(
+      commands,
+      availableTypes,
+      initialParentIds,
+      contractsByType,
+      initialParentTypes,
+    );
+    commands = valid;
+
+    // Repair loop (1 retry)
+    let finalDropped = dropped;
+    if (dropped.length > 0) {
+      logger.decision("CHAT_STREAM_VALIDATION", `Dropped ${dropped.length} invalid command(s), attempting repair`, { dropped });
+      const { repairedValid, stillDropped } = await repairDroppedCommands(
+        messages,
+        dropped,
+        availableTypes,
+        contractsByType,
+        initialParentIds,
+        initialParentTypes,
+      );
+      commands = [...commands, ...repairedValid];
+      finalDropped = stillDropped;
+    }
+
+    sendSSE(res, "complete", {
+      message: obj.message ?? "",
+      commands,
+      ...(finalDropped.length > 0 ? { droppedCommands: finalDropped } : {}),
+    });
+    res.end();
+  } catch (err) {
+    console.error("[AI] chat/stream error:", err);
+    sendSSE(res, "error", { error: err instanceof Error ? err.message : "Internal server error" });
+    res.end();
   }
 });

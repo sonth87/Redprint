@@ -380,6 +380,7 @@
     "send": "Gửi",
     "generate": "Tạo",
     "generating": "Đang tạo…",
+    "commandsSkipped": "Đã bỏ qua {{count}} đề xuất của AI do không khớp component hoặc thuộc tính hợp lệ.",
     "generateDescription": "Mô tả trang hoặc thành phần bạn muốn tạo (ví dụ: \"Một form liên hệ với trường email và tin nhắn\").",
     "thinking": "AI đang suy nghĩ…",
     "configTitle": "Cấu hình AI",

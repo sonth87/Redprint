@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from "react";
 import * as LucideIcons from "lucide-react";
-import { AppWindow, Search, X, ChevronDown, ChevronRight } from "lucide-react";
+import { Layers2, Search, X, ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@ui-builder/ui";
 import type { PaletteCatalog, PaletteGroup, PaletteType, PaletteItem } from "@ui-builder/builder-core";
 import { useTranslation } from "react-i18next";
@@ -213,7 +213,7 @@ export const AddElementsPanel: React.FC<AddElementsPanelProps> = ({
                 popupsOpen && "bg-primary/10 text-primary ring-1 ring-primary/30",
               )}
             >
-              <AppWindow className="w-4 h-4" />
+              <Layers2 className="w-4 h-4" />
             </button>
           </>
         )}

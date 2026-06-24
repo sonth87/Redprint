@@ -17,6 +17,7 @@ import {
   Label,
   Checkbox,
   Textarea,
+  toast,
 } from "@ui-builder/ui";
 import { Sparkles, Zap, Loader2 } from "lucide-react";
 import { useBuilder } from "@ui-builder/builder-react";
@@ -109,9 +110,13 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
           (cmd) => ALLOWED_AI_COMMANDS.has(cmd.type),
         );
       }
+      // Surface validation-gate rejections loudly (non-blocking) — valid commands still applied.
+      if (response.droppedCommands && response.droppedCommands.length > 0) {
+        toast.warning(t("ai.commandsSkipped", { count: response.droppedCommands.length }));
+      }
       onOpenChange(false);
     },
-    [dispatch, onOpenChange, context.document.rootNodeId],
+    [dispatch, onOpenChange, context.document.rootNodeId, t],
   );
 
   const handleGenerate = useCallback(async () => {

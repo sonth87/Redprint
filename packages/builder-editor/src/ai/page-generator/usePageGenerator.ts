@@ -11,6 +11,7 @@ import { useCallback, useRef, useState } from "react";
 import { useBuilder } from "@ui-builder/builder-react";
 import { normalizeAICommands } from "../normalizeAICommands";
 import { applyAICommandsProgressive } from "../applyAICommandsProgressive";
+import { buildBackendHeaders } from "../AIService";
 import type { AIConfig, AIBuilderContext, AICommandSuggestion, DesignTokens, PageGenerationOptions, PagePlan } from "../types";
 
 // ── Types ────────────────────────────────────────────────────────────────
@@ -152,7 +153,7 @@ export function usePageGenerator(config: AIConfig, context: AIBuilderContext) {
       try {
         const response = await fetch(`${backendUrl}/api/ai/generate-page`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: buildBackendHeaders(config),
           body: JSON.stringify(requestBody),
           signal: controller.signal,
         });
