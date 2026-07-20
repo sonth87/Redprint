@@ -4,7 +4,7 @@
 > Ưu tiên: P0
 > Ước lượng: 0.5 ngày
 > Phụ thuộc: Không
-> Trạng thái: Chưa bắt đầu
+> Trạng thái: Hoàn thành — thêm `sectionAnchor()` (theo section.type, hậu tố khi trùng), set `props.anchorId` trong `buildSkeletonCommands`; `navItemsFor`/`defaultNavItems` giờ lấy từ `navigableSections(pagePlan)` thay vì chuỗi tự do/hardcode. `CompileContext` được bổ sung field `pagePlan`. Test mới: "stable anchorId derived from type" + "every NavigationMenu anchor href resolves to a real Section anchorId".
 
 ## 1. Mục đích
 

@@ -4,7 +4,7 @@
 > Ưu tiên: P0
 > Ước lượng: 0.25 ngày
 > Phụ thuộc: Không
-> Trạng thái: Chưa bắt đầu
+> Trạng thái: Hoàn thành — tạo `packages/builder-editor/src/ai/allowedCommands.ts` (12 lệnh, đã thêm `TOGGLE_RESPONSIVE_HIDDEN`/`RESET_RESPONSIVE_STYLE` vào bản chat), `AIAssistant.tsx` và `usePageGenerator.ts` cùng import từ đây, xoá 2 bản copy nội bộ. Contract test 2 chiều: `apps/api/src/services/command-reference.test.ts` (parse `COMMAND_REFERENCE` bằng regex, xác nhận đúng 11 lệnh dạy LLM + không dạy REMOVE_NODE) và `packages/builder-editor/src/ai/allowedCommands.test.ts` (whitelist khớp cùng danh sách kỳ vọng + test deny-by-default cho lệnh nguy hiểm). Docs AI_ASSISTANT.md whitelist section vẫn cần cập nhật ở [05/02](../05-docs-standardization/02-ai-docs-refresh.md).
 
 ## 1. Mục đích
 

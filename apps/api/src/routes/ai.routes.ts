@@ -281,7 +281,7 @@ aiRouter.post("/generate-page", async (req: Request, res: Response) => {
 
 // ── Chat system prompt builder ───────────────────────────────────────────
 
-function buildChatSystemPrompt(ctx: ChatRequest["builderContext"]): string {
+export function buildChatSystemPrompt(ctx: ChatRequest["builderContext"]): string {
   // Components: use pre-serialized compact manifest when available (Phase 1B),
   // otherwise fall back to a simple type list.
   const componentList =
@@ -336,6 +336,22 @@ Selected node + parent + siblings:\n${JSON.stringify(focusedNodes, null, 2)}\n`;
       ? `\n## Design Tokens — MANDATORY\nUse ONLY these values for colors and typography. Do NOT invent arbitrary CSS values.\n${JSON.stringify(ctx.designTokens, null, 2)}\n`
       : "";
 
+  // Popups (roadmap 00/03): only rendered when the document actually has popups, so we never
+  // waste tokens on an empty section and never invite the model to invent a popup id.
+  const activeSurfaceLine =
+    ctx.activeSurface?.type === "popup"
+      ? `- Active surface: editing popup "${ctx.activeSurface.popupId}" (${ctx.activeSurface.selection ?? "content"}), rootId: "${ctx.activeSurface.rootNodeId}". New nodes you add should use this rootId as their top-level parentId, not the page root.`
+      : `- Active surface: page (rootId: "${ctx.document.rootNodeId}")`;
+  const popupsBlock =
+    ctx.availablePopups && ctx.availablePopups.length > 0
+      ? `\n## Popups\n${activeSurfaceLine}\nAvailable popups (use these ids as the targetId for showModal/hideModal interactions — never invent an id):\n${ctx.availablePopups
+          .map(
+            (p) =>
+              `  - id: "${p.id}", name: "${p.name}", kind: ${p.kind}, enabled: ${p.enabled}, autoTrigger: ${p.autoTrigger}`,
+          )
+          .join("\n")}\n`
+      : "";
+
   return `You are an AI assistant for a visual web page builder called Redprint. Help users build, modify, and improve their web page designs by generating precise builder commands.
 
 ## Current Builder State
@@ -347,7 +363,7 @@ ${selectedNodeBlock}
 ${componentList}
 
 ## Component Hierarchy
-${nestingRules}${pageContextBlock}${presetsBlock}${designTokensBlock}
+${nestingRules}${pageContextBlock}${presetsBlock}${designTokensBlock}${popupsBlock}
 ${COMMAND_REFERENCE}`;
 }
 

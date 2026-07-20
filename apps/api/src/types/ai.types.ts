@@ -13,31 +13,6 @@ export interface LLMMessage {
   content: string;
 }
 
-// ── Section Outline (Step 1 output) ─────────────────────────────────────
-
-export interface SectionOutline {
-  /** 0-based index */
-  index: number;
-  /** Temporary client-side ID for mapping SSE events */
-  sectionId: string;
-  /** Section type: hero | header | features | stats | testimonials | pricing | faq | cta | footer | custom */
-  sectionType: string;
-  /** Human description of this section's purpose */
-  purpose: string;
-  /** Layout hint: centered | left-aligned | right-aligned | 2-col | 3-col-grid | 4-col-grid */
-  layoutHint: string;
-  /** Preset ID from client palette catalog, if a matching preset exists */
-  presetId?: string;
-  /** Key content elements this section must contain */
-  keyContent: string[];
-  /** Tone hint: professional | playful | minimal | bold */
-  tone?: string;
-}
-
-export interface PageOutline {
-  sections: SectionOutline[];
-}
-
 // ── Builder types mirrored from client (no package dep) ─────────────────
 
 export interface AICommandSuggestion {
@@ -166,6 +141,20 @@ export interface ChatRequest {
     designTokens?: DesignTokens;
     /** If true, backend will prepend REMOVE_NODE commands for all children of root node. */
     fullPageMode?: boolean;
+    /** Which surface the user is currently editing — page, or a popup's shell/content. */
+    activeSurface?:
+      | { type: "page" }
+      | { type: "popup"; popupId: string; rootNodeId: string; selection: "shell" | "content" | null };
+    /** Summary of popups in the document, so the LLM can reference real ids for showModal/hideModal. */
+    availablePopups?: Array<{
+      id: string;
+      name: string;
+      enabled: boolean;
+      kind: string;
+      placement: string;
+      rootNodeId: string;
+      autoTrigger: string;
+    }>;
   };
 }
 
@@ -333,7 +322,6 @@ export type SSEEventType =
   | { event: "plan_ready"; data: { jobId: string; plan: PagePlan; skeletonCommands: AICommandSuggestion[] } }
   | { event: "section_started"; data: { jobId: string; index: number; sectionId: string } }
   | { event: "section_retrying"; data: { jobId: string; index: number; sectionId: string; attempt: number; reason: string } }
-  | { event: "outline_ready"; data: { sections: SectionOutline[] } }
   | { event: "section_ready"; data: { index: number; sectionId: string; commands: AICommandSuggestion[] } }
   | { event: "section_error"; data: { index: number; sectionId: string; error: string } }
   | { event: "section_failed"; data: { jobId: string; index: number; sectionId: string; error: string; fallbackCommands?: AICommandSuggestion[] } }

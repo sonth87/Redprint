@@ -184,6 +184,10 @@ export async function sendAIMessage(
       availablePresetsCompact: context.availablePresetsCompact,
       designTokens: context.designTokens,
       fullPageMode: context.fullPageMode,
+      // Popup awareness (roadmap 00/03): buildAIContext already computes these — previously
+      // dropped here, leaving the LLM unable to reference existing popup ids for showModal/hideModal.
+      activeSurface: context.activeSurface,
+      availablePopups: context.availablePopups,
     },
   };
 
@@ -240,6 +244,8 @@ export async function streamAIMessage(
       availablePresetsCompact: context.availablePresetsCompact,
       designTokens: context.designTokens,
       fullPageMode: context.fullPageMode,
+      activeSurface: context.activeSurface,
+      availablePopups: context.availablePopups,
     },
   };
 

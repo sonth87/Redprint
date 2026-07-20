@@ -4,7 +4,7 @@
 > Ưu tiên: P0
 > Ước lượng: 0.5 ngày
 > Phụ thuộc: Không
-> Trạng thái: Chưa bắt đầu
+> Trạng thái: Hoàn thành — services/testimonials card giờ ưu tiên `mediaItems` của SectionPlan, fallback qua `mediaItemsFor()` (đã tự chọn pool đúng ngành). Test: `section-plan-compiler.test.ts` — "never uses pet fallback images for non-pet industries" + "still uses pet pool images... pet care".
 
 ## 1. Mục đích
 

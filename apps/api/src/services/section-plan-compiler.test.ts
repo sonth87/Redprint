@@ -203,4 +203,88 @@ describe("section-plan compiler", () => {
     expect(types).not.toContain("CollapsibleText");
     expect(types.every((type) => request.availableComponents.some((component) => component.type === type))).toBe(true);
   });
+
+  it("never uses pet fallback images for non-pet industries in services/testimonials cards", () => {
+    const request: GeneratePageRequest = { ...makeRequest(), prompt: "Landing page for an accounting SaaS platform" };
+    const plan = buildDeterministicPagePlan(request, "job-bbbbbbb2");
+    const sections = plan.sections.filter((item) => item.type === "services" || item.type === "testimonials");
+    const commands = sections.flatMap((section) => compileFallbackSection(section, plan, request));
+
+    const imageSrcs = commands
+      .filter((cmd) => cmd.type === "ADD_NODE" && cmd.payload.componentType === "Image")
+      .map((cmd) => String((cmd.payload.props as { src?: string })?.src ?? ""));
+
+    expect(imageSrcs.length).toBeGreaterThan(0);
+    const petImageUrls = new Set([
+      "https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=900&q=80",
+      "https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=900&q=80",
+      "https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=900&q=80",
+      "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=900&q=80",
+      "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=900&q=80",
+    ]);
+    for (const src of imageSrcs) {
+      expect(petImageUrls.has(src)).toBe(false);
+    }
+  });
+
+  it("still uses pet pool images for services cards when the industry is pet care", () => {
+    const request = makeRequest(); // prompt: "Landing page for pet services"
+    const plan = buildDeterministicPagePlan(request, "job-ccccccc3");
+    const section = plan.sections.find((item) => item.type === "services") ?? plan.sections[0];
+    const commands = compileFallbackSection(section, plan, request);
+
+    const imageSrcs = commands
+      .filter((cmd) => cmd.type === "ADD_NODE" && cmd.payload.componentType === "Image")
+      .map((cmd) => String((cmd.payload.props as { src?: string })?.src ?? ""));
+
+    expect(imageSrcs.some((src) => src.includes("images.unsplash.com"))).toBe(true);
+  });
+
+  it("gives every Section a stable anchorId derived from its type", () => {
+    const request = makeRequest();
+    const plan = buildDeterministicPagePlan(request, "job-ddddddd4");
+    const skeleton = buildSkeletonCommands(plan, request);
+    const sectionAdds = skeleton.filter((cmd) => cmd.type === "ADD_NODE" && cmd.payload.componentType === "Section");
+
+    expect(sectionAdds.length).toBe(plan.sections.length);
+    const anchorIds = sectionAdds.map((cmd) => String((cmd.payload.props as { anchorId?: string })?.anchorId ?? ""));
+    expect(anchorIds.every((id) => id.length > 0)).toBe(true);
+    // No two sections should collide on the same anchor.
+    expect(new Set(anchorIds).size).toBe(anchorIds.length);
+    // Anchors are derived from section type, so a services section anchors to "services".
+    const servicesSection = plan.sections.find((s) => s.type === "services");
+    if (servicesSection) {
+      const servicesCommand = sectionAdds.find((cmd) => cmd.payload.nodeId === servicesSection.id);
+      expect((servicesCommand?.payload.props as { anchorId?: string })?.anchorId).toBe("services");
+    }
+  });
+
+  it("every header/footer NavigationMenu anchor href resolves to a real Section anchorId in the same batch", () => {
+    const request = makeRichRequest();
+    const plan = buildDeterministicPagePlan(request, "job-eeeeeee5");
+    const skeleton = buildSkeletonCommands(plan, request);
+    const sectionAnchorIds = new Set(
+      skeleton
+        .filter((cmd) => cmd.type === "ADD_NODE" && cmd.payload.componentType === "Section")
+        .map((cmd) => String((cmd.payload.props as { anchorId?: string })?.anchorId ?? "")),
+    );
+
+    const allCommands = [
+      ...skeleton,
+      ...plan.sections.flatMap((section) => compileFallbackSection(section, plan, request)),
+    ];
+    const navMenus = allCommands.filter(
+      (cmd) => cmd.type === "ADD_NODE" && cmd.payload.componentType === "NavigationMenu",
+    );
+    expect(navMenus.length).toBeGreaterThan(0);
+
+    for (const navMenu of navMenus) {
+      const items = (navMenu.payload.props as { items?: Array<{ target?: { type: string; anchorId?: string } }> })?.items ?? [];
+      const anchorTargets = items.filter((item) => item.target?.type === "anchor");
+      expect(anchorTargets.length).toBeGreaterThan(0);
+      for (const item of anchorTargets) {
+        expect(sectionAnchorIds.has(String(item.target?.anchorId))).toBe(true);
+      }
+    }
+  });
 });

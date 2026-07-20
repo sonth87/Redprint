@@ -4,7 +4,7 @@
 > Ưu tiên: P0
 > Ước lượng: 0.5 ngày
 > Phụ thuộc: Không
-> Trạng thái: Chưa bắt đầu
+> Trạng thái: Hoàn thành — xoá `outline-generator.ts`, `section-generator.ts`, `page-patterns.ts` (đã grep xác nhận 0 import bên ngoài trước khi xoá). Xoá `SectionOutline`/`PageOutline`/nhánh `outline_ready` khỏi `SSEEventType` trong `ai.types.ts` (server). Xoá nhánh xử lý SSE event `outline_ready` chết trong `usePageGenerator.ts` — giữ nguyên `SectionOutlineView` (type client-local, vẫn dùng thật cho outline UI, không liên quan `SectionOutline` phía server). `pnpm typecheck` + 43 test apps/api pass.
 
 ## 1. Mục đích
 

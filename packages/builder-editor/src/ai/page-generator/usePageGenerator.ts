@@ -12,6 +12,7 @@ import { useBuilder } from "@ui-builder/builder-react";
 import { normalizeAICommands } from "../normalizeAICommands";
 import { applyAICommandsProgressive } from "../applyAICommandsProgressive";
 import { buildBackendHeaders } from "../AIService";
+import { ALLOWED_AI_COMMANDS } from "../allowedCommands";
 import type { AIConfig, AIBuilderContext, AICommandSuggestion, DesignTokens, PageGenerationOptions, PagePlan } from "../types";
 
 // ── Types ────────────────────────────────────────────────────────────────
@@ -43,21 +44,6 @@ export interface PageGeneratorState {
   error: string | null;
 }
 
-const ALLOWED_COMMANDS = new Set([
-  "ADD_NODE",
-  "UPDATE_PROPS",
-  "UPDATE_STYLE",
-  "UPDATE_RESPONSIVE_PROPS",
-  "UPDATE_RESPONSIVE_STYLE",
-  "RENAME_NODE",
-  "DUPLICATE_NODE",
-  "REMOVE_NODE",
-  "UPDATE_CANVAS_CONFIG",
-  "UPDATE_INTERACTIONS",
-  "TOGGLE_RESPONSIVE_HIDDEN",
-  "RESET_RESPONSIVE_STYLE",
-]);
-
 // ── Hook ─────────────────────────────────────────────────────────────────
 
 export function usePageGenerator(config: AIConfig, context: AIBuilderContext) {
@@ -84,7 +70,7 @@ export function usePageGenerator(config: AIConfig, context: AIBuilderContext) {
       void applyAICommandsProgressive(
         normalized,
         (cmd) => dispatch({ type: cmd.type, payload: cmd.payload } as never),
-        (cmd) => ALLOWED_COMMANDS.has(cmd.type),
+        (cmd) => ALLOWED_AI_COMMANDS.has(cmd.type),
         { preserveOrder },
       );
     },
@@ -218,14 +204,6 @@ export function usePageGenerator(config: AIConfig, context: AIBuilderContext) {
                 status: "pending",
               })),
               totalCount: plan.sections.length,
-            }));
-          } else if (event === "outline_ready") {
-            const sections = data.sections as SectionOutlineView[];
-            setState((prev) => ({
-              ...prev,
-              phase: "generating",
-              outline: sections.map((s) => ({ ...s, done: false, status: "pending" })),
-              totalCount: sections.length,
             }));
           } else if (event === "section_started") {
             const { index, sectionId } = data as { index: number; sectionId: string };

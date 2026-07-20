@@ -28,20 +28,7 @@ import { applyAICommandsProgressive } from "./applyAICommandsProgressive";
 import { usePageGenerator } from "./page-generator";
 import { useTranslation } from "react-i18next";
 import { PROMPT_TEMPLATES, COLOR_PALETTES, TONE_STYLES, TEMPLATE_CATEGORIES } from "./ai-prompt-templates";
-
-// Commands the AI is allowed to dispatch — destructive/system commands are excluded
-const ALLOWED_AI_COMMANDS = new Set([
-  "ADD_NODE",
-  "UPDATE_PROPS",
-  "UPDATE_STYLE",
-  "UPDATE_RESPONSIVE_PROPS",
-  "UPDATE_RESPONSIVE_STYLE",
-  "RENAME_NODE",
-  "DUPLICATE_NODE",
-  "REMOVE_NODE",
-  "UPDATE_CANVAS_CONFIG",
-  "UPDATE_INTERACTIONS",
-]);
+import { ALLOWED_AI_COMMANDS } from "./allowedCommands";
 
 // ── Props ───────────────────────────────────────────────────────────────
 
@@ -54,6 +41,11 @@ export interface AIAssistantProps {
 
 // ── Component ───────────────────────────────────────────────────────────
 
+// Chat turns kept in context sent to the backend — enough continuity for follow-up
+// edits ("make that button red") without letting the prompt grow unbounded.
+// See docs/roadmap/00-bugfixes/04-chat-history.md.
+const MAX_CHAT_TURNS = 6;
+
 export function AIAssistant({ open, onOpenChange, config, context }: AIAssistantProps) {
   const { t, i18n } = useTranslation();
   const { dispatch } = useBuilder();
@@ -61,6 +53,7 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef(false);
   const streamScrollRef = useRef<HTMLPreElement>(null);
+  const threadScrollRef = useRef<HTMLDivElement>(null);
 
   const [prompt, setPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -70,8 +63,18 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
   const [selectedColorPalette, setSelectedColorPalette] = useState<string>("");
   const [selectedTone, setSelectedTone] = useState<string>("");
   const [showTemplates, setShowTemplates] = useState(false);
+  // Conversation thread for the (non-full-page) chat path. Full-page generation is a
+  // one-shot SSE pipeline (usePageGenerator) and intentionally does not use this thread.
+  const [messages, setMessages] = useState<AIMessage[]>([]);
 
-  // Reset all state when dialog closes
+  const clearThread = useCallback(() => {
+    setMessages([]);
+    setError(null);
+  }, []);
+
+  // Reset transient (per-open) state when dialog closes. The conversation thread is
+  // intentionally NOT cleared here — it survives across close/reopen within the same
+  // editor session, and is reset explicitly via the "Clear" button or a document change.
   useEffect(() => {
     if (!open) {
       setPrompt("");
@@ -81,6 +84,23 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
       abortRef.current = false;
     }
   }, [open]);
+
+  // A new document (e.g. switching pages) invalidates the thread's node references.
+  const rootNodeId = context.document.rootNodeId;
+  const prevRootNodeIdRef = useRef(rootNodeId);
+  useEffect(() => {
+    if (prevRootNodeIdRef.current !== rootNodeId) {
+      prevRootNodeIdRef.current = rootNodeId;
+      setMessages([]);
+    }
+  }, [rootNodeId]);
+
+  // Auto-scroll the conversation thread to the latest message.
+  useEffect(() => {
+    if (threadScrollRef.current) {
+      threadScrollRef.current.scrollTop = threadScrollRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   // Focus textarea when dialog opens and is in idle state
   useEffect(() => {
@@ -96,8 +116,16 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
     }
   }, [streamingText]);
 
-  const applyAndClose = useCallback(
-    async (response: AIResponse) => {
+  /**
+   * Apply AI-suggested commands to the canvas.
+   *
+   * `closeDialog: true` is used only by the full-page generation path (a one-shot SSE
+   * pipeline that has no conversation thread — see docs/roadmap/00-bugfixes/04-chat-history.md).
+   * The regular chat path passes `closeDialog: false` and instead appends an assistant
+   * message to the thread, keeping the dialog open for follow-up turns.
+   */
+  const applyResponse = useCallback(
+    async (response: AIResponse, options: { closeDialog: boolean }) => {
       if (abortRef.current) return;
 
       if (response.suggestions && response.suggestions.length > 0) {
@@ -114,7 +142,24 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
       if (response.droppedCommands && response.droppedCommands.length > 0) {
         toast.warning(t("ai.commandsSkipped", { count: response.droppedCommands.length }));
       }
-      onOpenChange(false);
+
+      if (options.closeDialog) {
+        onOpenChange(false);
+        return;
+      }
+
+      const appliedCount = response.suggestions?.length ?? 0;
+      const assistantMessage: AIMessage = {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        content:
+          response.message ||
+          (appliedCount > 0
+            ? t("ai.appliedChangesCount", { count: appliedCount })
+            : t("ai.noChanges")),
+        timestamp: Date.now(),
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
     },
     [dispatch, onOpenChange, context.document.rootNodeId, t],
   );
@@ -173,6 +218,8 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
 
     try {
       if (fullPageMode) {
+        // One-shot SSE pipeline — no conversation thread, dialog closes on completion
+        // (see docs/roadmap/00-bugfixes/04-chat-history.md, section 3, step 5).
         await pageGenerator.generate(text, {
           fullPageMode: true,
           designTokens: contextWithMode.designTokens,
@@ -195,9 +242,15 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
         return;
       }
 
+      // Regular chat: send the trailing window of the thread plus this turn's message —
+      // enough context for follow-up edits without unbounded prompt growth.
+      const outgoingMessages = [...messages, userMessage].slice(-MAX_CHAT_TURNS * 2);
+      setMessages((prev) => [...prev, userMessage]);
+      setPrompt("");
+
       if (config.streamingEnabled === true) {
         // ── Streaming mode ──
-        await streamAIMessage([userMessage], contextWithMode, config, {
+        await streamAIMessage(outgoingMessages, contextWithMode, config, {
           onToken: (token) => {
             if (abortRef.current) return;
             setStreamingText((prev) => prev + token);
@@ -205,7 +258,8 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
           onComplete: (fullText) => {
             if (abortRef.current) return;
             setIsLoading(false);
-            applyAndClose(parseAIResponse(fullText));
+            setStreamingText("");
+            void applyResponse(parseAIResponse(fullText), { closeDialog: false });
           },
           onError: (err) => {
             if (abortRef.current) return;
@@ -216,10 +270,10 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
         });
       } else {
         // ── Non-streaming mode ──
-        const response = await sendAIMessage([userMessage], contextWithMode, config);
+        const response = await sendAIMessage(outgoingMessages, contextWithMode, config);
         if (!abortRef.current) {
           setIsLoading(false);
-          applyAndClose(response);
+          await applyResponse(response, { closeDialog: false });
         }
       }
     } catch (err) {
@@ -229,7 +283,7 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
         setError(err instanceof Error ? err.message : "Unknown error");
       }
     }
-  }, [prompt, isLoading, config, context, applyAndClose, fullPageMode, selectedColorPalette, selectedTone, pageGenerator, onOpenChange]);
+  }, [prompt, isLoading, config, context, applyResponse, fullPageMode, selectedColorPalette, selectedTone, pageGenerator, onOpenChange, messages]);
 
   const handleCancel = useCallback(() => {
     abortRef.current = true;
@@ -318,6 +372,41 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
         <div className="px-6 py-4 flex flex-col gap-5 overflow-y-auto flex-1">
           {!isLoading ? (
             <>
+              {/* Conversation thread — only shown once the user has sent at least one message. */}
+              {messages.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-foreground">
+                      {t("ai.conversation")}
+                    </label>
+                    <button
+                      type="button"
+                      onClick={clearThread}
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {t("ai.clearConversation")}
+                    </button>
+                  </div>
+                  <div
+                    ref={threadScrollRef}
+                    className="flex flex-col gap-2 max-h-[220px] overflow-y-auto rounded-lg border border-border bg-muted/20 p-3"
+                  >
+                    {messages.map((msg) => (
+                      <div
+                        key={msg.id}
+                        className={`text-xs rounded-md px-3 py-2 max-w-[85%] whitespace-pre-wrap ${
+                          msg.role === "user"
+                            ? "self-end bg-primary/10 text-foreground"
+                            : "self-start bg-background border border-border text-muted-foreground"
+                        }`}
+                      >
+                        {msg.content}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Prompt textarea - Priority section */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">

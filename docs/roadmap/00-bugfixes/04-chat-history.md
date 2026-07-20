@@ -4,7 +4,7 @@
 > Ưu tiên: P0
 > Ước lượng: 0.5–1 ngày
 > Phụ thuộc: Không
-> Trạng thái: Chưa bắt đầu
+> Trạng thái: Hoàn thành — thêm state `messages: AIMessage[]` trong `AIAssistant.tsx`, giữ tối đa `MAX_CHAT_TURNS=6` lượt (12 message) gửi lên backend. `applyAndClose` tách thành `applyResponse(response, { closeDialog })`: full-page mode vẫn đóng dialog như cũ (không dùng thread), chat thường không đóng + đẩy assistant message vào thread. Thread reset khi đổi `document.rootNodeId` hoặc bấm "Clear". UI thread hiển thị trên textarea, chỉ khi có message. Thêm i18n key `ai.conversation/clearConversation/appliedChangesCount/noChanges` (en+vi). Chưa làm: hint "trust Page Structure over history" trong system prompt — ghi corner case, có thể bổ sung nếu thấy model bị nhầm giữa transcript và document thật.
 
 ## 1. Mục đích
 

@@ -23,6 +23,8 @@ interface CompileContext {
   designTokens: DesignTokens;
   brief: CreativeBrief;
   contractsByType: Map<string, ComponentContract>;
+  /** Full page plan — needed to resolve nav anchors against real Section ids (see sectionAnchor). */
+  pagePlan: PagePlan;
 }
 
 const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1601758125946-6ec2ef64daf8?w=1200&q=80";
@@ -196,14 +198,46 @@ function mediaItemsFor(
   return items.slice(0, options.max);
 }
 
-function navItemsFor(plan: SectionPlan, section: PagePlanSection, brief: CreativeBrief): SectionPlanNavItem[] {
-  const fromPlan = (plan.navItems ?? []).filter((item) => item.label.trim() && item.href.trim());
+/**
+ * Anchor id shared between the Section skeleton (buildSkeletonCommands) and every
+ * nav item that targets it, so NavigationMenu smooth-scroll always finds a real
+ * element. Keyed by section TYPE (not title/content) so it stays stable across
+ * locales and LLM-authored copy. Suffixed with `-2`, `-3`, ... when a page plan
+ * repeats a section type (rare, but the compiler must not silently produce two
+ * Sections with the same id).
+ */
+function sectionAnchor(section: PagePlanSection, allSections: PagePlanSection[]): string {
+  const sameType = allSections.filter((s) => s.type === section.type);
+  const position = sameType.findIndex((s) => s.id === section.id);
+  return position <= 0 ? section.type : `${section.type}-${position + 1}`;
+}
+
+/**
+ * Nav items pointing at OTHER sections of the same page plan — used for header/footer
+ * NavigationMenu defaults. Only anchors that a Section in this plan actually owns
+ * are ever emitted; sections without a nav-worthy label (hero, cta, footer, custom)
+ * are skipped.
+ */
+function navigableSections(pagePlan: PagePlan): PagePlanSection[] {
+  const skip = new Set<PageSectionType>(["header", "hero", "cta", "footer", "custom"]);
+  return pagePlan.sections.filter((s) => !skip.has(s.type));
+}
+
+function navItemsFor(plan: SectionPlan, section: PagePlanSection, pagePlan: PagePlan): SectionPlanNavItem[] {
+  const anchorsInPlan = new Set(pagePlan.sections.map((s) => sectionAnchor(s, pagePlan.sections)));
+  const fromPlan = (plan.navItems ?? []).filter((item) => {
+    if (!item.label.trim() || !item.href.trim()) return false;
+    if (!item.href.startsWith("#")) return true; // non-anchor hrefs (external/page links) pass through
+    return anchorsInPlan.has(item.href.slice(1));
+  });
   if (fromPlan.length > 0) return fromPlan.slice(0, 6);
 
-  const defaults = defaultItems(section, brief).slice(0, 4).map((item) => ({
-    label: item.title,
-    href: `#${item.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "section"}`,
-  }));
+  const defaults = navigableSections(pagePlan)
+    .slice(0, 4)
+    .map((navSection) => ({
+      label: navSection.title,
+      href: `#${sectionAnchor(navSection, pagePlan.sections)}`,
+    }));
   return defaults.length > 0 ? defaults : [{ label: "Home", href: "#home" }];
 }
 
@@ -808,9 +842,9 @@ export function buildSkeletonCommands(plan: PagePlan, request: GeneratePageReque
           componentType: "Section",
           parentId: rootParentId,
           name: section.title,
-          props: { fullWidthBackground: false },
+          props: { fullWidthBackground: false, anchorId: sectionAnchor(section, plan.sections) },
           style: {
-            backgroundColor: sectionBackground(section.type, section.index, { availableTypes: new Set(), designTokens, brief: plan.brief, contractsByType: new Map() }),
+            backgroundColor: sectionBackground(section.type, section.index, { availableTypes: new Set(), designTokens, brief: plan.brief, contractsByType: new Map(), pagePlan: plan }),
             color: c.text,
             minHeight: spacing.minHeight,
             paddingTop: spacing.paddingTop,
@@ -953,8 +987,39 @@ function defaultComponentIntents(sectionType: PageSectionType): SectionPlan["com
   }));
 }
 
-function defaultNavItems(brief: CreativeBrief): SectionPlanNavItem[] {
+/** Localized label for a navigable section type — only used when the plan lacks LLM-authored navItems. */
+function navLabelFor(type: PageSectionType, vi: boolean): string {
+  const labels: Partial<Record<PageSectionType, { vi: string; en: string }>> = {
+    services: { vi: "Dịch vụ", en: "Services" },
+    features: { vi: "Tính năng", en: "Features" },
+    gallery: { vi: "Hình ảnh", en: "Gallery" },
+    pricing: { vi: "Bảng giá", en: "Pricing" },
+    testimonials: { vi: "Đánh giá", en: "Reviews" },
+    faq: { vi: "FAQ", en: "FAQ" },
+    trust: { vi: "Vì sao chọn chúng tôi", en: "Why Us" },
+    process: { vi: "Quy trình", en: "How It Works" },
+    stats: { vi: "Kết quả", en: "Results" },
+  };
+  const entry = labels[type];
+  return vi ? entry?.vi ?? type : entry?.en ?? type;
+}
+
+/**
+ * Default nav items generated from the SECTIONS ACTUALLY PRESENT in the page plan
+ * (not a hardcoded guess) — every href is guaranteed to match a real Section's
+ * anchorId. Used only as a fallback when neither the LLM nor a content pack
+ * supplied navItems.
+ */
+function defaultNavItems(brief: CreativeBrief, pagePlan: PagePlan): SectionPlanNavItem[] {
   const vi = isVietnamese(brief);
+  const fromPlan = navigableSections(pagePlan)
+    .slice(0, 5)
+    .map((navSection) => ({
+      label: navLabelFor(navSection.type, vi),
+      href: `#${sectionAnchor(navSection, pagePlan.sections)}`,
+    }));
+  if (fromPlan.length > 0) return fromPlan;
+
   return vi
     ? [
         { label: "Dịch vụ", href: "#services" },
@@ -992,7 +1057,7 @@ function defaultMediaItems(section: PagePlanSection, brief: CreativeBrief): Sect
   }));
 }
 
-export function buildFallbackSectionPlan(section: PagePlanSection, brief: CreativeBrief): SectionPlan {
+export function buildFallbackSectionPlan(section: PagePlanSection, brief: CreativeBrief, pagePlan: PagePlan): SectionPlan {
   const pet = isPetCare(brief);
   const vi = isVietnamese(brief);
 
@@ -1074,7 +1139,7 @@ export function buildFallbackSectionPlan(section: PagePlanSection, brief: Creati
       faqs: content?.faqs,
       testimonials: content?.testimonials,
       mediaItems: defaultMediaItems(section, brief),
-      navItems: defaultNavItems(brief),
+      navItems: defaultNavItems(brief, pagePlan),
       mediaPrompt: content?.mediaPrompt,
     };
   }
@@ -1114,7 +1179,7 @@ export function buildFallbackSectionPlan(section: PagePlanSection, brief: Creati
           ]
         : undefined,
     mediaItems: defaultMediaItems(section, brief),
-    navItems: defaultNavItems(brief),
+    navItems: defaultNavItems(brief, pagePlan),
   };
 }
 
@@ -1180,7 +1245,7 @@ function compileHeaderSection(plan: SectionPlan, section: PagePlanSection, ctx: 
   }
 
   if (has(ctx, "NavigationMenu")) {
-    commands.push(navMenuCommand(`${section.id}-nav-menu`, rootId, navItemsFor(plan, section, ctx.brief), ctx));
+    commands.push(navMenuCommand(`${section.id}-nav-menu`, rootId, navItemsFor(plan, section, ctx.pagePlan), ctx));
     if (has(ctx, "Button")) {
       commands.push(buttonCommand(`${section.id}-nav-cta`, rootId, plan.ctaLabel || (isVietnamese(ctx.brief) ? "Đặt lịch" : "Book now"), ctx));
     }
@@ -1307,7 +1372,7 @@ function compileFooterSection(plan: SectionPlan, section: PagePlanSection, ctx: 
     addIntro(commands, section, rootId, plan, ctx, { centered: false, compact: true });
   }
   if (has(ctx, "NavigationMenu")) {
-    commands.push(navMenuCommand(`${section.id}-footer-menu`, rootId, navItemsFor(plan, section, ctx.brief), ctx, "horizontal"));
+    commands.push(navMenuCommand(`${section.id}-footer-menu`, rootId, navItemsFor(plan, section, ctx.pagePlan), ctx, "horizontal"));
   }
   if (has(ctx, "Divider")) commands.push(dividerCommand(`${section.id}-divider`, rootId, ctx));
   if (has(ctx, "Text")) {
@@ -1415,11 +1480,12 @@ function compileGenericSection(plan: SectionPlan, section: PagePlanSection, ctx:
     const columns = section.type === "faq" ? 1 : Math.min(3, Math.max(2, list.length));
     const gridId = `${section.id}-grid`;
     commands.push(gridCommand(gridId, rootId, columns));
+    const cardImages =
+      section.type === "services" || section.type === "testimonials"
+        ? mediaItemsFor(plan, section, ctx.brief, { min: list.length, max: 6 })
+        : undefined;
     list.slice(0, 6).forEach((item, index) => {
-      const imageSrc =
-        section.type === "services" || section.type === "testimonials"
-          ? PET_IMAGES[index % PET_IMAGES.length]
-          : undefined;
+      const imageSrc = cardImages?.[index]?.src;
       addCard(commands, `${section.id}-card-${index}`, gridId, item, ctx, imageSrc);
     });
   }
@@ -1568,7 +1634,7 @@ function hasValidEnumProps(componentType: string, props: unknown): boolean {
 
 export function compileFallbackSection(section: PagePlanSection, pagePlan: PagePlan, request: GeneratePageRequest): AICommandSuggestion[] {
   const ctx = buildCompileContext(pagePlan, request);
-  return compileSectionPlan(buildFallbackSectionPlan(section, pagePlan.brief), section, ctx);
+  return compileSectionPlan(buildFallbackSectionPlan(section, pagePlan.brief, pagePlan), section, ctx);
 }
 
 export function compileSection(sectionPlan: SectionPlan, section: PagePlanSection, pagePlan: PagePlan, request: GeneratePageRequest): AICommandSuggestion[] {
@@ -1596,6 +1662,7 @@ function buildCompileContext(pagePlan: PagePlan, request: GeneratePageRequest): 
     designTokens: request.designTokens ?? {},
     brief: pagePlan.brief,
     contractsByType: buildContractsByType(request.availableComponents),
+    pagePlan,
   };
 }
 

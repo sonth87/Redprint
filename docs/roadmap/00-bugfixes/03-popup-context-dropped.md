@@ -4,7 +4,7 @@
 > Ưu tiên: P0
 > Ước lượng: 0.5 ngày
 > Phụ thuộc: Không — nhưng là điều kiện tiên quyết cho [04-popup-modal/04-ai-popup-generation.md](../04-popup-modal/04-ai-popup-generation.md) và [01-interactions-events/05-ai-event-wiring.md](../01-interactions-events/05-ai-event-wiring.md)
-> Trạng thái: Chưa bắt đầu
+> Trạng thái: Hoàn thành — `AIService.ts` (cả `sendAIMessage` + `streamAIMessage`) nay gửi `activeSurface`/`availablePopups`; `ChatRequest.builderContext` (ai.types.ts) khai 2 field; `buildChatSystemPrompt` render block `## Popups` (chỉ khi có popup) + dòng active surface hướng dẫn model parent node vào đúng root khi đang edit popup. Test: `ai.routes.test.ts` (4 case). Chưa làm: validate `showModal/hideModal.targetId` ở gate — để ở [01/05](../01-interactions-events/05-ai-event-wiring.md) như đã ghi corner case.
 
 ## 1. Mục đích
 
