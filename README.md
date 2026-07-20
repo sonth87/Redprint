@@ -67,6 +67,14 @@ export default function App() {
 
 ## 📖 Documentation
 
+Documentation is organized in three layers:
+
+| Layer | Location | Audience | Language |
+| ----- | -------- | -------- | -------- |
+| **User Guide** | [docs/user-guide/](./docs/README.md) | Users, PMs, newcomers — features & flows | Tiếng Việt |
+| **Technical Spec** | [.claude/docs/](./.claude/docs/README.md) | AI agents & maintainers — contracts, conventions | English |
+| **Roadmap** | [docs/roadmap/](./docs/roadmap/README.md) | Planning — one file per improvement item | Tiếng Việt |
+
 Complete technical reference organized by domain:
 
 | Document | Covers |

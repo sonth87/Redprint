@@ -11,7 +11,17 @@
 
 > **Override rule**: `ARCHITECTURE.md` may **override or extend** sections from `RULES.md`. When conflicts exist, `ARCHITECTURE.md` takes precedence.
 
-> **Language**: English (`.claude/`). Vietnamese translations available in `.claude.vi/`.
+### Documentation layers
+
+| Layer | Location | Audience | Language |
+| ----- | -------- | -------- | -------- |
+| Technical spec | `.claude/docs/` (index: `.claude/docs/README.md`) | AI agents & maintainers — contracts, conventions, rules | English |
+| User guide | `docs/user-guide/` (index: `docs/README.md`) | Users/PMs — features & flows, high-level | Vietnamese |
+| Roadmap | `docs/roadmap/` | Planning — one file per improvement item, with status headers | Vietnamese |
+
+- Spec files may link to user-guide pages for overview context; specs describe **current** behavior, roadmap describes **planned** work — never mix the two.
+- When code behavior/APIs change, update the matching spec file (and the user-guide page if user-visible) **in the same task**.
+- Do not edit `.claude/ARCHITECTURE.md` directly — write proposals to `docs/roadmap/05-docs-standardization/architecture-md-proposals.md` for the maintainer.
 
 ## Project Context
 
