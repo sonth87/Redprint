@@ -4,7 +4,7 @@
 > Ưu tiên: P1
 > Ước lượng: 1–1.5 ngày
 > Phụ thuộc: [01/01](./01-runtime-dead-actions.md) (dùng chung hạ tầng action)
-> Trạng thái: Chưa bắt đầu
+> Trạng thái: Hoàn thành — `InteractionConfig` thêm field `once?: boolean` (builder-core). `RuntimeNode`: tách `lifecycleInteractions` (mount/unmount/intersect), `useEffect` mount chạy 1 lần khi node xuất hiện + cleanup chạy unmount interactions khi biến mất, dùng `InteractionBinder.runInteraction()` dùng chung (đúng thiết kế 01/01). `intersect` dùng IntersectionObserver riêng, chia sẻ `elementRef` với animation observer (2 observer độc lập trên cùng element, không xung đột); `once` tôn trọng qua `intersectFiredRef`. Mở rộng điều kiện gắn `ref`/`shouldInject` sang `hasIntersectInteraction`. UI: thêm `intersect` vào `InteractionRow` trigger dropdown + i18n `events.intersect` (en/vi). Test: chưa viết test render React thật cho mount/unmount/intersect (repo không có jsdom/testing-library — xem corner case dưới); logic điều kiện + action execution dùng chung đã được test đầy đủ qua `InteractionBinder.test.ts` ở [01/01](./01-runtime-dead-actions.md). Chưa làm: demo page playground (việc thủ công).
 
 ## 1. Mục đích
 
@@ -73,6 +73,16 @@ User chọn "mount" trong EventsTab → lưu vào document → không có gì x�
   khi variable đổi (đó là việc của trigger khác). Ghi rõ semantics trong docs.
 - **unmount khi cả trang unmount** (chuyển route SPA) → cleanup chạy, action async (fetch) vẫn kịp fire-and-forget;
   `navigate` trong unmount là anti-pattern — docs cảnh báo.
+- **mount/unmount effect dùng closure "đóng băng" tại thời điểm mount** (dependency chỉ `[node?.id]`, cố ý) →
+  nếu user sửa `interactions` của node trong lúc nó đã mounted (không remount), effect cleanup chạy unmount
+  action theo **cấu hình cũ**, không phải cấu hình mới nhất. Đây là hệ quả trực tiếp của yêu cầu "mount chạy
+  đúng 1 lần" (không thể vừa chạy đúng 1 lần vừa luôn đọc giá trị mới nhất) — chấp nhận, giống bán chất
+  `useEffect(() => {...}, [])` thông thường trong React.
+- **Thiếu test render React thật**: repo không có jsdom/testing-library nên chưa viết test cho riêng
+  `useEffect` mount/unmount và `IntersectionObserver` callback trong `RuntimeNode` (chỉ test được qua
+  `InteractionBinder.runInteraction` — phần điều kiện/action, không phải phần "khi nào React gọi nó"). Nếu
+  sau này thêm testing-library vào repo, bổ sung: mount bắn đúng 1 lần kể cả StrictMode double-invoke,
+  unmount cleanup chạy khi node bị `toggleVisibility` ẩn, intersect `once` không bắn lần 2.
 
 ## 7. Rủi ro & rollback
 

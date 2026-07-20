@@ -13,21 +13,21 @@ Hệ event **đã có khung đầy đủ** — không phải xây từ đầu:
 
 | Action | UI có? | Runtime chạy? | Ghi chú |
 |--------|--------|---------------|---------|
-| navigate | ✅ | ✅ | `window.open` |
+| navigate | ✅ | ✅ | `_self` → `location.assign`, `_blank` → `window.open(...,"noopener,noreferrer")` (sửa trong 01/01) |
 | setState | ✅ | ✅ | `SET_VARIABLE` |
 | showModal / hideModal | ✅ | ✅ | mở/đóng popup |
-| toggleVisibility | ✅ | ❌ | binder dispatch `TOGGLE_VISIBILITY` nhưng RuntimeRenderer không xử lý |
-| scrollTo | ✅ | ❌ | `executeAction` không có case |
-| addClass / removeClass | ✅ | ❌ | không có case |
-| triggerApi | ✅ | ❌ | không có case |
-| emit | ✅ | ❌ | dispatch `EMIT_EVENT` không ai nhận |
-| custom | ✅ | ❌ | dispatch `CUSTOM_ACTION` không ai nhận |
+| toggleVisibility | ✅ | ✅ | **[01/01 xong]** runtime-only `hiddenNodeIds` Set trong RuntimeRenderer |
+| scrollTo | ✅ | ✅ | **[01/01 xong]** `getElementById` → fallback `[data-node-id]`, SSR-guarded |
+| addClass / removeClass | ✅ | ✅ | **[01/01 xong]** runtime-only `nodeClassOverrides` Map, skip+warn nếu root không phải DOM tag |
+| triggerApi | ✅ | ✅ | **[01/01 xong]** fetch fire-and-forget, `credentials:"omit"`, SSRF guard qua `isSafeFetchEndpoint` (`packages/shared`) |
+| emit | ✅ | ✅ | **[01/01 xong]** → `RendererConfig.onCustomEvent` |
+| custom | ✅ | ✅ | **[01/01 xong]** → `RendererConfig.customActionHandlers[handler]` |
 
 | Trigger | Trong type? | UI có? | Runtime chạy? |
 |---------|------------|--------|----------------|
 | click, dblclick, hover, mouseenter, mouseleave, focus, blur, submit, change, keydown, keyup, scroll | ✅ | ✅ (trừ keydown/keyup không có trong UI) | ✅ |
-| mount, unmount | ✅ | ✅ | ❌ (binder không map) |
-| intersect | ✅ | ❌ | ❌ |
+| mount, unmount | ✅ | ✅ | ❌ (scope [01/02](./02-lifecycle-triggers.md)) |
+| intersect | ✅ | ❌ | ❌ (scope [01/02](./02-lifecycle-triggers.md)) |
 | mousedown, mouseup, mouseover, mousemove, longpress, exitIntent, delay | ❌ | ❌ | ❌ |
 
 UI hiện chỉ cho **1 action / interaction** (`actions[0]`), không có editor cho `conditions`, targetId phải gõ tay.

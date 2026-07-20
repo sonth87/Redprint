@@ -268,6 +268,7 @@
     "mount": "Mount",
     "unmount": "Unmount",
     "scroll": "Scroll",
+    "intersect": "Enters Viewport",
     "navigate": "Navigate",
     "toggleVisibility": "Toggle Visibility",
     "setState": "Set State",

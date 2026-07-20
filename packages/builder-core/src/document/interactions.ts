@@ -52,4 +52,11 @@ export interface InteractionConfig {
   actions: InteractionAction[];
   stopPropagation?: boolean;
   preventDefault?: boolean;
+  /**
+   * For `trigger: "intersect"` only — when true, the interaction fires the first time
+   * the node enters the viewport and then never again (mirrors `_animationPlayOnce`).
+   * Default (false/undefined): fires every time the node enters the viewport.
+   * See docs/roadmap/01-interactions-events/02-lifecycle-triggers.md.
+   */
+  once?: boolean;
 }

@@ -68,6 +68,20 @@ interface RuntimeContextValue {
   closePopup: (popupId: string, reason?: PopupAnalyticsEvent["closeReason"]) => void;
   attachNodeIds: boolean;
   missingComponentFallback?: ComponentDefinition;
+  /**
+   * Runtime-only visibility overrides toggled by the `toggleVisibility` interaction
+   * action — never mutates the document, resets on reload (roadmap 01/01, 3.2).
+   */
+  hiddenNodeIds: Set<string>;
+  /** Runtime-only className overrides from `addClass`/`removeClass` (roadmap 01/01, 3.3). */
+  nodeClassOverrides: Map<string, Set<string>>;
+  /** Bridge for the `emit` interaction action (RendererConfig.onCustomEvent). */
+  onCustomEvent?: (event: string, payload?: unknown) => void;
+  /** Bridge for the `custom` interaction action (RendererConfig.customActionHandlers). */
+  customActionHandlers?: Record<string, (params?: unknown) => void>;
+  toggleNodeVisibility: (targetId: string) => void;
+  addNodeClass: (targetId: string, className: string) => void;
+  removeNodeClass: (targetId: string, className: string) => void;
 }
 
 const RuntimeContext = createContext<RuntimeContextValue | null>(null);
@@ -83,6 +97,7 @@ function useRuntimeContext(): RuntimeContextValue {
 const RuntimeNode = memo(function RuntimeNode({ nodeId }: { nodeId: string }) {
   const ctx = useRuntimeContext();
   const node = ctx.document.nodes[nodeId];
+  const warnedClassOverrideRef = useRef(false);
 
   // ── Animation state ──────────────────────────────────────────────
   const animPreset = node?.props._animation as string | undefined;
@@ -108,6 +123,94 @@ const RuntimeNode = memo(function RuntimeNode({ nodeId }: { nodeId: string }) {
     return () => observer.disconnect();
   }, [hasAnimation, animPreset, node?.props._animationPlayOnce]);
 
+  // ── Lifecycle interactions: mount / unmount / intersect ───────────
+  // See docs/roadmap/01-interactions-events/02-lifecycle-triggers.md.
+  // `mount`/`unmount`/`intersect` are not DOM events — TRIGGER_TO_REACT_EVENT has no
+  // entry for them, so bindAll() silently skips them; they need React lifecycle hooks
+  // instead. Kept separate from InteractionBinder (which stays framework-light) but
+  // reuses its shared runInteraction() for condition-eval + action-dispatch.
+  const interactions = node?.interactions;
+  const lifecycleInteractions = useMemo(
+    () => (interactions ?? []).filter((i) => i.trigger === "mount" || i.trigger === "unmount" || i.trigger === "intersect"),
+    [interactions],
+  );
+  const hasIntersectInteraction = lifecycleInteractions.some((i) => i.trigger === "intersect");
+  const lifecycleDispatch = useCallback(
+    (type: string, payload: unknown) => {
+      if (type === "SET_VARIABLE") {
+        const { key, value } = payload as { key: string; value: unknown };
+        ctx.setVariable(key, value);
+      } else if (type === "SHOW_MODAL") {
+        const { targetId } = payload as { targetId: string };
+        ctx.openPopup(targetId);
+      } else if (type === "HIDE_MODAL") {
+        const { targetId } = payload as { targetId: string };
+        ctx.closePopup(targetId, "action");
+      } else if (type === "TOGGLE_VISIBILITY") {
+        const { targetId } = payload as { targetId: string };
+        ctx.toggleNodeVisibility(targetId);
+      } else if (type === "ADD_CLASS") {
+        const { targetId, className } = payload as { targetId: string; className: string };
+        ctx.addNodeClass(targetId, className);
+      } else if (type === "REMOVE_CLASS") {
+        const { targetId, className } = payload as { targetId: string; className: string };
+        ctx.removeNodeClass(targetId, className);
+      } else if (type === "EMIT_EVENT") {
+        const { event, payload: eventPayload } = payload as { event: string; payload?: unknown };
+        if (ctx.onCustomEvent) ctx.onCustomEvent(event, eventPayload);
+        else console.warn(`[interactions] emit "${event}" had no RendererConfig.onCustomEvent listener attached`);
+      } else if (type === "CUSTOM_ACTION") {
+        const { handler, params } = payload as { handler: string; params?: unknown };
+        const fn = ctx.customActionHandlers?.[handler];
+        if (fn) fn(params);
+        else console.warn(`[interactions] custom handler "${handler}" had no RendererConfig.customActionHandlers entry`);
+      }
+    },
+    [ctx],
+  );
+
+  // mount / unmount — fire once per node lifecycle. Does not run during SSR
+  // (useEffect never executes server-side), which is the correct semantics for a
+  // side-effecting action.
+  useEffect(() => {
+    if (!node) return;
+    for (const interaction of lifecycleInteractions) {
+      if (interaction.trigger === "mount") {
+        InteractionBinder.runInteraction(interaction, ctx.variables, lifecycleDispatch);
+      }
+    }
+    return () => {
+      for (const interaction of lifecycleInteractions) {
+        if (interaction.trigger === "unmount") {
+          InteractionBinder.runInteraction(interaction, ctx.variables, lifecycleDispatch);
+        }
+      }
+    };
+    // Intentionally mount/unmount-only (empty-ish dep list): this must run exactly
+    // once per node instance, not re-fire when `variables`/lifecycleDispatch change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [node?.id]);
+
+  // intersect — reuses the same element ref as the animation observer (both may be
+  // active on the same node; two independent IntersectionObservers on one element
+  // is supported and does not conflict).
+  const intersectFiredRef = useRef(false);
+  useEffect(() => {
+    if (!hasIntersectInteraction || !elementRef.current) return;
+    const root = findScrollContainer(elementRef.current);
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry?.isIntersecting) return;
+      for (const interaction of lifecycleInteractions) {
+        if (interaction.trigger !== "intersect") continue;
+        if (interaction.once && intersectFiredRef.current) continue;
+        InteractionBinder.runInteraction(interaction, ctx.variables, lifecycleDispatch);
+      }
+      intersectFiredRef.current = true;
+    }, { root, threshold: 0.1 });
+    observer.observe(elementRef.current);
+    return () => observer.disconnect();
+  }, [hasIntersectInteraction, lifecycleInteractions, ctx.variables, lifecycleDispatch]);
+
   // ── Hover state ──────────────────────────────────────────────────
   const hoverTransform = node?.props._hoverTransform as string | undefined;
   const hoverOpacity   = node?.props._hoverOpacity   as string | undefined;
@@ -118,6 +221,8 @@ const RuntimeNode = memo(function RuntimeNode({ nodeId }: { nodeId: string }) {
   // ── Early exits ──────────────────────────────────────────────────
   if (!node) return null;
   if (!resolveVisibility(node, ctx.breakpoint)) return null;
+  // toggleVisibility interaction action — runtime-only, resets on reload (roadmap 01/01, 3.2).
+  if (ctx.hiddenNodeIds.has(nodeId)) return null;
 
   const def =
     ctx.registry.getComponent(node.type) ??
@@ -147,6 +252,30 @@ const RuntimeNode = memo(function RuntimeNode({ nodeId }: { nodeId: string }) {
       } else if (type === "HIDE_MODAL") {
         const { targetId } = payload as { targetId: string };
         ctx.closePopup(targetId, "action");
+      } else if (type === "TOGGLE_VISIBILITY") {
+        const { targetId } = payload as { targetId: string };
+        ctx.toggleNodeVisibility(targetId);
+      } else if (type === "ADD_CLASS") {
+        const { targetId, className } = payload as { targetId: string; className: string };
+        ctx.addNodeClass(targetId, className);
+      } else if (type === "REMOVE_CLASS") {
+        const { targetId, className } = payload as { targetId: string; className: string };
+        ctx.removeNodeClass(targetId, className);
+      } else if (type === "EMIT_EVENT") {
+        const { event, payload: eventPayload } = payload as { event: string; payload?: unknown };
+        if (ctx.onCustomEvent) {
+          ctx.onCustomEvent(event, eventPayload);
+        } else {
+          console.warn(`[interactions] emit "${event}" had no RendererConfig.onCustomEvent listener attached`);
+        }
+      } else if (type === "CUSTOM_ACTION") {
+        const { handler, params } = payload as { handler: string; params?: unknown };
+        const fn = ctx.customActionHandlers?.[handler];
+        if (fn) {
+          fn(params);
+        } else {
+          console.warn(`[interactions] custom handler "${handler}" had no RendererConfig.customActionHandlers entry`);
+        }
       }
     },
   );
@@ -168,8 +297,15 @@ const RuntimeNode = memo(function RuntimeNode({ nodeId }: { nodeId: string }) {
     extraProps["data-node-id"] = nodeId;
   }
 
-  // Callback ref for IntersectionObserver — works with cloneElement on HTML elements
-  if (hasAnimation) {
+  // addClass/removeClass interaction actions — runtime-only className additions
+  // (roadmap 01/01, 3.3). Merged onto whatever className the component itself
+  // already renders, further down at cloneElement time.
+  const classOverrides = ctx.nodeClassOverrides.get(nodeId);
+  const hasClassOverride = !!classOverrides && classOverrides.size > 0;
+
+  // Callback ref for IntersectionObserver — works with cloneElement on HTML elements.
+  // Shared by both the animation observer and the `intersect` interaction observer.
+  if (hasAnimation || hasIntersectInteraction) {
     extraProps["ref"] = (el: Element | null) => { elementRef.current = el; };
   }
 
@@ -216,7 +352,9 @@ const RuntimeNode = memo(function RuntimeNode({ nodeId }: { nodeId: string }) {
       ctx.attachNodeIds ||
       Object.keys(interactionHandlers).length > 0 ||
       hasAnimation ||
-      hasHover;
+      hasIntersectInteraction ||
+      hasHover ||
+      hasClassOverride;
 
     if (React.isValidElement(rendered) && shouldInject) {
       if (hasStyleOverride) {
@@ -224,6 +362,23 @@ const RuntimeNode = memo(function RuntimeNode({ nodeId }: { nodeId: string }) {
         const renderedStyle =
           (rendered.props as Record<string, unknown>).style as React.CSSProperties ?? {};
         extraProps["style"] = { ...renderedStyle, ...animStyle, ...hoverStyle };
+      }
+      if (hasClassOverride) {
+        // Only string-typed elements (DOM tags) can safely receive a className prop —
+        // a component that renders a Fragment or a custom component whose root prop
+        // isn't `className` would silently receive a prop it ignores. Skip quietly
+        // with a one-time-per-node warning rather than fail (roadmap 01/01, 3.3).
+        if (typeof rendered.type === "string") {
+          const renderedClassName = (rendered.props as Record<string, unknown>).className as string | undefined;
+          extraProps["className"] = [renderedClassName, ...Array.from(classOverrides!)]
+            .filter(Boolean)
+            .join(" ");
+        } else if (!warnedClassOverrideRef.current) {
+          warnedClassOverrideRef.current = true;
+          console.warn(
+            `[interactions] addClass/removeClass on node "${nodeId}" (${node.type}) was skipped — its renderer's root element does not accept a plain className prop.`,
+          );
+        }
       }
       return React.cloneElement(
         rendered as React.ReactElement<Record<string, unknown>>,
@@ -282,6 +437,8 @@ export function RuntimeRenderer({ document, registry, config = {} }: RuntimeRend
     locale,
     getFrequencyCount,
     setFrequencyCount,
+    onCustomEvent,
+    customActionHandlers,
   } = config;
   const hasSectionVisibleTrigger = Object.values(document.popups ?? {}).some(
     (popup) => popup.autoTrigger.type === "sectionVisible",
@@ -298,6 +455,44 @@ export function RuntimeRenderer({ document, registry, config = {} }: RuntimeRend
 
   const setVariable = useCallback((key: string, value: unknown) => {
     setVariables((prev) => ({ ...prev, [key]: value }));
+  }, []);
+
+  // toggleVisibility interaction action — runtime-only, never mutates the document
+  // (roadmap 01/01, 3.2). Reset on every mount/reload, exactly like popupStack.
+  const [hiddenNodeIds, setHiddenNodeIds] = useState<Set<string>>(() => new Set());
+  const toggleNodeVisibility = useCallback((targetId: string) => {
+    setHiddenNodeIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(targetId)) next.delete(targetId);
+      else next.add(targetId);
+      return next;
+    });
+  }, []);
+
+  // addClass/removeClass interaction actions — runtime-only className overrides
+  // (roadmap 01/01, 3.3).
+  const [nodeClassOverrides, setNodeClassOverrides] = useState<Map<string, Set<string>>>(() => new Map());
+  const addNodeClass = useCallback((targetId: string, className: string) => {
+    setNodeClassOverrides((prev) => {
+      const next = new Map(prev);
+      const existing = next.get(targetId);
+      const updated = existing ? new Set(existing) : new Set<string>();
+      updated.add(className);
+      next.set(targetId, updated);
+      return next;
+    });
+  }, []);
+  const removeNodeClass = useCallback((targetId: string, className: string) => {
+    setNodeClassOverrides((prev) => {
+      const existing = prev.get(targetId);
+      if (!existing || !existing.has(className)) return prev;
+      const next = new Map(prev);
+      const updated = new Set(existing);
+      updated.delete(className);
+      if (updated.size > 0) next.set(targetId, updated);
+      else next.delete(targetId);
+      return next;
+    });
   }, []);
 
   // Runtime popup lifecycle stack (opening → open → closing → closed).
@@ -695,8 +890,32 @@ export function RuntimeRenderer({ document, registry, config = {} }: RuntimeRend
       closePopup,
       attachNodeIds: effectiveAttachNodeIds,
       missingComponentFallback,
+      hiddenNodeIds,
+      nodeClassOverrides,
+      onCustomEvent,
+      customActionHandlers,
+      toggleNodeVisibility,
+      addNodeClass,
+      removeNodeClass,
     }),
-    [document, registry, breakpoint, variables, setVariable, openPopup, closePopup, effectiveAttachNodeIds, missingComponentFallback],
+    [
+      document,
+      registry,
+      breakpoint,
+      variables,
+      setVariable,
+      openPopup,
+      closePopup,
+      effectiveAttachNodeIds,
+      missingComponentFallback,
+      hiddenNodeIds,
+      nodeClassOverrides,
+      onCustomEvent,
+      customActionHandlers,
+      toggleNodeVisibility,
+      addNodeClass,
+      removeNodeClass,
+    ],
   );
 
   // Background should be inert when the topmost interactive popup is modal-like

@@ -32,6 +32,7 @@ export function InteractionRow({
       { value: "mount", label: t("events.mount") },
       { value: "unmount", label: t("events.unmount") },
       { value: "scroll", label: t("events.scroll") },
+      { value: "intersect", label: t("events.intersect") },
     ],
     [t],
   );

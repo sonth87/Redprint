@@ -195,3 +195,6 @@ export * from "./carousel";
 
 // ── Navigation menu types and helpers ──────────────────────────────────────
 export * from "./menu";
+
+// ── URL guard (SSRF-safe scheme/host validation) ────────────────────────────
+export * from "./urlGuard";

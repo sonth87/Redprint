@@ -127,4 +127,17 @@ export interface RendererConfig {
    * When omitted, falls back to localStorage/sessionStorage.
    */
   setFrequencyCount?: (key: string, count: number, expiresAt?: number) => void;
+
+  // ── Interaction actions: emit / custom (roadmap 01/01) ────────────────────
+  /**
+   * Standard bridge for the `emit` interaction action — lets page content notify
+   * the host app (CMS/website) of a named event. Called with no listener attached
+   * is a dev-only no-op warning, never a thrown error.
+   */
+  onCustomEvent?: (event: string, payload?: unknown) => void;
+  /**
+   * Named handlers for the `custom` interaction action. A handler name with no
+   * matching entry is a dev-only no-op warning, never a thrown error.
+   */
+  customActionHandlers?: Record<string, (params?: unknown) => void>;
 }

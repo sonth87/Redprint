@@ -4,7 +4,7 @@
 > Ưu tiên: P1 (cao nhất sau bugfixes)
 > Ước lượng: 2–2.5 ngày
 > Phụ thuộc: Không
-> Trạng thái: Chưa bắt đầu
+> Trạng thái: Hoàn thành — `InteractionBinder.ts` viết lại: `executeAction` có đủ case cho `scrollTo`/`triggerApi` (DOM-only, xử lý tại chỗ) và `toggleVisibility`/`addClass`/`removeClass`/`emit`/`custom` (dispatch, xử lý ở RuntimeRenderer vì cần React state). Thêm `runInteraction()` dùng chung (nền cho [01/02](./02-lifecycle-triggers.md)). Sửa bug ghi đè handler cùng propName (`bindAll` giờ gom theo Map, chạy tuần tự tất cả). `navigate` đổi `_self` → `location.assign`, `_blank` → `window.open(...,"noopener,noreferrer")`. `RuntimeRenderer.tsx`: thêm state `hiddenNodeIds`/`nodeClassOverrides` + setter, mở rộng context, `RuntimeNode` áp dụng (early-exit ẩn, merge className có guard Fragment/non-DOM). `RendererConfig` thêm `onCustomEvent`/`customActionHandlers`. SSRF guard cho `triggerApi` (`isSafeFetchEndpoint`) đặt tại `packages/shared/src/urlGuard.ts` (mới, dùng chung với `isPrivateHost`). Test: `InteractionBinder.test.ts` (16 case, mock global qua `vi.stubGlobal` — không cần jsdom) + `urlGuard.test.ts` (8 case). Chưa làm: demo page trong `apps/playground` (mục 5, việc thủ công ngoài scope code).
 
 ## 1. Mục đích
 
