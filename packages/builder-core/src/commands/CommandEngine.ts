@@ -110,9 +110,17 @@ export class CommandEngine {
         // If a groupId is set, try to coalesce with the top entry of the same group.
         // This converts a rapid stream of commands (e.g. mousemove during drag) into a
         // single history entry: inverse = pre-gesture state, command = latest final state.
-        const coalesced = command.groupId
-          ? this.historyStack.coalesce(command.groupId, command)
-          : false;
+        //
+        // Coalescing is the default for grouped commands (gestures). A batch that
+        // opts out with `coalesce: false` (e.g. AI generation adding many distinct
+        // nodes under one groupId) pushes a separate entry per command, each with
+        // its own inverse; HistoryStack.undo() still reverts the whole group
+        // atomically. Without this opt-out, only the first node's inverse would be
+        // kept and undo would remove just one node.
+        const coalesced =
+          command.groupId && command.coalesce !== false
+            ? this.historyStack.coalesce(command.groupId, command)
+            : false;
 
         if (!coalesced) {
           const entry: HistoryEntry = {

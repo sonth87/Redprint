@@ -47,8 +47,10 @@ export interface PageGeneratorState {
 // ── Hook ─────────────────────────────────────────────────────────────────
 
 export function usePageGenerator(config: AIConfig, context: AIBuilderContext) {
-  const { dispatch } = useBuilder();
+  const { dispatch, builder } = useBuilder();
   const abortRef = useRef<AbortController | null>(null);
+  // Transactional apply (roadmap 02/07) is on by default.
+  const transactional = config.transactionalApply !== false;
 
   const [state, setState] = useState<PageGeneratorState>({
     phase: "idle",
@@ -63,18 +65,29 @@ export function usePageGenerator(config: AIConfig, context: AIBuilderContext) {
   });
 
   const applyCommands = useCallback(
-    (commands: AICommandSuggestion[], rootNodeId: string, preserveOrder = false) => {
+    (commands: AICommandSuggestion[], rootNodeId: string, preserveOrder = false, groupId?: string) => {
       const normalized = normalizeAICommands(commands, rootNodeId);
       // fire-and-forget: sections arrive seconds apart (one LLM call each),
       // so phase 2 of section N always completes before section N+1 arrives.
       void applyAICommandsProgressive(
         normalized,
-        (cmd) => dispatch({ type: cmd.type, payload: cmd.payload } as never),
+        (cmd) => dispatch(cmd as never),
         (cmd) => ALLOWED_AI_COMMANDS.has(cmd.type),
-        { preserveOrder },
+        {
+          preserveOrder,
+          groupId: transactional ? groupId : undefined,
+          // Roll back a partially-applied section (all its commands share the
+          // groupId, so one undo removes the lot) so no half-built section is
+          // left on the canvas; the server's fallbackCommands then fill it in.
+          onGroupFailed: transactional
+            ? () => {
+                builder.undo();
+              }
+            : undefined,
+        },
       );
     },
-    [dispatch],
+    [dispatch, builder, transactional],
   );
 
   const generate = useCallback(
@@ -187,7 +200,8 @@ export function usePageGenerator(config: AIConfig, context: AIBuilderContext) {
           } else if (event === "plan_ready") {
             const plan = data.plan as PagePlan;
             const skeletonCommands = (data.skeletonCommands as AICommandSuggestion[]) ?? [];
-            applyCommands(skeletonCommands, context.document.rootNodeId);
+            const jobId = (data.jobId as string) ?? plan.jobId;
+            applyCommands(skeletonCommands, context.document.rootNodeId, false, `ai-${jobId}-skeleton`);
             setState((prev) => ({
               ...prev,
               phase: "generating",
@@ -229,14 +243,16 @@ export function usePageGenerator(config: AIConfig, context: AIBuilderContext) {
               ),
             }));
           } else if (event === "section_ready") {
-            const { index, sectionId, commands } = data as {
+            const { index, sectionId, commands, jobId: evJobId } = data as {
               index: number;
               sectionId: string;
               commands: AICommandSuggestion[];
+              jobId?: string;
             };
 
-            // Apply commands to canvas in real-time
-            applyCommands(commands, context.document.rootNodeId, true);
+            // Apply commands to canvas in real-time, grouped per section for
+            // atomic undo/rollback (roadmap 02/07).
+            applyCommands(commands, context.document.rootNodeId, true, `ai-${evJobId ?? "job"}-${sectionId}`);
 
             setState((prev) => ({
               ...prev,
@@ -246,14 +262,15 @@ export function usePageGenerator(config: AIConfig, context: AIBuilderContext) {
               ),
             }));
           } else if (event === "section_failed") {
-            const { index, sectionId, error, fallbackCommands } = data as {
+            const { index, sectionId, error, fallbackCommands, jobId: failJobId } = data as {
               index: number;
               sectionId: string;
               error: string;
               fallbackCommands?: AICommandSuggestion[];
+              jobId?: string;
             };
             if (fallbackCommands?.length) {
-              applyCommands(fallbackCommands, context.document.rootNodeId, true);
+              applyCommands(fallbackCommands, context.document.rootNodeId, true, `ai-${failJobId ?? "job"}-${sectionId}-fallback`);
             }
             setState((prev) => ({
               ...prev,

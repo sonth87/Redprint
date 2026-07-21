@@ -96,3 +96,53 @@ describe("undo/redo integration — CommandEngine + HistoryStack", () => {
     expect(builder.getState().document.nodes["n1"]).toBeUndefined();
   });
 });
+
+describe("grouped undo — batch vs gesture coalescing (roadmap 02/07)", () => {
+  it("a batch of ADD_NODEs sharing a groupId with coalesce:false undoes atomically", () => {
+    const builder = makeBuilder();
+    const root = builder.getState().document.rootNodeId;
+    const groupId = "ai-section-1";
+
+    // Three DIFFERENT nodes under one groupId, opting out of coalescing.
+    builder.dispatch({ type: "ADD_NODE", payload: { nodeId: "n1", parentId: root, componentType: "text" }, groupId, coalesce: false });
+    builder.dispatch({ type: "ADD_NODE", payload: { nodeId: "n2", parentId: root, componentType: "text" }, groupId, coalesce: false });
+    builder.dispatch({ type: "ADD_NODE", payload: { nodeId: "n3", parentId: root, componentType: "text" }, groupId, coalesce: false });
+
+    expect(builder.getState().document.nodes["n1"]).toBeDefined();
+    expect(builder.getState().document.nodes["n2"]).toBeDefined();
+    expect(builder.getState().document.nodes["n3"]).toBeDefined();
+
+    // A single undo must remove ALL three (atomic group), not just the last.
+    builder.undo();
+    expect(builder.getState().document.nodes["n1"]).toBeUndefined();
+    expect(builder.getState().document.nodes["n2"]).toBeUndefined();
+    expect(builder.getState().document.nodes["n3"]).toBeUndefined();
+    expect(builder.canUndo).toBe(false);
+
+    // A single redo restores all three.
+    builder.redo();
+    expect(builder.getState().document.nodes["n1"]).toBeDefined();
+    expect(builder.getState().document.nodes["n2"]).toBeDefined();
+    expect(builder.getState().document.nodes["n3"]).toBeDefined();
+  });
+
+  it("a gesture stream (same node, default coalesce) stays a single history entry", () => {
+    const builder = makeBuilder();
+    const root = builder.getState().document.rootNodeId;
+    builder.dispatch({ type: "ADD_NODE", payload: { nodeId: "n1", parentId: root, componentType: "text" } });
+
+    const gestureGroupId = "gesture-1";
+    // Rapid updates to the SAME node under one groupId (no coalesce flag = default true).
+    builder.dispatch({ type: "UPDATE_STYLE", payload: { nodeId: "n1", style: { left: "10px" } }, groupId: gestureGroupId });
+    builder.dispatch({ type: "UPDATE_STYLE", payload: { nodeId: "n1", style: { left: "20px" } }, groupId: gestureGroupId });
+    builder.dispatch({ type: "UPDATE_STYLE", payload: { nodeId: "n1", style: { left: "30px" } }, groupId: gestureGroupId });
+
+    expect(builder.getState().document.nodes["n1"]!.style?.left).toBe("30px");
+
+    // One undo reverts the whole gesture back to pre-gesture (no left set).
+    builder.undo();
+    expect(builder.getState().document.nodes["n1"]!.style?.left).toBeUndefined();
+    // The node itself is still there (only the gesture was undone).
+    expect(builder.getState().document.nodes["n1"]).toBeDefined();
+  });
+});

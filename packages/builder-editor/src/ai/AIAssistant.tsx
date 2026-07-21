@@ -132,10 +132,12 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
         const commands = normalizeAICommands(response.suggestions, context.document.rootNodeId);
         // fullPageMode: backend prepends REMOVE_NODE commands for all children before AI commands,
         // so we just apply in order. Progressive apply: containers first, leaves next frame.
+        // Group the whole turn's commands for one atomic undo (roadmap 02/07).
         await applyAICommandsProgressive(
           commands,
-          (cmd) => dispatch({ type: cmd.type, payload: cmd.payload } as never),
+          (cmd) => dispatch(cmd as never),
           (cmd) => ALLOWED_AI_COMMANDS.has(cmd.type),
+          { groupId: `ai-chat-${crypto.randomUUID().slice(0, 8)}` },
         );
       }
       // Surface validation-gate rejections loudly (non-blocking) — valid commands still applied.

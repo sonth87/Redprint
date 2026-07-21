@@ -423,6 +423,22 @@ void applyAICommandsProgressive(normalized, dispatch, filter);
 await applyAICommandsProgressive(normalized, dispatch, filter);
 ```
 
+### Transactional Apply (roadmap 02/07)
+
+Each generated section (and each chat/ai-section turn) is applied under one **atomic undo group**. The
+caller passes a `groupId` to `applyAICommandsProgressive`, which tags every dispatch with that `groupId`
+plus `coalesce: false`. In builder-core, `Command.coalesce` defaults to `true` (gesture behavior — a
+rapid same-node stream collapses into one history entry via `HistoryStack.coalesce`); AI batches opt out
+with `false` so each command keeps its own inverse but `HistoryStack.undo()` still reverts the whole
+`groupId` group atomically. Net effect: **one Ctrl+Z undoes a whole section** (≈ `#sections + 1`
+skeleton undos for a full page) instead of hundreds of per-node undos. `REMOVE_NODE` (fullPageMode
+prelude) has an inverse (`RESTORE_NODES`), so undoing the skeleton restores the previous page.
+
+If a command throws mid-apply, `applyAICommandsProgressive` calls `onGroupFailed`, and the generate-page
+hook rolls the partial section back with a single `builder.undo()` before the server's `fallbackCommands`
+fill it in — so no half-built section is left on the canvas. Controlled by `AIConfig.transactionalApply`
+(default `true`; set `false` to restore per-command history).
+
 ---
 
 ## Type Contracts
@@ -442,6 +458,7 @@ interface AIConfig {
   streamingEnabled?: boolean;      // selects /chat vs /chat/stream for the chat path; full-page generation always uses SSE
   includePageContext?: boolean;    // include full page node tree in context
   designTokens?: DesignTokens;
+  transactionalApply?: boolean;    // roadmap 02/07: atomic per-section undo + mid-apply rollback (default true)
 }
 ```
 

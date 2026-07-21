@@ -13,16 +13,18 @@ Các hạng mục nhóm này **không thay kiến trúc** — chúng nâng chấ
 
 ## Hạng mục
 
-| # | File | Nội dung | Phase | Effort |
-|---|------|----------|-------|--------|
-| 01 | [01-preset-first-compiler.md](./01-preset-first-compiler.md) | Compiler ưu tiên instantiate preset thay vì tự build style | P3 | 3 ngày |
-| 02 | [02-industry-content-packs.md](./02-industry-content-packs.md) | Đưa fallback content + image pool ra data file theo ngành | P3 | 2 ngày |
-| 03 | [03-locale-support.md](./03-locale-support.md) | Locale chính thức end-to-end | P3 | 1 ngày |
-| 04 | [04-quality-gates.md](./04-quality-gates.md) | Quality gate sau compile (placeholder, contrast, trùng lặp, responsive) | P3 | 2 ngày |
-| 05 | [05-layout-variety.md](./05-layout-variety.md) | `layoutVariant` có tác dụng thật — 2–3 biến thể layout mỗi section type | P3/P4 | 3 ngày |
-| 06 | [06-media-pipeline.md](./06-media-pipeline.md) | Ảnh theo ngành: tích hợp search/generation, dùng `mediaPrompt` | P4 | 2–3 ngày |
-| 07 | [07-transactional-apply.md](./07-transactional-apply.md) | Apply section nguyên tử + undo theo section | P4 | 2 ngày |
-| 08 | [08-cost-observability.md](./08-cost-observability.md) | Token/cost logging per job, config nhiệt độ/model per stage | P4 | 1 ngày |
+| # | File | Nội dung | Phase | Trạng thái |
+|---|------|----------|-------|-----------|
+| 01 | [01-preset-first-compiler.md](./01-preset-first-compiler.md) | Compiler ưu tiên instantiate preset thay vì tự build style | P3 | ✅ Hoàn thành (Phase 1) |
+| 02 | [02-industry-content-packs.md](./02-industry-content-packs.md) | Đưa fallback content + image pool ra data file theo ngành | P3 | ✅ Hoàn thành |
+| 03 | [03-locale-support.md](./03-locale-support.md) | Locale chính thức end-to-end | P3 | ✅ Hoàn thành |
+| 04 | [04-quality-gates.md](./04-quality-gates.md) | Quality gate sau compile (placeholder, contrast, trùng lặp, responsive) | P3 | ✅ Hoàn thành |
+| 05 | [05-layout-variety.md](./05-layout-variety.md) | `layoutVariant` có tác dụng thật — 2–3 biến thể layout mỗi section type | P3/P4 | ✅ Hoàn thành (Phase 1) |
+| 06 | [06-media-pipeline.md](./06-media-pipeline.md) | Ảnh theo ngành: tích hợp search/generation, dùng `mediaPrompt` | P4 | ✅ Hoàn thành (v1 Unsplash) |
+| 07 | [07-transactional-apply.md](./07-transactional-apply.md) | Apply section nguyên tử + undo theo section | P4 | ✅ Hoàn thành |
+| 08 | [08-cost-observability.md](./08-cost-observability.md) | Token/cost logging per job, config nhiệt độ/model per stage | P4 | ✅ Hoàn thành |
 
-Thứ tự khuyến nghị trong nhóm: 02 → 03 → 01 → 04 → 05 → 07 → 08 → 06
-(02+03 gỡ hardcode trước để 01/05 xây trên nền sạch).
+**Toàn bộ nhóm 02 hoàn thành 2026-07-21.** Thứ tự đã làm: 08 → 02 → 03 → 04 → 01 → 05 → 06 → 07.
+Các phần "phase sau" còn lại (ghi trong từng file): 01 container/section-template preset; 05 variant cho
+features/testimonials/pricing/faq + page-level rhythm; 06 Pexels/generation + chat `search_image` +
+self-host ảnh; 07 nút "Undo generation". Không chặn — đều là mở rộng trên nền đã có.

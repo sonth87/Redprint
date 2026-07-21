@@ -175,10 +175,13 @@ export function useAISectionState(options: UseAISectionStateOptions): UseAISecti
         removeCount++;
       }
 
-      // 2. Dispatch AI-generated commands progressively (containers first, leaves next frame)
+      // 2. Dispatch AI-generated commands progressively (containers first, leaves next frame).
+      //    Grouped for one atomic undo of the whole AI section (roadmap 02/07).
       await applyAICommandsProgressive(
         safeCommands,
-        (cmd) => dispatch({ type: cmd.type, payload: cmd.payload } as Command),
+        (cmd) => dispatch(cmd as Command),
+        undefined,
+        { groupId: `ai-section-${crypto.randomUUID().slice(0, 8)}` },
       );
 
       setState({

@@ -30,6 +30,13 @@ export interface AIConfig {
   includePageContext?: boolean;
   /** Design tokens for consistent styling across AI-generated sections. Phase 2A. */
   designTokens?: DesignTokens;
+  /**
+   * Transactional apply (roadmap 02/07): group each generated section's commands
+   * under one atomic undo/redo entry, and roll back a partially-applied section
+   * if a command fails mid-apply. Default: true. Set false to restore the
+   * per-command history behavior.
+   */
+  transactionalApply?: boolean;
 }
 
 export interface AIMessage {

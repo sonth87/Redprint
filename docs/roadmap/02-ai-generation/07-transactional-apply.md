@@ -4,7 +4,22 @@
 > Ưu tiên: P4
 > Ước lượng: 0.5–1 ngày (giảm từ 2 ngày sau khi khảo sát — xem mục 2)
 > Phụ thuộc: Không
-> Trạng thái: Chưa bắt đầu
+> Trạng thái: Hoàn thành — 2026-07-21. **builder-core**: `Command.coalesce?: boolean` (types.ts);
+> `CommandEngine.dispatch` coalesce chỉ khi `groupId && command.coalesce !== false` (giữ nguyên gesture =
+> default coalesce; batch AI opt-out bằng `coalesce:false` → push nhiều entry cùng groupId → `undo()` gom
+> nguyên tử). KHÔNG đụng ~8 gesture site (chọn hướng opt-out theo mục 7). Xác nhận REMOVE_NODE có inverse
+> `RESTORE_NODES` (undo skeleton khôi phục trang cũ). **builder-editor**: `applyAICommandsProgressive` nhận
+> `groupId` + `onGroupFailed`; mỗi dispatch gắn `{groupId, coalesce:false}`; command fail giữa batch →
+> `onGroupFailed` → caller `builder.undo()` gỡ nhóm dở (rồi fallbackCommands của server lấp vào). 3 caller
+> wire groupId: `usePageGenerator` (per-section `ai-<jobId>-<sectionId>` + skeleton + fallback, rollback
+> bật), `AIAssistant` (per-turn), `useAISectionState` (per-section). Flag `AIConfig.transactionalApply`
+> (default true). Test: core `undoRedo.integration.test.ts` +2 (batch cùng groupId undo 1 lần gỡ 3 node;
+> gesture vẫn coalesce về 1 entry) — **core 257 pass** (1 fail popup-undo là pre-existing, không liên
+> quan, verify qua stash); editor `applyAICommandsProgressive.test.ts` +4 (tag groupId+coalesce:false;
+> không groupId→không tag; onGroupFailed khi throw; không gọi khi ok) — **editor 40 pass**. Docs:
+> AI_ASSISTANT (Transactional Apply section + AIConfig field) + roadmap.
+> **Ghi chú:** dùng `groupId` có sẵn thay snapshot API như bản gốc đề xuất — nhẹ hơn nhiều, không clone
+> document. Undo UX nút "Undo generation" (mục 3.3) để optional, chưa làm.
 
 ## 1. Mục đích
 

@@ -13,6 +13,15 @@ export interface Command<T = unknown> {
   timestamp?: number;
   /** Group commands into atomic transactions for undo/redo */
   groupId?: string;
+  /**
+   * Within a `groupId`, whether to coalesce this command into the group's single
+   * history entry (gesture behavior: a rapid same-target stream → one undo).
+   * Defaults to `true` when a `groupId` is set. Set `false` for a *batch* of
+   * commands that share a groupId but each need their own inverse (e.g. AI
+   * generation adding many different nodes) — they push separate entries that
+   * `HistoryStack.undo()` still gathers and reverts as one atomic block.
+   */
+  coalesce?: boolean;
 }
 
 export interface CommandResult {
