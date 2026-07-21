@@ -58,3 +58,27 @@ describe("buildChatSystemPrompt — popup context (roadmap 00/03)", () => {
     expect(prompt).toContain('rootId: "popup-abc-root"');
   });
 });
+
+describe("buildChatSystemPrompt — component retrieval (roadmap 03/03)", () => {
+  it("uses the client's precomputed componentsManifest unchanged below the retrieval threshold", () => {
+    const ctx: ChatRequest["builderContext"] = {
+      ...baseCtx(),
+      componentsManifest: "PRECOMPUTED_MANIFEST_STRING",
+    };
+    const prompt = buildChatSystemPrompt(ctx, "add a button");
+    expect(prompt).toContain("PRECOMPUTED_MANIFEST_STRING");
+  });
+
+  it("rebuilds a filtered manifest server-side when the catalog is above the threshold", () => {
+    const big = Array.from({ length: 40 }, (_, i) => ({ type: `Filler${i}`, name: `Filler${i}`, category: "content" }));
+    const ctx: ChatRequest["builderContext"] = {
+      ...baseCtx(),
+      availableComponents: [...baseCtx().availableComponents, ...big],
+      componentsManifest: "STALE_FULL_CATALOG_MANIFEST",
+    };
+    const prompt = buildChatSystemPrompt(ctx, "add a button");
+    // Retrieval kicked in — the stale client-precomputed string (built for the
+    // full, non-filtered catalog) must NOT be used verbatim.
+    expect(prompt).not.toContain("STALE_FULL_CATALOG_MANIFEST");
+  });
+});

@@ -92,6 +92,7 @@ selects a provider or model — the backend does, via environment variables:
 | `AI_PRESET_FIRST` | Reuse designer presets for leaf slots during compile (`false` = adapters only) | `true` (on) |
 | `AI_LAYOUT_VARIETY` | Layout variants for hero/services/cta (`off` = always default variant) | on |
 | `AI_GENERIC_ADAPTER` | Compile unknown components via `aiHints.contentSlots` (`false` = intents outside hand-written adapters are ignored) | on |
+| `AI_RETRIEVAL_THRESHOLD` | Catalog size above which component retrieval (top-k filtering) kicks in | `30` |
 | `UNSPLASH_ACCESS_KEY` | Enable context-aware image search (unset = content-pack pool only) | — |
 | `IMAGE_TIMEOUT_MS` / `IMAGE_RATE_LIMIT` | Image search timeout (ms) / requests per hour | `3000` / `45` |
 
@@ -395,6 +396,29 @@ bound cost against a spammy LLM response. Logged per-instantiation as `intentAda
 (falls back to the pre-03/02 behavior — intents ignored outside the hand-written adapters/section table
 above). Container components needing children (e.g. Tabs) are out of scope for v1 — `contentSlots`
 only describes props, not child trees; see [03/05](../../docs/roadmap/03-component-platform/05-wave2-components.md).
+
+### Component Retrieval (roadmap 03/03)
+
+At 17 built-ins, sending every component's manifest/contract to every prompt is cheap — no filtering
+needed. `component-retrieval.ts` keeps that true as the registry grows: below
+`AI_RETRIEVAL_THRESHOLD` (default 30) it's a **no-op** — `selectComponentsForSection`/
+`selectComponentsForPrompt` return the input array unchanged, so output is byte-identical to
+pre-03/03 for the current catalog. Above the threshold, a deterministic (no embeddings, no vector DB)
+scorer ranks components: `3×sectionAffinity match + 2×keyword overlap (bestFor/purpose vs.
+brief.requiredContentAreas/section.contentRequirements) + 1×category prior + 1×core-layout-primitive`.
+Core layout/content types (`Section`, `Container`, `Grid`, `Row`, `Column`, `Text`, `Button`, `Image`)
+are **always** included regardless of score — the model must always be able to build a basic structure.
+Section prompts get the top-15 for the manifest and top-6 for detailed contracts
+(`SECTION_CONTRACT_TOP_K_DEFAULT`, applied on top of `candidateComponentsForSection`'s existing list —
+a no-op for the current ≤6-entry hardcoded lists). The chat path scores against the whole user prompt
+instead of a section type (`selectComponentsForPrompt`, top-20) and **force-includes** any component
+named verbatim in the prompt (e.g. "use HoneycombGallery") even if its score would otherwise miss the
+cutoff — since chat's `componentsManifest` normally arrives pre-serialized from the client (Phase 1B,
+built for the *full* catalog), `buildChatSystemPrompt` only trusts that string below the threshold and
+rebuilds a filtered one server-side above it. Logged as a `COMPONENT_RETRIEVAL` decision
+(`candidateCount`/`totalCount`/`nearMisses` — the top 3 scores just below the cutoff, for tuning weights)
+whenever retrieval actually filters anything. Embedding-based ranking (v2, for when keyword overlap
+proves too weak past ~100 components) is deliberately deferred — design-only, not implemented.
 
 ---
 

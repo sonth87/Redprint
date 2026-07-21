@@ -246,6 +246,11 @@ maps section content onto any component's props using the content-slot mapping t
 declares (`aiHints.contentSlots`), falling back through preset → generic mapping → the component's own
 declared fallback chain. Disable with `AI_GENERIC_ADAPTER=false`.
 
+As the component registry grows, prompts don't have to grow with it: above `AI_RETRIEVAL_THRESHOLD`
+components (default 30), only the top-k most relevant components (by section affinity and keyword
+match) are sent to each prompt instead of the whole catalog. Below the threshold this is a no-op — the
+current built-in set is unaffected.
+
 A deterministic **quality gate** (`AI_QUALITY_GATE`, default `block`) runs after compile: it blocks
 placeholder text and empty sections (retried with a hint, then falls back), and warns on low contrast,
 non-responsive giant headings, duplicate/overlong headings, and wrong-language headings. Set to `warn`

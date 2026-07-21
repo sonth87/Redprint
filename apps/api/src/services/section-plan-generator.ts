@@ -20,6 +20,8 @@ import {
 import { extractJSON, formatZodError } from "./json-utils.js";
 import { resolveLocale, localeLabel } from "./section-plan-compiler.js";
 import { SECTION_VARIANTS, hasVariants } from "./layout-variants.js";
+import { selectComponentsForSection, SECTION_CONTRACT_TOP_K_DEFAULT } from "./component-retrieval.js";
+import { logger } from "./logger.js";
 import type { GeneratePageRequest, PagePlan, PagePlanSection, SectionPlan } from "../types/ai.types.js";
 
 const OptionalStringSchema = z.preprocess((value) => (value === null ? undefined : value), z.string().optional());
@@ -156,9 +158,23 @@ function buildSectionPresetBlock(
 }
 
 function buildSystemPrompt(pagePlan: PagePlan, section: PagePlanSection, request: GeneratePageRequest): string {
-  const componentManifest = buildComponentCapabilityManifest(request.availableComponents ?? []);
-  const candidateTypes = candidateComponentsForSection(section.type, request.availableComponents ?? []);
-  const componentContracts = resolveComponentContracts(request.availableComponents ?? [], candidateTypes);
+  const available = request.availableComponents ?? [];
+  // Retrieval (roadmap 03/03): below the catalog threshold this is a no-op
+  // (selects everything, same order) — byte-identical to pre-03/03 output for
+  // the current 17 built-ins. Above it, only the top-k relevant components
+  // reach the manifest/contract prompt sections below.
+  const retrieval = selectComponentsForSection(available, section.type, pagePlan.brief, section);
+  if (retrieval.retrievalUsed) {
+    logger.decision("COMPONENT_RETRIEVAL", `Retrieved ${retrieval.candidateCount}/${retrieval.totalCount} components for section`, {
+      sectionType: section.type,
+      candidateCount: retrieval.candidateCount,
+      totalCount: retrieval.totalCount,
+      nearMisses: retrieval.nearMisses,
+    });
+  }
+  const componentManifest = buildComponentCapabilityManifest(retrieval.selected);
+  const candidateTypes = candidateComponentsForSection(section.type, retrieval.selected).slice(0, SECTION_CONTRACT_TOP_K_DEFAULT);
+  const componentContracts = resolveComponentContracts(retrieval.selected, candidateTypes);
   const presetBlock = buildSectionPresetBlock(request, candidateTypes);
   const variantList = hasVariants(section.type)
     ? `\nlayoutVariant for this ${section.type} section — choose ONE that best fits the content (or omit to let the system pick): ${(SECTION_VARIANTS[section.type] as readonly string[]).join(" | ")}. Pick by content: many images → a gallery/media-heavy variant; a process/steps feel → alternating rows; a simple message → a centered/stacked variant.\n`

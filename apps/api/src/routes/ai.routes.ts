@@ -7,7 +7,8 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { randomUUID } from "node:crypto";
 import { classifyAIError } from "../services/ai-error-classifier.js";
-import { buildComponentCapabilityManifest } from "../services/component-capability-manifest.js";
+import { buildComponentCapabilityManifest, formatComponentManifestForPrompt } from "../services/component-capability-manifest.js";
+import { selectComponentsForPrompt } from "../services/component-retrieval.js";
 import { buildDeterministicPagePlan, generatePagePlan } from "../services/page-plan-generator.js";
 import { generateSectionPlan } from "../services/section-plan-generator.js";
 import {
@@ -369,12 +370,23 @@ aiRouter.post("/generate-page", async (req: Request, res: Response) => {
 
 // ── Chat system prompt builder ───────────────────────────────────────────
 
-export function buildChatSystemPrompt(ctx: ChatRequest["builderContext"]): string {
-  // Components: use pre-serialized compact manifest when available (Phase 1B),
-  // otherwise fall back to a simple type list.
-  const componentList =
-    ctx.componentsManifest ??
-    ctx.availableComponents.map((c) => `${c.type} (${c.category})`).join(", ");
+export function buildChatSystemPrompt(ctx: ChatRequest["builderContext"], userPrompt = ""): string {
+  // Retrieval (roadmap 03/03): only kicks in above the catalog threshold. Below
+  // it, keep the pre-03/03 behavior exactly — the client's pre-serialized
+  // compact manifest (Phase 1B) when available, else a simple type list. Above
+  // the threshold, the client's manifest isn't retrieval-aware (it was built
+  // for the full catalog), so rebuild a filtered one server-side instead.
+  const chatRetrieval = selectComponentsForPrompt(ctx.availableComponents, userPrompt);
+  if (chatRetrieval.retrievalUsed) {
+    logger.decision("COMPONENT_RETRIEVAL", `Retrieved ${chatRetrieval.candidateCount}/${chatRetrieval.totalCount} components for chat`, {
+      candidateCount: chatRetrieval.candidateCount,
+      totalCount: chatRetrieval.totalCount,
+      nearMisses: chatRetrieval.nearMisses,
+    });
+  }
+  const componentList = chatRetrieval.retrievalUsed
+    ? formatComponentManifestForPrompt(buildComponentCapabilityManifest(chatRetrieval.selected))
+    : ctx.componentsManifest ?? ctx.availableComponents.map((c) => `${c.type} (${c.category})`).join(", ");
 
   // Nesting rules: use derived rules when available (Phase 1B), else static fallback.
   const nestingRules =
@@ -492,7 +504,8 @@ aiRouter.post("/chat", async (req: Request, res: Response) => {
   }
 
   try {
-    const systemContent = buildChatSystemPrompt(body.builderContext);
+    const lastUserMessage = body.messages.filter((m) => m.role === "user").at(-1)?.content ?? "";
+    const systemContent = buildChatSystemPrompt(body.builderContext, lastUserMessage);
 
     logger.systemMessage(systemContent);
     logger.debug("CHAT_CONTEXT", "Chat request context", {
@@ -750,7 +763,8 @@ aiRouter.post("/chat/stream", async (req: Request, res: Response) => {
   initSSE(res);
 
   try {
-    const systemContent = buildChatSystemPrompt(body.builderContext);
+    const lastUserMessage = body.messages.filter((m) => m.role === "user").at(-1)?.content ?? "";
+    const systemContent = buildChatSystemPrompt(body.builderContext, lastUserMessage);
 
     logger.systemMessage(systemContent);
     logger.debug("CHAT_STREAM_CONTEXT", "Chat stream request context", {

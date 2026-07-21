@@ -4,7 +4,31 @@
 > Ưu tiên: P4
 > Ước lượng: 1–2 ngày
 > Phụ thuộc: [03/01](./01-ai-hints.md) (sectionAffinity/bestFor là tín hiệu xếp hạng)
-> Trạng thái: Chưa bắt đầu
+> Trạng thái: Hoàn thành (v1 — deterministic keyword scoring, chưa embedding) — 2026-07-21. Module mới
+> `apps/api/src/services/component-retrieval.ts`: `selectComponentsForSection`/`selectComponentsForPrompt`
+> đúng công thức mục 3.2 (`3×sectionAffinity + 2×keywordOverlap + 1×categoryPrior + 1×coreLayout`,
+> core layout luôn kèm bất kể score). Ngưỡng `AI_RETRIEVAL_THRESHOLD` (default 30) — dưới ngưỡng trả
+> nguyên catalog **cùng reference/thứ tự**, không phải chỉ "giống nhau" mà là bypass thật, đảm bảo output
+> byte-identical với hành vi trước 03/03 cho 17 built-in hiện tại. Top-15 cho manifest section, top-6 cho
+> contract chi tiết (`SECTION_CONTRACT_TOP_K_DEFAULT`, áp lên trên danh sách `candidateComponentsForSection`
+> — no-op với danh sách hardcode hiện có vì tất cả đã ≤6). Chat path: `selectComponentsForPrompt` (k=20,
+> score theo keyword toàn `userPrompt`) + force-include component được gọi đích danh trong prompt (mục 6
+> corner case "dùng HoneycombGallery"). **Phát hiện kiến trúc quan trọng khi wire chat**: `componentsManifest`
+> phía chat **đã được client tiền tính sẵn** (Phase 1B, `serializeComponentsCompact`) cho *toàn bộ* catalog
+> — không retrieval-aware. `buildChatSystemPrompt` chỉ dùng chuỗi client gửi khi retrieval KHÔNG kích hoạt;
+> khi kích hoạt, build lại manifest từ danh sách đã lọc phía server (bỏ qua chuỗi client stale). Log
+> quyết định `COMPONENT_RETRIEVAL` (`candidateCount`/`totalCount`/`nearMisses` — top 3 điểm sát ngưỡng bị
+> loại, để tinh chỉnh trọng số) khi retrieval thực sự chạy.
+>
+> **Test:** `component-retrieval.test.ts` (8 — bypass dưới ngưỡng giữ nguyên reference, override ngưỡng qua
+> env, PricingTable giả lọt top-6 trong catalog 60 component đúng như mục 6 yêu cầu, keyword overlap,
+> force-include theo tên trong chat prompt) + 2 test `ai.routes.test.ts` (chat dùng nguyên manifest client
+> dưới ngưỡng, bỏ qua manifest stale khi trên ngưỡng). **apps/api 177 test pass** (167→177). Toàn bộ 167
+> test cũ pass nguyên vẹn không sửa — xác nhận bypass path không đổi hành vi. Docs: AI_ASSISTANT (mục
+> "Component Retrieval" + env row) + README + roadmap.
+>
+> **Chưa làm (đúng mục 4 — backlog có chủ đích):** embedding-based ranking v2 khi catalog >100 và keyword
+> overlap tỏ ra yếu — chỉ ghi thiết kế trong roadmap gốc, không implement đợt này.
 
 ## 1. Mục đích
 
