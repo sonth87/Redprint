@@ -3,28 +3,32 @@ import { buildDeterministicPagePlan } from "./page-plan-generator.js";
 import { buildSkeletonCommands, compileFallbackSection, compileSection, compileSectionWithMeta } from "./section-plan-compiler.js";
 import type { AIPresetGroup, GeneratePageRequest, SectionPlan } from "../types/ai.types.js";
 
+// capabilities mirrors what buildAIContext.ts actually sends (truthy capability
+// names only) — canContainChildren now drives the compiler's leaf_parent check
+// (roadmap 03/01, replacing the old hardcoded LEAF_COMPONENT_TYPES table), so
+// fixtures must declare it realistically instead of omitting it.
 const availableComponents = [
-  { type: "Section", name: "Section", category: "layout" },
-  { type: "Container", name: "Container", category: "layout" },
-  { type: "Grid", name: "Grid", category: "layout" },
-  { type: "Text", name: "Text", category: "content" },
-  { type: "Button", name: "Button", category: "interactive" },
-  { type: "Image", name: "Image", category: "media" },
-  { type: "Divider", name: "Divider", category: "content" },
+  { type: "Section", name: "Section", category: "layout", capabilities: ["canContainChildren"] },
+  { type: "Container", name: "Container", category: "layout", capabilities: ["canContainChildren"] },
+  { type: "Grid", name: "Grid", category: "layout", capabilities: ["canContainChildren"] },
+  { type: "Text", name: "Text", category: "content", capabilities: [] },
+  { type: "Button", name: "Button", category: "interactive", capabilities: [] },
+  { type: "Image", name: "Image", category: "media", capabilities: [] },
+  { type: "Divider", name: "Divider", category: "content", capabilities: [] },
 ];
 
 const richAvailableComponents = [
   ...availableComponents,
-  { type: "Row", name: "Row", category: "layout" },
-  { type: "Column", name: "Column", category: "layout" },
-  { type: "NavigationMenu", name: "Navigation Menu", category: "navigation" },
-  { type: "GalleryPro", name: "Gallery Pro", category: "media" },
-  { type: "GalleryGrid", name: "Gallery Grid", category: "media" },
-  { type: "GallerySlider", name: "Gallery Slider", category: "media" },
-  { type: "CollapsibleText", name: "Collapsible Text", category: "content" },
-  { type: "TextMarquee", name: "Text Marquee", category: "content" },
-  { type: "TextMask", name: "Text Mask", category: "content" },
-  { type: "Shape", name: "Shape", category: "decorative" },
+  { type: "Row", name: "Row", category: "layout", capabilities: ["canContainChildren"] },
+  { type: "Column", name: "Column", category: "layout", capabilities: ["canContainChildren"] },
+  { type: "NavigationMenu", name: "Navigation Menu", category: "navigation", capabilities: [] },
+  { type: "GalleryPro", name: "Gallery Pro", category: "media", capabilities: [] },
+  { type: "GalleryGrid", name: "Gallery Grid", category: "media", capabilities: [] },
+  { type: "GallerySlider", name: "Gallery Slider", category: "media", capabilities: [] },
+  { type: "CollapsibleText", name: "Collapsible Text", category: "content", capabilities: [] },
+  { type: "TextMarquee", name: "Text Marquee", category: "content", capabilities: [] },
+  { type: "TextMask", name: "Text Mask", category: "content", capabilities: [] },
+  { type: "Shape", name: "Shape", category: "decorative", capabilities: [] },
 ];
 
 function makeRequest(): GeneratePageRequest {

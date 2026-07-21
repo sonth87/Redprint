@@ -78,36 +78,6 @@ const RICH_COMPONENT_TYPES = new Set([
   "Repeater",
 ]);
 
-const LEAF_COMPONENT_TYPES = new Set([
-  "Text",
-  "Button",
-  "Image",
-  "Divider",
-  "TextMarquee",
-  "CollapsibleText",
-  "TextMask",
-  "GalleryPro",
-  "GallerySlider",
-  "GalleryGrid",
-  "Shape",
-  "NavigationMenu",
-  "Anchor",
-]);
-
-const REQUIRED_PROPS: Record<string, string[]> = {
-  Text: ["text"],
-  Button: ["label"],
-  Image: ["src", "alt"],
-  TextMask: ["text"],
-  TextMarquee: ["text"],
-  CollapsibleText: ["text"],
-  GalleryPro: ["items"],
-  GallerySlider: ["slideCount"],
-  GalleryGrid: ["imageCount"],
-  NavigationMenu: ["items"],
-  Shape: ["shape"],
-};
-
 type GalleryLayoutMode = "grid" | "masonry" | "collage" | "slider" | "slideshow" | "strip" | "stacked";
 
 function html(text: string): string {
@@ -1659,15 +1629,20 @@ export function validateCompiledCommandsWithReport(
     if (parentId === "root" && componentType !== "Section") { drop("root_non_section"); continue; }
     if (!knownIds.has(parentId) && parentId !== "root") { drop("orphan_parent"); continue; }
     const parentType = knownTypes.get(parentId);
-    if (parentType && LEAF_COMPONENT_TYPES.has(parentType)) { drop("leaf_parent"); continue; }
+    const parentContract = parentType ? contractsByType.get(parentType) : undefined;
+    // canContainChildren comes from the component's technical capabilities
+    // (roadmap 03/01) — a structural fact, never overridden by aiHints. When
+    // the parent type has no contract (unknown to this request), default to
+    // permissive (fall through to the other checks) rather than guessing leaf.
+    if (parentContract && !parentContract.canContainChildren) { drop("leaf_parent"); continue; }
     const props = cmd.payload.props && typeof cmd.payload.props === "object"
       ? (cmd.payload.props as Record<string, unknown>)
       : {};
-    const propValidation = validatePropsAgainstContract(contractsByType.get(componentType), props);
+    const contract = contractsByType.get(componentType);
+    const propValidation = validatePropsAgainstContract(contract, props);
     if (!propValidation.valid) { drop("invalid_props"); continue; }
     cmd.payload.props = propValidation.repairedProps;
-    if (!hasRequiredProps(componentType, cmd.payload.props)) { drop("missing_required_props"); continue; }
-    if (!hasValidEnumProps(componentType, cmd.payload.props)) { drop("invalid_enum"); continue; }
+    if (!hasRequiredProps(contract, cmd.payload.props)) { drop("missing_required_props"); continue; }
 
     knownIds.add(nodeId);
     knownTypes.set(nodeId, componentType);
@@ -1686,47 +1661,24 @@ export function validateCompiledCommands(
   return validateCompiledCommandsWithReport(commands, availableTypes, initialParentIds, contractsByType).valid;
 }
 
-function hasRequiredProps(componentType: string, props: unknown): boolean {
-  const required = REQUIRED_PROPS[componentType];
-  if (!required || required.length === 0) return true;
+/**
+ * Required-prop check driven entirely by the component's contract (roadmap
+ * 03/01) — `contract.requiredProps` comes from real propSchema `required: true`
+ * declarations (see the audit in packages/builder-components), no hardcoded
+ * per-type table. Enum/option validation for these same props is already
+ * handled by `validatePropsAgainstContract` (contract-based `select` option
+ * checks) just before this call, so there is no separate enum table either.
+ */
+function hasRequiredProps(contract: ComponentContract | undefined, props: unknown): boolean {
+  if (!contract || contract.requiredProps.length === 0) return true;
   if (!props || typeof props !== "object") return false;
   const data = props as Record<string, unknown>;
-  return required.every((key) => {
-    const value = data[key];
+  return contract.requiredProps.every((prop) => {
+    const value = data[prop.key];
     if (Array.isArray(value)) return value.length > 0;
     if (typeof value === "string") return value.trim().length > 0;
     return value !== undefined && value !== null;
   });
-}
-
-function hasValidEnumProps(componentType: string, props: unknown): boolean {
-  if (!props || typeof props !== "object") return true;
-  const data = props as Record<string, unknown>;
-  if (componentType === "NavigationMenu") {
-    const layout = String(data.layout ?? "horizontal");
-    const itemStyle = String(data.itemStyle ?? "plain");
-    return ["horizontal", "vertical", "hamburger"].includes(layout) &&
-      ["plain", "underline", "underline-all", "boxed", "boxed-all", "pill", "pill-outlined", "pill-all", "filled", "button-all", "block-vertical", "serif-panel", "dark-panel", "pastel-panel", "icon-hamburger", "labeled-hamburger"].includes(itemStyle);
-  }
-  if (componentType === "GalleryPro") {
-    return ["grid", "masonry", "collage", "slider", "slideshow", "strip", "stacked"].includes(String(data.layoutMode ?? "grid"));
-  }
-  if (componentType === "GalleryGrid") {
-    return ["grid", "masonry"].includes(String(data.layout ?? "grid"));
-  }
-  if (componentType === "GallerySlider") {
-    return ["16/9", "4/3", "1/1", "3/4"].includes(String(data.aspectRatio ?? "16/9"));
-  }
-  if (componentType === "TextMarquee") {
-    return ["left", "right"].includes(String(data.direction ?? "left"));
-  }
-  if (componentType === "TextMask") {
-    return ["700", "900"].includes(String(data.fontWeight ?? "900"));
-  }
-  if (componentType === "Shape") {
-    return ["rectangle", "circle", "triangle", "star", "heart", "hexagon", "diamond", "arrow-right", "arrow-left", "arrow-up", "arrow-down", "blob"].includes(String(data.shape ?? "rectangle"));
-  }
-  return true;
 }
 
 export function compileFallbackSection(section: PagePlanSection, pagePlan: PagePlan, request: GeneratePageRequest): AICommandSuggestion[] {

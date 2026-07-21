@@ -4,7 +4,49 @@
 > Ưu tiên: P4 (hạng mục quan trọng nhất của nhóm)
 > Ước lượng: 2–3 ngày
 > Phụ thuộc: Không
-> Trạng thái: Chưa bắt đầu
+> Trạng thái: Hoàn thành — 2026-07-21. Làm đúng 3 PR như mục 7 đề xuất:
+>
+> **PR1 (type + hints + serialize):** `ComponentAIHints`/`ComponentContentSlots` mới trong
+> `packages/builder-core/src/registry/types.ts` (+ export barrel, + `defineComponent`/`ComponentConfig`).
+> Điền `aiHints` cho **cả 20** `ComponentDefinition` thật trong `builder-components` (không chỉ 17 —
+> thêm cả `Section`, `Anchor` (`excludeFromAI:true` — anchor do compiler quản lý, không phải quyết định
+> nội dung AI), `PopupContent` (`excludeFromAI:true`)). `extendComponent` merge `aiHints` theo field
+> (không dùng flat spread như phần còn lại). `buildAIContext.ts`: `aiComponents` lọc `excludeFromAI` trước
+> mọi serialize (availableComponents/componentsManifest/nestingRules); `serializeAIHints` cap
+> bestFor≤5/examples≤3. Server: gộp 2 chỗ định nghĩa `availableComponents` trùng lặp (`GeneratePageRequest`
+> + `ChatRequest`) thành 1 type `AIAvailableComponent` dùng chung + `AIComponentHints` mirror type.
+>
+> **PR2 (server dùng aiHints, đổi thứ tự ưu tiên):** `mergeCapability`:
+> `aiHints > CURATED_COMPONENT_CAPABILITIES > propSchema-inferred`; `contractSource` thêm giá trị
+> `"aiHints"`. `candidateComponentsForSection`: union hardcode cũ + mọi component có
+> `aiHints.sectionAffinity` khớp section type (self-nominate). `examplesFor` ưu tiên
+> `aiHints.examples` trước bảng curated nhỏ.
+>
+> **PR3 (compiler bỏ bảng cứng — rủi ro cao nhất, cần audit trước):** Audit phát hiện ~10 component
+> thiếu `required: true` dù có prop bắt buộc thật (Text.text, Button.label, TextMask/TextMarquee/
+> CollapsibleText.text, NavigationMenu.items, Shape.shape, GalleryPro.items, GallerySlider.slideCount,
+> GalleryGrid.imageCount) — sửa cả 10. Phát hiện phụ: 3 variant trong `PropSchema` (`select`, `slider`,
+> `json`) thiếu field `required`/`hidden` trong type union → thêm. GalleryPro.items không có control
+> UI trong property panel (chỉ sửa qua "Manage Media" modal) → thêm field `hidden?: boolean` mới cho
+> variant `json` + skip trong `DesignTab.tsx`'s render loop (tránh hiện dòng "Unsupported control (json)").
+> `LEAF_COMPONENT_TYPES` → đọc `contractsByType.get(parentType)?.canContainChildren` (từ `capabilities`
+> thật, không phải aiHints — đúng nguyên tắc "hints không override sự thật kỹ thuật"). `REQUIRED_PROPS`
+> → `contract.requiredProps` (propSchema `required:true` thật). Xoá `hasValidEnumProps` hoàn toàn — phát
+> hiện nó check cả prop **không tồn tại** (`NavigationMenu.layout` — prop thật là `orientation`), tức là
+> dead code; `validatePropsAgainstContract` (đã có) validate enum `select` đúng từ propSchema thật.
+>
+> **Test:** fixture PricingTable giả (roadmap mục 8) — `ai-hints-e2e.test.ts` (6 test: xuất hiện đúng
+> manifest với aiHints riêng, tự đề cử đúng section pricing, không đề cử sai section, contract
+> requiredProps đúng từ propSchema, validation gate chặn thiếu required, chặn thêm con vào leaf) +
+> test bổ sung cho manifest/candidate/buildAIContext. **apps/api 154 test pass** (148→154),
+> **builder-editor 44 pass** (+4), **builder-components 2 pass**, **builder-core 257 pass** (1 fail
+> popup-undo pre-existing không liên quan). Phát hiện quan trọng khi viết test: fixture
+> `availableComponents` cũ trong nhiều test file không set `capabilities` — vô hại với code cũ (dùng
+> bảng cứng theo tên type) nhưng vỡ ngầm với `canContainChildren`-từ-capabilities mới; đã sửa fixture
+> cho khớp thực tế client luôn gửi `capabilities`.
+>
+> Docs: `.claude/docs/AI_ASSISTANT.md` viết lại mục "Rich Component Awareness" + "On-Demand Component
+> Contracts" phản ánh kiến trúc mới.
 
 ## 1. Mục đích
 

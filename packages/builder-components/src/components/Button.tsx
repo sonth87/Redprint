@@ -79,11 +79,20 @@ export const ButtonComponent: ComponentDefinition = {
     canBeLocked: true,
     inlineEditable: true,
   },
+  aiHints: {
+    purpose: "Clickable call-to-action.",
+    bestFor: ["primary CTA", "secondary CTA", "booking buttons"],
+    sectionAffinity: ["header", "hero", "services", "pricing", "cta", "footer"],
+    contentSlots: { ctaLabel: "label" },
+    fallbackTo: ["Text"],
+    examples: ["Primary hero CTA with variant=\"primary\"", "Secondary CTA with variant=\"outline\""],
+  },
   propSchema: [
     {
       key: "label",
       label: "Label",
       type: "richtext",
+      required: true,
       toolbar: { bold: true, italic: false, underline: false, strikethrough: false, link: false, align: false },
     },
     {

@@ -11,7 +11,7 @@ export interface ComponentCapability {
   keyProps: Record<string, string | string[]>;
   variants: string[];
   fallbackTo: string[];
-  contractSource?: "propSchema" | "curated" | "merged";
+  contractSource?: "propSchema" | "curated" | "merged" | "aiHints";
 }
 
 export type ComponentCatalogSummary = ComponentCapability;
@@ -253,22 +253,42 @@ function propSchemaCapability(component: AvailableComponent): ComponentCapabilit
   };
 }
 
+/**
+ * Priority order (roadmap 03/01): `aiHints` (client-declared, per-component
+ * source of truth) > `CURATED_COMPONENT_CAPABILITIES` (server fallback, kept
+ * 1-2 releases for components that haven't migrated yet) > propSchema-inferred
+ * heuristics (last resort for unknown/third-party components).
+ *
+ * `keyProps`/`variants`/`requiredProps` aren't part of aiHints (they're
+ * propSchema/curated-derived technical detail) so those always come from
+ * fromSchema/curated regardless of aiHints presence.
+ */
 function mergeCapability(component: AvailableComponent): ComponentCapability {
   const fromSchema = propSchemaCapability(component);
   const curated = supportedDefinition(component.type);
-  if (!curated) return fromSchema;
+  const hints = component.aiHints;
+
+  if (!curated && !hints) return fromSchema;
+
+  const base = curated ? { ...fromSchema, ...curated } : fromSchema;
+  const requiredProps = curated
+    ? Array.from(new Set([...fromSchema.requiredProps, ...curated.requiredProps]))
+    : fromSchema.requiredProps;
+  const variants = curated ? Array.from(new Set([...fromSchema.variants, ...curated.variants])) : fromSchema.variants;
+  const curatedFallback = curated?.fallbackTo.length ? curated.fallbackTo : undefined;
 
   return {
-    ...fromSchema,
-    ...curated,
+    ...base,
     name: component.name,
     category: component.category,
     isContainer: fromSchema.isContainer,
-    requiredProps: Array.from(new Set([...fromSchema.requiredProps, ...curated.requiredProps])),
-    keyProps: { ...fromSchema.keyProps, ...curated.keyProps },
-    variants: Array.from(new Set([...fromSchema.variants, ...curated.variants])),
-    fallbackTo: curated.fallbackTo.length > 0 ? curated.fallbackTo : fromSchema.fallbackTo,
-    contractSource: "merged",
+    purpose: hints?.purpose ?? base.purpose,
+    bestFor: hints?.bestFor?.length ? hints.bestFor : base.bestFor,
+    requiredProps,
+    keyProps: base.keyProps,
+    variants,
+    fallbackTo: hints?.fallbackTo?.length ? hints.fallbackTo : curatedFallback ?? fromSchema.fallbackTo,
+    contractSource: hints ? "aiHints" : "merged",
   };
 }
 

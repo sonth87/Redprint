@@ -151,6 +151,33 @@ export interface AIPropSchemaEntry {
   children?: AIPropSchemaEntry[];
 }
 
+/**
+ * Wire shape of `ComponentDefinition.aiHints` (roadmap 03/01) — serialized via
+ * `serializeAIHints` in buildAIContext.ts. `excludeFromAI` components never
+ * reach this shape (filtered out before serialization), so it's not a field here.
+ */
+export interface AIComponentHints {
+  purpose: string;
+  bestFor?: string[];
+  sectionAffinity?: string[];
+  contentSlots?: {
+    heading?: string;
+    body?: string;
+    items?: {
+      prop: string;
+      shape: "array-of-objects" | "indexed-props";
+      itemKeys?: Record<string, string>;
+      maxItems?: number;
+    };
+    mediaSrc?: string;
+    mediaAlt?: string;
+    ctaLabel?: string;
+    href?: string;
+  };
+  fallbackTo?: string[];
+  examples?: string[];
+}
+
 /** Context passed to AI to understand current builder state */
 export interface AIBuilderContext {
   document: {
@@ -174,6 +201,8 @@ export interface AIBuilderContext {
     propSchema?: AIPropSchemaEntry[];
     capabilities?: string[];
     defaultProps?: Record<string, unknown>;
+    /** Self-described AI metadata (roadmap 03/01), when the component declares it. */
+    aiHints?: AIComponentHints;
   }[];
   activeBreakpoint: string;
   activeSurface?: { type: "page" } | { type: "popup"; popupId: string; rootNodeId: string; selection: "shell" | "content" | null };

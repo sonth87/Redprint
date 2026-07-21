@@ -17,6 +17,14 @@ export const PopupContentComponent: ComponentDefinition = {
     canBeHidden: false,
     canBeLocked: true,
   },
+  aiHints: {
+    purpose: "Root content container for document-level popups.",
+    bestFor: [],
+    fallbackTo: [],
+    // Internal-only: never a candidate for page-generation content — popups are
+    // created/managed through the popup system, not AI section generation.
+    excludeFromAI: true,
+  },
   containerConfig: {
     layoutType: "flex",
   },

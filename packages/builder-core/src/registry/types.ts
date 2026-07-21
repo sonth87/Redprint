@@ -34,19 +34,32 @@ export type PropSchema =
   | { key: string; type: "string"; label: string; default?: string; multiline?: boolean; placeholder?: string; required?: boolean; description?: string }
   | { key: string; type: "number"; label: string; default?: number; min?: number; max?: number; step?: number; unit?: string; required?: boolean; description?: string }
   | { key: string; type: "boolean"; label: string; default?: boolean; required?: boolean; description?: string }
-  | { key: string; type: "select"; label: string; options: SelectOption[]; default?: string; multiple?: boolean; description?: string }
+  | { key: string; type: "select"; label: string; options: SelectOption[]; default?: string; multiple?: boolean; required?: boolean; description?: string }
   | { key: string; type: "color"; label: string; default?: string; allowGradient?: boolean; allowTransparent?: boolean }
   | { key: string; type: "image"; label: string; accept?: string | string[]; required?: boolean; focalPoint?: boolean }
   | { key: string; type: "video"; label: string; accept?: string | string[]; required?: boolean }
   | { key: string; type: "richtext"; label: string; toolbar?: RichtextToolbarConfig; required?: boolean }
   | { key: string; type: "data-binding"; label: string; sourceType?: string; required?: boolean }
-  | { key: string; type: "json"; label: string; required?: boolean }
+  | {
+      key: string;
+      type: "json";
+      label: string;
+      required?: boolean;
+      /**
+       * When true, this entry is declared for AI/validation contracts only and
+       * is not rendered in the property panel — `"json"` has no dedicated
+       * panel control (see `PropControl.tsx`), so a prop already edited via a
+       * custom UI elsewhere (e.g. GalleryPro's "Manage Media" modal) should set
+       * this instead of showing an "Unsupported control" placeholder row.
+       */
+      hidden?: boolean;
+    }
   | { key: string; type: "spacing"; label: string; default?: import("@ui-builder/shared").BoxValue }
   | { key: string; type: "border"; label: string; default?: import("@ui-builder/shared").BorderValue }
   | { key: string; type: "shadow"; label: string }
   | { key: string; type: "icon"; label: string }
   | { key: string; type: "font"; label: string }
-  | { key: string; type: "slider"; label: string; min: number; max: number; step?: number; default?: number }
+  | { key: string; type: "slider"; label: string; min: number; max: number; step?: number; default?: number; required?: boolean }
   | { key: string; type: "row"; children: PropSchema[] }
   | { key: string; type: "group"; label: string; children: PropSchema[]; collapsible?: boolean };
 
@@ -273,6 +286,63 @@ export interface ComponentDefinition {
   deprecated?: boolean;
   /** The replacement component type to suggest when deprecated is true. */
   replacedBy?: string;
+  /** Self-described AI metadata (roadmap 03/01) — see {@link ComponentAIHints}. */
+  aiHints?: ComponentAIHints;
+}
+
+// ── AI Hints ──────────────────────────────────────────────────────────────
+
+/**
+ * How a content-intent field maps onto this component's props, so a generic
+ * compiler adapter can patch AI-authored content in without per-component code
+ * (roadmap 03/02). Plain data only — serializable, no framework/AI-SDK deps.
+ */
+export interface ComponentContentSlots {
+  /** Prop name that receives the section/card heading text. */
+  heading?: string;
+  /** Prop name that receives the body/description text. */
+  body?: string;
+  /** Prop name that receives a list of items, and how that list is shaped. */
+  items?: {
+    prop: string;
+    shape: "array-of-objects" | "indexed-props";
+    /** For "array-of-objects": map logical keys (title/body/...) to object keys. */
+    itemKeys?: Record<string, string>;
+    maxItems?: number;
+  };
+  mediaSrc?: string;
+  mediaAlt?: string;
+  ctaLabel?: string;
+  href?: string;
+}
+
+/**
+ * Self-described AI metadata for a component (roadmap 03/01). This is the
+ * single source of truth for "what this component is for" and "how AI should
+ * use it" — it replaces server-side hardcoded knowledge
+ * (`CURATED_COMPONENT_CAPABILITIES`, `candidateComponentsForSection`, etc. in
+ * apps/api) with data the component itself carries. Pure data, no functions —
+ * safe to serialize over the wire to the AI backend.
+ *
+ * `sectionAffinity` uses plain strings rather than importing the server's
+ * `PageSectionType` enum, to keep builder-core framework/domain-agnostic; the
+ * server treats it as `PageSectionType[]` at its boundary.
+ */
+export interface ComponentAIHints {
+  /** One sentence describing this component's role — replaces `inferPurpose` heuristics. */
+  purpose: string;
+  /** 2-5 concrete use cases. */
+  bestFor: string[];
+  /** Section types this component is a good fit for (server maps to PageSectionType). */
+  sectionAffinity?: string[];
+  /** Content-intent → prop mapping for the generic adapter (roadmap 03/02). */
+  contentSlots?: ComponentContentSlots;
+  /** Component type(s) to fall back to when this one isn't available, in order. */
+  fallbackTo?: string[];
+  /** Short usage examples surfaced in the AI section-prompt contract. */
+  examples?: string[];
+  /** When true, this component is never offered to the AI (e.g. internal-only components). */
+  excludeFromAI?: boolean;
 }
 
 // ── Filter ────────────────────────────────────────────────────────────────

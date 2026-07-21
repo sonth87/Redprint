@@ -187,9 +187,9 @@ window on every turn.
 ## Rich Component Awareness
 
 Full-page generation v2 uses a hybrid backend-side component contract layer. The editor sends
-`availableComponents` with `propSchema`, `capabilities`, and `defaultProps`; the backend derives a
-compact catalog summary for all available components and merges curated guidance for complex
-components.
+`availableComponents` with `propSchema`, `capabilities`, `defaultProps`, and (roadmap 03/01) `aiHints`;
+the backend derives a compact catalog summary for all available components and merges guidance from
+three sources.
 
 The manifest intentionally does not include full raw `propSchema`. Each component entry contains:
 
@@ -201,16 +201,55 @@ The manifest intentionally does not include full raw `propSchema`. Each componen
 - `variants`
 - `fallbackTo`
 
-Known rich components such as `NavigationMenu`, `GalleryPro`, `GalleryGrid`, `GallerySlider`,
-`CollapsibleText`, `TextMarquee`, `TextMask`, `Shape`, `Row`, `Column`, and `Repeater` get curated
-purpose/fallback/variant guidance. Unknown or custom registered components still receive
-propSchema-driven summaries, so they can appear in AI context without code changes.
+### `aiHints` — component self-description (roadmap 03/01)
+
+`ComponentDefinition.aiHints` (`packages/builder-core/src/registry/types.ts`) is the source of truth
+for "what this component is for" and "how AI should use it" — a component declares its own
+`purpose`, `bestFor`, `sectionAffinity` (which `PageSectionType`s it's a good fit for),
+`contentSlots` (content-intent → prop mapping, used by the generic-adapter direction in
+[03/02](../../docs/roadmap/03-component-platform/02-generic-adapter.md)), `fallbackTo`, `examples`, and
+`excludeFromAI` (never offered to AI — set on `Anchor`/`PopupContent`, which are compiler/system-managed,
+not AI content decisions). It's plain data (no functions), serialized to the wire by
+`buildAIContext.ts`'s `serializeAIHints` (caps `bestFor`≤5, `examples`≤3) and filtered so
+`excludeFromAI` components never reach `availableComponents`/`componentsManifest`/`nestingRules` at all.
+`extendComponent` merges `aiHints` **per field** (not the flat spread used for the rest of the
+definition), so a variant can override just e.g. `sectionAffinity` while inheriting the rest.
+
+**Manifest merge priority**: `aiHints` (component's own declaration) > `CURATED_COMPONENT_CAPABILITIES`
+(server-side fallback table, kept 1-2 releases for components that haven't migrated) > propSchema-inferred
+heuristics (`inferPurpose`/`inferBestFor`, last resort for unknown/third-party components).
+`contractSource` on the manifest/contract reflects which one won: `"aiHints" | "merged" | "curated" |
+"propSchema"`. **`candidateComponentsForSection`** unions the legacy hardcoded section→type map with any
+available component whose `aiHints.sectionAffinity` includes that section type — so a brand-new
+component (e.g. a third-party `PricingTable`) self-nominates for the `pricing` section without any
+server edit. `examplesFor` prefers a component's own `aiHints.examples` over the small curated examples
+table.
+
+**Structural facts stay separate from semantic hints**: `canContainChildren` (used by the compiler's
+`leaf_parent` validation) always comes from `capabilities` — `aiHints` never overrides it, since a
+component can't declare itself a container if it technically isn't one.
+
+Known rich components (`NavigationMenu`, `GalleryPro`, `GalleryGrid`, `GallerySlider`,
+`CollapsibleText`, `TextMarquee`, `TextMask`, `Shape`, `Row`, `Column`, `Repeater`, plus the rest of the
+20 built-ins) now declare their own `aiHints` directly in `packages/builder-components/src/components/*.tsx`
+— `CURATED_COMPONENT_CAPABILITIES` is retained only as the fallback path. Unknown or custom registered
+components without `aiHints` still receive propSchema-driven summaries, so they can appear in AI context
+without code changes (just with weaker `purpose`/`bestFor` text until they add hints).
 
 ### On-Demand Component Contracts
 
 Section prompts receive detailed `ComponentContract` entries only for components relevant to that
 section. A contract contains required/optional props, defaults, variants, constraints, fallback
-chain, examples, and `contractSource` (`propSchema`, `curated`, or `merged`).
+chain, examples, and `contractSource` (`propSchema`, `curated`, `merged`, or `aiHints`).
+`requiredProps`/`canContainChildren` are derived entirely from the component's real `propSchema`
+(`required: true`) and `capabilities.canContainChildren` — the compiler's validation gate
+(`validateCompiledCommandsWithReport` in `section-plan-compiler.ts`) has no hardcoded per-type
+`REQUIRED_PROPS`/`LEAF_COMPONENT_TYPES`/`hasValidEnumProps` tables anymore (roadmap 03/01, PR3); enum
+validation for `select`-type props comes from `validatePropsAgainstContract` (`prop-schema-validator.ts`),
+which already checks values against `propSchema` `options`. A `PropSchema` entry that's declared
+`required: true` purely for AI/validation but has no working panel control (e.g. GalleryPro's `items`,
+edited via the "Manage Media" modal) sets `hidden: true` so it doesn't render an "Unsupported control"
+row in the property panel.
 
 This avoids sending every component's full schema to every prompt while still letting the model make
 better section-level component choices.

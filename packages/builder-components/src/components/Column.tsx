@@ -18,6 +18,13 @@ export const ColumnComponent: ComponentDefinition = {
     canBeHidden: true,
     canBeLocked: true,
   },
+  aiHints: {
+    purpose: "Vertical or horizontal flex stack.",
+    bestFor: ["card content", "copy stacks", "media/copy columns"],
+    sectionAffinity: ["hero", "services", "features", "trust", "pricing"],
+    fallbackTo: ["Container"],
+    examples: ["Copy column stacking heading, body, and CTA row"],
+  },
   containerConfig: {
     layoutType: "flex",
     emptyStateConfig: { message: "Drop components here", allowDrop: true },

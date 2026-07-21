@@ -18,6 +18,13 @@ export const RowComponent: ComponentDefinition = {
     canBeHidden: true,
     canBeLocked: true,
   },
+  aiHints: {
+    purpose: "Horizontal flex layout container.",
+    bestFor: ["header rows", "CTA action rows", "compact feature rows"],
+    sectionAffinity: ["header", "cta"],
+    fallbackTo: ["Container"],
+    examples: ["Header nav row with logo + menu + CTA button"],
+  },
   containerConfig: {
     layoutType: "flex",
     emptyStateConfig: { message: "Drop here", allowDrop: true },

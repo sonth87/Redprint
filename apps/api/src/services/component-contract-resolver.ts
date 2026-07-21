@@ -1,6 +1,5 @@
 import {
   buildComponentCapabilityManifest,
-  CURATED_COMPONENT_CAPABILITIES,
   type ComponentCapability,
 } from "./component-capability-manifest.js";
 import type { AIPropSchemaEntry, GeneratePageRequest } from "../types/ai.types.js";
@@ -33,7 +32,7 @@ export interface ComponentContract {
   constraints: string[];
   fallbackTo: string[];
   examples: string[];
-  contractSource: "propSchema" | "curated" | "merged";
+  contractSource: "propSchema" | "curated" | "merged" | "aiHints";
 }
 
 function flattenPropSchema(schema: AIPropSchemaEntry[] | undefined): AIPropSchemaEntry[] {
@@ -78,15 +77,22 @@ function inferConstraints(component: AvailableComponent, capability: ComponentCa
   return constraints;
 }
 
-function examplesFor(type: string): string[] {
-  const examples: Record<string, string[]> = {
-    NavigationMenu: ["header navigation with anchor targets, page links, and optional submenu children"],
-    GalleryPro: ["service showcase gallery using mediaItems and collage or slider variant"],
-    CollapsibleText: ["FAQ answer rendered as expandable rich text"],
-    TextMask: ["playful hero heading with gradient-filled text"],
-    TextMarquee: ["announcement or proof ticker in hero/CTA"],
-  };
-  return examples[type] ?? [];
+const CURATED_EXAMPLES: Record<string, string[]> = {
+  NavigationMenu: ["header navigation with anchor targets, page links, and optional submenu children"],
+  GalleryPro: ["service showcase gallery using mediaItems and collage or slider variant"],
+  CollapsibleText: ["FAQ answer rendered as expandable rich text"],
+  TextMask: ["playful hero heading with gradient-filled text"],
+  TextMarquee: ["announcement or proof ticker in hero/CTA"],
+};
+
+/**
+ * Usage examples for a component's prompt contract. Priority (roadmap 03/01):
+ * the component's own `aiHints.examples` > the small curated table above
+ * (kept for built-ins that haven't declared examples yet) > none.
+ */
+function examplesFor(type: string, component: AvailableComponent): string[] {
+  if (component.aiHints?.examples?.length) return component.aiHints.examples;
+  return CURATED_EXAMPLES[type] ?? [];
 }
 
 export function resolveComponentContracts(
@@ -107,7 +113,6 @@ export function resolveComponentContracts(
     const explicitRequired = new Set(capability.requiredProps);
     const requiredProps = props.filter((prop) => prop.required || explicitRequired.has(prop.key));
     const optionalProps = props.filter((prop) => !requiredProps.some((required) => required.key === prop.key));
-    const curated = CURATED_COMPONENT_CAPABILITIES[type];
 
     contracts.push({
       type,
@@ -120,8 +125,8 @@ export function resolveComponentContracts(
       variants: capability.variants,
       constraints: inferConstraints(component, capability),
       fallbackTo: capability.fallbackTo,
-      examples: examplesFor(type),
-      contractSource: curated ? capability.contractSource ?? "merged" : "propSchema",
+      examples: examplesFor(type, component),
+      contractSource: capability.contractSource ?? "propSchema",
     });
   }
 
@@ -153,17 +158,33 @@ export function formatComponentContractsForPrompt(contracts: ComponentContract[]
     .join("\n");
 }
 
+const BY_SECTION_HARDCODE: Record<string, string[]> = {
+  header: ["NavigationMenu", "Row", "Text", "Button"],
+  hero: ["TextMask", "TextMarquee", "Image", "Shape", "Grid", "Column"],
+  services: ["GalleryPro", "GalleryGrid", "Grid", "Image", "Text", "Button"],
+  gallery: ["GalleryPro", "GallerySlider", "GalleryGrid", "Grid", "Image"],
+  testimonials: ["GalleryPro", "GallerySlider", "Grid", "Text"],
+  faq: ["CollapsibleText", "Grid", "Text"],
+  cta: ["TextMarquee", "Image", "Button", "Text"],
+  footer: ["NavigationMenu", "Divider", "Grid", "Text"],
+};
+const DEFAULT_CANDIDATES = ["Grid", "Text", "Button", "Image"];
+
+/**
+ * Candidate component types offered to the LLM for a section (roadmap 03/01).
+ * Union of the legacy hardcoded map (kept during migration) and any available
+ * component whose `aiHints.sectionAffinity` lists this section type — so a new
+ * component self-nominates for the sections it's good for without a server edit.
+ * Order: hardcode/default first (proven picks), then self-nominated extras.
+ */
 export function candidateComponentsForSection(sectionType: string, availableComponents: AvailableComponent[]): string[] {
   const available = new Set(availableComponents.map((component) => component.type));
-  const bySection: Record<string, string[]> = {
-    header: ["NavigationMenu", "Row", "Text", "Button"],
-    hero: ["TextMask", "TextMarquee", "Image", "Shape", "Grid", "Column"],
-    services: ["GalleryPro", "GalleryGrid", "Grid", "Image", "Text", "Button"],
-    gallery: ["GalleryPro", "GallerySlider", "GalleryGrid", "Grid", "Image"],
-    testimonials: ["GalleryPro", "GallerySlider", "Grid", "Text"],
-    faq: ["CollapsibleText", "Grid", "Text"],
-    cta: ["TextMarquee", "Image", "Button", "Text"],
-    footer: ["NavigationMenu", "Divider", "Grid", "Text"],
-  };
-  return (bySection[sectionType] ?? ["Grid", "Text", "Button", "Image"]).filter((type) => available.has(type));
+  const base = BY_SECTION_HARDCODE[sectionType] ?? DEFAULT_CANDIDATES;
+
+  const selfNominated = availableComponents
+    .filter((component) => component.aiHints?.sectionAffinity?.includes(sectionType))
+    .map((component) => component.type);
+
+  const merged = Array.from(new Set([...base, ...selfNominated]));
+  return merged.filter((type) => available.has(type));
 }

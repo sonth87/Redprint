@@ -18,6 +18,13 @@ export const RepeaterComponent: ComponentDefinition = {
     canBeHidden: true,
     canBeLocked: true,
   },
+  aiHints: {
+    purpose: "Repeats a child template for collection-like sections.",
+    bestFor: ["repeatable cards", "data-driven grids"],
+    sectionAffinity: ["services", "features", "testimonials"],
+    fallbackTo: ["Grid"],
+    examples: ["Card template repeated for each service/feature item"],
+  },
   containerConfig: {
     layoutType: "grid",
     emptyStateConfig: { message: "Define your item template here", allowDrop: true },

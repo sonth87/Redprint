@@ -18,6 +18,13 @@ export const GridComponent: ComponentDefinition = {
     canBeHidden: true,
     canBeLocked: true,
   },
+  aiHints: {
+    purpose: "Responsive grid container.",
+    bestFor: ["cards", "pricing", "features", "fallback galleries"],
+    sectionAffinity: ["services", "features", "pricing", "faq", "gallery", "testimonials", "stats"],
+    fallbackTo: ["Container"],
+    examples: ["3-column feature card grid", "2-column pricing tier grid"],
+  },
   containerConfig: {
     layoutType: "grid",
     emptyStateConfig: { message: "Drop components into grid cells", allowDrop: true },

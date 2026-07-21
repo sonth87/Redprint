@@ -35,11 +35,19 @@ export const ShapeComponent: ComponentDefinition = {
     canBeHidden: true,
     canBeLocked: true,
   },
+  aiHints: {
+    purpose: "Bounded decorative SVG accent.",
+    bestFor: ["subtle playful accents", "background detail", "visual filler when media is unavailable"],
+    sectionAffinity: ["hero", "cta"],
+    fallbackTo: ["Divider"],
+    examples: ["Playful blob/heart accent behind hero media"],
+  },
   propSchema: [
     {
       key: "shape",
       label: "Shape",
       type: "select",
+      required: true,
       options: [
         { value: "rectangle", label: "Rectangle" },
         { value: "circle", label: "Circle" },

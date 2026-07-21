@@ -17,6 +17,13 @@ export const ContainerComponent: ComponentDefinition = {
     canBeHidden: true,
     canBeLocked: true,
   },
+  aiHints: {
+    purpose: "Flexible content wrapper inside sections.",
+    bestFor: ["copy stacks", "button rows", "bounded layouts"],
+    sectionAffinity: ["header", "hero", "services", "features", "trust", "process", "cta", "footer"],
+    fallbackTo: ["Grid", "Column"],
+    examples: ["Column stack wrapping heading + body + CTA row"],
+  },
   propSchema: [
     {
       key: "display",

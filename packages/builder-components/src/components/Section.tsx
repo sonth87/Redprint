@@ -296,6 +296,12 @@ export const SectionComponent: ComponentDefinition = {
     canBeHidden: true,
     canBeLocked: true,
   },
+  aiHints: {
+    purpose: "Top-level page band. Full page generation should create Section nodes directly under root.",
+    bestFor: ["page skeleton", "major landing page bands"],
+    fallbackTo: [],
+    examples: ["Root-level Section wrapping a hero, services, or CTA band"],
+  },
   propSchema: [
     {
       key: "sectionOptionsGroup",

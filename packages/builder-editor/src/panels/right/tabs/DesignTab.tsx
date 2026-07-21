@@ -153,6 +153,11 @@ export function DesignTab({
             if (selectedNode.type === "Image" && schema.key === "filter") {
               return null;
             }
+            // Skip entries declared for AI/validation only (e.g. GalleryPro's
+            // `items`, edited via the "Manage Media" modal, not the panel).
+            if (schema.hidden) {
+              return null;
+            }
             if (schema.type === "group") {
               return (
                 <div key={schema.key} className="space-y-3">

@@ -19,8 +19,16 @@ export const NavigationMenuComponent: ComponentDefinition = {
     canBeHidden: true,
     canBeLocked: true,
   },
+  aiHints: {
+    purpose: "Responsive navigation menu with anchor/page/url targets, nested submenu items, overflow handling, and hamburger overlay.",
+    bestFor: ["header navigation", "footer links", "anchor navigation", "multi-page navigation", "mobile hamburger menus"],
+    sectionAffinity: ["header", "footer"],
+    contentSlots: { items: { prop: "items", shape: "array-of-objects", itemKeys: { title: "label", href: "target" }, maxItems: 6 } },
+    fallbackTo: ["Row", "Text", "Button"],
+    examples: ["Header nav linking to section anchors (Services, Pricing, FAQ)"],
+  },
   propSchema: [
-    { key: "items", label: "Menu Items (tree JSON)", type: "json" },
+    { key: "items", label: "Menu Items (tree JSON)", type: "json", required: true },
     {
       key: "orientation",
       label: "Orientation",

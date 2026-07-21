@@ -19,11 +19,20 @@ export const CollapsibleTextComponent: ComponentDefinition = {
     canBeHidden: true,
     canBeLocked: true,
   },
+  aiHints: {
+    purpose: "Expandable text block for compact long-form content.",
+    bestFor: ["FAQ", "policies", "long answers", "accordion-like sections"],
+    sectionAffinity: ["faq"],
+    contentSlots: { heading: "text", body: "text" },
+    fallbackTo: ["Text", "Grid"],
+    examples: ["FAQ item with a question title and expandable answer"],
+  },
   propSchema: [
     {
       key: "text",
       label: "Content",
       type: "richtext",
+      required: true,
       toolbar: { bold: true, italic: true, underline: true, link: true, align: true },
     },
     { key: "previewLines", label: "Preview Lines", type: "number", default: 3, min: 1, max: 10 },

@@ -17,6 +17,13 @@ export const DividerComponent: ComponentDefinition = {
     canBeHidden: true,
     canBeLocked: true,
   },
+  aiHints: {
+    purpose: "Visual separator.",
+    bestFor: ["footer separation", "section rhythm", "card boundaries"],
+    sectionAffinity: ["footer"],
+    fallbackTo: [],
+    examples: ["Thin horizontal rule between footer columns"],
+  },
   propSchema: [
     {
       key: "orientation",

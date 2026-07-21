@@ -45,10 +45,17 @@ export const GalleryGridComponent: ComponentDefinition = {
     canBeHidden: true,
     canBeLocked: true,
   },
+  aiHints: {
+    purpose: "Legacy image grid gallery with captions.",
+    bestFor: ["service image grid", "simple visual proof", "gallery fallback"],
+    sectionAffinity: ["gallery", "services"],
+    fallbackTo: ["Grid", "Image"],
+    examples: ["Simple 3-column image grid with captions"],
+  },
   propSchema: [
     { key: "columns", label: "Columns", type: "number", default: 3, min: 1, max: 6 },
     { key: "gap", label: "Gap", type: "number", default: 8, min: 0, max: 48, step: 2, unit: "px" },
-    { key: "imageCount", label: "Number of Images", type: "slider", min: 1, max: MAX_SLOTS, default: 6 },
+    { key: "imageCount", label: "Number of Images", type: "slider", min: 1, max: MAX_SLOTS, default: 6, required: true },
     {
       key: "aspectRatio",
       label: "Cell Aspect Ratio",

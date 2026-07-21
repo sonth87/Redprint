@@ -170,6 +170,8 @@ export type {
   QuickAction,
   SelectOption,
   ComponentFilter,
+  ComponentAIHints,
+  ComponentContentSlots,
 } from "./registry/types";
 
 // ── Commands ───────────────────────────────────────────────────────────────

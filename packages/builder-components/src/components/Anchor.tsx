@@ -18,6 +18,14 @@ export const AnchorComponent: ComponentDefinition = {
     canBeHidden: false,
     canBeLocked: true,
   },
+  aiHints: {
+    purpose: "Invisible anchor point for scroll-to navigation.",
+    bestFor: ["scroll targets for nav links"],
+    fallbackTo: [],
+    // Anchor placement/ids are compiler-managed (sectionAnchor), not an AI content
+    // decision — never offer it as something to add via generation.
+    excludeFromAI: true,
+  },
   propSchema: [
     { key: "anchorId", label: "Anchor ID", type: "string", default: "section-anchor", required: true },
     { key: "label", label: "Label (editor-only)", type: "string", default: "Section Anchor" },

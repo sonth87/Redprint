@@ -21,11 +21,20 @@ export const TextComponent: ComponentDefinition = {
     inlineEditable: true,
     aiTextGeneration: true,
   },
+  aiHints: {
+    purpose: "Rich text content.",
+    bestFor: ["headings", "body copy", "eyebrows", "labels"],
+    sectionAffinity: ["header", "hero", "services", "features", "trust", "process", "stats", "faq", "cta", "footer"],
+    contentSlots: { heading: "text", body: "text" },
+    fallbackTo: [],
+    examples: ["Section heading via tag=\"h2\"", "Supporting body paragraph via tag=\"p\""],
+  },
   propSchema: [
     {
       key: "text",
       label: "Content",
       type: "richtext",
+      required: true,
       toolbar: {
         bold: true,
         italic: true,

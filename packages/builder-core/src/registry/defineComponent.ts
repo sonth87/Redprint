@@ -40,6 +40,7 @@ import type {
   ContainerConfig,
   QuickAction,
   ComponentI18nMap,
+  ComponentAIHints,
 } from "./types";
 import type { StyleConfig } from "../document/types";
 
@@ -73,6 +74,8 @@ export interface ComponentConfig {
   lifecycle?: ComponentLifecycle;
   a11y?: ComponentA11yConfig;
   editorConfig?: ComponentEditorConfig;
+  /** Self-described AI metadata (roadmap 03/01). */
+  aiHints?: ComponentAIHints;
 }
 
 /**
@@ -102,6 +105,7 @@ export function defineComponent(config: ComponentConfig): ComponentDefinition {
     lifecycle: config.lifecycle,
     a11y: config.a11y,
     editorConfig: config.editorConfig,
+    aiHints: config.aiHints,
   };
 }
 

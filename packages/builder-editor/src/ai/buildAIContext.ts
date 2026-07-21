@@ -3,7 +3,7 @@
  * for the AI assistant to reason about.
  */
 import type { BuilderState, ComponentDefinition, PaletteCatalog } from "@ui-builder/builder-core";
-import type { AIBuilderContext, AIPageNode, AIPageNodeSlim, AIPageNodeSummary, AIPropSchemaEntry, AIPresetGroup } from "./types";
+import type { AIBuilderContext, AIPageNode, AIPageNodeSlim, AIPageNodeSummary, AIPropSchemaEntry, AIPresetGroup, AIComponentHints } from "./types";
 import { serializeComponentsCompact, deriveNestingRules } from "./serializeComponents";
 import { serializePresetsCompact } from "./serializePresets";
 
@@ -56,6 +56,24 @@ function serializeAIPropSchema(schema: ComponentDefinition["propSchema"] | undef
   return schema.map(serializeAIPropSchemaEntry);
 }
 
+/**
+ * Serialize a component's aiHints for the wire (roadmap 03/01). Caps list
+ * fields so a component that over-declares (e.g. 20 bestFor) doesn't blow up
+ * manifest token size; `excludeFromAI` components are filtered out entirely
+ * before this runs (see `aiComponents` in buildAIContext), so it's omitted here.
+ */
+function serializeAIHints(hints: ComponentDefinition["aiHints"]): AIComponentHints | undefined {
+  if (!hints) return undefined;
+  return {
+    purpose: hints.purpose,
+    bestFor: hints.bestFor?.slice(0, 5),
+    sectionAffinity: hints.sectionAffinity,
+    contentSlots: hints.contentSlots,
+    fallbackTo: hints.fallbackTo,
+    examples: hints.examples?.slice(0, 3),
+  };
+}
+
 export function buildAIContext(
   state: BuilderState,
   components: ComponentDefinition[],
@@ -67,6 +85,12 @@ export function buildAIContext(
   const selectedDef = selectedNode
     ? components.find((c) => c.type === selectedNode.type) ?? null
     : null;
+
+  // Components that opt out of AI (roadmap 03/01, e.g. Anchor/PopupContent) are
+  // never offered as something the AI can create — filtered before any AI-facing
+  // serialization below. The selected-node lookup above stays against the full
+  // list since the user may already have one on canvas.
+  const aiComponents = components.filter((c) => !c.aiHints?.excludeFromAI);
 
   // Always build pageNodes (needed for fullPageMode clearing)
   // Phase 3A: Hierarchical page context (slim tree + focused nodes) when includePageContext is true
@@ -156,8 +180,8 @@ export function buildAIContext(
   }
 
   // Phase 1B: compact component manifest + nesting rules
-  const componentsManifest = serializeComponentsCompact(components);
-  const nestingRules = deriveNestingRules(components);
+  const componentsManifest = serializeComponentsCompact(aiComponents);
+  const nestingRules = deriveNestingRules(aiComponents);
 
   // Phase 1C: compact preset summary
   const availablePresetsCompact = options.paletteCatalog ? serializePresetsCompact(options.paletteCatalog) : undefined;
@@ -183,7 +207,7 @@ export function buildAIContext(
           propSchema: serializeAIPropSchema(selectedDef?.propSchema),
         }
       : null,
-    availableComponents: components.map((c) => ({
+    availableComponents: aiComponents.map((c) => ({
       type: c.type,
       name: c.name,
       category: c.category,
@@ -192,6 +216,7 @@ export function buildAIContext(
         .map(([k]) => k),
       propSchema: serializeAIPropSchema(c.propSchema),
       defaultProps: c.defaultProps,
+      aiHints: serializeAIHints(c.aiHints),
     })),
     activeBreakpoint: state.editor.activeBreakpoint,
     activeSurface: state.editor.activePopupId && doc.popups?.[state.editor.activePopupId]

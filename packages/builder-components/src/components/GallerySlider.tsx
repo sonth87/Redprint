@@ -178,8 +178,15 @@ export const GallerySliderComponent: ComponentDefinition = {
     canBeHidden: true,
     canBeLocked: true,
   },
+  aiHints: {
+    purpose: "Legacy image carousel/slideshow.",
+    bestFor: ["carousel", "testimonial visuals", "compact gallery"],
+    sectionAffinity: ["gallery", "testimonials"],
+    fallbackTo: ["GalleryGrid", "Grid", "Image"],
+    examples: ["Auto-playing carousel of testimonial photos"],
+  },
   propSchema: [
-    { key: "slideCount", label: "Number of Slides", type: "slider", min: 1, max: MAX_SLIDES, default: 3 },
+    { key: "slideCount", label: "Number of Slides", type: "slider", min: 1, max: MAX_SLIDES, default: 3, required: true },
     { key: "autoPlay", label: "Auto Play", type: "boolean", default: false },
     { key: "autoPlaySpeed", label: "Auto Play Speed", type: "number", default: 3000, min: 500, max: 10000, step: 500, unit: "ms" },
     { key: "loop", label: "Loop", type: "boolean", default: true },

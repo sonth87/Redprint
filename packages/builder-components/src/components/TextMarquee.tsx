@@ -18,8 +18,16 @@ export const TextMarqueeComponent: ComponentDefinition = {
     canBeHidden: true,
     canBeLocked: true,
   },
+  aiHints: {
+    purpose: "Animated scrolling text strip.",
+    bestFor: ["playful announcements", "social proof ticker", "CTA energy"],
+    sectionAffinity: ["hero", "cta"],
+    contentSlots: { heading: "text" },
+    fallbackTo: ["Text"],
+    examples: ["Scrolling proof ticker under the hero heading"],
+  },
   propSchema: [
-    { key: "text", label: "Text", type: "string", default: "Let's Talk 👋  Let's Talk 👋  Let's Talk 👋" },
+    { key: "text", label: "Text", type: "string", default: "Let's Talk 👋  Let's Talk 👋  Let's Talk 👋", required: true },
     { key: "speed", label: "Speed (s)", type: "number", default: 20, min: 2, max: 120, step: 1, unit: "s" },
     {
       key: "direction",

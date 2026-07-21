@@ -66,6 +66,14 @@ export const ImageComponent: ComponentDefinition = {
     canBeHidden: true,
     canBeLocked: true,
   },
+  aiHints: {
+    purpose: "Single image block.",
+    bestFor: ["hero media", "service thumbnails", "CTA media"],
+    sectionAffinity: ["hero", "services", "features", "gallery", "testimonials", "cta"],
+    contentSlots: { mediaSrc: "src", mediaAlt: "alt", href: "link.linkUrl" },
+    fallbackTo: ["Shape"],
+    examples: ["Hero cover image with objectFit=\"cover\"", "Service thumbnail image"],
+  },
   propSchema: [
     { key: "src", label: "Image", type: "image", required: true },
     { key: "alt", label: "Alt text", type: "string", default: "" },

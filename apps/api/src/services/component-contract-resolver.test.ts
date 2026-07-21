@@ -56,3 +56,54 @@ describe("component contract resolver", () => {
     expect(candidateComponentsForSection("header", components)).toEqual(["NavigationMenu"]);
   });
 });
+
+describe("aiHints in contract resolution (roadmap 03/01)", () => {
+  it("a component's own aiHints.examples override the curated examples table", () => {
+    const withExamples: GeneratePageRequest["availableComponents"] = [
+      {
+        type: "NavigationMenu",
+        name: "Navigation Menu",
+        category: "navigation",
+        propSchema: [{ key: "items", label: "Items", type: "json", required: true }],
+        aiHints: { purpose: "Nav.", examples: ["custom nav example from aiHints"] },
+      },
+    ];
+    const contracts = resolveComponentContracts(withExamples, ["NavigationMenu"]);
+    expect(contracts[0]?.examples).toEqual(["custom nav example from aiHints"]);
+  });
+
+  it("falls back to the curated examples table when aiHints declares none", () => {
+    const contracts = resolveComponentContracts(components, ["NavigationMenu"]);
+    expect(contracts.find((c) => c.type === "NavigationMenu")?.examples).toEqual([
+      "header navigation with anchor targets, page links, and optional submenu children",
+    ]);
+  });
+
+  it("candidateComponentsForSection self-nominates a component via sectionAffinity", () => {
+    const withAffinity: GeneratePageRequest["availableComponents"] = [
+      ...components,
+      {
+        type: "PricingTable",
+        name: "Pricing Table",
+        category: "content",
+        aiHints: { purpose: "Pricing tiers.", sectionAffinity: ["pricing"] },
+      },
+    ];
+    // "pricing" has no hardcoded entry (falls to DEFAULT_CANDIDATES) — PricingTable
+    // must still appear because it self-nominates via sectionAffinity.
+    expect(candidateComponentsForSection("pricing", withAffinity)).toContain("PricingTable");
+  });
+
+  it("does not self-nominate for a section type not listed in sectionAffinity", () => {
+    const withAffinity: GeneratePageRequest["availableComponents"] = [
+      ...components,
+      {
+        type: "PricingTable",
+        name: "Pricing Table",
+        category: "content",
+        aiHints: { purpose: "Pricing tiers.", sectionAffinity: ["pricing"] },
+      },
+    ];
+    expect(candidateComponentsForSection("footer", withAffinity)).not.toContain("PricingTable");
+  });
+});

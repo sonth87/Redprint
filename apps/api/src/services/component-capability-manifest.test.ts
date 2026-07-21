@@ -39,3 +39,53 @@ describe("component capability manifest", () => {
     expect(filterPreferredComponents(["GalleryGrid", "GalleryPro", "GalleryPro", "Missing"], manifest)).toEqual(["GalleryPro"]);
   });
 });
+
+describe("aiHints priority (roadmap 03/01)", () => {
+  it("a component's own aiHints override CURATED purpose/bestFor/fallbackTo", () => {
+    const withHints: GeneratePageRequest["availableComponents"] = [
+      {
+        type: "NavigationMenu",
+        name: "Navigation Menu",
+        category: "navigation",
+        aiHints: {
+          purpose: "Custom nav purpose from aiHints.",
+          bestFor: ["custom use case"],
+          fallbackTo: ["Text"],
+        },
+      },
+    ];
+    const manifest = buildComponentCapabilityManifest(withHints);
+    const nav = manifest.find((c) => c.type === "NavigationMenu");
+    expect(nav?.purpose).toBe("Custom nav purpose from aiHints.");
+    expect(nav?.bestFor).toEqual(["custom use case"]);
+    expect(nav?.fallbackTo).toEqual(["Text"]);
+    expect(nav?.contractSource).toBe("aiHints");
+  });
+
+  it("an unknown component with only aiHints (no CURATED entry) still gets aiHints priority", () => {
+    const pricingTable: GeneratePageRequest["availableComponents"] = [
+      {
+        type: "PricingTable",
+        name: "Pricing Table",
+        category: "content",
+        propSchema: [{ key: "tiers", label: "Tiers", type: "json" }],
+        aiHints: {
+          purpose: "Displays side-by-side pricing tiers.",
+          bestFor: ["pricing comparison"],
+          sectionAffinity: ["pricing"],
+          fallbackTo: ["Grid"],
+        },
+      },
+    ];
+    const manifest = buildComponentCapabilityManifest(pricingTable);
+    const entry = manifest.find((c) => c.type === "PricingTable");
+    expect(entry?.purpose).toBe("Displays side-by-side pricing tiers.");
+    expect(entry?.contractSource).toBe("aiHints");
+  });
+
+  it("falls back to CURATED when a known component declares no aiHints", () => {
+    const manifest = buildComponentCapabilityManifest(components);
+    const nav = manifest.find((c) => c.type === "NavigationMenu");
+    expect(nav?.contractSource).toBe("merged");
+  });
+});

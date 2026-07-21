@@ -6,9 +6,12 @@ import {
 import type { AICommandSuggestion, GeneratePageRequest } from "../types/ai.types.js";
 
 const AVAILABLE: GeneratePageRequest["availableComponents"] = [
-  { type: "Section", name: "Section", category: "layout" },
-  { type: "Text", name: "Text", category: "content" },
-  { type: "Button", name: "Button", category: "content" },
+  // capabilities mirrors what buildAIContext.ts actually sends (truthy
+  // capability names only) — canContainChildren now drives leaf_parent
+  // (roadmap 03/01), so the fixture must be realistic, not omit it.
+  { type: "Section", name: "Section", category: "layout", capabilities: ["canContainChildren", "canResize"] },
+  { type: "Text", name: "Text", category: "content", capabilities: ["canResize"], propSchema: [{ key: "text", label: "Text", type: "string", required: true }] },
+  { type: "Button", name: "Button", category: "content", capabilities: ["canResize"], propSchema: [{ key: "label", label: "Label", type: "string", required: true }] },
 ];
 
 const availableTypes = new Set(AVAILABLE.map((c) => c.type));

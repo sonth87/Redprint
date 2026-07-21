@@ -55,6 +55,45 @@ export interface AIPropSchemaEntry {
   children?: AIPropSchemaEntry[];
 }
 
+/**
+ * Wire shape of `ComponentDefinition.aiHints` (roadmap 03/01) — mirrors the
+ * client's `AIComponentHints` (builder-editor/src/ai/types.ts). Plain data,
+ * no functions, so it can flow straight from client to server.
+ */
+export interface AIComponentHints {
+  purpose: string;
+  bestFor?: string[];
+  sectionAffinity?: string[];
+  contentSlots?: {
+    heading?: string;
+    body?: string;
+    items?: {
+      prop: string;
+      shape: "array-of-objects" | "indexed-props";
+      itemKeys?: Record<string, string>;
+      maxItems?: number;
+    };
+    mediaSrc?: string;
+    mediaAlt?: string;
+    ctaLabel?: string;
+    href?: string;
+  };
+  fallbackTo?: string[];
+  examples?: string[];
+}
+
+/** A component the AI can use, as sent by the client in `availableComponents`. */
+export interface AIAvailableComponent {
+  type: string;
+  name: string;
+  category: string;
+  propSchema?: AIPropSchemaEntry[];
+  capabilities?: string[];
+  defaultProps?: Record<string, unknown>;
+  /** Self-described AI metadata (roadmap 03/01), when the component declares it. */
+  aiHints?: AIComponentHints;
+}
+
 export interface AIPageNode {
   id: string;
   type: string;
@@ -91,14 +130,7 @@ export interface GeneratePageRequest {
   /** Real root node ID from the current builder document. */
   rootNodeId?: string;
   /** Available components the AI can use */
-  availableComponents: Array<{
-    type: string;
-    name: string;
-    category: string;
-    propSchema?: AIPropSchemaEntry[];
-    capabilities?: string[];
-    defaultProps?: Record<string, unknown>;
-  }>;
+  availableComponents: AIAvailableComponent[];
   /** Palette presets for layout suggestions */
   availablePresets?: AIPresetGroup[];
   /** Compact preset summary — serializePresetsCompact() output. Phase 1C. */
@@ -119,14 +151,7 @@ export interface ChatRequest {
   builderContext: {
     document: { name: string; nodeCount: number; rootNodeId: string };
     selectedNode: AIPageNode | null;
-    availableComponents: Array<{
-      type: string;
-      name: string;
-      category: string;
-      propSchema?: AIPropSchemaEntry[];
-      capabilities?: string[];
-      defaultProps?: Record<string, unknown>;
-    }>;
+    availableComponents: AIAvailableComponent[];
     activeBreakpoint: string;
     pageNodes?: Record<string, AIPageNode>;
     pageNodesSummary?: AIPageNodeSummary;

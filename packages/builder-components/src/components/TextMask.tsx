@@ -18,8 +18,16 @@ export const TextMaskComponent: ComponentDefinition = {
     canBeHidden: true,
     canBeLocked: true,
   },
+  aiHints: {
+    purpose: "Expressive masked heading with gradient or image fill.",
+    bestFor: ["playful hero heading", "brand statement", "editorial emphasis"],
+    sectionAffinity: ["hero"],
+    contentSlots: { heading: "text" },
+    fallbackTo: ["Text"],
+    examples: ["Large gradient-filled hero headline"],
+  },
   propSchema: [
-    { key: "text", label: "Text", type: "string", default: "HELLO" },
+    { key: "text", label: "Text", type: "string", default: "HELLO", required: true },
     { key: "gradient", label: "Gradient (CSS)", type: "string", default: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" },
     { key: "backgroundImage", label: "Background Image URL", type: "string", default: "" },
     { key: "fontSize", label: "Font Size", type: "string", default: "120px" },

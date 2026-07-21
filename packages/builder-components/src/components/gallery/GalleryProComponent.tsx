@@ -13,6 +13,10 @@ import { extractProps } from "./types";
 import { renderByMode } from "./renderByMode";
 
 const PROP_SCHEMA = [
+  // Declared for AI/validation contracts only (`required: true`) — edited via
+  // the "Manage Media" modal, not the property panel (`hidden: true`, no
+  // dedicated "json" control exists in PropControl).
+  { key: "items", label: "Items", type: "json" as const, required: true, hidden: true },
   {
     key: "layoutMode",
     label: "Layout",
@@ -114,6 +118,14 @@ export const GalleryProComponent: ComponentDefinition = {
     canBindData: true,
     canBeHidden: true,
     canBeLocked: true,
+  },
+  aiHints: {
+    purpose: "Advanced responsive image gallery with multiple layout modes.",
+    bestFor: ["visual service showcase", "portfolio", "venue/gallery", "testimonials with imagery"],
+    sectionAffinity: ["gallery", "services", "testimonials"],
+    contentSlots: { items: { prop: "items", shape: "array-of-objects", itemKeys: { title: "title", body: "description", mediaSrc: "src", mediaAlt: "alt" }, maxItems: 12 } },
+    fallbackTo: ["GallerySlider", "GalleryGrid", "Grid", "Image"],
+    examples: ["Masonry showcase of service photos", "Slider of customer testimonial photos"],
   },
   propSchema: PROP_SCHEMA,
   defaultProps: {
