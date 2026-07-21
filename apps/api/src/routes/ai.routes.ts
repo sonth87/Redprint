@@ -20,6 +20,12 @@ import {
 } from "../services/section-plan-compiler.js";
 import { callLLM, callLLMStream } from "../services/llm-client.js";
 import { JobAccountant } from "../services/llm-accounting.js";
+import {
+  runQualityGate,
+  partitionByMode,
+  resolveGateMode,
+} from "../services/quality-gate.js";
+import { resolveLocale } from "../services/section-plan-compiler.js";
 import { initSSE, sendSSE } from "../services/sse.js";
 import { COMMAND_REFERENCE } from "../services/command-reference.js";
 import { logger } from "../services/logger.js";
@@ -117,6 +123,12 @@ aiRouter.post("/generate-page", async (req: Request, res: Response) => {
   const failedSections: Array<{ sectionId: string; index: number; error: string }> = [];
   let completed = 0;
 
+  // Quality gate (roadmap 02/04): job-level heading registry for cross-section
+  // duplicate detection; locale drives the wrong_language check.
+  const gateMode = resolveGateMode();
+  const seenHeadings = new Map<string, string>();
+  let qualityWarningCount = 0;
+
   try {
     logger.jobEvent("started", { jobId, stage: "planner", status: "running" });
     sendSSE(res, "job_started", { jobId });
@@ -169,6 +181,24 @@ aiRouter.post("/generate-page", async (req: Request, res: Response) => {
             throw new Error("Compiler produced no valid commands");
           }
 
+          // Quality gate — deterministic content checks (roadmap 02/04).
+          const gateLocale = resolveLocale(body, pagePlan.brief);
+          const issues = runQualityGate(commands, body.designTokens ?? {}, {
+            locale: gateLocale,
+            seenHeadings,
+          });
+          const { blocking, warnings } = partitionByMode(issues, gateMode);
+          if (blocking.length > 0) {
+            // Treat as a retryable section error so the existing retry-with-hint
+            // loop rewrites it; exhausted attempts fall through to fallback pack.
+            const err = new Error(
+              `Quality gate blocked section: ${blocking.map((i) => `${i.code} (${i.detail})`).join("; ")}`,
+            );
+            (err as { qualityBlock?: boolean }).qualityBlock = true;
+            throw err;
+          }
+          if (warnings.length > 0) qualityWarningCount += warnings.length;
+
           const richSummary = richCommandSummary(commands);
           completed++;
           sectionDone = true;
@@ -186,12 +216,14 @@ aiRouter.post("/generate-page", async (req: Request, res: Response) => {
             adapterUsed: richSummary.adapterUsed,
             richComponentUsed: richSummary.richComponentUsed,
             mediaItemCount: sectionPlan.mediaItems?.length ?? 0,
+            qualityWarnings: warnings.length || undefined,
           });
           sendSSE(res, "section_ready", {
             jobId,
             index: section.index,
             sectionId: section.id,
             commands,
+            qualityWarnings: warnings.length > 0 ? warnings : undefined,
           });
           break;
         } catch (err) {
@@ -222,6 +254,21 @@ aiRouter.post("/generate-page", async (req: Request, res: Response) => {
 
       if (!sectionDone) {
         const fallbackCommands = compileFallbackSection(section, pagePlan, body);
+        // Run the gate on the fallback in exempt mode: blocks are downgraded to
+        // warnings so a bad pack can never leave a section empty, but a genuinely
+        // dirty pack still surfaces in logs for the maintainer to fix.
+        const fallbackGateLocale = resolveLocale(body, pagePlan.brief);
+        const fallbackIssues = runQualityGate(fallbackCommands, body.designTokens ?? {}, {
+          locale: fallbackGateLocale,
+          exemptBlock: true,
+        });
+        if (fallbackIssues.length > 0) {
+          qualityWarningCount += fallbackIssues.length;
+          logger.decision("QUALITY_GATE_FALLBACK", "Fallback section has quality issues", {
+            sectionId: section.id,
+            issues: fallbackIssues.map((i) => `${i.code}:${i.detail}`),
+          });
+        }
         const richSummary = richCommandSummary(fallbackCommands);
         failedSections.push({ sectionId: section.id, index: section.index, error: lastError || "Section generation failed" });
         logger.jobEvent("section_failed", {
@@ -264,6 +311,8 @@ aiRouter.post("/generate-page", async (req: Request, res: Response) => {
       estimatedCostUsd: usage.estimatedCostUsd,
       usageIncomplete: usage.usageIncomplete,
       usageByStage: usage.byStage,
+      qualityWarnings: qualityWarningCount || undefined,
+      qualityGateMode: gateMode,
     });
     sendSSE(res, "complete", {
       jobId,
@@ -552,10 +601,23 @@ aiRouter.post("/chat", async (req: Request, res: Response) => {
       finalDropped = stillDropped;
     }
 
+    // Quality gate (roadmap 02/04) — scoped to the commands this turn produces
+    // (chat edits a few nodes, not the whole page). No locale check here: the
+    // chat prompt already enforces "respond in the user's language". Both block
+    // and warn issues are surfaced to the client (chat is a single-turn edit;
+    // we don't force a content re-ask), so the UI can flag them.
+    const qualityIssues = runQualityGate(commands, ctx.designTokens ?? {});
+    if (qualityIssues.length > 0) {
+      logger.decision("CHAT_QUALITY_GATE", `Chat commands have ${qualityIssues.length} quality issue(s)`, {
+        issues: qualityIssues.map((i) => `${i.code}:${i.detail}`),
+      });
+    }
+
     res.json({
       message: obj.message ?? "",
       commands,
       ...(finalDropped.length > 0 ? { droppedCommands: finalDropped } : {}),
+      ...(qualityIssues.length > 0 ? { qualityWarnings: qualityIssues } : {}),
     });
   } catch (err) {
     console.error("[AI] chat error:", err);
@@ -763,10 +825,20 @@ aiRouter.post("/chat/stream", async (req: Request, res: Response) => {
       finalDropped = stillDropped;
     }
 
+    // Quality gate (roadmap 02/04) — scoped to this turn's commands; surfaced to
+    // the client (both block + warn) rather than triggering a content re-ask.
+    const qualityIssues = runQualityGate(commands, ctx.designTokens ?? {});
+    if (qualityIssues.length > 0) {
+      logger.decision("CHAT_STREAM_QUALITY_GATE", `Chat commands have ${qualityIssues.length} quality issue(s)`, {
+        issues: qualityIssues.map((i) => `${i.code}:${i.detail}`),
+      });
+    }
+
     sendSSE(res, "complete", {
       message: obj.message ?? "",
       commands,
       ...(finalDropped.length > 0 ? { droppedCommands: finalDropped } : {}),
+      ...(qualityIssues.length > 0 ? { qualityWarnings: qualityIssues } : {}),
     });
     res.end();
   } catch (err) {

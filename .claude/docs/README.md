@@ -34,6 +34,7 @@
 | [ACCESSIBILITY.md](./ACCESSIBILITY.md) | A11y, keyboard navigation, diagnostics | [10-phim-tat-thao-tac](../../docs/user-guide/10-phim-tat-thao-tac.md) |
 | [INTEGRATION.md](./INTEGRATION.md) | External services, event catalogue, performance targets | [11-runtime-va-tich-hop](../../docs/user-guide/11-runtime-va-tich-hop.md) |
 | [POPUPS.md](./POPUPS.md) | Popup system V6 spec — data model, rules, campaigns, lifecycle, commands | [07-popup-modal](../../docs/user-guide/07-popup-modal.md) |
+| [VERSIONING.md](./VERSIONING.md) | Package SemVer bump rules, Changesets workflow | — |
 
 ## Known drift (2026-07-20 audit)
 

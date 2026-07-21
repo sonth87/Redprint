@@ -106,6 +106,9 @@ export const logger = {
       estimatedCostUsd?: number | null;
       usageIncomplete?: boolean;
       usageByStage?: Record<string, { calls: number; inputTokens: number; outputTokens: number }>;
+      // Quality gate (roadmap 02/04).
+      qualityWarnings?: number;
+      qualityGateMode?: string;
     },
   ) => {
     if (!DEBUG) return;

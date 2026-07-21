@@ -227,6 +227,11 @@ error codes where available. The per-job `complete` log line also carries token/
 (`totalInputTokens`, `totalOutputTokens`, `estimatedCostUsd`, `llmCalls`, `usageByStage`) — see the
 [cost & observability roadmap item](docs/roadmap/02-ai-generation/08-cost-observability.md).
 
+A deterministic **quality gate** (`AI_QUALITY_GATE`, default `block`) runs after compile: it blocks
+placeholder text and empty sections (retried with a hint, then falls back), and warns on low contrast,
+non-responsive giant headings, duplicate/overlong headings, and wrong-language headings. Set to `warn`
+(surface but never block) or `off`; disable individual checks with `AI_QG_DISABLE=low_contrast,...`.
+
 Model, temperature, and max output tokens are configurable per pipeline **stage** without code
 changes. Global vars are `LLM_MODEL`, `LLM_TEMPERATURE`, `LLM_MAX_TOKENS`; per-stage overrides use the
 suffixes `_PLANNER`, `_SECTION`, `_CHAT`, `_REPAIR` (e.g. `LLM_MODEL_PLANNER=claude-haiku-4-5` runs the

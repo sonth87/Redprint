@@ -30,10 +30,11 @@
 | ----------- | ------------------------------ |
 | API/route/env in `apps/api` | `.claude/docs/AI_ASSISTANT.md` + the env table in `README.md` |
 | New AI command / whitelist change | `apps/api/src/services/command-reference.ts` + `packages/builder-editor/src/ai/allowedCommands.ts` + `.claude/docs/AI_ASSISTANT.md` — three-way sync, enforced by `command-reference.test.ts` / `allowedCommands.test.ts` |
-| Document schema change (node/popup/interaction) | `.claude/docs/DATA_MODEL.md` (+ `POPUPS.md` for popup fields) + a schema migration + `CHANGELOG.md` |
+| Document schema change (node/popup/interaction) | `.claude/docs/DATA_MODEL.md` (+ `POPUPS.md` for popup fields) + a schema migration (see [COMMAND_SYSTEM.md](.claude/docs/COMMAND_SYSTEM.md#schema-versioning--migration) for `schemaVersion`, distinct from package version) |
 | New component / `propSchema` change | `docs/user-guide/04-components-va-preset.md` + `aiHints` on the component definition |
 | Any user-visible feature | the matching `docs/user-guide/*.md` page |
 | Completed a `docs/roadmap/*` item | update its `> Trạng thái:` header + note the PR link at the bottom of the file |
+| Any change to `packages/*` or `apps/*` worth a changelog entry | run `pnpm changeset` and commit the generated `.changeset/*.md` alongside the code — see [`.claude/docs/VERSIONING.md`](.claude/docs/VERSIONING.md) for bump-level rules |
 
 Run `pnpm docs:check` before committing docs changes — it verifies internal links resolve and every
 roadmap item still has a status header (also runs in CI on PRs touching docs; see
@@ -63,6 +64,7 @@ packages/config             ← Shared configs (ESLint, TS, Tailwind)
 - Interface contracts in `README.md` are **immutable** unless version-bumped
 - Uses **shadcn** (`packages/ui`) as design system — NOT `@sth87/shadcn-design-system`
 - After any code change, explicitly review whether project docs and AI-facing docs/instructions also need updates. If behavior, APIs, workflows, constraints, or assumptions changed, update the relevant docs in the same task.
+- After any code change worth a changelog entry, run `pnpm changeset` and commit the generated file with the code — see [`.claude/docs/VERSIONING.md`](.claude/docs/VERSIONING.md).
 
 ## Skills
 

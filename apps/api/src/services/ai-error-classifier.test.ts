@@ -23,5 +23,11 @@ describe("classifyAIError", () => {
       retryable: true,
     });
   });
+
+  it("treats a quality-gate block as retryable (roadmap 02/04)", () => {
+    expect(
+      classifyAIError(new Error("Quality gate blocked section: placeholder_content (Placeholder text: ...)")),
+    ).toMatchObject({ kind: "quality_block", retryable: true });
+  });
 });
 

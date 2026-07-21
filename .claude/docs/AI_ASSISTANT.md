@@ -87,6 +87,8 @@ selects a provider or model — the backend does, via environment variables:
 | `OPENAI_API_KEY` / `GOOGLE_API_KEY` / `ANTHROPIC_API_KEY` | Provider-specific fallback if `LLM_API_KEY` unset | — |
 | `LLM_TIMEOUT_MS` | Abort a provider call after this many ms | `60000` |
 | `AI_EXPOSE_COST` | Attach a compact token/cost summary to the SSE `complete` event | `false` |
+| `AI_QUALITY_GATE` | Post-compile quality gate mode: `block` \| `warn` \| `off` | `block` |
+| `AI_QG_DISABLE` | Comma-separated quality-check codes to disable (e.g. `low_contrast,wrong_language`) | — |
 
 Default models per provider (when `LLM_MODEL` is unset): `gpt-4o` (openai), `gemini-2.0-flash`
 (gemini), `claude-sonnet-5` (claude). Claude requests mark the (large, stable) system prompt
@@ -139,7 +141,7 @@ job_started      { jobId }
 plan_ready       { jobId, plan: PagePlan, skeletonCommands: AICommandSuggestion[] }
 section_started  { jobId, index, sectionId }
 section_retrying { jobId, index, sectionId, attempt, reason }
-section_ready    { jobId, index, sectionId, commands: AICommandSuggestion[] }
+section_ready    { jobId, index, sectionId, commands: AICommandSuggestion[], qualityWarnings?: QualityIssue[] }
 section_failed   { jobId, index, sectionId, error, fallbackCommands?: AICommandSuggestion[] }
 complete         { jobId, status: "success" | "partial" | "failed", completed, failed, failedSections }
 error            { jobId, message: string }
@@ -308,6 +310,31 @@ When the gate drops ≥1 command on `/chat` or `/chat/stream`, `repairDroppedCom
 hint from the `REPAIR_HINTS` table (keyed by rejection reason), and the model is asked to return only
 the corrected commands. Repaired commands go back through the same validation gate; only commands
 still invalid after repair surface in the final `droppedCommands`.
+
+## Quality Gate (roadmap 02/04)
+
+Beyond the structural validation gate, `quality-gate.ts` runs deterministic **content** checks on the
+compiled commands (no LLM). `runQualityGate(commands, designTokens, { locale?, seenHeadings?,
+exemptBlock? })` returns `QualityIssue[]` with two severities:
+
+| Code | Severity | Check |
+|------|----------|-------|
+| `placeholder_content` | block (strong patterns) / warn (weak) | "lorem ipsum", "your headline here", `TBD`, `xxxx`, `[…]`, `{{…}}` in any text/label |
+| `empty_section` | block | a Section skeleton that received no child commands |
+| `low_contrast` | warn | WCAG contrast < 3.0 for a node's `color` vs `backgroundColor`/section bg (only when both parse to hex/rgb) |
+| `missing_mobile_font` | warn | `h1`/`h2` Text > 40px with no `responsiveStyle.mobile.fontSize` |
+| `overlong_heading` | warn | heading > 120 chars |
+| `duplicate_heading` | warn | two sections share a normalized `h1`/`h2` heading (job-level `seenHeadings`) |
+| `wrong_language` | warn | heading script doesn't match the requested `locale` (roadmap 02/03) |
+
+Mode is set by `AI_QUALITY_GATE` (`block` default / `warn` / `off`); `AI_QG_DISABLE` turns off
+individual codes. **generate-page:** a `block` issue throws a `quality_block` error (retryable →
+retry-with-hint via the existing loop → fallback pack); `warn` issues ride along on
+`section_ready.qualityWarnings` and count into the `complete` log (`qualityWarnings`,
+`qualityGateMode`). Fallback-pack commands run the gate with `exemptBlock: true` (blocks downgraded to
+warn so a section is never left empty; a dirty pack still logs). **chat / chat-stream:** the gate runs
+scoped to that turn's commands and both block+warn issues are returned as `qualityWarnings` on the
+response (no forced content re-ask).
 
 ---
 

@@ -5,6 +5,7 @@ export type AIErrorKind =
   | "invalid_json"
   | "schema_error"
   | "compiler_error"
+  | "quality_block"
   | "unknown";
 
 export interface ClassifiedAIError {
@@ -34,6 +35,9 @@ export function classifyAIError(error: unknown): ClassifiedAIError {
   }
   if (lower.includes("compiler produced no valid commands")) {
     return { kind: "compiler_error", message, retryable: true };
+  }
+  if (lower.includes("quality gate blocked")) {
+    return { kind: "quality_block", message, retryable: true };
   }
 
   return { kind: "unknown", message, retryable: true };

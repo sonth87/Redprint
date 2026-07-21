@@ -4,7 +4,19 @@
 > Ưu tiên: P3
 > Ước lượng: 2 ngày
 > Phụ thuộc: Không (chạy tốt hơn sau [02/02](./02-industry-content-packs.md)/[02/03](./03-locale-support.md))
-> Trạng thái: Chưa bắt đầu
+> Trạng thái: Hoàn thành — 2026-07-21. Module mới `apps/api/src/services/quality-gate.ts`
+> (`runQualityGate`, `partitionByMode`, `contrastRatio`, `plainText`). 7 check v1: `placeholder_content`
+> (strong→block/weak→warn), `empty_section` (block), `low_contrast`/`missing_mobile_font`/
+> `overlong_heading`/`duplicate_heading`/`wrong_language` (warn). Env `AI_QUALITY_GATE=block|warn|off`
+> (default block) + `AI_QG_DISABLE=code,...`. **generate-page**: block → throw `quality_block`
+> (classifier mới, retryable) → retry-with-hint sẵn có → fallback pack; warn → `section_ready.qualityWarnings`
+> + đếm vào log `complete` (`qualityWarnings`/`qualityGateMode`). Fallback chạy gate với `exemptBlock:true`
+> (block→warn, không bao giờ để section trắng). **chat + chat/stream**: gate scope theo command lượt đó,
+> block+warn đều trả về `qualityWarnings` (không ép re-ask). Test: `quality-gate.test.ts` (23, gồm 2 test
+> fallback pack vi/en sạch block) + 1 test classifier `quality_block`. Docs: AI_ASSISTANT (bảng check +
+> SSE field + env) + README cập nhật cùng task.
+> Chưa làm: LLM-as-critic (Phase 6, ngoài phạm vi v1); client hiển thị icon ⚠ trên outline (BE đã phát
+> `qualityWarnings`, phần UI thuộc editor — làm sau nếu cần).
 
 ## 1. Mục đích
 
