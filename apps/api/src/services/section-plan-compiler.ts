@@ -26,6 +26,14 @@ import {
   packSection,
   type ContentPack,
 } from "../data/content-packs/loader.js";
+import {
+  buildPresetIndex,
+  presetCommand,
+  presetFirstEnabled,
+  resolvePresetById,
+  resolvePresetByHeuristic,
+  type PresetIndex,
+} from "./preset-catalog.js";
 
 interface CompileContext {
   availableTypes: Set<string>;
@@ -38,6 +46,14 @@ interface CompileContext {
   pack: ContentPack;
   /** Resolved locale key into the pack (`vi` / `_default`). Owned by 02/03; for now derived from the brief. */
   locale: string;
+  /** Designer preset catalog index for preset-first compile (roadmap 02/01). */
+  presetIndex: PresetIndex;
+  /** LLM-chosen preset refs for the current section (by role). */
+  presetRefsByRole: Map<string, string>;
+  /** Seed for heuristic preset variety (per section). */
+  presetSeed: number;
+  /** Sink: ids of presets actually instantiated (for logging `presetUsed`). */
+  presetUsed: Set<string>;
 }
 
 const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1601758125946-6ec2ef64daf8?w=1200&q=80";
@@ -94,6 +110,37 @@ function html(text: string): string {
 
 function command(type: string, payload: Record<string, unknown>, description: string): AICommandSuggestion {
   return { type, payload, description };
+}
+
+/**
+ * Preset-first leaf compile (roadmap 02/01). Returns a preset-instantiated
+ * ADD_NODE command when a designer preset matches this role/type — either the
+ * one the LLM referenced by role, or a heuristic pick by componentType + tags —
+ * else null so the caller uses its hardcoded adapter. `contentProps` is the
+ * text/label/src patch. Records the used preset id for logging.
+ */
+function tryPresetLeaf(
+  ctx: CompileContext,
+  role: string,
+  componentType: string,
+  tags: string[],
+  contentProps: Record<string, unknown>,
+  nodeId: string,
+  parentId: string,
+): AICommandSuggestion | null {
+  if (!presetFirstEnabled() || ctx.presetIndex.size === 0) return null;
+
+  const refId = ctx.presetRefsByRole.get(role);
+  let preset = resolvePresetById(ctx.presetIndex, refId);
+  // Only honor an LLM ref whose componentType matches this slot.
+  if (preset && preset.componentType !== componentType) preset = null;
+  if (!preset) {
+    preset = resolvePresetByHeuristic(ctx.presetIndex, componentType, tags, ctx.presetSeed);
+  }
+  if (!preset) return null;
+
+  ctx.presetUsed.add(preset.id);
+  return presetCommand(nodeId, parentId, preset, { props: contentProps }, ctx.designTokens);
 }
 
 function colors(tokens: DesignTokens) {
@@ -798,7 +845,18 @@ function addActions(
       { display: "flex", flexDirection: "row", flexWrap: "wrap", justifyContent: centered ? "center" : "flex-start" },
     ),
   );
-  if (plan.ctaLabel) commands.push(buttonCommand(`${section.id}-cta-primary`, actionsId, plan.ctaLabel, ctx));
+  if (plan.ctaLabel) {
+    const preset = tryPresetLeaf(
+      ctx,
+      `${section.type}_cta`,
+      "Button",
+      ["cta", "primary", "button"],
+      { label: html(plan.ctaLabel) },
+      `${section.id}-cta-primary`,
+      actionsId,
+    );
+    commands.push(preset ?? buttonCommand(`${section.id}-cta-primary`, actionsId, plan.ctaLabel, ctx));
+  }
   if (plan.secondaryCtaLabel) {
     commands.push(
       command(
@@ -829,15 +887,26 @@ function addIntro(
     commands.push(textCommand(`${section.id}-eyebrow`, parentId, plan.eyebrow, "span", { color: c.accent, fontSize: "13px", fontWeight: "800", textTransform: "uppercase", letterSpacing: "0.08em" }));
   }
   if (has(ctx, "Text")) {
+    const headingTag = section.type === "hero" ? "h1" : "h2";
+    const headingPreset = tryPresetLeaf(
+      ctx,
+      `${section.type}_heading`,
+      "Text",
+      ["heading", headingTag, "title"],
+      { text: html(plan.heading), tag: headingTag },
+      `${section.id}-heading`,
+      parentId,
+    );
     commands.push(
-      textCommand(`${section.id}-heading`, parentId, plan.heading, section.type === "hero" ? "h1" : "h2", {
-        color: c.text,
-        fontSize: section.type === "hero" ? "56px" : options.compact ? "30px" : "38px",
-        lineHeight: "1.08",
-        fontWeight: "800",
-        maxWidth: options.centered ? "760px" : "860px",
-        fontFamily: c.headingFont,
-      }),
+      headingPreset ??
+        textCommand(`${section.id}-heading`, parentId, plan.heading, headingTag, {
+          color: c.text,
+          fontSize: section.type === "hero" ? "56px" : options.compact ? "30px" : "38px",
+          lineHeight: "1.08",
+          fontWeight: "800",
+          maxWidth: options.centered ? "760px" : "860px",
+          fontFamily: c.headingFont,
+        }),
     );
     commands.push(textCommand(`${section.id}-body`, parentId, plan.body, "p", { color: c.muted, fontSize: options.compact ? "16px" : "18px", lineHeight: "1.75", maxWidth: "760px" }));
   }
@@ -1339,10 +1408,22 @@ function compileGenericSection(plan: SectionPlan, section: PagePlanSection, ctx:
 }
 
 export function compileSectionPlan(plan: SectionPlan, section: PagePlanSection, ctx: CompileContext): AICommandSuggestion[] {
+  // Per-section preset state (roadmap 02/01): LLM-chosen refs by role + a stable
+  // seed for heuristic variety derived from the section id.
+  ctx.presetRefsByRole = new Map((plan.presetRefs ?? []).map((ref) => [ref.role, ref.presetId]));
+  ctx.presetSeed = hashString(section.id);
+
   if (section.type === "header") return compileHeaderSection(plan, section, ctx);
   if (section.type === "hero") return compileHeroSection(plan, section, ctx);
   if (section.type === "footer") return compileFooterSection(plan, section, ctx);
   return compileGenericSection(plan, section, ctx);
+}
+
+/** Small deterministic string hash → non-negative int (for preset variety seed). */
+function hashString(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
 }
 
 /** Why a command was rejected by the validation gate. Written for both logs and AI/user feedback. */
@@ -1483,8 +1564,26 @@ export function compileFallbackSection(section: PagePlanSection, pagePlan: PageP
 }
 
 export function compileSection(sectionPlan: SectionPlan, section: PagePlanSection, pagePlan: PagePlan, request: GeneratePageRequest): AICommandSuggestion[] {
+  return compileSectionWithMeta(sectionPlan, section, pagePlan, request).commands;
+}
+
+/** Result of {@link compileSectionWithMeta}: commands + which presets were instantiated. */
+export interface CompileSectionResult {
+  commands: AICommandSuggestion[];
+  /** Preset ids instantiated in this section (roadmap 02/01 — logged as presetUsed). */
+  presetUsed: string[];
+}
+
+/** Like {@link compileSection} but also reports which presets were used. */
+export function compileSectionWithMeta(
+  sectionPlan: SectionPlan,
+  section: PagePlanSection,
+  pagePlan: PagePlan,
+  request: GeneratePageRequest,
+): CompileSectionResult {
   const ctx = buildCompileContext(pagePlan, request);
-  return compileSectionPlan(normalizeComponentIntentPreferences(sectionPlan), section, ctx);
+  const commands = compileSectionPlan(normalizeComponentIntentPreferences(sectionPlan), section, ctx);
+  return { commands, presetUsed: [...ctx.presetUsed] };
 }
 
 /**
@@ -1502,14 +1601,19 @@ export function buildContractsByType(
 }
 
 function buildCompileContext(pagePlan: PagePlan, request: GeneratePageRequest): CompileContext {
+  const availableTypes = new Set(request.availableComponents.map((c) => c.type));
   return {
-    availableTypes: new Set(request.availableComponents.map((c) => c.type)),
+    availableTypes,
     designTokens: request.designTokens ?? {},
     brief: pagePlan.brief,
     contractsByType: buildContractsByType(request.availableComponents),
     pagePlan,
     pack: matchContentPack(pagePlan.brief),
     locale: resolveLocale(request, pagePlan.brief),
+    presetIndex: buildPresetIndex(request.availablePresets, availableTypes),
+    presetRefsByRole: new Map(),
+    presetSeed: 0,
+    presetUsed: new Set<string>(),
   };
 }
 

@@ -293,12 +293,22 @@ export interface SectionComponentIntent {
   reason?: string;
 }
 
+/** LLM-chosen preset reference at section-intent level (roadmap 02/01). */
+export interface SectionPresetRef {
+  /** Semantic slot this preset fills, e.g. "hero_cta", "heading". */
+  role: string;
+  /** Preset id from the available catalog; validated against it server-side. */
+  presetId: string;
+}
+
 export interface SectionPlan {
   sectionId: string;
   type: PageSectionType;
   layoutVariant?: string;
   preferredComponents?: string[];
   componentIntents?: SectionComponentIntent[];
+  /** Optional preset references chosen by the LLM at section-intent level (roadmap 02/01). */
+  presetRefs?: SectionPresetRef[];
   interactionIntent?: SectionInteractionIntent;
   mediaItems?: SectionPlanMediaItem[];
   navItems?: SectionPlanNavItem[];

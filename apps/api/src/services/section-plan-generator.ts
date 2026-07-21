@@ -95,6 +95,12 @@ const SectionPlanSchema = z.object({
   layoutVariant: OptionalStringSchema,
   preferredComponents: StringArraySchema,
   componentIntents: ComponentIntentsSchema,
+  presetRefs: z.preprocess(
+    (value) => (value === null ? undefined : value),
+    z
+      .array(z.object({ role: z.string().min(1), presetId: z.string().min(1) }))
+      .optional(),
+  ),
   interactionIntent: z.preprocess(
     (value) => (value === null ? undefined : value),
     z.enum(["static", "carousel", "expandable", "marquee", "gallery"]).optional(),
@@ -117,10 +123,42 @@ const SectionPlanSchema = z.object({
   mediaPrompt: OptionalStringSchema,
 });
 
+/**
+ * Compact preset list scoped to this section's candidate component types
+ * (roadmap 02/01). Only id/componentType/tags — never props/style — so the LLM
+ * can reference a preset by id without the token cost of full preset data.
+ * Capped at 30 to bound prompt growth.
+ */
+function buildSectionPresetBlock(
+  request: GeneratePageRequest,
+  candidateTypes: string[],
+): string {
+  const groups = request.availablePresets;
+  if (!groups || groups.length === 0) return "";
+  const candidateSet = new Set(candidateTypes);
+  const lines: string[] = [];
+  for (const group of groups) {
+    for (const type of group.types ?? []) {
+      for (const item of type.items ?? []) {
+        if (!item?.id || !item.componentType) continue;
+        if (candidateSet.size > 0 && !candidateSet.has(item.componentType)) continue;
+        const tags = item.tags?.length ? `,${item.tags.join("|")}` : "";
+        lines.push(`${item.id}(${item.componentType}${tags})`);
+        if (lines.length >= 30) break;
+      }
+      if (lines.length >= 30) break;
+    }
+    if (lines.length >= 30) break;
+  }
+  if (lines.length === 0) return "";
+  return `\nAvailable presets for this section (reference by id in presetRefs; never invent an id):\n${lines.join(", ")}\n`;
+}
+
 function buildSystemPrompt(pagePlan: PagePlan, section: PagePlanSection, request: GeneratePageRequest): string {
   const componentManifest = buildComponentCapabilityManifest(request.availableComponents ?? []);
   const candidateTypes = candidateComponentsForSection(section.type, request.availableComponents ?? []);
   const componentContracts = resolveComponentContracts(request.availableComponents ?? [], candidateTypes);
+  const presetBlock = buildSectionPresetBlock(request, candidateTypes);
   return `You are a professional landing page section copywriter and UX planner.
 Generate content intent for exactly one section. Do NOT return HTML/CSS. Do NOT return builder commands.
 
@@ -131,6 +169,7 @@ Return ONLY JSON:
   "layoutVariant": "optional compact layout name",
   "preferredComponents": ["ComponentType"],
   "componentIntents": [{ "role": "hero_media", "componentType": "Image", "variant": "cover", "contentSource": "mediaItems", "priority": "preferred", "reason": "why this component fits" }],
+  "presetRefs": [{ "role": "hero_cta", "presetId": "id-from-the-preset-list-below" }],
   "interactionIntent": "static|carousel|expandable|marquee|gallery",
   "mediaItems": [{ "src": "optional image URL", "alt": "specific alt text", "caption": "optional", "link": "optional" }],
   "navItems": [{ "label": "Services", "href": "#services" }],
@@ -152,7 +191,7 @@ ${formatComponentManifestForPrompt(componentManifest)}
 
 Detailed component contracts for this section:
 ${formatComponentContractsForPrompt(componentContracts)}
-
+${presetBlock}
 Page brief:
 ${JSON.stringify(pagePlan.brief, null, 2)}
 
@@ -169,6 +208,7 @@ Rules:
 - Prefer rich components when they match section intent.
 - Only choose component types listed in the component capability manifest.
 - If using componentIntents, use only componentType values present in the detailed contracts for this section.
+- Optionally set presetRefs to reuse a designed preset for a slot — use ONLY ids from the preset list above; omit presetRefs if none fit. Never invent a preset id.
 - Return component intent and content only; never return builder commands or raw component props.
 - If media is needed but no real image is available, include useful alt/caption and describe media intent; the compiler may use safe fallback images.
 - Write real, specific content. No lorem ipsum, no "your headline here".
@@ -216,6 +256,16 @@ export async function generateSectionPlan(
   const componentManifest = buildComponentCapabilityManifest(request.availableComponents ?? []);
   const available = new Set(componentManifest.map((component) => component.type));
 
+  // Drop any preset ref the LLM invented (id not in the catalog) — mirror of
+  // filterPreferredComponents. Roadmap 02/01.
+  const presetIds = new Set<string>();
+  for (const group of request.availablePresets ?? []) {
+    for (const type of group.types ?? []) {
+      for (const item of type.items ?? []) if (item?.id) presetIds.add(item.id);
+    }
+  }
+  const presetRefs = (result.data.presetRefs ?? []).filter((ref) => presetIds.has(ref.presetId));
+
   return {
     ...result.data,
     sectionId: section.id,
@@ -223,6 +273,7 @@ export async function generateSectionPlan(
     items: result.data.items ?? [],
     preferredComponents: filterPreferredComponents(result.data.preferredComponents, componentManifest),
     componentIntents: (result.data.componentIntents ?? []).filter((intent) => available.has(intent.componentType)),
+    presetRefs: presetRefs.length > 0 ? presetRefs : undefined,
     mediaItems: result.data.mediaItems ?? [],
     navItems: result.data.navItems ?? [],
   } as SectionPlan;

@@ -14,7 +14,7 @@ import {
   buildContractsByType,
   buildSkeletonCommands,
   compileFallbackSection,
-  compileSection,
+  compileSectionWithMeta,
   validateCompiledCommandsWithReport,
   type DroppedCommand,
 } from "../services/section-plan-compiler.js";
@@ -176,7 +176,7 @@ aiRouter.post("/generate-page", async (req: Request, res: Response) => {
             attempt > 1 ? lastError : undefined,
             accountant,
           );
-          const commands = compileSection(sectionPlan, section, pagePlan, body);
+          const { commands, presetUsed } = compileSectionWithMeta(sectionPlan, section, pagePlan, body);
           if (commands.length === 0) {
             throw new Error("Compiler produced no valid commands");
           }
@@ -217,6 +217,7 @@ aiRouter.post("/generate-page", async (req: Request, res: Response) => {
             richComponentUsed: richSummary.richComponentUsed,
             mediaItemCount: sectionPlan.mediaItems?.length ?? 0,
             qualityWarnings: warnings.length || undefined,
+            presetUsed: presetUsed.length > 0 ? presetUsed : undefined,
           });
           sendSSE(res, "section_ready", {
             jobId,

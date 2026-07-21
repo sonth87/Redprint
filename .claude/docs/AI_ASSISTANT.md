@@ -89,6 +89,7 @@ selects a provider or model — the backend does, via environment variables:
 | `AI_EXPOSE_COST` | Attach a compact token/cost summary to the SSE `complete` event | `false` |
 | `AI_QUALITY_GATE` | Post-compile quality gate mode: `block` \| `warn` \| `off` | `block` |
 | `AI_QG_DISABLE` | Comma-separated quality-check codes to disable (e.g. `low_contrast,wrong_language`) | — |
+| `AI_PRESET_FIRST` | Reuse designer presets for leaf slots during compile (`false` = adapters only) | `true` (on) |
 
 Default models per provider (when `LLM_MODEL` is unset): `gpt-4o` (openai), `gemini-2.0-flash`
 (gemini), `claude-sonnet-5` (claude). Claude requests mark the (large, stable) system prompt
@@ -265,6 +266,21 @@ content in &lt;language&gt;; keep structural values English") and selects the co
 (unknown locales fall back to a pack's `_default` copy while the LLM writes in the requested language).
 Compiler-emitted UI strings (CollapsibleText expand/collapse, nav CTA) come from `COMPILER_STRINGS`
 (`vi`/`en`, fallback `en`). RTL locales are out of scope until the builder supports RTL layout.
+
+**Preset-first compile (roadmap 02/01, phase 1 — leaf presets):** the client sends `availablePresets`
+(full props/style per designer preset) in the request. `preset-catalog.ts` indexes them
+(`buildPresetIndex`, dropping presets whose `componentType` isn't in the registry) and the compiler
+instantiates a preset for a **leaf** slot (currently the primary CTA `Button` and the heading `Text`)
+instead of a hardcoded style — either the one the LLM referenced via the new
+`SectionPlan.presetRefs: [{role, presetId}]` field, or a heuristic pick by componentType + tags
+(`resolvePresetByHeuristic`, seeded by section id for controlled variety). `presetCommand` patches the
+content (text/label/src, image src through `safeMediaUrl`) over the preset's props; a preset tagged
+`themable` gets design-token color overrides, others keep their designed style verbatim. Invented
+preset ids are filtered (mirror of `filterPreferredComponents`); with no catalog or `AI_PRESET_FIRST=false`
+the compiler uses the old adapters unchanged. The section prompt lists candidate-scoped presets (id +
+type + tags only, capped 30 — never props/style, to bound tokens). `compileSectionWithMeta` reports the
+instantiated preset ids, logged as `presetUsed` on `section_ready`. Container/card (multi-child) presets
+are deferred to a later phase.
 
 ### Compiler Strategy
 

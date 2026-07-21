@@ -4,7 +4,21 @@
 > Ưu tiên: P3
 > Ước lượng: 3 ngày
 > Phụ thuộc: [02/02](./02-industry-content-packs.md) nên xong trước (nền sạch), không bắt buộc
-> Trạng thái: Chưa bắt đầu
+> Trạng thái: Hoàn thành (Phase 1 — leaf presets) — 2026-07-21. Module mới
+> `apps/api/src/services/preset-catalog.ts`: `buildPresetIndex` (flatten `availablePresets`, bỏ preset có
+> componentType không nằm trong registry), `resolvePresetById`/`resolvePresetByHeuristic` (khớp
+> componentType+tag, seed theo section id → biến thể có kiểm soát), `presetCommand` (patch content lên
+> props, `safeMediaUrl` cho src, token override cho preset tag `themable`, giữ style preset không-themable),
+> `presetFirstEnabled` (`AI_PRESET_FIRST`, default on). `SectionPlan.presetRefs?: [{role,presetId}]` +
+> field trong `SectionPlanSchema` (lọc id bịa trong `generateSectionPlan`, mirror `filterPreferredComponents`).
+> Section prompt thêm block preset rút gọn theo candidate components (id+type+tags, cap 30, không props/style).
+> Compiler wire preset-first cho **leaf**: primary CTA (`addActions`) + heading (`addIntro`); fallback =
+> adapter cũ khi không khớp. `compileSectionWithMeta` trả `presetUsed` → log `section_ready.presetUsed`.
+> Test: `preset-catalog.test.ts` (8) + 5 test compiler (dùng preset, honor ref, fallback khi rỗng, bỏ id
+> bịa, flag off). apps/api **114 test pass**. Docs: AI_ASSISTANT (preset section + env row) + README + roadmap.
+> **Chưa làm (phase sau):** container/card preset (multi-child content patch, roadmap mục 3.6); section-template
+> preset ([SECTION TEMPLATES]); wire preset cho Image/secondary CTA/eyebrow. Đây là bước đệm cho
+> [03/02 generic-adapter](../03-component-platform/02-generic-adapter.md).
 
 ## 1. Mục đích
 

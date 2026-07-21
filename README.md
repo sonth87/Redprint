@@ -227,6 +227,11 @@ error codes where available. The per-job `complete` log line also carries token/
 (`totalInputTokens`, `totalOutputTokens`, `estimatedCostUsd`, `llmCalls`, `usageByStage`) — see the
 [cost & observability roadmap item](docs/roadmap/02-ai-generation/08-cost-observability.md).
 
+When the editor sends a preset catalog (`availablePresets`), the compiler reuses designed presets for
+leaf slots (CTA button, heading) instead of only hardcoded styles — the LLM references presets by id, or
+the compiler picks by tag heuristic. Disable with `AI_PRESET_FIRST=false` (falls back to the built-in
+adapters).
+
 A deterministic **quality gate** (`AI_QUALITY_GATE`, default `block`) runs after compile: it blocks
 placeholder text and empty sections (retried with a hint, then falls back), and warns on low contrast,
 non-responsive giant headings, duplicate/overlong headings, and wrong-language headings. Set to `warn`

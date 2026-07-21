@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildDeterministicPagePlan } from "./page-plan-generator.js";
-import { buildSkeletonCommands, compileFallbackSection, compileSection } from "./section-plan-compiler.js";
-import type { GeneratePageRequest, SectionPlan } from "../types/ai.types.js";
+import { buildSkeletonCommands, compileFallbackSection, compileSection, compileSectionWithMeta } from "./section-plan-compiler.js";
+import type { AIPresetGroup, GeneratePageRequest, SectionPlan } from "../types/ai.types.js";
 
 const availableComponents = [
   { type: "Section", name: "Section", category: "layout" },
@@ -322,5 +322,97 @@ describe("section-plan compiler", () => {
     // English pet-care `_default` copy; must not contain Vietnamese diacritics.
     expect(text).not.toMatch(/[àáạảãăằắđịệộủ]/);
     expect(text).toMatch(/Grooming|Daycare|Care/i);
+  });
+
+  // ── Preset-first compile (roadmap 02/01) ────────────────────────────────
+
+  const PRESETS: AIPresetGroup[] = [
+    {
+      group: "Elements",
+      types: [
+        {
+          type: "Button",
+          items: [
+            { id: "btn-fancy", name: "Fancy CTA", componentType: "Button", props: { variant: "pill", size: "xl" }, style: { backgroundColor: "#123456", borderRadius: "999px" }, tags: ["cta", "primary"] },
+          ],
+        },
+      ],
+    },
+  ];
+
+  function heroPlan(presetRefs?: SectionPlan["presetRefs"]): SectionPlan {
+    return {
+      sectionId: "sec-hero",
+      type: "hero",
+      heading: "Welcome to our service",
+      body: "We help you get things done.",
+      ctaLabel: "Get started",
+      items: [],
+      preferredComponents: [],
+      presetRefs,
+    } as SectionPlan;
+  }
+
+  function heroSectionOf(request: GeneratePageRequest) {
+    const plan = buildDeterministicPagePlan(request, "job-preset");
+    return plan.sections.find((s) => s.type === "hero") ?? plan.sections[0];
+  }
+
+  it("instantiates a preset for the CTA when the catalog has a matching preset", () => {
+    const request: GeneratePageRequest = { ...makeRequest(), availablePresets: PRESETS };
+    const section = heroSectionOf(request);
+    const plan = buildDeterministicPagePlan(request, "job-preset");
+    const { commands, presetUsed } = compileSectionWithMeta(heroPlan(), section, plan, request);
+
+    const ctaCmd = commands.find((c) => c.type === "ADD_NODE" && c.payload.presetId === "btn-fancy");
+    expect(ctaCmd).toBeTruthy();
+    // content patch applied over preset props
+    expect((ctaCmd!.payload.props as { label?: string }).label).toContain("Get started");
+    // preset's own props preserved
+    expect((ctaCmd!.payload.props as { variant?: string }).variant).toBe("pill");
+    expect(presetUsed).toContain("btn-fancy");
+  });
+
+  it("honors an explicit presetRef by role", () => {
+    const request: GeneratePageRequest = { ...makeRequest(), availablePresets: PRESETS };
+    const section = heroSectionOf(request);
+    const plan = buildDeterministicPagePlan(request, "job-preset");
+    const { presetUsed } = compileSectionWithMeta(heroPlan([{ role: "hero_cta", presetId: "btn-fancy" }]), section, plan, request);
+    expect(presetUsed).toContain("btn-fancy");
+  });
+
+  it("falls back to the hardcoded adapter when no presets are available", () => {
+    const request = makeRequest(); // no availablePresets
+    const section = heroSectionOf(request);
+    const plan = buildDeterministicPagePlan(request, "job-preset");
+    const { commands, presetUsed } = compileSectionWithMeta(heroPlan(), section, plan, request);
+    expect(presetUsed).toHaveLength(0);
+    // a Button CTA still gets emitted (via buttonCommand), just without a presetId
+    const cta = commands.find((c) => c.type === "ADD_NODE" && c.payload.componentType === "Button");
+    expect(cta).toBeTruthy();
+    expect(cta!.payload.presetId).toBeUndefined();
+  });
+
+  it("ignores a bogus presetRef id (not in catalog) and still compiles", () => {
+    const request: GeneratePageRequest = { ...makeRequest(), availablePresets: PRESETS };
+    const section = heroSectionOf(request);
+    const plan = buildDeterministicPagePlan(request, "job-preset");
+    // bogus ref → falls through to heuristic, which still finds btn-fancy by tag
+    const { commands } = compileSectionWithMeta(heroPlan([{ role: "hero_cta", presetId: "does-not-exist" }]), section, plan, request);
+    // still produces valid commands (no crash), CTA present
+    expect(commands.find((c) => c.payload.componentType === "Button")).toBeTruthy();
+  });
+
+  it("AI_PRESET_FIRST=false disables preset instantiation", () => {
+    const request: GeneratePageRequest = { ...makeRequest(), availablePresets: PRESETS };
+    const section = heroSectionOf(request);
+    const plan = buildDeterministicPagePlan(request, "job-preset");
+    process.env.AI_PRESET_FIRST = "false";
+    try {
+      const { presetUsed } = compileSectionWithMeta(heroPlan(), section, plan, request);
+      expect(presetUsed).toHaveLength(0);
+    } finally {
+      delete process.env.AI_PRESET_FIRST;
+    }
   });
 });

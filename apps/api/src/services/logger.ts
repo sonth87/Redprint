@@ -109,6 +109,8 @@ export const logger = {
       // Quality gate (roadmap 02/04).
       qualityWarnings?: number;
       qualityGateMode?: string;
+      // Preset-first compile (roadmap 02/01).
+      presetUsed?: string[];
     },
   ) => {
     if (!DEBUG) return;
