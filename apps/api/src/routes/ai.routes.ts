@@ -176,7 +176,7 @@ aiRouter.post("/generate-page", async (req: Request, res: Response) => {
             attempt > 1 ? lastError : undefined,
             accountant,
           );
-          const { commands, presetUsed } = compileSectionWithMeta(sectionPlan, section, pagePlan, body);
+          const { commands, presetUsed, variantUsed } = compileSectionWithMeta(sectionPlan, section, pagePlan, body);
           if (commands.length === 0) {
             throw new Error("Compiler produced no valid commands");
           }
@@ -218,6 +218,7 @@ aiRouter.post("/generate-page", async (req: Request, res: Response) => {
             mediaItemCount: sectionPlan.mediaItems?.length ?? 0,
             qualityWarnings: warnings.length || undefined,
             presetUsed: presetUsed.length > 0 ? presetUsed : undefined,
+            variantUsed: variantUsed || undefined,
           });
           sendSSE(res, "section_ready", {
             jobId,

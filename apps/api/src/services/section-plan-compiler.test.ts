@@ -416,3 +416,82 @@ describe("section-plan compiler", () => {
     }
   });
 });
+
+// ── Layout variants (roadmap 02/05) ────────────────────────────────────────
+
+describe("layout variants", () => {
+  function nodeIds(commands: ReturnType<typeof compileSection>): string[] {
+    return commands.filter((c) => c.type === "ADD_NODE").map((c) => String(c.payload.nodeId));
+  }
+  function heroWith(variant: string): SectionPlan {
+    return {
+      sectionId: "sec-hero", type: "hero", heading: "Welcome", body: "Body copy here.",
+      ctaLabel: "Start", items: [], preferredComponents: [], layoutVariant: variant,
+    } as SectionPlan;
+  }
+
+  it("reports the LLM-requested variant via variantUsed", () => {
+    const request = makeRequest();
+    const plan = buildDeterministicPagePlan(request, "job-v1");
+    const hero = plan.sections.find((s) => s.type === "hero")!;
+    const { variantUsed } = compileSectionWithMeta(heroWith("centered-stack"), hero, plan, request);
+    expect(variantUsed).toBe("centered-stack");
+  });
+
+  it("produces structurally different node sets for different hero variants", () => {
+    const request = makeRequest();
+    const plan = buildDeterministicPagePlan(request, "job-v2");
+    const hero = plan.sections.find((s) => s.type === "hero")!;
+    const split = nodeIds(compileSectionWithMeta(heroWith("split-media-right"), hero, plan, request).commands);
+    const centered = nodeIds(compileSectionWithMeta(heroWith("centered-stack"), hero, plan, request).commands);
+    const fullBleed = nodeIds(compileSectionWithMeta(heroWith("full-bleed-media"), hero, plan, request).commands);
+    // split uses a grid; centered-stack does not; full-bleed adds an overlay.
+    expect(split).toContain(`${hero.id}-hero-grid`);
+    expect(centered).not.toContain(`${hero.id}-hero-grid`);
+    expect(fullBleed.some((id) => id.includes("overlay"))).toBe(true);
+  });
+
+  it("falls back to a valid variant when the LLM requests a bogus one", () => {
+    const request = makeRequest();
+    const plan = buildDeterministicPagePlan(request, "job-v3");
+    const hero = plan.sections.find((s) => s.type === "hero")!;
+    const { variantUsed } = compileSectionWithMeta(heroWith("not-a-real-variant"), hero, plan, request);
+    expect(["split-media-right", "split-media-left", "centered-stack", "full-bleed-media"]).toContain(variantUsed);
+  });
+
+  it("AI_LAYOUT_VARIETY=off always uses the default hero variant", () => {
+    const request = makeRequest();
+    const plan = buildDeterministicPagePlan(request, "job-v4");
+    const hero = plan.sections.find((s) => s.type === "hero")!;
+    process.env.AI_LAYOUT_VARIETY = "off";
+    try {
+      const { variantUsed } = compileSectionWithMeta(heroWith("full-bleed-media"), hero, plan, request);
+      expect(variantUsed).toBe("split-media-right");
+    } finally {
+      delete process.env.AI_LAYOUT_VARIETY;
+    }
+  });
+
+  it("services alternating-rows variant emits row containers instead of only a card grid", () => {
+    const request = makeRequest();
+    const plan = buildDeterministicPagePlan(request, "job-v5");
+    const services = plan.sections.find((s) => s.type === "services")!;
+    const servicesPlan = {
+      sectionId: services.id, type: "services", heading: "What we do", body: "x",
+      items: [{ title: "A", body: "aa" }, { title: "B", body: "bb" }], preferredComponents: [],
+      layoutVariant: "alternating-rows",
+    } as SectionPlan;
+    const { commands, variantUsed } = compileSectionWithMeta(servicesPlan, services, plan, request);
+    expect(variantUsed).toBe("alternating-rows");
+    expect(nodeIds(commands).some((id) => id.includes("-row-"))).toBe(true);
+  });
+
+  it("conversion visualEmphasis repeats the CTA at the section end", () => {
+    const request = makeRequest();
+    const plan = buildDeterministicPagePlan(request, "job-v6");
+    const hero = plan.sections.find((s) => s.type === "hero")!;
+    const p = { ...heroWith("centered-stack"), visualEmphasis: "conversion" } as SectionPlan;
+    const ids = nodeIds(compileSectionWithMeta(p, hero, plan, request).commands);
+    expect(ids).toContain(`${hero.id}-cta-closing`);
+  });
+});

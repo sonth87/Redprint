@@ -90,6 +90,7 @@ selects a provider or model — the backend does, via environment variables:
 | `AI_QUALITY_GATE` | Post-compile quality gate mode: `block` \| `warn` \| `off` | `block` |
 | `AI_QG_DISABLE` | Comma-separated quality-check codes to disable (e.g. `low_contrast,wrong_language`) | — |
 | `AI_PRESET_FIRST` | Reuse designer presets for leaf slots during compile (`false` = adapters only) | `true` (on) |
+| `AI_LAYOUT_VARIETY` | Layout variants for hero/services/cta (`off` = always default variant) | on |
 
 Default models per provider (when `LLM_MODEL` is unset): `gpt-4o` (openai), `gemini-2.0-flash`
 (gemini), `claude-sonnet-5` (claude). Claude requests mark the (large, stable) system prompt
@@ -281,6 +282,20 @@ the compiler uses the old adapters unchanged. The section prompt lists candidate
 type + tags only, capped 30 — never props/style, to bound tokens). `compileSectionWithMeta` reports the
 instantiated preset ids, logged as `presetUsed` on `section_ready`. Container/card (multi-child) presets
 are deferred to a later phase.
+
+**Layout variety (roadmap 02/05, phase 1 — hero/services/cta):** `layoutVariant` now changes the actual
+compile path. `layout-variants.ts` holds a closed enum per section type (hero:
+`split-media-right|split-media-left|centered-stack|full-bleed-media`; services:
+`grid-cards|gallery-showcase|alternating-rows`; cta: `centered-band|split-with-media`) plus each variant's
+component `requires`. `resolveVariant()` picks: an LLM-requested variant if valid + requirements met,
+else a seed-pick keyed by `${jobId}:${type}` (stable across a section's retries, varied across jobs),
+filtered to variants whose required components are available. The compiler dispatches on `ctx.variant`
+inside `compileHeroSection` / `compileServicesVariant` / the cta block. `visualEmphasis` is a post-variant
+modifier (`applyVisualEmphasis`): `conversion` repeats the CTA at the section end, `proof` appends a stats
+row when the plan has stats. The section prompt lists the type's variant enum with content guidance.
+`AI_LAYOUT_VARIETY=off` forces every section to its default (first) variant = the previous behavior.
+`compileSectionWithMeta` reports `variantUsed` (logged on `section_ready`). Fallback-pack sections run
+through the same variants. features/testimonials/pricing/faq variants are a later phase.
 
 ### Compiler Strategy
 

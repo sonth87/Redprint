@@ -232,6 +232,10 @@ leaf slots (CTA button, heading) instead of only hardcoded styles — the LLM re
 the compiler picks by tag heuristic. Disable with `AI_PRESET_FIRST=false` (falls back to the built-in
 adapters).
 
+Hero, services, and CTA sections have multiple **layout variants** (e.g. hero split-media / centered /
+full-bleed) so the same prompt can produce visually different pages — the LLM may pick one, or the
+compiler picks deterministically per job. Disable with `AI_LAYOUT_VARIETY=off`.
+
 A deterministic **quality gate** (`AI_QUALITY_GATE`, default `block`) runs after compile: it blocks
 placeholder text and empty sections (retried with a hint, then falls back), and warns on low contrast,
 non-responsive giant headings, duplicate/overlong headings, and wrong-language headings. Set to `warn`

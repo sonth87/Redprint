@@ -34,6 +34,7 @@ import {
   resolvePresetByHeuristic,
   type PresetIndex,
 } from "./preset-catalog.js";
+import { hasVariants, isLayoutVarietyEnabled, resolveVariant } from "./layout-variants.js";
 
 interface CompileContext {
   availableTypes: Set<string>;
@@ -54,6 +55,8 @@ interface CompileContext {
   presetSeed: number;
   /** Sink: ids of presets actually instantiated (for logging `presetUsed`). */
   presetUsed: Set<string>;
+  /** Resolved layout variant for the current section (roadmap 02/05). */
+  variant: string;
 }
 
 const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1601758125946-6ec2ef64daf8?w=1200&q=80";
@@ -1201,6 +1204,171 @@ function compileHeaderSection(plan: SectionPlan, section: PagePlanSection, ctx: 
   return validateCompiledCommands(commands, ctx.availableTypes, new Set([section.id]), ctx.contractsByType);
 }
 
+/**
+ * Apply a `visualEmphasis` modifier after a section's variant is laid out
+ * (roadmap 02/05). `conversion` repeats the CTA at the section end; `proof`
+ * appends a compact stats row when the plan carries stats. `media`/`copy`/
+ * `balanced` are expressed through variant selection, not here.
+ */
+function applyVisualEmphasis(commands: AICommandSuggestion[], section: PagePlanSection, rootId: string, plan: SectionPlan, ctx: CompileContext) {
+  if (!isLayoutVarietyEnabled()) return;
+  const emphasis = plan.visualEmphasis;
+
+  if (emphasis === "conversion" && plan.ctaLabel && has(ctx, "Button")) {
+    // Avoid duplicating if this exact CTA node id already exists.
+    const closingId = `${section.id}-cta-closing`;
+    if (!commands.some((cmd) => cmd.payload?.nodeId === closingId)) {
+      const preset = tryPresetLeaf(ctx, `${section.type}_cta`, "Button", ["cta", "primary", "button"], { label: html(plan.ctaLabel) }, closingId, rootId);
+      commands.push(preset ?? buttonCommand(closingId, rootId, plan.ctaLabel, ctx));
+    }
+  }
+
+  if (emphasis === "proof" && plan.stats?.length && has(ctx, "Grid") && has(ctx, "Text")) {
+    const c = colors(ctx.designTokens);
+    const statsId = `${section.id}-stats`;
+    const stats = plan.stats.slice(0, 4);
+    commands.push(gridCommand(statsId, rootId, Math.min(4, Math.max(2, stats.length))));
+    stats.forEach((stat, index) => {
+      const cellId = `${section.id}-stat-${index}`;
+      commands.push(containerCommand(cellId, statsId, { gap: "4px", padding: "12px", showPlaceholder: false }, { textAlign: "center", alignItems: "center" }));
+      commands.push(textCommand(`${cellId}-value`, cellId, stat.title, "span", { color: c.accent, fontSize: "30px", fontWeight: "800" }));
+      commands.push(textCommand(`${cellId}-label`, cellId, stat.body, "span", { color: c.muted, fontSize: "14px" }));
+    });
+  }
+}
+
+/** Emit a card grid of items into `rootId`. Shared by services grid-cards + generic. */
+function emitCardGrid(commands: AICommandSuggestion[], rootId: string, section: PagePlanSection, plan: SectionPlan, ctx: CompileContext, items: SectionPlanItem[], withImages: boolean) {
+  if (items.length === 0 || !has(ctx, "Grid")) return;
+  const columns = Math.min(3, Math.max(2, items.length));
+  const gridId = `${section.id}-grid`;
+  commands.push(gridCommand(gridId, rootId, columns));
+  const cardImages = withImages ? mediaItemsFor(plan, section, ctx, { min: items.length, max: 6 }) : undefined;
+  items.slice(0, 6).forEach((item, index) => {
+    addCard(commands, `${section.id}-card-${index}`, gridId, item, ctx, cardImages?.[index]?.src);
+  });
+}
+
+/** services variant dispatch (roadmap 02/05): grid-cards | gallery-showcase | alternating-rows. */
+function compileServicesVariant(commands: AICommandSuggestion[], rootId: string, section: PagePlanSection, plan: SectionPlan, ctx: CompileContext) {
+  const c = colors(ctx.designTokens);
+  const items = plan.items.length > 0 ? plan.items : defaultItems(section, ctx.pack, ctx.locale, ctx.brief);
+
+  switch (ctx.variant) {
+    case "gallery-showcase": {
+      const used = addRichGallery(commands, `${section.id}-service-gallery`, rootId, section, plan, ctx, { min: 4, max: 6 });
+      // Still list the offerings compactly beneath the showcase.
+      emitCardGrid(commands, rootId, section, plan, ctx, items, !used);
+      break;
+    }
+    case "alternating-rows": {
+      const rowImages = has(ctx, "Image") ? mediaItemsFor(plan, section, ctx, { min: items.length, max: 6 }) : [];
+      items.slice(0, 4).forEach((item, index) => {
+        const rowId = `${section.id}-row-${index}`;
+        const mediaFirst = index % 2 === 1;
+        if (has(ctx, "Grid")) commands.push(gridCommand(rowId, rootId, 2));
+        else commands.push(containerCommand(rowId, rootId, { direction: "row", gap: "24px", padding: "0px", showPlaceholder: false }, { alignItems: "center" }));
+        const copyId = `${rowId}-copy`;
+        const mediaId = `${rowId}-media`;
+        commands.push(containerCommand(copyId, rowId, { gap: "8px", padding: "0px", showPlaceholder: false }, { justifyContent: "center", ...(mediaFirst ? { order: 2 } : {}) }));
+        if (has(ctx, "Text")) {
+          commands.push(textCommand(`${copyId}-title`, copyId, item.title, "h3", { color: c.text, fontSize: "22px", fontWeight: "700" }));
+          commands.push(textCommand(`${copyId}-body`, copyId, item.body, "p", { color: c.muted, fontSize: "16px", lineHeight: "1.7" }));
+        }
+        if (has(ctx, "Image") && rowImages[index]) {
+          commands.push(containerCommand(mediaId, rowId, { gap: "0px", padding: "0px", showPlaceholder: false }, { ...(mediaFirst ? { order: 1 } : {}) }));
+          commands.push(imageCommand(`${mediaId}-img`, mediaId, rowImages[index]!.src, rowImages[index]!.alt, { width: "100%", height: "240px", borderRadius: c.radius }));
+        }
+      });
+      break;
+    }
+    case "grid-cards":
+    default:
+      emitCardGrid(commands, rootId, section, plan, ctx, items, true);
+      break;
+  }
+}
+
+/** Emit a hero image into `parentId`. Shared by hero variants. */
+function heroImage(commands: AICommandSuggestion[], parentId: string, section: PagePlanSection, plan: SectionPlan, ctx: CompileContext, media: ReturnType<typeof mediaItemsFor>, style: Record<string, unknown>) {
+  if (!has(ctx, "Image")) return;
+  const image = media[0]!;
+  commands.push(
+    command(
+      "ADD_NODE",
+      {
+        nodeId: `${section.id}-image`,
+        componentType: "Image",
+        parentId,
+        props: { src: image.src, alt: image.alt || plan.mediaPrompt || plan.heading, objectFit: "cover" },
+        style,
+        responsiveStyle: { mobile: { width: "100%", height: "240px" } },
+      },
+      "Add hero image",
+    ),
+  );
+}
+
+/** Emit hero copy (eyebrow/heading/body via TextMask or addIntro) into `parentId`. */
+function heroCopy(commands: AICommandSuggestion[], parentId: string, section: PagePlanSection, plan: SectionPlan, ctx: CompileContext, centered: boolean) {
+  const c = colors(ctx.designTokens);
+  if (has(ctx, "Text") && plan.eyebrow) {
+    commands.push(textCommand(`${section.id}-eyebrow`, parentId, plan.eyebrow, "span", { color: c.accent, fontSize: "13px", fontWeight: "800", textTransform: "uppercase", letterSpacing: "0.08em", ...(centered ? { textAlign: "center" } : {}) }));
+  }
+  if (has(ctx, "TextMask") && (prefers(plan, "TextMask") || isPlayfulTone(ctx.brief))) {
+    commands.push(textMaskCommand(`${section.id}-mask-heading`, parentId, plan.heading, ctx));
+    if (has(ctx, "Text")) {
+      commands.push(textCommand(`${section.id}-body`, parentId, plan.body, "p", { color: c.muted, fontSize: "18px", lineHeight: "1.75", maxWidth: "720px", ...(centered ? { textAlign: "center", marginLeft: "auto", marginRight: "auto" } : {}) }));
+    }
+  } else {
+    addIntro(commands, section, parentId, plan, ctx, { centered });
+  }
+}
+
+/** hero split-media variant (media on right or left). The original hero path. */
+function heroSplitMedia(commands: AICommandSuggestion[], rootId: string, section: PagePlanSection, plan: SectionPlan, ctx: CompileContext, mediaSide: "left" | "right", media: ReturnType<typeof mediaItemsFor>) {
+  const c = colors(ctx.designTokens);
+  const gridId = `${section.id}-hero-grid`;
+  const copyId = `${section.id}-copy`;
+  const mediaId = `${section.id}-media`;
+  commands.push(gridCommand(gridId, rootId, 2));
+  const pushCopy = () =>
+    commands.push(
+      has(ctx, "Column")
+        ? columnCommand(copyId, gridId, { gap: 22, padding: 0, alignItems: "stretch" }, { justifyContent: "center", ...(mediaSide === "left" ? { order: 2 } : {}) })
+        : containerCommand(copyId, gridId, { gap: "22px", padding: "0px", showPlaceholder: false }, { justifyContent: "center", ...(mediaSide === "left" ? { order: 2 } : {}) }),
+    );
+  const pushMedia = () =>
+    commands.push(containerCommand(mediaId, gridId, { gap: "12px", padding: "0px", showPlaceholder: false }, { justifyContent: "center", ...(mediaSide === "left" ? { order: 1 } : {}) }));
+  // Emit media/copy in DOM order but use CSS order for the left variant.
+  pushCopy();
+  pushMedia();
+  heroCopy(commands, copyId, section, plan, ctx, false);
+  addActions(commands, section, copyId, plan, ctx, false);
+  heroImage(commands, mediaId, section, plan, ctx, media, { width: "100%", height: "420px", borderRadius: c.radius, boxShadow: "0 24px 60px rgba(15, 23, 42, 0.16)" });
+  if (has(ctx, "Shape") && isPlayfulTone(ctx.brief)) {
+    commands.push(shapeCommand(`${section.id}-accent-shape`, mediaId, packAccentShape(ctx.pack) as Parameters<typeof shapeCommand>[2], ctx, { alignSelf: "flex-end", marginTop: "-42px", marginRight: "20px" }));
+  }
+}
+
+/** hero centered-stack variant: copy centered, optional image below. */
+function heroCenteredStack(commands: AICommandSuggestion[], rootId: string, section: PagePlanSection, plan: SectionPlan, ctx: CompileContext, media: ReturnType<typeof mediaItemsFor>) {
+  const c = colors(ctx.designTokens);
+  heroCopy(commands, rootId, section, plan, ctx, true);
+  addActions(commands, section, rootId, plan, ctx, true);
+  heroImage(commands, rootId, section, plan, ctx, media, { width: "100%", maxWidth: "820px", height: "360px", borderRadius: c.radius, margin: "8px auto 0", boxShadow: "0 24px 60px rgba(15, 23, 42, 0.16)" });
+}
+
+/** hero full-bleed-media variant: large image, copy overlaid/stacked. */
+function heroFullBleed(commands: AICommandSuggestion[], rootId: string, section: PagePlanSection, plan: SectionPlan, ctx: CompileContext, media: ReturnType<typeof mediaItemsFor>) {
+  const c = colors(ctx.designTokens);
+  heroImage(commands, rootId, section, plan, ctx, media, { width: "100%", height: "480px", borderRadius: c.radius, objectFit: "cover" });
+  const overlayId = `${section.id}-overlay`;
+  commands.push(containerCommand(overlayId, rootId, { gap: "18px", padding: "32px", showPlaceholder: false }, { textAlign: "center", alignItems: "center", marginTop: "-120px", position: "relative" }));
+  heroCopy(commands, overlayId, section, plan, ctx, true);
+  addActions(commands, section, overlayId, plan, ctx, true);
+}
+
 function compileHeroSection(plan: SectionPlan, section: PagePlanSection, ctx: CompileContext): AICommandSuggestion[] {
   const c = colors(ctx.designTokens);
   const commands: AICommandSuggestion[] = [];
@@ -1209,62 +1377,37 @@ function compileHeroSection(plan: SectionPlan, section: PagePlanSection, ctx: Co
 
   if (!has(ctx, "Container")) return commands;
 
+  const centeredVariant = ctx.variant === "centered-stack" || ctx.variant === "full-bleed-media";
   commands.push(
     containerCommand(
       rootId,
       section.id,
       { gap: "28px", padding: "0px", showPlaceholder: false },
-      { maxWidth: "1120px", margin: "0 auto", alignItems: "stretch", textAlign: "left", fontFamily: c.font },
+      { maxWidth: "1120px", margin: "0 auto", alignItems: centeredVariant ? "center" : "stretch", textAlign: centeredVariant ? "center" : "left", fontFamily: c.font },
     ),
   );
 
-  if (has(ctx, "Grid")) {
-    const gridId = `${section.id}-hero-grid`;
-    const copyId = `${section.id}-copy`;
-    const mediaId = `${section.id}-media`;
-    commands.push(gridCommand(gridId, rootId, 2));
-    commands.push(
-      has(ctx, "Column")
-        ? columnCommand(copyId, gridId, { gap: 22, padding: 0, alignItems: "stretch" }, { justifyContent: "center" })
-        : containerCommand(copyId, gridId, { gap: "22px", padding: "0px", showPlaceholder: false }, { justifyContent: "center" }),
-    );
-    commands.push(containerCommand(mediaId, gridId, { gap: "12px", padding: "0px", showPlaceholder: false }, { justifyContent: "center" }));
-    if (has(ctx, "Text") && plan.eyebrow) {
-      commands.push(textCommand(`${section.id}-eyebrow`, copyId, plan.eyebrow, "span", { color: c.accent, fontSize: "13px", fontWeight: "800", textTransform: "uppercase", letterSpacing: "0.08em" }));
-    }
-    if (has(ctx, "TextMask") && (prefers(plan, "TextMask") || isPlayfulTone(ctx.brief))) {
-      commands.push(textMaskCommand(`${section.id}-mask-heading`, copyId, plan.heading, ctx));
-      if (has(ctx, "Text")) {
-        commands.push(textCommand(`${section.id}-body`, copyId, plan.body, "p", { color: c.muted, fontSize: "18px", lineHeight: "1.75", maxWidth: "720px" }));
+  switch (ctx.variant) {
+    case "centered-stack":
+      heroCenteredStack(commands, rootId, section, plan, ctx, heroMedia);
+      break;
+    case "full-bleed-media":
+      heroFullBleed(commands, rootId, section, plan, ctx, heroMedia);
+      break;
+    case "split-media-left":
+      heroSplitMedia(commands, rootId, section, plan, ctx, "left", heroMedia);
+      break;
+    case "split-media-right":
+    default:
+      if (has(ctx, "Grid")) {
+        heroSplitMedia(commands, rootId, section, plan, ctx, "right", heroMedia);
+      } else {
+        heroCenteredStack(commands, rootId, section, plan, ctx, heroMedia);
       }
-    } else {
-      addIntro(commands, section, copyId, plan, ctx, { centered: false });
-    }
-    addActions(commands, section, copyId, plan, ctx, false);
-    if (has(ctx, "Image")) {
-      const image = heroMedia[0]!;
-      commands.push(
-        command(
-          "ADD_NODE",
-          {
-            nodeId: `${section.id}-image`,
-            componentType: "Image",
-            parentId: mediaId,
-            props: { src: image.src, alt: image.alt || plan.mediaPrompt || plan.heading, objectFit: "cover" },
-            style: { width: "100%", height: "420px", borderRadius: c.radius, boxShadow: "0 24px 60px rgba(15, 23, 42, 0.16)" },
-            responsiveStyle: { mobile: { width: "100%", height: "240px" } },
-          },
-          "Add hero image",
-        ),
-      );
-    }
-    if (has(ctx, "Shape") && isPlayfulTone(ctx.brief)) {
-      commands.push(shapeCommand(`${section.id}-accent-shape`, mediaId, packAccentShape(ctx.pack) as Parameters<typeof shapeCommand>[2], ctx, { alignSelf: "flex-end", marginTop: "-42px", marginRight: "20px" }));
-    }
-  } else {
-    addIntro(commands, section, rootId, plan, ctx, { centered: false });
-    addActions(commands, section, rootId, plan, ctx, false);
+      break;
   }
+
+  applyVisualEmphasis(commands, section, rootId, plan, ctx);
 
   const heroMarquee = packMarquee(ctx.pack, ctx.locale, "hero");
   if (heroMarquee && has(ctx, "TextMarquee") && (prefers(plan, "TextMarquee") || isPlayfulTone(ctx.brief))) {
@@ -1346,7 +1489,9 @@ function compileGenericSection(plan: SectionPlan, section: PagePlanSection, ctx:
   }
 
   if (section.type === "services") {
-    addRichGallery(commands, `${section.id}-service-gallery`, rootId, section, plan, ctx, { min: 4, max: 6 });
+    compileServicesVariant(commands, rootId, section, plan, ctx);
+    applyVisualEmphasis(commands, section, rootId, plan, ctx);
+    return validateCompiledCommands(commands, ctx.availableTypes, new Set([section.id]), ctx.contractsByType);
   }
 
   if (section.type === "testimonials" && (has(ctx, "GalleryPro") || has(ctx, "GallerySlider") || has(ctx, "GalleryGrid"))) {
@@ -1374,10 +1519,16 @@ function compileGenericSection(plan: SectionPlan, section: PagePlanSection, ctx:
     if (ctaMarquee && has(ctx, "TextMarquee") && (prefers(plan, "TextMarquee") || isPlayfulTone(ctx.brief))) {
       commands.push(textMarqueeCommand(`${section.id}-marquee`, rootId, ctaMarquee, ctx));
     }
-    if (has(ctx, "Image")) {
+    // split-with-media: image beside the copy (only if an Image is available and
+    // the variant was chosen); centered-band (default): image below the band.
+    if (ctx.variant === "split-with-media" && has(ctx, "Image")) {
+      const image = mediaItemsFor(plan, section, ctx, { min: 1, max: 1 })[0]!;
+      commands.push(imageCommand(`${section.id}-image`, rootId, image.src, image.alt || plan.mediaPrompt || plan.heading, { width: "100%", maxWidth: "520px", height: "300px", borderRadius: c.radius, margin: "16px auto 0" }));
+    } else if (has(ctx, "Image")) {
       const image = mediaItemsFor(plan, section, ctx, { min: 1, max: 1 })[0]!;
       commands.push(imageCommand(`${section.id}-image`, rootId, image.src, image.alt || plan.mediaPrompt || plan.heading, { width: "100%", maxWidth: "720px", height: "240px", borderRadius: c.radius, marginTop: "12px" }));
     }
+    applyVisualEmphasis(commands, section, rootId, plan, ctx);
     return validateCompiledCommands(commands, ctx.availableTypes, new Set([section.id]), ctx.contractsByType);
   }
 
@@ -1395,7 +1546,7 @@ function compileGenericSection(plan: SectionPlan, section: PagePlanSection, ctx:
     const gridId = `${section.id}-grid`;
     commands.push(gridCommand(gridId, rootId, columns));
     const cardImages =
-      section.type === "services" || section.type === "testimonials"
+      section.type === "testimonials"
         ? mediaItemsFor(plan, section, ctx, { min: list.length, max: 6 })
         : undefined;
     list.slice(0, 6).forEach((item, index) => {
@@ -1412,6 +1563,16 @@ export function compileSectionPlan(plan: SectionPlan, section: PagePlanSection, 
   // seed for heuristic variety derived from the section id.
   ctx.presetRefsByRole = new Map((plan.presetRefs ?? []).map((ref) => [ref.role, ref.presetId]));
   ctx.presetSeed = hashString(section.id);
+
+  // Resolve layout variant (roadmap 02/05): LLM choice validated, else seed-pick.
+  ctx.variant = hasVariants(section.type)
+    ? resolveVariant({
+        type: section.type,
+        requested: plan.layoutVariant,
+        seedKey: `${ctx.pagePlan.jobId}:${section.type}`,
+        availableTypes: ctx.availableTypes,
+      })
+    : "";
 
   if (section.type === "header") return compileHeaderSection(plan, section, ctx);
   if (section.type === "hero") return compileHeroSection(plan, section, ctx);
@@ -1567,14 +1728,16 @@ export function compileSection(sectionPlan: SectionPlan, section: PagePlanSectio
   return compileSectionWithMeta(sectionPlan, section, pagePlan, request).commands;
 }
 
-/** Result of {@link compileSectionWithMeta}: commands + which presets were instantiated. */
+/** Result of {@link compileSectionWithMeta}: commands + compile metadata. */
 export interface CompileSectionResult {
   commands: AICommandSuggestion[];
   /** Preset ids instantiated in this section (roadmap 02/01 — logged as presetUsed). */
   presetUsed: string[];
+  /** Layout variant actually used (roadmap 02/05 — logged as variantUsed). */
+  variantUsed: string;
 }
 
-/** Like {@link compileSection} but also reports which presets were used. */
+/** Like {@link compileSection} but also reports compile metadata (presets, variant). */
 export function compileSectionWithMeta(
   sectionPlan: SectionPlan,
   section: PagePlanSection,
@@ -1583,7 +1746,7 @@ export function compileSectionWithMeta(
 ): CompileSectionResult {
   const ctx = buildCompileContext(pagePlan, request);
   const commands = compileSectionPlan(normalizeComponentIntentPreferences(sectionPlan), section, ctx);
-  return { commands, presetUsed: [...ctx.presetUsed] };
+  return { commands, presetUsed: [...ctx.presetUsed], variantUsed: ctx.variant };
 }
 
 /**
@@ -1614,6 +1777,7 @@ function buildCompileContext(pagePlan: PagePlan, request: GeneratePageRequest): 
     presetRefsByRole: new Map(),
     presetSeed: 0,
     presetUsed: new Set<string>(),
+    variant: "",
   };
 }
 

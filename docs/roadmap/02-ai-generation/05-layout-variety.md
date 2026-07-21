@@ -4,7 +4,22 @@
 > Ưu tiên: P3/P4
 > Ước lượng: 3 ngày
 > Phụ thuộc: [02/01](./01-preset-first-compiler.md) (preset-first giảm gánh cho variant code)
-> Trạng thái: Chưa bắt đầu
+> Trạng thái: Hoàn thành (Phase 1 — hero/services/cta) — 2026-07-21. Module mới
+> `apps/api/src/services/layout-variants.ts`: enum đóng theo type (hero 4: split-media-right/left,
+> centered-stack, full-bleed-media; services 3: grid-cards, gallery-showcase, alternating-rows; cta 2:
+> centered-band, split-with-media) + `VARIANT_REQUIRES` (component cần) + `resolveVariant` (ưu tiên LLM
+> choice hợp lệ+đủ requires, else seed-pick theo `${jobId}:${type}` — ổn định khi retry, khác giữa job;
+> lọc theo availableTypes). Compiler: `CompileContext.variant` resolve trong `compileSectionPlan`; hero
+> refactor thành dispatch (`heroSplitMedia`/`heroCenteredStack`/`heroFullBleed` + `heroCopy`/`heroImage`
+> tái dùng), `compileServicesVariant`, cta 2 nhánh. `applyVisualEmphasis` modifier sau variant
+> (conversion→lặp CTA cuối section, proof→stats row nếu plan có stats). `compileSectionWithMeta` trả
+> `variantUsed` → log `section_ready.variantUsed`. Section prompt liệt kê enum variant theo type + hướng
+> dẫn chọn. Flag `AI_LAYOUT_VARIETY=off` → luôn variant đầu (hành vi cũ). Test: `layout-variants.test.ts`
+> (8: resolve/seed-ổn-định/requires-filter/off) + 6 test compiler (variantUsed, cấu trúc khác nhau giữa
+> variant, variant lạ→fallback, off, services alternating-rows, conversion lặp CTA). apps/api **128 test
+> pass**. Docs: AI_ASSISTANT (layout-variety section + env) + README + roadmap.
+> **Chưa làm (phase sau):** variant cho features/testimonials/pricing/faq (roadmap bảng 3.1); page-level
+> alternating-rhythm pass (mục 3.6); viết variant bằng preset khi catalog có (dùng chung `tryPresetLeaf`).
 
 ## 1. Mục đích
 

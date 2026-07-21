@@ -111,6 +111,8 @@ export const logger = {
       qualityGateMode?: string;
       // Preset-first compile (roadmap 02/01).
       presetUsed?: string[];
+      // Layout variety (roadmap 02/05).
+      variantUsed?: string;
     },
   ) => {
     if (!DEBUG) return;
