@@ -1,5 +1,7 @@
 # Plugin System & Extension API
 
+> Audience: AI agents & maintainers. No dedicated user-guide page yet — this system is developer/host-app facing, not an end-user feature.
+
 Complete reference for plugin architecture, lifecycle, API surface, and best practices.
 
 ---

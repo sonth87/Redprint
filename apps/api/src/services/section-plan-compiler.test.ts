@@ -287,4 +287,40 @@ describe("section-plan compiler", () => {
       }
     }
   });
+
+  // ── Locale (roadmap 02/03) ──────────────────────────────────────────────
+
+  function allText(commands: ReturnType<typeof compileFallbackSection>): string {
+    return commands
+      .filter((cmd) => cmd.type === "ADD_NODE")
+      .map((cmd) => JSON.stringify(cmd.payload.props ?? {}))
+      .join(" ");
+  }
+
+  it("uses Vietnamese fallback content when generationOptions.locale='vi' despite an English prompt", () => {
+    const request: GeneratePageRequest = {
+      ...makeRequest(),
+      prompt: "Landing page for a pet grooming shop", // English, no diacritics
+      generationOptions: { locale: "vi" },
+    };
+    const plan = buildDeterministicPagePlan(request, "job-locale-vi");
+    const commands = plan.sections.flatMap((section) => compileFallbackSection(section, plan, request));
+    const text = allText(commands);
+    // pet-care pack `vi` locale copy should appear.
+    expect(text).toMatch(/Dịch vụ|Đặt lịch|thú cưng|Spa/);
+  });
+
+  it("uses English fallback content when generationOptions.locale='en' despite a Vietnamese prompt", () => {
+    const request: GeneratePageRequest = {
+      ...makeRequest(),
+      prompt: "Trang cho tiệm chăm sóc thú cưng", // Vietnamese diacritics
+      generationOptions: { locale: "en" },
+    };
+    const plan = buildDeterministicPagePlan(request, "job-locale-en");
+    const services = plan.sections.find((s) => s.type === "services") ?? plan.sections[0];
+    const text = allText(compileFallbackSection(services, plan, request));
+    // English pet-care `_default` copy; must not contain Vietnamese diacritics.
+    expect(text).not.toMatch(/[àáạảãăằắđịệộủ]/);
+    expect(text).toMatch(/Grooming|Daycare|Care/i);
+  });
 });

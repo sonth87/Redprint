@@ -4,7 +4,17 @@
 > Ưu tiên: P3 (làm đầu tiên trong nhóm 02)
 > Ước lượng: 2 ngày
 > Phụ thuộc: Không
-> Trạng thái: Chưa bắt đầu
+> Trạng thái: Hoàn thành — 2026-07-21. `apps/api/src/data/content-packs/` (index + `_generic` + `pet-care`
+> + `saas` + `restaurant` + `loader.ts` Zod). PawJoy/pet literals + `PET_IMAGES`/`GENERIC_IMAGES`/`isPetCare`
+> gỡ khỏi compiler (grep `PawJoy|Tắm thơm|PET_IMAGES` trong `src/**/*.ts` = 0, chỉ còn trong comment mô tả
+> + JSON). `CompileContext` thêm `pack`+`locale` (resolve 1 lần trong `buildCompileContext` qua
+> `matchContentPack` + `resolvePackLocale`). Content/nav/media/marquee/accent-shape đọc từ pack; merge sâu
+> 1 tầng trên `_generic`. `{industry}` placeholder nội suy từ brief. Locale hiện suy từ `isVietnamese`
+> (`resolvePackLocale`) — 02/03 sẽ thay bằng `generationOptions.locale`. Build: thêm bước `copy-data`
+> (dependency-free, dùng `fs.cpSync`) copy JSON `data/palette` + `data/content-packs` vào `dist` — đồng thời
+> vá luôn lỗi tồn tại: `tsc` không copy JSON nên palette JSON trước đây thiếu trong prod. Test:
+> `content-packs/loader.test.ts` (8 — matcher 4 ngành, schema completeness, merge over generic, restaurant
+> không rò rỉ copy pet). 13 test compiler cũ vẫn pass (hành vi fallback giữ nguyên).
 
 ## 1. Mục đích
 

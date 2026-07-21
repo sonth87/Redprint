@@ -1,5 +1,7 @@
 # Preset System
 
+> Audience: AI agents & maintainers. User-facing overview: [/docs/user-guide/04-components-va-preset.md](../../docs/user-guide/04-components-va-preset.md)
+
 Pre-configured component variations that users can drag directly onto the canvas.
 
 ---

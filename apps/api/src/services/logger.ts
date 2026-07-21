@@ -98,6 +98,14 @@ export const logger = {
       adapterFallbackReason?: string;
       propValidationErrors?: string[];
       contractSource?: string;
+      // Cost/observability (roadmap 02/08) — populated on the "complete" event.
+      llmCalls?: number;
+      totalInputTokens?: number;
+      totalOutputTokens?: number;
+      cacheHitTokens?: number;
+      estimatedCostUsd?: number | null;
+      usageIncomplete?: boolean;
+      usageByStage?: Record<string, { calls: number; inputTokens: number; outputTokens: number }>;
     },
   ) => {
     if (!DEBUG) return;

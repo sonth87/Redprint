@@ -4,7 +4,18 @@
 > Ưu tiên: P3
 > Ước lượng: 1 ngày
 > Phụ thuộc: Nên đi cùng [02/02](./02-industry-content-packs.md)
-> Trạng thái: Chưa bắt đầu
+> Trạng thái: Hoàn thành — 2026-07-21. `resolveLocale(request, brief?)` trong `section-plan-compiler.ts`
+> (ưu tiên: `generationOptions.locale` tường minh → heuristic script prompt: dấu tiếng Việt rồi CJK
+> ja/ko/zh → `en`). `isVietnamese()` **đã xoá** (grep 0). Locale nối vào planner prompt
+> (`page-plan-generator.ts`) + section prompt (`section-plan-generator.ts`) qua `localeLabel()` ("write
+> all content in <language>; structural values stay English"); chọn locale entry của content pack (02/02)
+> — locale lạ dùng `_default` của pack còn LLM viết đúng ngôn ngữ yêu cầu. `COMPILER_STRINGS` (vi/en,
+> fallback en) cho UI string compiler tự sinh (CollapsibleText expand/collapse, nav CTA "Đặt lịch"/"Book
+> now"). UI: dropdown "Content Language" (Auto/Tiếng Việt/English) trong `PageGeneratorModal.tsx`; Auto gửi
+> `i18n.language` hiện tại làm gợi ý. i18n key `ai.language*` cho en+vi. RTL (ar/he) chưa liệt kê (ngoài
+> phạm vi, builder chưa hỗ trợ RTL). Test: `locale.test.ts` (9 — ưu tiên nguồn, không-dấu-vẫn-đúng khi
+> chọn vi, CJK, planner-no-brief) + 2 test compiler (locale=vi/prompt-en → content vi; locale=en/prompt-vi
+> → content en). Chưa làm: check ngôn ngữ heading ở quality gate (thuộc [02/04](./04-quality-gates.md)).
 
 ## 1. Mục đích
 

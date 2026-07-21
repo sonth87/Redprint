@@ -1,0 +1,60 @@
+{
+  "id": "saas",
+  "keywords": ["saas", "software", "phần mềm", "phan mem", "app", "platform", "nền tảng", "dashboard", "api", "b2b"],
+  "accentShape": "blob",
+  "imagePool": [
+    "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=900&q=80",
+    "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=900&q=80",
+    "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=900&q=80",
+    "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=900&q=80",
+    "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=900&q=80"
+  ],
+  "locales": {
+    "_default": {
+      "brandPlaceholder": "Acme Platform",
+      "navLabels": {
+        "features": "Features",
+        "pricing": "Pricing",
+        "testimonials": "Customers",
+        "faq": "FAQ",
+        "process": "How It Works"
+      },
+      "navItems": [
+        { "label": "Features", "href": "#features" },
+        { "label": "Pricing", "href": "#pricing" },
+        { "label": "Customers", "href": "#testimonials" },
+        { "label": "FAQ", "href": "#faq" }
+      ],
+      "sections": {
+        "hero": {
+          "eyebrow": "Built for teams",
+          "heading": "Ship faster with one connected workflow",
+          "body": "Bring planning, work, and reporting into a single place your team already understands.",
+          "ctaLabel": "Start free",
+          "secondaryCtaLabel": "Book a demo"
+        },
+        "features": {
+          "items": [
+            { "title": "Automations", "body": "Replace repetitive steps with rules that run themselves." },
+            { "title": "Real-time dashboards", "body": "See status, blockers, and trends without exporting a thing." },
+            { "title": "Secure by default", "body": "SSO, granular roles, and audit logs on every plan." }
+          ]
+        },
+        "pricing": {
+          "items": [
+            { "title": "Starter", "body": "For small teams getting organized.", "meta": "$0" },
+            { "title": "Growth", "body": "For scaling teams that need automation and analytics.", "meta": "$29/seat" },
+            { "title": "Enterprise", "body": "Advanced security, SSO, and dedicated support.", "meta": "Custom" }
+          ]
+        },
+        "faq": {
+          "faqs": [
+            { "title": "Is there a free plan?", "body": "Yes — the Starter plan is free for small teams, with no time limit." },
+            { "title": "Can I migrate my existing data?", "body": "Import from CSV or connect a source; our team helps with larger migrations." },
+            { "title": "How does billing work?", "body": "Per active seat, billed monthly or annually. Change plans anytime." }
+          ]
+        }
+      }
+    }
+  }
+}

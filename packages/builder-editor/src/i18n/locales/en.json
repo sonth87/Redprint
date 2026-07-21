@@ -401,6 +401,10 @@
     "templates": "Quick Templates",
     "colorPalette": "Color Palette",
     "toneStyle": "Tone & Style",
+    "language": "Content Language",
+    "languageAuto": "Auto",
+    "languageVi": "Vietnamese",
+    "languageEn": "English",
     "yourPrompt": "Your Prompt",
     "templateCategories": {
       "product": "Product",

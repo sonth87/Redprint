@@ -1,0 +1,30 @@
+name: Docs Check
+
+# Static docs governance checks — see docs/roadmap/05-docs-standardization/03-doc-governance.md.
+# Fast (<1s), dependency-free (scripts/check-docs.mjs), so this runs on every PR that touches docs.
+
+on:
+  pull_request:
+    paths:
+      - "docs/**"
+      - ".claude/docs/**"
+      - ".claude/ARCHITECTURE.md"
+      - "README.md"
+      - "CLAUDE.md"
+      - "scripts/check-docs.mjs"
+      - ".github/workflows/docs-check.yml"
+  push:
+    branches: [main, master]
+    paths:
+      - "docs/**"
+      - ".claude/docs/**"
+
+jobs:
+  check-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/check-docs.mjs

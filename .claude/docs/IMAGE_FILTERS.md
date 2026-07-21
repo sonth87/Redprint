@@ -1,5 +1,7 @@
 # Image Filter System
 
+> Audience: AI agents & maintainers. User-facing overview: [/docs/user-guide/05-styling-va-hieu-ung.md](../../docs/user-guide/05-styling-va-hieu-ung.md)
+
 **Location:** `packages/shared/src/imageFilters.ts`  
 **Consumers:** `builder-components` (Image.tsx), `builder-editor` (ImageFilterPicker.tsx)  
 **Version:** 1.0 | **Last updated:** 2026-04

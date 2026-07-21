@@ -33,7 +33,7 @@
 | [IMAGE_FILTERS.md](./IMAGE_FILTERS.md) | Image filters & frames | [05-styling-va-hieu-ung](../../docs/user-guide/05-styling-va-hieu-ung.md) |
 | [ACCESSIBILITY.md](./ACCESSIBILITY.md) | A11y, keyboard navigation, diagnostics | [10-phim-tat-thao-tac](../../docs/user-guide/10-phim-tat-thao-tac.md) |
 | [INTEGRATION.md](./INTEGRATION.md) | External services, event catalogue, performance targets | [11-runtime-va-tich-hop](../../docs/user-guide/11-runtime-va-tich-hop.md) |
-| POPUPS.md *(planned)* | Popup system V6 spec — see [roadmap 05/02](../../docs/roadmap/05-docs-standardization/02-ai-docs-refresh.md) | [07-popup-modal](../../docs/user-guide/07-popup-modal.md) |
+| [POPUPS.md](./POPUPS.md) | Popup system V6 spec — data model, rules, campaigns, lifecycle, commands | [07-popup-modal](../../docs/user-guide/07-popup-modal.md) |
 
 ## Known drift (2026-07-20 audit)
 

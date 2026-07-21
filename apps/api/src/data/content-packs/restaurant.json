@@ -1,0 +1,85 @@
+{
+  "id": "restaurant",
+  "keywords": ["restaurant", "nhà hàng", "nha hang", "quán", "quan", "café", "cafe", "cà phê", "ca phe", "coffee", "bistro", "menu", "food", "ẩm thực", "am thuc"],
+  "accentShape": "blob",
+  "imagePool": [
+    "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=900&q=80",
+    "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=900&q=80",
+    "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=900&q=80",
+    "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=900&q=80",
+    "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=900&q=80"
+  ],
+  "locales": {
+    "_default": {
+      "brandPlaceholder": "The Corner Table",
+      "navLabels": {
+        "services": "Menu",
+        "gallery": "Gallery",
+        "testimonials": "Reviews",
+        "faq": "FAQ"
+      },
+      "navItems": [
+        { "label": "Menu", "href": "#services" },
+        { "label": "Gallery", "href": "#gallery" },
+        { "label": "Reviews", "href": "#testimonials" },
+        { "label": "FAQ", "href": "#faq" }
+      ],
+      "sections": {
+        "hero": {
+          "eyebrow": "Fresh every day",
+          "heading": "Honest food, made from scratch",
+          "body": "A seasonal menu, a warm room, and a table waiting for you.",
+          "ctaLabel": "Reserve a table",
+          "secondaryCtaLabel": "See the menu"
+        },
+        "services": {
+          "heading": "On the menu",
+          "items": [
+            { "title": "Small plates", "body": "Shareable starters built around the day's best market finds." },
+            { "title": "Mains", "body": "Comforting classics and a few surprises, cooked to order." },
+            { "title": "Desserts", "body": "House-made sweets that are worth saving room for." }
+          ]
+        },
+        "faq": {
+          "faqs": [
+            { "title": "Do you take reservations?", "body": "Yes — book online or call us; walk-ins are welcome when there's room." },
+            { "title": "Are there vegetarian options?", "body": "Every menu has vegetarian and vegan dishes, clearly marked." },
+            { "title": "Can you handle allergies?", "body": "Tell your server — the kitchen adapts most dishes for common allergens." }
+          ]
+        }
+      }
+    },
+    "vi": {
+      "brandPlaceholder": "Góc Quán",
+      "navLabels": {
+        "services": "Thực đơn",
+        "gallery": "Hình ảnh",
+        "testimonials": "Đánh giá",
+        "faq": "FAQ"
+      },
+      "navItems": [
+        { "label": "Thực đơn", "href": "#services" },
+        { "label": "Hình ảnh", "href": "#gallery" },
+        { "label": "Đánh giá", "href": "#testimonials" },
+        { "label": "FAQ", "href": "#faq" }
+      ],
+      "sections": {
+        "hero": {
+          "eyebrow": "Tươi mới mỗi ngày",
+          "heading": "Món ngon nấu mới, nguyên liệu thật",
+          "body": "Thực đơn theo mùa, không gian ấm cúng và một bàn đang chờ bạn.",
+          "ctaLabel": "Đặt bàn ngay",
+          "secondaryCtaLabel": "Xem thực đơn"
+        },
+        "services": {
+          "heading": "Thực đơn nổi bật",
+          "items": [
+            { "title": "Món khai vị", "body": "Món nhỏ để chia sẻ, làm từ nguyên liệu tươi trong ngày." },
+            { "title": "Món chính", "body": "Món quen thuộc và vài bất ngờ, nấu theo yêu cầu." },
+            { "title": "Tráng miệng", "body": "Món ngọt nhà làm, rất đáng để dành bụng." }
+          ]
+        }
+      }
+    }
+  }
+}

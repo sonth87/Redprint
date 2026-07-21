@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "npx --yes tsx watch --env-file=.env src/server.ts",
     "dev:plain": "npx --yes tsx --env-file=.env src/server.ts",
-    "build": "tsc",
+    "build": "tsc && npm run copy-data",
+    "copy-data": "node --eval \"const fs=require('node:fs');for(const d of ['data/palette','data/content-packs']){fs.cpSync('src/'+d,'dist/'+d,{recursive:true,filter:(s)=>fs.statSync(s).isDirectory()||s.endsWith('.json')})}\"",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",

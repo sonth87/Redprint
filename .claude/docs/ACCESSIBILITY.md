@@ -1,5 +1,7 @@
 # Accessibility & Error Handling
 
+> Audience: AI agents & maintainers. User-facing overview: [/docs/user-guide/10-phim-tat-thao-tac.md](../../docs/user-guide/10-phim-tat-thao-tac.md)
+
 Reference for accessibility requirements, error boundaries, and developer diagnostics.
 
 ---

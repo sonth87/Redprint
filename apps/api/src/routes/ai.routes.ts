@@ -19,6 +19,7 @@ import {
   type DroppedCommand,
 } from "../services/section-plan-compiler.js";
 import { callLLM, callLLMStream } from "../services/llm-client.js";
+import { JobAccountant } from "../services/llm-accounting.js";
 import { initSSE, sendSSE } from "../services/sse.js";
 import { COMMAND_REFERENCE } from "../services/command-reference.js";
 import { logger } from "../services/logger.js";
@@ -112,6 +113,7 @@ aiRouter.post("/generate-page", async (req: Request, res: Response) => {
 
   const jobId = randomUUID();
   const startedAt = Date.now();
+  const accountant = new JobAccountant();
   const failedSections: Array<{ sectionId: string; index: number; error: string }> = [];
   let completed = 0;
 
@@ -119,7 +121,7 @@ aiRouter.post("/generate-page", async (req: Request, res: Response) => {
     logger.jobEvent("started", { jobId, stage: "planner", status: "running" });
     sendSSE(res, "job_started", { jobId });
 
-    const pagePlan = await generatePagePlan(body, jobId);
+    const pagePlan = await generatePagePlan(body, jobId, accountant);
     const skeletonCommands = buildSkeletonCommands(pagePlan, body);
     const manifestComponents = buildComponentCapabilityManifest(body.availableComponents ?? []).map((component) => component.type);
 
@@ -160,6 +162,7 @@ aiRouter.post("/generate-page", async (req: Request, res: Response) => {
             section,
             body,
             attempt > 1 ? lastError : undefined,
+            accountant,
           );
           const commands = compileSection(sectionPlan, section, pagePlan, body);
           if (commands.length === 0) {
@@ -247,12 +250,20 @@ aiRouter.post("/generate-page", async (req: Request, res: Response) => {
     });
 
     const status = failedSections.length === 0 ? "success" : completed > 0 ? "partial" : "failed";
+    const usage = accountant.summary();
     logger.jobEvent("complete", {
       jobId,
       stage: "complete",
       status,
       elapsedMs: Date.now() - startedAt,
       fallbackUsed: failedSections.length > 0,
+      llmCalls: usage.llmCalls,
+      totalInputTokens: usage.totalInputTokens,
+      totalOutputTokens: usage.totalOutputTokens,
+      cacheHitTokens: usage.cacheReadTokens,
+      estimatedCostUsd: usage.estimatedCostUsd,
+      usageIncomplete: usage.usageIncomplete,
+      usageByStage: usage.byStage,
     });
     sendSSE(res, "complete", {
       jobId,
@@ -260,6 +271,18 @@ aiRouter.post("/generate-page", async (req: Request, res: Response) => {
       completed,
       failed: failedSections.length,
       failedSections,
+      // Cost summary is opt-in for the client (avoid surprising the UI); it can
+      // surface "~$0.04, 12 calls" when AI_EXPOSE_COST=true.
+      ...(process.env.AI_EXPOSE_COST === "true"
+        ? {
+            usage: {
+              llmCalls: usage.llmCalls,
+              totalInputTokens: usage.totalInputTokens,
+              totalOutputTokens: usage.totalOutputTokens,
+              estimatedCostUsd: usage.estimatedCostUsd,
+            },
+          }
+        : {}),
     });
     res.end();
   } catch (err) {
@@ -422,7 +445,7 @@ aiRouter.post("/chat", async (req: Request, res: Response) => {
       ...body.messages.filter((m) => m.role !== "system"),
     ];
 
-    const rawText = await callLLM(messages, true);
+    const rawText = await callLLM(messages, { jsonMode: true, stage: "chat" });
 
     // Parse response
     let parsed: unknown;
@@ -599,7 +622,7 @@ async function repairDroppedCommands(
 
   let repairText: string;
   try {
-    repairText = await callLLM(repairMessages, true);
+    repairText = await callLLM(repairMessages, { jsonMode: true, stage: "repair" });
   } catch (err) {
     logger.decision("REPAIR_FAILED", "Repair LLM call failed", { error: String(err) });
     return { repairedValid: [], stillDropped: dropped };
@@ -667,7 +690,7 @@ aiRouter.post("/chat/stream", async (req: Request, res: Response) => {
     // Stream tokens to client as they arrive
     const rawText = await callLLMStream(messages, (delta) => {
       sendSSE(res, "token", { delta });
-    }, true);
+    }, { jsonMode: true, stage: "chat" });
 
     // Parse accumulated response
     let parsed: unknown;

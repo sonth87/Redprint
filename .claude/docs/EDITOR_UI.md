@@ -1,5 +1,7 @@
 # Editor UI: Canvas, Panels & Interaction
 
+> Audience: AI agents & maintainers. User-facing overview: [/docs/user-guide/02-giao-dien-editor.md](../../docs/user-guide/02-giao-dien-editor.md), [10-phim-tat-thao-tac](../../docs/user-guide/10-phim-tat-thao-tac.md)
+
 Complete reference for editor interface, canvas system, panel architecture, selection, snapping, and keyboard shortcuts.
 
 ---

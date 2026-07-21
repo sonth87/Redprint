@@ -3,7 +3,7 @@
 > Phân loại: Quy trình
 > Ưu tiên: P2
 > Ước lượng: 0.5 ngày (thiết lập) + duy trì
-> Trạng thái: Chưa bắt đầu
+> Trạng thái: Hoàn thành — ma trận "what-changed → what-docs" + nguyên tắc viết chép vào `CLAUDE.md` (file không bị khoá); `RULES.md` bị khoá (tự ghi rõ trong nội dung file) nên chỉ đề xuất qua [architecture-md-proposals.md, Đề xuất 4](./architecture-md-proposals.md#đề-xuất-4--chép-what-changed--what-docs-matrix-vào-rulesmd). Script `scripts/check-docs.mjs` (dependency-free) kiểm tra 2 việc: link nội bộ trong `docs/**`+`.claude/docs/**`+README/CLAUDE không gãy, và mọi file `docs/roadmap/*/*.md` (trừ README/legacy) có header `Trạng thái:`. Wired vào `pnpm docs:check` (root `package.json`) và `.github/workflows/docs-check.yml` (chạy trên PR đụng docs, + push vào main/master). Thêm `.github/PULL_REQUEST_TEMPLATE.md` với checkbox "Docs updated / not needed (lý do)". Không làm: audit định kỳ 3-tháng (chỉ là quy trình, không phải artifact code — ghi vào lịch làm việc của maintainer).
 
 ## 1. Mục đích
 

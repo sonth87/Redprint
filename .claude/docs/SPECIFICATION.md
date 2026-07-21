@@ -1,5 +1,7 @@
 # UI Builder Specification
 
+> Audience: AI agents & maintainers. User-facing overview: [/docs/user-guide/01-gioi-thieu-tong-quan.md](../../docs/user-guide/01-gioi-thieu-tong-quan.md)
+
 **Technical Specification v2.1**
 
 > This document serves as the engineering reference for AI Agents when understanding project scope, planning development, and generating code/structures per module. All interface contracts defined here are immutable unless officially version-bumped.

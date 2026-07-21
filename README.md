@@ -88,6 +88,7 @@ Complete technical reference organized by domain:
 | **[ACCESSIBILITY.md](./.claude/docs/ACCESSIBILITY.md)** | A11y, keyboard navigation, error handling, diagnostics |
 | **[INTEGRATION.md](./.claude/docs/INTEGRATION.md)** | External services, event catalogue, performance targets |
 | **[AI_ASSISTANT.md](./.claude/docs/AI_ASSISTANT.md)** | AI conversational interface — providers, context, command whitelist |
+| **[POPUPS.md](./.claude/docs/POPUPS.md)** | Popup system V6 — data model, rules, campaigns, lifecycle, commands |
 | **[PROPERTY_SYSTEM.md](./.claude/docs/PROPERTY_SYSTEM.md)** | PropertyDescriptor, shared style/prop editing, PropertyControls |
 | **[PRESETS.md](./.claude/docs/PRESETS.md)** | Component preset types, PresetRegistry API, palette UI |
 | **[IMAGE_FILTERS.md](./.claude/docs/IMAGE_FILTERS.md)** | 39 Instagram-style filter presets — CSS, SVG, and overlay modes |
@@ -222,7 +223,21 @@ sections.
 Enable `AI_DEBUG=true` for structured generation logs. Full prompts/responses stay redacted unless
 `AI_PROMPT_DEBUG=true`; logs include section type, preferred components, selected rich component,
 fallback reason, media item count, component intents, adapter usage, contract source, and validation
-error codes where available.
+error codes where available. The per-job `complete` log line also carries token/cost accounting
+(`totalInputTokens`, `totalOutputTokens`, `estimatedCostUsd`, `llmCalls`, `usageByStage`) — see the
+[cost & observability roadmap item](docs/roadmap/02-ai-generation/08-cost-observability.md).
+
+Model, temperature, and max output tokens are configurable per pipeline **stage** without code
+changes. Global vars are `LLM_MODEL`, `LLM_TEMPERATURE`, `LLM_MAX_TOKENS`; per-stage overrides use the
+suffixes `_PLANNER`, `_SECTION`, `_CHAT`, `_REPAIR` (e.g. `LLM_MODEL_PLANNER=claude-haiku-4-5` runs the
+planner on a cheaper model). Newer Claude models reject sampling params, so `temperature` is sent only
+to models that still accept it. Set `AI_EXPOSE_COST=true` to include a compact cost summary in the SSE
+`complete` event for the editor to display.
+
+The `/api/ai/*` routes sit behind a perimeter: set `AI_API_KEY` to require
+`Authorization: Bearer <AI_API_KEY>` on every request (unset = open, with a startup warning — fine for
+local dev, not for production). `AI_RATE_LIMIT_WINDOW_MS` (default `60000`) and `AI_RATE_LIMIT_MAX`
+(default `30`) cap requests per IP.
 
 The backend runs on `http://localhost:3002` by default. Set the URL in the editor's AI config panel.
 
@@ -232,10 +247,11 @@ The backend runs on `http://localhost:3002` by default. Set the URL in the edito
 |----------|--------------|-----------|
 | OpenAI | `gpt-4o` | `response_format: json_object` |
 | Gemini | `gemini-2.0-flash` | `responseMimeType: application/json` |
-| Claude | `claude-sonnet-4-5` | Prompt-based |
+| Claude | `claude-sonnet-5` | Prompt-based |
 
-Override via `LLM_MODEL` env var. All providers support the same request/response shape — switching
-providers requires only an env change, no code changes.
+Override via `LLM_MODEL` (or per-stage `LLM_MODEL_PLANNER` / `_SECTION` / `_CHAT` / `_REPAIR`). All
+providers support the same request/response shape — switching providers requires only an env change, no
+code changes.
 
 ### Design Tokens
 

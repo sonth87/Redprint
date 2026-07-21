@@ -2,81 +2,136 @@
 
 > Phân loại: Cải tiến
 > Ưu tiên: P4
-> Ước lượng: 2 ngày
+> Ước lượng: 0.5–1 ngày (giảm từ 2 ngày sau khi khảo sát — xem mục 2)
 > Phụ thuộc: Không
 > Trạng thái: Chưa bắt đầu
 
 ## 1. Mục đích
 
-(1) Một section apply là **tất-cả-hoặc-không** — không bao giờ để lại section dở dang trên canvas khi có
-command giữa chừng fail. (2) Một lần Ctrl+Z hoàn tác **cả trang generate** (hoặc cả section), không phải
-undo từng node một trong hàng trăm command.
+Hai mục tiêu **độc lập** (đừng gộp — chúng cần cơ chế khác nhau):
 
-## 2. Hiện trạng & lý do
+- **(A) Undo cả trang bằng ít lần Ctrl+Z**: một lần undo hoàn tác cả section (hoặc cả trang generate),
+  không phải bấm Ctrl+Z hàng trăm lần cho từng node.
+- **(B) Atomic apply**: nếu một command giữa chừng fail, không để lại section dở dang trên canvas —
+  hoặc cả section vào, hoặc không có gì (rồi dùng fallback).
 
+## 2. Hiện trạng & lý do — QUAN TRỌNG: đã khảo sát code, khác giả định roadmap gốc
+
+**Phát hiện then chốt (2026-07-20):** `CommandEngine` + `HistoryStack` **đã có sẵn cơ chế `groupId`
+coalescing** — roadmap bản gốc (viết trước khi đọc code) đề xuất thêm "snapshot transaction API" mới,
+nhưng thực tế không cần cho mục tiêu (A):
+
+- `Command` có field `groupId` optional; `HistoryStack.coalesce()`
+  (`packages/builder-core/src/history/HistoryStack.ts:49-55`) và `HistoryStack.undo()/redo()`
+  (`:63-113`) **gom mọi entry cùng `groupId` thành một khối undo/redo atomic**. Đã serializable, đã test
+  (`tests/history/undoRedo.integration.test.ts`). Dùng cho drag-gesture coalescing hiện tại.
+- Nghĩa là mục tiêu (A) chỉ cần: **gán cùng một `groupId` cho mọi command của một section (hoặc cả job)**
+  khi dispatch — không cần snapshot document, không tốn memory clone, không thêm API mới vào core.
+
+⚠️ **Nhưng `groupId` KHÔNG giải quyết mục tiêu (B).** Mỗi command vẫn được commit ngay khi dispatch
+(`CommandEngine.dispatch` không có "chưa commit"). Nếu command 12/40 fail, 11 command đầu đã vào document
+rồi. `groupId` chỉ giúp undo chúng cùng lúc **sau khi apply xong** — không ngăn section dở dang xuất hiện
+tạm thời, và không tự rollback. (B) cần một cơ chế riêng ở client.
+
+**Hiện trạng cụ thể:**
 - `applyAICommandsProgressive` dispatch từng command, lỗi thì `console.warn` và **đi tiếp**
-  (`packages/builder-editor/src/ai/applyAICommandsProgressive.ts:36-39, 71-77`) → command 12/40 fail là
-  38 node còn lại vẫn vào, ra section khuyết (thiếu heading, card mồ côi…).
-- Undo: mỗi dispatch là 1 entry history (CommandEngine) → full-page generate ~200 command = user phải
-  Ctrl+Z 200 lần. Plan cũ mục 18.7/27 đã yêu cầu "Section apply atomic, undo full page hoặc từng section" — chưa làm.
+  (`packages/builder-editor/src/ai/applyAICommandsProgressive.ts` — 2 vòng dispatch, catch chỉ warn).
+- Command AI hiện **không set `groupId`** → mỗi node là 1 entry history riêng → full-page generate
+  ~200 command = ~200 lần Ctrl+Z.
 
 ## 3. Cách làm
 
-1. **Khảo sát CommandEngine trước** (`packages/builder-core/src/commands/CommandEngine.ts` + `HistoryStack`):
-   xác nhận có/chưa có khái niệm batch. Giả định chưa có → thêm **transaction API** ở core:
-   ```ts
-   // builder-core
-   engine.beginBatch(label?: string): BatchHandle   // gom mọi dispatch tiếp theo
-   engine.commitBatch(handle): void                 // 1 entry history duy nhất
-   engine.rollbackBatch(handle): void               // revert các command đã apply trong batch
-   ```
-   Cách hiện thực rẻ nhất, ít xâm lấn: batch = snapshot document trước batch (structural clone /
-   immutable ref nếu state đã immutable) — rollback = restore snapshot; history entry = {before, after}.
-   Đổi lại tốn memory theo kích thước document (chấp nhận: document JSON thường < vài MB).
-2. **builder-react**: expose `dispatchBatch(commands[], { label, validateAll })` từ `useBuilder()` —
-   wrap begin/commit/rollback, giữ backwards-compat `dispatch` đơn lẻ.
-3. **Sửa applyAICommandsProgressive**:
-   - Mỗi **section** (hoặc mỗi lần gọi apply) = 1 batch, label = `AI: <section title>`.
-   - Command fail → `rollbackBatch` + throw/return kết quả fail để caller (`usePageGenerator`) đánh dấu
-     section failed và **dùng fallbackCommands** (đường section_failed đã có UI sẵn).
-   - Progressive render 2 phase vẫn giữ **bên trong** batch (container phase 1, leaf phase 2 sau rAF,
-     commit sau phase 2) — lưu ý: batch mở qua rAF frame; đảm bảo không có dispatch ngoài-AI chen giữa
-     (editor đang ở trạng thái generating — chấp nhận rủi ro thấp này, hoặc queue dispatch ngoài batch
-     lại đến khi commit; quyết định khi implement, ghi chú vào PR).
-4. **Undo UX**: full-page generate = 1 batch/section + 1 batch skeleton → undo ~10 lần cho cả trang.
-   Thêm nút "Undo generation" trong PageGeneratorModal khi phase=done: pop liên tiếp các batch có label
-   prefix `AI:` của jobId hiện tại (lưu jobId trong label: `AI[job:xxxx]: Hero`).
-5. Test: core — batch commit 1 entry, rollback trả state cũ (deep equal); editor — command thứ N fail →
-   canvas không có node nào của section đó; undo sau generate 9 section = 10 bước về trạng thái ban đầu.
+### 3.1 Mục tiêu (A) — undo theo section, dùng `groupId` (nhẹ, không đụng core)
+
+1. Trong `usePageGenerator` / `AIAssistant` khi gọi `applyAICommandsProgressive`: truyền thêm một
+   `groupId` ổn định cho batch — mỗi **section** một `groupId` (VD `ai-<jobId>-<sectionId>`), hoặc cả job
+   một `groupId` nếu muốn "undo cả trang một phát" (quyết định UX — xem 3.3).
+2. `normalizeAICommands` / `applyAICommandsProgressive` gắn `groupId` đó vào từng command trước khi
+   `dispatch({ type, payload, groupId })`. `CommandEngine.dispatch` đã đọc `command.groupId` và
+   `HistoryStack.coalesce` xử lý phần còn lại — **không sửa gì trong core**.
+3. Lưu ý coalescing hiện tại: `coalesce()` chỉ **thay `command`** của entry top cùng groupId, giữ
+   `inverseCommand` **đầu tiên** (thiết kế cho gesture: nhiều bước → 1 undo về trạng thái trước gesture).
+   Với AI, mỗi command là ADD_NODE **khác node** — không phải cùng node bị sửa nhiều lần. Cần kiểm tra:
+   coalesce theo groupId có gộp đúng nhiều ADD_NODE khác nhau không, hay chỉ giữ inverse của node đầu
+   (làm undo chỉ xoá 1 node)? **Đây là điểm phải verify bằng test trước khi tin** — nếu coalesce không
+   hợp cho multi-node, thì cần: hoặc (a) mở rộng `HistoryStack` để một groupId giữ **mảng** inverse
+   (undo chạy ngược tất cả), hoặc (b) `undo()` grouped đã pop tất cả entry cùng groupId — nghĩa là
+   **đừng coalesce, cứ push nhiều entry cùng groupId** và để `undo()` gom lại (đọc lại `:76-84`: grouped
+   undo pop mọi entry cùng groupId → đây mới là đường đúng cho AI, không phải coalesce).
+   → **Kết luận thiết kế:** AI commands push **nhiều entry cùng groupId** (không coalesce), `undo()` sẵn
+   có gom cả nhóm. Coalesce chỉ dành cho gesture (cùng node). Cần đảm bảo `dispatch` không nhầm sang
+   nhánh coalesce — kiểm tra: coalesce chỉ chạy khi top entry **cùng groupId**, nên command AI thứ 2
+   cùng groupId sẽ bị coalesce nhầm với command thứ 1. **Phải xử lý:** thêm cờ phân biệt
+   "gesture-coalesce" vs "batch-group" — đơn giản nhất: một field `coalesce?: boolean` trên Command
+   (default false), `dispatch` chỉ gọi `coalesce()` khi `command.coalesce === true`. Gesture set true,
+   AI set false. Đây là thay đổi **nhỏ, an toàn** ở core (thêm 1 điều kiện), khác hẳn snapshot API lớn.
+
+### 3.2 Mục tiêu (B) — atomic apply (rollback khi fail), client-side
+
+1. Trong `applyAICommandsProgressive`, đổi từ "warn và đi tiếp" sang: nếu một command fail (dispatch trả
+   `success: false` hoặc throw), **dừng batch section đó** và rollback các command đã apply của **chính
+   section đó**.
+2. Rollback client-side tận dụng chính history: các command đã dispatch trong section này đều cùng
+   `groupId` (từ 3.1) → gọi một `undo()` sẽ gỡ sạch cả nhóm đã-apply-dở. Cần API nhỏ: cho phép caller
+   "undo nhóm groupId X" (không phải undo top of stack) — hoặc đơn giản hơn: vì section đang apply là
+   nhóm mới nhất trên stack, `engine.undo()` một lần là gỡ đúng nhóm dở dang.
+   → **Thiết kế v1 tối giản:** khi section fail giữa chừng, gọi `undo()` một lần (gỡ nhóm dở), rồi apply
+   `fallbackCommands` của section đó (đường `section_failed` đã có sẵn UI + fallback). Không cần
+   `rollbackBatch` API riêng.
+3. Progressive 2-phase (container trước, leaf sau rAF): giữ nguyên. Nếu fail ở phase 2 (leaf), undo nhóm
+   cũng gỡ luôn container phase 1 (cùng groupId). Đúng kỳ vọng.
+
+### 3.3 Undo UX
+
+- Mỗi section = 1 groupId → undo cả trang generate ≈ (số section + 1 skeleton) lần Ctrl+Z. Đủ tốt.
+- Tuỳ chọn: nút "Undo generation" trong PageGeneratorModal khi `phase=done` — pop liên tiếp các nhóm
+  có groupId prefix `ai-<jobId>-`. Cần lưu danh sách groupId của job. **Optional, làm sau nếu cần.**
+
+### 3.4 Test
+
+- Core: command cùng groupId (coalesce=false) push nhiều entry; `undo()` gỡ cả nhóm; gesture
+  (coalesce=true) vẫn coalesce như cũ (không regression `undoRedo.integration.test.ts`).
+- Editor: inject 1 command fail giữa section → sau apply, canvas không có node nào của section đó
+  (đã rollback), và fallback được apply.
+- Undo sau generate N section = N (+1) bước về trạng thái ban đầu.
 
 ## 4. Hướng thiết kế
 
-- Transaction đặt ở **core** (nơi sở hữu state + history) chứ không hack ở editor — mọi consumer
-  (AI, figma import, paste nhiều node) hưởng chung API.
-- Snapshot-based rollback thay vì inverse-command: đơn giản, đúng tuyệt đối, đủ nhanh; tối ưu
-  structural-sharing để sau nếu đo thấy chậm.
+- **Tận dụng `groupId` có sẵn thay vì snapshot API mới** — không clone document, không tốn memory, không
+  thêm surface API lớn vào core. Thay đổi core duy nhất: thêm field `coalesce?: boolean` để tách
+  gesture-coalesce khỏi batch-group (một điều kiện `if`).
+- Rollback client-side qua `undo()` thay vì restore snapshot — dùng đúng cơ chế inverse-command đã có,
+  đúng tuyệt đối, không nhân đôi logic revert.
 
 ## 5. Kết quả mong muốn
 
-- [ ] Không còn khả năng xuất hiện section khuyết trên canvas (test injected failure).
-- [ ] Undo cả trang generate ≤ số section + 1 lần Ctrl+Z; nút "Undo generation" hoạt động.
-- [ ] Không regression undo/redo thao tác tay (test suite command hiện có pass).
-- [ ] Dispatch đơn lẻ ngoài batch giữ nguyên hành vi (API cộng thêm, không phá).
+- [ ] Không còn section khuyết tồn tại sau khi apply (test injected failure → rollback + fallback).
+- [ ] Undo cả trang generate ≤ (số section + 1) lần Ctrl+Z.
+- [ ] Không regression undo/redo thao tác tay + gesture coalescing (`undoRedo.integration.test.ts` pass).
+- [ ] Dispatch đơn lẻ (không groupId) giữ nguyên hành vi.
 
 ## 6. Tình huống có thể xảy ra & corner cases
 
-- **User thao tác trong lúc generate** (thêm node tay giữa 2 section) → mỗi section là batch riêng nên
-  thao tác tay nằm giữa các entry history — thứ tự undo đúng tuần tự thời gian, chấp nhận.
-- **Batch mở mà client crash/reload** → không sao: batch chỉ tồn tại trong memory, reload đọc document đã lưu
-  (autosave nên tránh chạy giữa batch — kiểm tra điểm hook autosave, chỉ save sau commit).
-- **REMOVE_NODE prelude (fullPageMode)** trong batch skeleton: rollback khôi phục cả trang cũ — đúng kỳ vọng
-  (huỷ generate = trang cũ quay lại nguyên vẹn). Đây là cải thiện lớn so với hiện tại.
-- **Batch lồng nhau** (AI trong tương lai gọi từ plugin đã mở batch) → v1 cấm: beginBatch khi đang có batch → throw;
-  ghi docs API.
-- **Memory với document lớn + 10 batch** → snapshot giữ tham chiếu ngắn hạn, release sau commit
-  (history entry chỉ giữ before/after của batch, như 1 command to).
+- **coalesce nhầm command AI thứ 2 với thứ 1** (nếu quên tách `coalesce` flag) → undo chỉ gỡ 1 node.
+  Đây là bug tiềm ẩn chính — test phải bắt: 3 ADD_NODE cùng groupId, undo 1 lần → cả 3 biến mất.
+- **User thao tác tay giữa 2 section** → thao tác tay là entry không-groupId (hoặc groupId khác) → nằm
+  giữa các nhóm; undo tuần tự đúng thời gian. Chấp nhận.
+- **Autosave chạy giữa lúc apply** → document ở trạng thái dở. Kiểm tra hook autosave: nên debounce/skip
+  khi đang generating (nếu có autosave); nếu không có autosave thì bỏ qua.
+- **REMOVE_NODE prelude (fullPageMode)** cùng groupId skeleton → undo skeleton khôi phục trang cũ. Đúng
+  kỳ vọng (huỷ generate = trang cũ về nguyên). Xác nhận REMOVE_NODE có inverse handler (thêm lại node) —
+  **phải verify**: nếu REMOVE_NODE không có inverseHandler thì undo không khôi phục được node cũ. Kiểm tra
+  `commands/handlers.ts`.
+- **fail ở phase 1 (container)** trước khi có leaf → undo nhóm chỉ có container, sạch.
+- **`undo()` khi stack rỗng** (section đầu tiên fail ngay command 1) → `undo()` trả "Nothing to undo",
+  no-op an toàn; chỉ cần apply fallback.
 
 ## 7. Rủi ro & rollback
 
-Trung bình-cao (đụng core state). Giảm rủi ro: API thuần cộng thêm; AI path bật qua flag
-`AI_TRANSACTIONAL_APPLY` phía editor (off = hành vi cũ) trong 1–2 release đầu.
+Trung bình (đụng `CommandEngine.dispatch` thêm 1 điều kiện `coalesce` + `applyAICommandsProgressive`).
+Thấp hơn nhiều so với thiết kế snapshot gốc (không đụng state management, không clone document).
+Flag `AI_TRANSACTIONAL_APPLY` phía editor: off = hành vi cũ (warn-và-đi-tiếp, không groupId). Field
+`coalesce` trên Command là additive — command cũ không set = false = không coalesce (an toàn cho AI;
+gesture phải set true explicit — **kiểm tra mọi nơi tạo gesture command đã set coalesce:true** trước khi
+đổi default, nếu không gesture coalescing sẽ hỏng). Cân nhắc: giữ default coalesce theo hành vi cũ
+(coalesce khi có groupId) và AI set `coalesce:false` explicit — an toàn hơn cho gesture, chỉ cần AI opt-out.

@@ -1,5 +1,7 @@
 # Integration Points & Event API
 
+> Audience: AI agents & maintainers. User-facing overview: [/docs/user-guide/11-runtime-va-tich-hop.md](../../docs/user-guide/11-runtime-va-tich-hop.md)
+
 Reference for external service contracts, event catalogue, and system boundaries.
 
 ---

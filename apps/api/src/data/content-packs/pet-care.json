@@ -1,0 +1,148 @@
+{
+  "id": "pet-care",
+  "keywords": ["pet", "thú cưng", "thu cung", "chó", "cho", "mèo", "meo", "groom", "boarding", "daycare"],
+  "accentShape": "heart",
+  "imagePool": [
+    "https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=900&q=80",
+    "https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=900&q=80",
+    "https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=900&q=80",
+    "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=900&q=80",
+    "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=900&q=80",
+    "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=900&q=80"
+  ],
+  "locales": {
+    "_default": {
+      "brandPlaceholder": "Happy Paws Pet Care",
+      "marquee": {
+        "hero": "Gentle grooming • Safe daycare • Photo updates • Easy booking",
+        "cta": "Book today • Friendly guidance • Care that feels personal"
+      },
+      "navLabels": {
+        "services": "Services",
+        "gallery": "Gallery",
+        "pricing": "Pricing",
+        "testimonials": "Reviews",
+        "faq": "FAQ"
+      },
+      "navItems": [],
+      "sections": {
+        "services": {
+          "items": [
+            { "title": "Grooming and Care", "body": "Gentle, detail-focused grooming tailored to every pet's comfort and routine." },
+            { "title": "Daycare and Boarding", "body": "Safe supervised spaces for play, rest, and overnight stays." },
+            { "title": "Walking and Training", "body": "Friendly support for healthier habits, confidence, and daily exercise." }
+          ],
+          "mediaCaptions": ["Gentle grooming", "Safe daycare", "Cozy boarding", "Healthy walks"]
+        },
+        "testimonials": {
+          "mediaCaption": "Customers trust the team for calm, thoughtful care."
+        },
+        "gallery": {
+          "mediaAlt": "Pet care space"
+        }
+      }
+    },
+    "vi": {
+      "brandPlaceholder": "PawJoy Pet Care",
+      "marquee": {
+        "hero": "Spa tắm thơm • Trông giữ an toàn • Cập nhật hình ảnh • Đặt lịch nhanh",
+        "cta": "Đặt lịch hôm nay • Tư vấn nhanh • Bé được chăm sóc như ở nhà"
+      },
+      "navLabels": {
+        "services": "Dịch vụ",
+        "gallery": "Hình ảnh",
+        "pricing": "Bảng giá",
+        "testimonials": "Đánh giá",
+        "faq": "FAQ"
+      },
+      "navItems": [],
+      "sections": {
+        "header": {
+          "heading": "PawJoy Pet Care",
+          "body": "Spa, trông giữ và chăm sóc thú cưng thân thiện.",
+          "ctaLabel": "Đặt lịch ngay"
+        },
+        "hero": {
+          "eyebrow": "Dịch vụ thú cưng",
+          "heading": "Spa và chăm sóc thú cưng vui khỏe mỗi ngày",
+          "body": "Từ tắm thơm, cắt tỉa đến trông giữ qua đêm, PawJoy giúp các bé được chăm sóc an toàn, sạch sẽ và đầy yêu thương.",
+          "ctaLabel": "Đặt lịch ngay",
+          "secondaryCtaLabel": "Xem dịch vụ",
+          "mediaPrompt": "Happy dog and cat in a bright playful pet spa with warm red and yellow accents"
+        },
+        "services": {
+          "heading": "Dịch vụ dành riêng cho từng bé",
+          "body": "Chọn nhanh các gói chăm sóc phổ biến cho chó mèo, từ làm đẹp đến vui chơi và lưu trú.",
+          "items": [
+            { "title": "Spa tắm thơm và cắt tỉa", "body": "Tắm sấy, vệ sinh tai móng và tạo kiểu nhẹ nhàng cho từng bé." },
+            { "title": "Trông giữ theo giờ", "body": "Không gian chơi an toàn, có người theo dõi và cập nhật hình ảnh." },
+            { "title": "Khách sạn thú cưng", "body": "Phòng nghỉ sạch sẽ, lịch ăn ngủ riêng và chăm sóc qua đêm." },
+            { "title": "Dắt đi dạo và vận động", "body": "Lịch đi dạo linh hoạt giúp bé vui khỏe và bớt căng thẳng." }
+          ],
+          "mediaCaptions": ["Spa sạch thơm", "Khu chơi an toàn", "Lưu trú ấm cúng", "Dắt đi dạo vui khỏe"]
+        },
+        "gallery": {
+          "heading": "Một ngày vui khỏe tại PawJoy",
+          "body": "Hình ảnh dịch vụ giúp chủ nuôi thấy rõ không gian, quy trình và sự thoải mái của các bé.",
+          "mediaPrompt": "Playful pet care gallery with grooming, daycare, boarding, and walking moments",
+          "mediaAlt": "Không gian chăm sóc thú cưng"
+        },
+        "trust": {
+          "heading": "Vì sao các sen yên tâm gửi bé?",
+          "body": "Quy trình chăm sóc rõ ràng, không gian sạch và đội ngũ hiểu tính cách từng bé.",
+          "items": [
+            { "title": "Nhân viên yêu động vật", "body": "Mỗi bé được làm quen nhẹ nhàng trước khi bắt đầu chăm sóc." },
+            { "title": "Không gian sạch và an toàn", "body": "Dụng cụ được vệ sinh riêng, khu chơi có giám sát liên tục." },
+            { "title": "Cập nhật minh bạch", "body": "Gửi ảnh, tình trạng ăn uống và ghi chú sau mỗi lần sử dụng dịch vụ." }
+          ]
+        },
+        "process": {
+          "heading": "Đặt lịch đơn giản trong 3 bước",
+          "body": "Bạn chỉ cần gửi nhu cầu, chọn lịch phù hợp và nhận cập nhật sau buổi chăm sóc.",
+          "items": [
+            { "title": "Chọn dịch vụ phù hợp", "body": "Chia sẻ giống, cân nặng, thói quen và nhu cầu của bé." },
+            { "title": "Nhận tư vấn lịch hẹn", "body": "Đội ngũ gợi ý gói chăm sóc, thời lượng và lưu ý chuẩn bị." },
+            { "title": "Đưa bé đến vui chơi", "body": "Bạn nhận cập nhật sau buổi chăm sóc và lời khuyên tại nhà." }
+          ]
+        },
+        "pricing": {
+          "heading": "Gói dịch vụ rõ ràng, dễ chọn",
+          "body": "Bắt đầu từ những gói cơ bản đến chăm sóc toàn diện cho từng kích thước và thói quen.",
+          "items": [
+            { "title": "Gói Tắm Thơm", "body": "Tắm, sấy, chải lông và vệ sinh cơ bản cho chó mèo nhỏ.", "meta": "Từ 199k" },
+            { "title": "Gói Spa Toàn Diện", "body": "Thêm cắt tỉa, dưỡng lông và chăm sóc móng tai nhẹ nhàng.", "meta": "Từ 399k" },
+            { "title": "Gói Lưu Trú", "body": "Trông giữ ban ngày hoặc qua đêm với cập nhật hình ảnh định kỳ.", "meta": "Từ 249k/ngày" }
+          ]
+        },
+        "testimonials": {
+          "heading": "Khách hàng nói gì về PawJoy",
+          "body": "Những trải nghiệm thật từ các chủ nuôi đã gửi gắm thú cưng.",
+          "mediaCaption": "Khách hàng tin chọn dịch vụ chăm sóc nhẹ nhàng.",
+          "testimonials": [
+            { "title": "Bé về nhà thơm sạch và vui vẻ", "body": "Mình nhận được ảnh cập nhật trong lúc bé spa, rất yên tâm.", "meta": "Chị Mai, nuôi Poodle" },
+            { "title": "Dịch vụ trông giữ rất có tâm", "body": "Bé mèo nhà mình nhát nhưng được chăm sóc nhẹ nhàng, lần sau sẽ quay lại.", "meta": "Anh Nam, nuôi mèo Anh lông ngắn" }
+          ]
+        },
+        "faq": {
+          "heading": "Câu hỏi thường gặp",
+          "body": "Một vài điều chủ nuôi thường hỏi trước khi đặt lịch.",
+          "faqs": [
+            { "title": "Tôi cần chuẩn bị gì trước khi đưa bé đến?", "body": "Bạn nên mang sổ tiêm, thức ăn quen thuộc nếu bé lưu trú và ghi chú thói quen đặc biệt." },
+            { "title": "Có nhận chó mèo nhạy cảm hoặc nhút nhát không?", "body": "Có. Đội ngũ sẽ làm quen chậm, giảm tiếng ồn và điều chỉnh quy trình theo tính cách của bé." },
+            { "title": "Tôi có được nhận ảnh cập nhật không?", "body": "Có. Với dịch vụ trông giữ và lưu trú, bạn sẽ nhận ảnh hoặc ghi chú trong ngày." }
+          ]
+        },
+        "cta": {
+          "heading": "Sẵn sàng cho bé một ngày thật vui?",
+          "body": "Đặt lịch để đội ngũ PawJoy tư vấn gói chăm sóc phù hợp nhất cho thú cưng của bạn.",
+          "ctaLabel": "Đặt lịch ngay",
+          "mediaPrompt": "Playful pet care booking scene with happy dog owner and warm colors"
+        },
+        "footer": {
+          "heading": "PawJoy Pet Care",
+          "body": "Dịch vụ spa, trông giữ, lưu trú và chăm sóc chó mèo tại địa phương."
+        }
+      }
+    }
+  }
+}

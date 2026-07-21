@@ -1,0 +1,136 @@
+{
+  "id": "_generic",
+  "keywords": [],
+  "accentShape": "blob",
+  "imagePool": [
+    "https://images.unsplash.com/photo-1601758125946-6ec2ef64daf8?w=1200&q=80",
+    "https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=900&q=80",
+    "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=900&q=80",
+    "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=900&q=80",
+    "https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?w=900&q=80",
+    "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=900&q=80"
+  ],
+  "locales": {
+    "_default": {
+      "brandPlaceholder": "Your Brand",
+      "marquee": {
+        "hero": "Trusted service • Clear pricing • Friendly support • Easy booking",
+        "cta": "Book today • Friendly guidance • Service that feels personal"
+      },
+      "navLabels": {
+        "services": "Services",
+        "gallery": "Gallery",
+        "pricing": "Pricing",
+        "testimonials": "Reviews",
+        "faq": "FAQ",
+        "features": "Features",
+        "process": "How It Works",
+        "stats": "Results"
+      },
+      "navItems": [
+        { "label": "Services", "href": "#services" },
+        { "label": "Gallery", "href": "#gallery" },
+        { "label": "Pricing", "href": "#pricing" },
+        { "label": "Reviews", "href": "#testimonials" },
+        { "label": "FAQ", "href": "#faq" }
+      ],
+      "sections": {
+        "header": {
+          "items": [
+            { "title": "Services", "body": "Featured care options" },
+            { "title": "Pricing", "body": "Transparent packages" },
+            { "title": "Reviews", "body": "Trusted customers" },
+            { "title": "FAQ", "body": "Common questions" }
+          ]
+        },
+        "hero": {
+          "heading": "Reliable {industry} made simple",
+          "ctaLabel": "Book a visit",
+          "secondaryCtaLabel": "View services"
+        },
+        "services": {
+          "items": [
+            { "title": "Grooming and Care", "body": "Gentle, detail-focused care tailored to every customer's comfort and routine." },
+            { "title": "Daycare and Boarding", "body": "Safe supervised spaces for play, rest, and overnight stays." },
+            { "title": "Walking and Training", "body": "Friendly support for healthier habits, confidence, and daily exercise." }
+          ]
+        },
+        "pricing": {
+          "items": [
+            { "title": "Essential", "body": "Core service package for regular care.", "meta": "From $29" },
+            { "title": "Complete", "body": "Most popular plan with extra attention and flexible scheduling.", "meta": "From $79" },
+            { "title": "Premium", "body": "Personalized care for special routines and advanced needs.", "meta": "Custom" }
+          ]
+        },
+        "process": {
+          "items": [
+            { "title": "Tell us what you need", "body": "Share your goals, schedule, and any special care notes." },
+            { "title": "Meet the care team", "body": "We confirm the right service path and answer practical questions." },
+            { "title": "Book with confidence", "body": "Choose a time and receive clear next steps before the visit." }
+          ]
+        },
+        "trust": {
+          "items": [
+            { "title": "Trained specialists", "body": "A careful team familiar with {industry} needs and safety standards." },
+            { "title": "Clean safe spaces", "body": "Every visit is supported by clear routines and attentive supervision." },
+            { "title": "Transparent updates", "body": "Customers know what happened, what changed, and what to do next." }
+          ]
+        },
+        "faq": {
+          "faqs": [
+            { "title": "How do I get started?", "body": "Choose a service, share a few details, and the team will confirm availability." },
+            { "title": "Can I customize the service?", "body": "Yes. The page can highlight packages and flexible options for different needs." },
+            { "title": "What should I prepare?", "body": "Bring any relevant notes, preferences, and contact details before the first visit." }
+          ]
+        },
+        "testimonials": {
+          "testimonials": [
+            { "title": "A calmer experience", "body": "The team made the whole process easy, warm, and incredibly professional.", "meta": "Mai T., customer" },
+            { "title": "Reliable every time", "body": "Clear communication and thoughtful service gave us complete confidence.", "meta": "Daniel P., customer" }
+          ]
+        },
+        "custom": {
+          "items": [
+            { "title": "Clear value", "body": "A focused message that helps visitors understand the offer quickly." },
+            { "title": "Helpful details", "body": "Practical information that answers the next natural question." },
+            { "title": "Easy next step", "body": "A direct path to contact, book, buy, or learn more." }
+          ]
+        }
+      }
+    },
+    "vi": {
+      "brandPlaceholder": "Thương hiệu của bạn",
+      "marquee": {
+        "hero": "Dịch vụ tin cậy • Giá rõ ràng • Hỗ trợ thân thiện • Đặt lịch nhanh",
+        "cta": "Đặt lịch hôm nay • Tư vấn nhanh • Phục vụ tận tâm"
+      },
+      "navLabels": {
+        "services": "Dịch vụ",
+        "gallery": "Hình ảnh",
+        "pricing": "Bảng giá",
+        "testimonials": "Đánh giá",
+        "faq": "FAQ",
+        "features": "Tính năng",
+        "process": "Quy trình",
+        "stats": "Kết quả"
+      },
+      "navItems": [
+        { "label": "Dịch vụ", "href": "#services" },
+        { "label": "Hình ảnh", "href": "#gallery" },
+        { "label": "Bảng giá", "href": "#pricing" },
+        { "label": "Đánh giá", "href": "#testimonials" },
+        { "label": "FAQ", "href": "#faq" }
+      ],
+      "sections": {
+        "header": {
+          "items": [
+            { "title": "Dịch vụ", "body": "Các gói chăm sóc nổi bật" },
+            { "title": "Bảng giá", "body": "Chi phí rõ ràng" },
+            { "title": "Đánh giá", "body": "Khách hàng tin chọn" },
+            { "title": "FAQ", "body": "Câu hỏi thường gặp" }
+          ]
+        }
+      }
+    }
+  }
+}

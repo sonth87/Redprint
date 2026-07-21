@@ -401,6 +401,10 @@
     "templates": "Mẫu Nhanh",
     "colorPalette": "Bảng Màu",
     "toneStyle": "Tone & Phong Cách",
+    "language": "Ngôn Ngữ Nội Dung",
+    "languageAuto": "Tự động",
+    "languageVi": "Tiếng Việt",
+    "languageEn": "English",
     "yourPrompt": "Lời Nhắc Của Bạn",
     "templateCategories": {
       "product": "Sản Phẩm",

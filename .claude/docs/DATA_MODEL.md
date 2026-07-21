@@ -1,6 +1,11 @@
 # Data Model & Component Protocol
 
+> Audience: AI agents & maintainers. User-facing overview: [/docs/user-guide/04-components-va-preset.md](../../docs/user-guide/04-components-va-preset.md)
+
 Comprehensive reference for BuilderDocument schema, BuilderNode structure, component definitions, and type contracts.
+
+> For the full popup lifecycle (rules, campaigns, variants, analytics, commands), see the dedicated
+> [POPUPS.md](./POPUPS.md) — the "Popup Model" section below covers only the document schema shape.
 
 ---
 

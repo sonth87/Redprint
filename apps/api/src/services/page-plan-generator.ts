@@ -5,7 +5,9 @@
  * normalize section count, ordering, required sections, and stable section IDs.
  */
 import { z } from "zod";
-import { callLLM } from "./llm-client.js";
+import { callLLMWithUsage } from "./llm-client.js";
+import type { JobAccountant } from "./llm-accounting.js";
+import { resolveLocale, localeLabel } from "./section-plan-compiler.js";
 import { extractJSON, formatZodError } from "./json-utils.js";
 import type {
   CreativeBrief,
@@ -302,10 +304,16 @@ Rules:
 - Use section type values only from: ${SECTION_TYPES.join(", ")}.
 - UI-selected tone has priority over template defaults: ${selectedTone(options)}.
 - UI-selected palette/style has priority over template defaults: ${selectedStyle(request)}.
+- Write every brief and section content field (titles, purpose, content) in ${localeLabel(resolveLocale(request))}. Keep structural values (section "type") in English.
 - Do not generate raw HTML, CSS, or builder commands. Plan only.`;
 }
 
-async function askPlanner(request: GeneratePageRequest, jobId: string, repairHint?: string): Promise<unknown> {
+async function askPlanner(
+  request: GeneratePageRequest,
+  jobId: string,
+  repairHint?: string,
+  accountant?: JobAccountant,
+): Promise<unknown> {
   const messages = [
     { role: "system" as const, content: buildPlannerSystemPrompt(request) },
     {
@@ -313,8 +321,9 @@ async function askPlanner(request: GeneratePageRequest, jobId: string, repairHin
       content: `${repairHint ? `Previous plan failed validation: ${repairHint}\n\n` : ""}User prompt:\n${request.prompt}`,
     },
   ];
-  const rawText = await callLLM(messages, true);
-  return extractJSON(rawText);
+  const result = await callLLMWithUsage(messages, { jsonMode: true, stage: "planner" });
+  accountant?.record(result, "planner");
+  return extractJSON(result.text);
 }
 
 export function normalizePagePlan(plan: PagePlan, request: GeneratePageRequest, jobId: string): PagePlan {
@@ -394,10 +403,14 @@ export function normalizePagePlan(plan: PagePlan, request: GeneratePageRequest, 
   };
 }
 
-export async function generatePagePlan(request: GeneratePageRequest, jobId: string): Promise<PagePlan> {
+export async function generatePagePlan(
+  request: GeneratePageRequest,
+  jobId: string,
+  accountant?: JobAccountant,
+): Promise<PagePlan> {
   let parsed: unknown;
   try {
-    parsed = await askPlanner(request, jobId);
+    parsed = await askPlanner(request, jobId, undefined, accountant);
   } catch (err) {
     return buildDeterministicPagePlan(request, jobId);
   }
@@ -406,7 +419,7 @@ export async function generatePagePlan(request: GeneratePageRequest, jobId: stri
   if (!result.success) {
     const errorText = formatZodError(result.error);
     try {
-      parsed = await askPlanner(request, jobId, errorText);
+      parsed = await askPlanner(request, jobId, errorText, accountant);
       result = PagePlanSchema.safeParse(parsed);
     } catch {
       // Fall through to deterministic fallback below.

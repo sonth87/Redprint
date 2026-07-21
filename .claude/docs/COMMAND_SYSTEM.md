@@ -1,5 +1,7 @@
 # Command System, State Management & History
 
+> Audience: AI agents & maintainers. User-facing overview: [/docs/user-guide/10-phim-tat-thao-tac.md](../../docs/user-guide/10-phim-tat-thao-tac.md)
+
 Reference for command execution, state model, undo/redo mechanism, and schema versioning.
 
 ---

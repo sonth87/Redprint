@@ -17,6 +17,15 @@ import type {
 import { resolveComponentContracts, type ComponentContract } from "./component-contract-resolver.js";
 import { validatePropsAgainstContract } from "./prop-schema-validator.js";
 import { safeLinkUrl, safeMediaUrl } from "./url-guard.js";
+import {
+  matchContentPack,
+  packAccentShape,
+  packMarquee,
+  packNavItems,
+  packNavLabel,
+  packSection,
+  type ContentPack,
+} from "../data/content-packs/loader.js";
 
 interface CompileContext {
   availableTypes: Set<string>;
@@ -25,25 +34,13 @@ interface CompileContext {
   contractsByType: Map<string, ComponentContract>;
   /** Full page plan — needed to resolve nav anchors against real Section ids (see sectionAnchor). */
   pagePlan: PagePlan;
+  /** Industry content pack for fallback content + image pool (roadmap 02/02). */
+  pack: ContentPack;
+  /** Resolved locale key into the pack (`vi` / `_default`). Owned by 02/03; for now derived from the brief. */
+  locale: string;
 }
 
 const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1601758125946-6ec2ef64daf8?w=1200&q=80";
-const PET_IMAGES = [
-  "https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=900&q=80",
-  "https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=900&q=80",
-  "https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=900&q=80",
-  "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=900&q=80",
-  "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=900&q=80",
-  "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=900&q=80",
-];
-const GENERIC_IMAGES = [
-  DEFAULT_IMAGE,
-  "https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=900&q=80",
-  "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=900&q=80",
-  "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=900&q=80",
-  "https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?w=900&q=80",
-  "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=900&q=80",
-];
 
 const RICH_COMPONENT_TYPES = new Set([
   "NavigationMenu",
@@ -136,8 +133,8 @@ function adapterCandidatesFor(section: PagePlanSection, plan: SectionPlan): stri
   return plan.preferredComponents ?? defaultPreferredComponents(section.type);
 }
 
-function fallbackImagePool(brief: CreativeBrief): string[] {
-  return isPetCare(brief) ? PET_IMAGES : GENERIC_IMAGES;
+function fallbackImagePool(pack: ContentPack): string[] {
+  return pack.imagePool;
 }
 
 function fallbackAlt(section: PagePlanSection, plan: SectionPlan, index: number): string {
@@ -181,10 +178,10 @@ function normalizeMediaItem(
 function mediaItemsFor(
   plan: SectionPlan,
   section: PagePlanSection,
-  brief: CreativeBrief,
+  ctx: CompileContext,
   options: { min: number; max: number },
 ) {
-  const pool = fallbackImagePool(brief);
+  const pool = fallbackImagePool(ctx.pack);
   const source = plan.mediaItems ?? [];
   const items = source
     .slice(0, options.max)
@@ -510,7 +507,7 @@ function textMaskCommand(id: string, parentId: string, text: string, ctx: Compil
 
 function collapsibleTextCommand(id: string, parentId: string, item: SectionPlanItem, ctx: CompileContext): AICommandSuggestion {
   const c = colors(ctx.designTokens);
-  const vi = isVietnamese(ctx.brief);
+  const strings = compilerStrings(ctx.locale);
   return command(
     "ADD_NODE",
     {
@@ -520,8 +517,8 @@ function collapsibleTextCommand(id: string, parentId: string, item: SectionPlanI
       props: {
         text: richTextBlock(item.title, item.body),
         previewLines: 2,
-        expandLabel: vi ? "Xem thêm" : "Read more",
-        collapseLabel: vi ? "Thu gọn" : "Show less",
+        expandLabel: strings.readMore,
+        collapseLabel: strings.showLess,
       },
       style: {
         width: "100%",
@@ -691,7 +688,7 @@ function addRichGallery(
   ctx: CompileContext,
   options: { min: number; max: number },
 ): boolean {
-  const items = mediaItemsFor(plan, section, ctx.brief, options);
+  const items = mediaItemsFor(plan, section, ctx, options);
   const preferred = firstAvailable(ctx, adapterCandidatesFor(section, plan).filter((type) => ["GalleryPro", "GallerySlider", "GalleryGrid"].includes(type)));
 
   if (preferred === "GallerySlider") {
@@ -722,13 +719,59 @@ function getBusinessName(brief: CreativeBrief): string {
   return detail?.split(":").at(1)?.trim() || brief.inferredIndustry || "Your Brand";
 }
 
-function isPetCare(brief: CreativeBrief): boolean {
-  const text = `${brief.rawPrompt} ${brief.inferredIndustry} ${brief.targetAudience}`.toLowerCase();
-  return /pet|thú cưng|thu cung|chó|cho|mèo|meo|groom|boarding|daycare/.test(text);
+function hasVietnameseDiacritics(text: string): boolean {
+  return /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(text);
 }
 
-function isVietnamese(brief: CreativeBrief): boolean {
-  return /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(brief.rawPrompt);
+/**
+ * Resolve the content locale for a generation request (roadmap 02/03). Priority:
+ *   1. Explicit `generationOptions.locale` (UI dropdown; "auto"/empty = infer).
+ *   2. Script heuristic on the prompt — Vietnamese diacritics, then CJK ranges.
+ *   3. Fallback `en`.
+ * Returns a short code (`vi`, `en`, `ja`, `ko`, `zh`, …). Content-pack lookups
+ * fall back to `_default` for any locale a pack does not define, so unknown
+ * locales still yield complete fallback content (in the pack's default language)
+ * while the LLM writes copy in the requested locale.
+ */
+export function resolveLocale(request: GeneratePageRequest, brief?: CreativeBrief): string {
+  const explicit = request.generationOptions?.locale?.trim().toLowerCase();
+  if (explicit && explicit !== "auto") return explicit;
+
+  const prompt = brief?.rawPrompt ?? request.prompt ?? "";
+  if (hasVietnameseDiacritics(prompt)) return "vi";
+  if (/[぀-ヿ]/.test(prompt)) return "ja"; // hiragana/katakana
+  if (/[가-힯]/.test(prompt)) return "ko"; // hangul
+  if (/[一-鿿]/.test(prompt)) return "zh"; // CJK unified ideographs
+  return "en";
+}
+
+/** Human-readable language name for a locale code, for LLM prompt instructions. */
+const LOCALE_LABELS: Record<string, string> = {
+  en: "English",
+  vi: "Vietnamese",
+  ja: "Japanese",
+  ko: "Korean",
+  zh: "Chinese",
+  fr: "French",
+  es: "Spanish",
+  de: "German",
+};
+
+export function localeLabel(code: string): string {
+  return LOCALE_LABELS[code] ?? code;
+}
+
+/**
+ * UI strings the compiler emits directly (not LLM-authored) — localized per
+ * resolved locale. Any locale without an entry falls back to `en`.
+ */
+const COMPILER_STRINGS: Record<string, { readMore: string; showLess: string; bookNow: string }> = {
+  en: { readMore: "Read more", showLess: "Show less", bookNow: "Book now" },
+  vi: { readMore: "Xem thêm", showLess: "Thu gọn", bookNow: "Đặt lịch" },
+};
+
+function compilerStrings(locale: string): (typeof COMPILER_STRINGS)["en"] {
+  return COMPILER_STRINGS[locale] ?? COMPILER_STRINGS.en;
 }
 
 function isPlayfulTone(brief: CreativeBrief): boolean {
@@ -803,8 +846,8 @@ function addIntro(
   }
 }
 
-function sectionBackground(type: PageSectionType, index: number, ctx: CompileContext): string {
-  const c = colors(ctx.designTokens);
+function sectionBackground(type: PageSectionType, index: number, designTokens: DesignTokens): string {
+  const c = colors(designTokens);
   if (type === "hero" || type === "cta") return c.secondary;
   if (index % 2 === 1) return "#f8fafc";
   return c.surface;
@@ -844,7 +887,7 @@ export function buildSkeletonCommands(plan: PagePlan, request: GeneratePageReque
           name: section.title,
           props: { fullWidthBackground: false, anchorId: sectionAnchor(section, plan.sections) },
           style: {
-            backgroundColor: sectionBackground(section.type, section.index, { availableTypes: new Set(), designTokens, brief: plan.brief, contractsByType: new Map(), pagePlan: plan }),
+            backgroundColor: sectionBackground(section.type, section.index, designTokens),
             color: c.text,
             minHeight: spacing.minHeight,
             paddingTop: spacing.paddingTop,
@@ -862,89 +905,19 @@ export function buildSkeletonCommands(plan: PagePlan, request: GeneratePageReque
   return commands;
 }
 
-function defaultItems(section: PagePlanSection, brief: CreativeBrief): SectionPlanItem[] {
+/**
+ * Fallback items for a section, sourced from the matched content pack (with
+ * `_generic` filling any section the pack omits). `{industry}` placeholders are
+ * interpolated from the brief. Roadmap 02/02.
+ */
+function defaultItems(section: PagePlanSection, pack: ContentPack, locale: string, brief: CreativeBrief): SectionPlanItem[] {
   const industry = brief.inferredIndustry || "your business";
-  const pet = isPetCare(brief);
-  const vi = isVietnamese(brief);
-
-  if (section.type === "header") {
-    return vi
-      ? [
-          { title: "Dịch vụ", body: "Các gói chăm sóc nổi bật" },
-          { title: "Bảng giá", body: "Chi phí rõ ràng" },
-          { title: "Đánh giá", body: "Khách hàng tin chọn" },
-          { title: "FAQ", body: "Câu hỏi thường gặp" },
-        ]
-      : [
-          { title: "Services", body: "Featured care options" },
-          { title: "Pricing", body: "Transparent packages" },
-          { title: "Reviews", body: "Trusted customers" },
-          { title: "FAQ", body: "Common questions" },
-        ];
-  }
-
-  if (section.type === "services") {
-    if (pet && vi) {
-      return [
-        { title: "Spa tắm thơm và cắt tỉa", body: "Tắm sấy, vệ sinh tai móng và tạo kiểu nhẹ nhàng cho từng bé." },
-        { title: "Trông giữ theo giờ", body: "Không gian chơi an toàn, có người theo dõi và cập nhật hình ảnh." },
-        { title: "Khách sạn thú cưng", body: "Phòng nghỉ sạch sẽ, lịch ăn ngủ riêng và chăm sóc qua đêm." },
-        { title: "Dắt đi dạo và vận động", body: "Lịch đi dạo linh hoạt giúp bé vui khỏe và bớt căng thẳng." },
-      ];
-    }
-    return [
-      { title: "Grooming and Care", body: `Gentle, detail-focused care tailored to every pet's comfort and routine.` },
-      { title: "Daycare and Boarding", body: `Safe supervised spaces for play, rest, and overnight stays.` },
-      { title: "Walking and Training", body: `Friendly support for healthier habits, confidence, and daily exercise.` },
-    ];
-  }
-  if (section.type === "pricing") {
-    if (pet && vi) {
-      return [
-        { title: "Gói Tắm Thơm", body: "Tắm, sấy, chải lông và vệ sinh cơ bản cho chó mèo nhỏ.", meta: "Từ 199k" },
-        { title: "Gói Spa Toàn Diện", body: "Thêm cắt tỉa, dưỡng lông và chăm sóc móng tai nhẹ nhàng.", meta: "Từ 399k" },
-        { title: "Gói Lưu Trú", body: "Trông giữ ban ngày hoặc qua đêm với cập nhật hình ảnh định kỳ.", meta: "Từ 249k/ngày" },
-      ];
-    }
-    return [
-      { title: "Essential", body: "Core service package for regular care.", meta: "From $29" },
-      { title: "Complete", body: "Most popular plan with extra attention and flexible scheduling.", meta: "From $79" },
-      { title: "Premium", body: "Personalized care for special routines and advanced needs.", meta: "Custom" },
-    ];
-  }
-  if (section.type === "process") {
-    if (pet && vi) {
-      return [
-        { title: "Chọn dịch vụ phù hợp", body: "Chia sẻ giống, cân nặng, thói quen và nhu cầu của bé." },
-        { title: "Nhận tư vấn lịch hẹn", body: "Đội ngũ gợi ý gói chăm sóc, thời lượng và lưu ý chuẩn bị." },
-        { title: "Đưa bé đến vui chơi", body: "Bạn nhận cập nhật sau buổi chăm sóc và lời khuyên tại nhà." },
-      ];
-    }
-    return [
-      { title: "Tell us what you need", body: "Share your goals, schedule, and any special care notes." },
-      { title: "Meet the care team", body: "We confirm the right service path and answer practical questions." },
-      { title: "Book with confidence", body: "Choose a time and receive clear next steps before the visit." },
-    ];
-  }
-  if (section.type === "trust") {
-    if (pet && vi) {
-      return [
-        { title: "Nhân viên yêu động vật", body: "Mỗi bé được làm quen nhẹ nhàng trước khi bắt đầu chăm sóc." },
-        { title: "Không gian sạch và an toàn", body: "Dụng cụ được vệ sinh riêng, khu chơi có giám sát liên tục." },
-        { title: "Cập nhật minh bạch", body: "Gửi ảnh, tình trạng ăn uống và ghi chú sau mỗi lần sử dụng dịch vụ." },
-      ];
-    }
-    return [
-      { title: "Trained specialists", body: `A careful team familiar with ${industry} needs and safety standards.` },
-      { title: "Clean safe spaces", body: "Every visit is supported by clear routines and attentive supervision." },
-      { title: "Transparent updates", body: "Customers know what happened, what changed, and what to do next." },
-    ];
-  }
-  return [
-    { title: "Clear value", body: "A focused message that helps visitors understand the offer quickly." },
-    { title: "Helpful details", body: "Practical information that answers the next natural question." },
-    { title: "Easy next step", body: "A direct path to contact, book, buy, or learn more." },
-  ];
+  const content = packSection(pack, locale, section.type);
+  const items = content.items ?? packSection(pack, locale, "custom").items ?? [];
+  return items.map((item) => ({
+    ...item,
+    body: item.body.replace(/\{industry\}/g, industry),
+  }));
 }
 
 function defaultPreferredComponents(sectionType: PageSectionType): string[] {
@@ -987,199 +960,87 @@ function defaultComponentIntents(sectionType: PageSectionType): SectionPlan["com
   }));
 }
 
-/** Localized label for a navigable section type — only used when the plan lacks LLM-authored navItems. */
-function navLabelFor(type: PageSectionType, vi: boolean): string {
-  const labels: Partial<Record<PageSectionType, { vi: string; en: string }>> = {
-    services: { vi: "Dịch vụ", en: "Services" },
-    features: { vi: "Tính năng", en: "Features" },
-    gallery: { vi: "Hình ảnh", en: "Gallery" },
-    pricing: { vi: "Bảng giá", en: "Pricing" },
-    testimonials: { vi: "Đánh giá", en: "Reviews" },
-    faq: { vi: "FAQ", en: "FAQ" },
-    trust: { vi: "Vì sao chọn chúng tôi", en: "Why Us" },
-    process: { vi: "Quy trình", en: "How It Works" },
-    stats: { vi: "Kết quả", en: "Results" },
-  };
-  const entry = labels[type];
-  return vi ? entry?.vi ?? type : entry?.en ?? type;
+/** Localized label for a navigable section type, from the content pack (roadmap 02/02). */
+function navLabelFor(type: PageSectionType, pack: ContentPack, locale: string): string {
+  return packNavLabel(pack, locale, type) ?? type;
 }
 
 /**
  * Default nav items generated from the SECTIONS ACTUALLY PRESENT in the page plan
  * (not a hardcoded guess) — every href is guaranteed to match a real Section's
  * anchorId. Used only as a fallback when neither the LLM nor a content pack
- * supplied navItems.
+ * supplied navItems. Falls back to the pack's static navItems if the page plan
+ * has no navigable sections.
  */
-function defaultNavItems(brief: CreativeBrief, pagePlan: PagePlan): SectionPlanNavItem[] {
-  const vi = isVietnamese(brief);
+function defaultNavItems(pack: ContentPack, locale: string, pagePlan: PagePlan): SectionPlanNavItem[] {
   const fromPlan = navigableSections(pagePlan)
     .slice(0, 5)
     .map((navSection) => ({
-      label: navLabelFor(navSection.type, vi),
+      label: navLabelFor(navSection.type, pack, locale),
       href: `#${sectionAnchor(navSection, pagePlan.sections)}`,
     }));
   if (fromPlan.length > 0) return fromPlan;
 
-  return vi
-    ? [
-        { label: "Dịch vụ", href: "#services" },
-        { label: "Hình ảnh", href: "#gallery" },
-        { label: "Bảng giá", href: "#pricing" },
-        { label: "Đánh giá", href: "#testimonials" },
-        { label: "FAQ", href: "#faq" },
-      ]
-    : [
-        { label: "Services", href: "#services" },
-        { label: "Gallery", href: "#gallery" },
-        { label: "Pricing", href: "#pricing" },
-        { label: "Reviews", href: "#testimonials" },
-        { label: "FAQ", href: "#faq" },
-      ];
+  return packNavItems(pack, locale);
 }
 
-function defaultMediaItems(section: PagePlanSection, brief: CreativeBrief): SectionPlanMediaItem[] {
-  const vi = isVietnamese(brief);
-  const pool = fallbackImagePool(brief);
+function defaultMediaItems(section: PagePlanSection, pack: ContentPack, locale: string): SectionPlanMediaItem[] {
+  const pool = fallbackImagePool(pack);
+  const content = packSection(pack, locale, section.type);
+  const altStem = content.mediaAlt;
   const count = section.type === "gallery" ? 6 : section.type === "services" ? 4 : section.type === "testimonials" ? 3 : 1;
   return Array.from({ length: count }, (_, index) => ({
     src: pool[index % pool.length],
-    alt: vi ? `Không gian chăm sóc thú cưng ${index + 1}` : fallbackAlt(section, { heading: section.title } as SectionPlan, index),
-    caption:
-      section.type === "services"
-        ? vi
-          ? ["Spa sạch thơm", "Khu chơi an toàn", "Lưu trú ấm cúng", "Dắt đi dạo vui khỏe"][index] ?? section.title
-          : ["Gentle grooming", "Safe daycare", "Cozy boarding", "Healthy walks"][index] ?? section.title
-        : section.type === "testimonials"
-        ? vi
-          ? "Khách hàng tin chọn dịch vụ chăm sóc nhẹ nhàng."
-          : "Customers trust the team for calm, thoughtful care."
-        : undefined,
+    alt: altStem ? `${altStem} ${index + 1}` : fallbackAlt(section, { heading: section.title } as SectionPlan, index),
+    caption: content.mediaCaptions?.[index] ?? content.mediaCaption ?? undefined,
   }));
 }
 
-export function buildFallbackSectionPlan(section: PagePlanSection, brief: CreativeBrief, pagePlan: PagePlan): SectionPlan {
-  const pet = isPetCare(brief);
-  const vi = isVietnamese(brief);
+/**
+ * Build a deterministic fallback SectionPlan from the matched content pack
+ * (roadmap 02/02). All copy comes from the pack + `_generic` merge; `{industry}`
+ * placeholders are interpolated from the brief. No industry is hardcoded here.
+ */
+export function buildFallbackSectionPlan(
+  section: PagePlanSection,
+  brief: CreativeBrief,
+  pagePlan: PagePlan,
+  pack: ContentPack,
+  locale: string,
+): SectionPlan {
+  const industry = brief.inferredIndustry || "your business";
+  const content = packSection(pack, locale, section.type);
+  const interpolate = (s: string | undefined) => s?.replace(/\{industry\}/g, industry);
 
-  if (pet && vi) {
-    const byType: Partial<Record<PageSectionType, Pick<SectionPlan, "heading" | "body" | "faqs" | "testimonials" | "mediaPrompt">>> = {
-      header: {
-        heading: "PawJoy Pet Care",
-        body: "Spa, trông giữ và chăm sóc thú cưng thân thiện.",
-      },
-      hero: {
-        heading: "Spa và chăm sóc thú cưng vui khỏe mỗi ngày",
-        body: "Từ tắm thơm, cắt tỉa đến trông giữ qua đêm, PawJoy giúp các bé được chăm sóc an toàn, sạch sẽ và đầy yêu thương.",
-        mediaPrompt: "Happy dog and cat in a bright playful pet spa with warm red and yellow accents",
-      },
-      services: {
-        heading: "Dịch vụ dành riêng cho từng bé",
-        body: "Chọn nhanh các gói chăm sóc phổ biến cho chó mèo, từ làm đẹp đến vui chơi và lưu trú.",
-      },
-      gallery: {
-        heading: "Một ngày vui khỏe tại PawJoy",
-        body: "Hình ảnh dịch vụ giúp chủ nuôi thấy rõ không gian, quy trình và sự thoải mái của các bé.",
-        mediaPrompt: "Playful pet care gallery with grooming, daycare, boarding, and walking moments",
-      },
-      trust: {
-        heading: "Vì sao các sen yên tâm gửi bé?",
-        body: "Quy trình chăm sóc rõ ràng, không gian sạch và đội ngũ hiểu tính cách từng bé.",
-      },
-      process: {
-        heading: "Đặt lịch đơn giản trong 3 bước",
-        body: "Bạn chỉ cần gửi nhu cầu, chọn lịch phù hợp và nhận cập nhật sau buổi chăm sóc.",
-      },
-      pricing: {
-        heading: "Gói dịch vụ rõ ràng, dễ chọn",
-        body: "Bắt đầu từ những gói cơ bản đến chăm sóc toàn diện cho từng kích thước và thói quen.",
-      },
-      testimonials: {
-        heading: "Khách hàng nói gì về PawJoy",
-        body: "Những trải nghiệm thật từ các chủ nuôi đã gửi gắm thú cưng.",
-        testimonials: [
-          { title: "Bé về nhà thơm sạch và vui vẻ", body: "Mình nhận được ảnh cập nhật trong lúc bé spa, rất yên tâm.", meta: "Chị Mai, nuôi Poodle" },
-          { title: "Dịch vụ trông giữ rất có tâm", body: "Bé mèo nhà mình nhát nhưng được chăm sóc nhẹ nhàng, lần sau sẽ quay lại.", meta: "Anh Nam, nuôi mèo Anh lông ngắn" },
-        ],
-      },
-      faq: {
-        heading: "Câu hỏi thường gặp",
-        body: "Một vài điều chủ nuôi thường hỏi trước khi đặt lịch.",
-        faqs: [
-          { title: "Tôi cần chuẩn bị gì trước khi đưa bé đến?", body: "Bạn nên mang sổ tiêm, thức ăn quen thuộc nếu bé lưu trú và ghi chú thói quen đặc biệt." },
-          { title: "Có nhận chó mèo nhạy cảm hoặc nhút nhát không?", body: "Có. Đội ngũ sẽ làm quen chậm, giảm tiếng ồn và điều chỉnh quy trình theo tính cách của bé." },
-          { title: "Tôi có được nhận ảnh cập nhật không?", body: "Có. Với dịch vụ trông giữ và lưu trú, bạn sẽ nhận ảnh hoặc ghi chú trong ngày." },
-        ],
-      },
-      cta: {
-        heading: "Sẵn sàng cho bé một ngày thật vui?",
-        body: "Đặt lịch để đội ngũ PawJoy tư vấn gói chăm sóc phù hợp nhất cho thú cưng của bạn.",
-        mediaPrompt: "Playful pet care booking scene with happy dog owner and warm colors",
-      },
-      footer: {
-        heading: "PawJoy Pet Care",
-        body: "Dịch vụ spa, trông giữ, lưu trú và chăm sóc chó mèo tại địa phương.",
-      },
-    };
+  const heading =
+    interpolate(content.heading) ??
+    (section.type === "hero" ? interpolate(brief.inferredPageType) ?? section.title : section.title);
+  const body =
+    interpolate(content.body) ??
+    (section.purpose ||
+      `A practical section for ${brief.targetAudience}, written in a ${brief.tone} tone.`);
 
-    const content = byType[section.type];
-    return {
-      sectionId: section.id,
-      type: section.type,
-      eyebrow: section.type === "hero" ? "Dịch vụ thú cưng" : section.title,
-      layoutVariant: section.type === "gallery" ? "collage gallery" : undefined,
-      preferredComponents: defaultPreferredComponents(section.type),
-      componentIntents: defaultComponentIntents(section.type),
-      interactionIntent: defaultInteractionIntent(section.type),
-      visualEmphasis: defaultVisualEmphasis(section.type),
-      heading: content?.heading ?? section.title,
-      body: content?.body ?? section.purpose,
-      ctaLabel: section.type === "hero" || section.type === "cta" || section.type === "header" ? "Đặt lịch ngay" : undefined,
-      secondaryCtaLabel: section.type === "hero" ? "Xem dịch vụ" : undefined,
-      items: defaultItems(section, brief),
-      faqs: content?.faqs,
-      testimonials: content?.testimonials,
-      mediaItems: defaultMediaItems(section, brief),
-      navItems: defaultNavItems(brief, pagePlan),
-      mediaPrompt: content?.mediaPrompt,
-    };
-  }
+  const eyebrowDefault = section.type === "hero" ? interpolate(brief.inferredPageType) : section.title;
 
   return {
     sectionId: section.id,
     type: section.type,
-    eyebrow: section.type === "hero" ? brief.inferredPageType : section.title,
+    eyebrow: content.eyebrow ?? eyebrowDefault,
     layoutVariant: section.type === "gallery" ? "collage gallery" : undefined,
     preferredComponents: defaultPreferredComponents(section.type),
     componentIntents: defaultComponentIntents(section.type),
     interactionIntent: defaultInteractionIntent(section.type),
     visualEmphasis: defaultVisualEmphasis(section.type),
-    heading:
-      section.type === "hero"
-        ? `Reliable ${brief.inferredIndustry} made simple`
-        : section.title,
-    body:
-      section.purpose ||
-      `A practical section for ${brief.targetAudience}, written in a ${brief.tone} tone.`,
-    ctaLabel: section.type === "hero" || section.type === "cta" ? "Book a visit" : undefined,
-    secondaryCtaLabel: section.type === "hero" ? "View services" : undefined,
-    items: defaultItems(section, brief),
-    faqs:
-      section.type === "faq"
-        ? [
-            { title: "How do I get started?", body: "Choose a service, share a few details, and the team will confirm availability." },
-            { title: "Can I customize the service?", body: "Yes. The page can highlight packages and flexible options for different needs." },
-            { title: "What should I prepare?", body: "Bring any relevant notes, preferences, and contact details before the first visit." },
-          ]
-        : undefined,
-    testimonials:
-      section.type === "testimonials"
-        ? [
-            { title: "A calmer experience", body: "The team made the whole process easy, warm, and incredibly professional.", meta: "Mai T., customer" },
-            { title: "Reliable every time", body: "Clear communication and thoughtful service gave us complete confidence.", meta: "Daniel P., customer" },
-          ]
-        : undefined,
-    mediaItems: defaultMediaItems(section, brief),
-    navItems: defaultNavItems(brief, pagePlan),
+    heading,
+    body,
+    ctaLabel: content.ctaLabel,
+    secondaryCtaLabel: content.secondaryCtaLabel,
+    items: defaultItems(section, pack, locale, brief),
+    faqs: section.type === "faq" ? content.faqs : undefined,
+    testimonials: section.type === "testimonials" ? content.testimonials : undefined,
+    mediaItems: defaultMediaItems(section, pack, locale),
+    navItems: defaultNavItems(pack, locale, pagePlan),
+    mediaPrompt: content.mediaPrompt,
   };
 }
 
@@ -1247,7 +1108,7 @@ function compileHeaderSection(plan: SectionPlan, section: PagePlanSection, ctx: 
   if (has(ctx, "NavigationMenu")) {
     commands.push(navMenuCommand(`${section.id}-nav-menu`, rootId, navItemsFor(plan, section, ctx.pagePlan), ctx));
     if (has(ctx, "Button")) {
-      commands.push(buttonCommand(`${section.id}-nav-cta`, rootId, plan.ctaLabel || (isVietnamese(ctx.brief) ? "Đặt lịch" : "Book now"), ctx));
+      commands.push(buttonCommand(`${section.id}-nav-cta`, rootId, plan.ctaLabel || compilerStrings(ctx.locale).bookNow, ctx));
     }
     return validateCompiledCommands(commands, ctx.availableTypes, new Set([section.id]), ctx.contractsByType);
   }
@@ -1258,14 +1119,14 @@ function compileHeaderSection(plan: SectionPlan, section: PagePlanSection, ctx: 
       ? rowCommand(navId, rootId, { gap: 18, padding: 0, alignItems: "center", justifyContent: "flex-end", flexWrap: "wrap" }, { alignItems: "center", justifyContent: "flex-end", flexWrap: "wrap" })
       : containerCommand(navId, rootId, { direction: "row", gap: "18px", padding: "0px", showPlaceholder: false }, { display: "flex", alignItems: "center", justifyContent: "flex-end", flexWrap: "wrap" }),
   );
-  const navItems = (plan.items.length ? plan.items : defaultItems(section, ctx.brief)).slice(0, 4);
+  const navItems = (plan.items.length ? plan.items : defaultItems(section, ctx.pack, ctx.locale, ctx.brief)).slice(0, 4);
   if (has(ctx, "Text")) {
     navItems.forEach((item, index) => {
       commands.push(textCommand(`${section.id}-nav-${index}`, navId, item.title, "span", { color: c.muted, fontSize: "14px", fontWeight: "700" }));
     });
   }
   if (has(ctx, "Button")) {
-    commands.push(buttonCommand(`${section.id}-nav-cta`, navId, plan.ctaLabel || "Book now", ctx));
+    commands.push(buttonCommand(`${section.id}-nav-cta`, navId, plan.ctaLabel || compilerStrings(ctx.locale).bookNow, ctx));
   }
 
   return validateCompiledCommands(commands, ctx.availableTypes, new Set([section.id]), ctx.contractsByType);
@@ -1275,7 +1136,7 @@ function compileHeroSection(plan: SectionPlan, section: PagePlanSection, ctx: Co
   const c = colors(ctx.designTokens);
   const commands: AICommandSuggestion[] = [];
   const rootId = `${section.id}-content`;
-  const heroMedia = mediaItemsFor(plan, section, ctx.brief, { min: 1, max: 4 });
+  const heroMedia = mediaItemsFor(plan, section, ctx, { min: 1, max: 4 });
 
   if (!has(ctx, "Container")) return commands;
 
@@ -1329,24 +1190,16 @@ function compileHeroSection(plan: SectionPlan, section: PagePlanSection, ctx: Co
       );
     }
     if (has(ctx, "Shape") && isPlayfulTone(ctx.brief)) {
-      commands.push(shapeCommand(`${section.id}-accent-shape`, mediaId, isPetCare(ctx.brief) ? "heart" : "blob", ctx, { alignSelf: "flex-end", marginTop: "-42px", marginRight: "20px" }));
+      commands.push(shapeCommand(`${section.id}-accent-shape`, mediaId, packAccentShape(ctx.pack) as Parameters<typeof shapeCommand>[2], ctx, { alignSelf: "flex-end", marginTop: "-42px", marginRight: "20px" }));
     }
   } else {
     addIntro(commands, section, rootId, plan, ctx, { centered: false });
     addActions(commands, section, rootId, plan, ctx, false);
   }
 
-  if (has(ctx, "TextMarquee") && (prefers(plan, "TextMarquee") || isPlayfulTone(ctx.brief))) {
-    commands.push(
-      textMarqueeCommand(
-        `${section.id}-marquee`,
-        rootId,
-        isVietnamese(ctx.brief)
-          ? "Spa tắm thơm • Trông giữ an toàn • Cập nhật hình ảnh • Đặt lịch nhanh"
-          : "Gentle grooming • Safe daycare • Photo updates • Easy booking",
-        ctx,
-      ),
-    );
+  const heroMarquee = packMarquee(ctx.pack, ctx.locale, "hero");
+  if (heroMarquee && has(ctx, "TextMarquee") && (prefers(plan, "TextMarquee") || isPlayfulTone(ctx.brief))) {
+    commands.push(textMarqueeCommand(`${section.id}-marquee`, rootId, heroMarquee, ctx));
   }
 
   return validateCompiledCommands(commands, ctx.availableTypes, new Set([section.id]), ctx.contractsByType);
@@ -1363,7 +1216,7 @@ function compileFooterSection(plan: SectionPlan, section: PagePlanSection, ctx: 
   if (has(ctx, "Grid")) {
     const gridId = `${section.id}-grid`;
     commands.push(gridCommand(gridId, rootId, 3));
-    const items = (plan.items.length ? plan.items : defaultItems(section, ctx.brief)).slice(0, 3);
+    const items = (plan.items.length ? plan.items : defaultItems(section, ctx.pack, ctx.locale, ctx.brief)).slice(0, 3);
     const first = { title: getBusinessName(ctx.brief), body: plan.body };
     [first, ...items].slice(0, 3).forEach((item, index) => {
       addCard(commands, `${section.id}-footer-card-${index}`, gridId, item, ctx);
@@ -1412,7 +1265,7 @@ function compileGenericSection(plan: SectionPlan, section: PagePlanSection, ctx:
     const usedGallery = addRichGallery(commands, `${section.id}-gallery`, rootId, section, plan, ctx, { min: 6, max: 8 });
     if (!usedGallery && has(ctx, "Grid")) {
       const fallbackGridId = `${section.id}-image-grid`;
-      const images = mediaItemsFor(plan, section, ctx.brief, { min: 6, max: 6 });
+      const images = mediaItemsFor(plan, section, ctx, { min: 6, max: 6 });
       commands.push(gridCommand(fallbackGridId, rootId, 3));
       images.forEach((item, index) => {
         if (has(ctx, "Image")) {
@@ -1432,7 +1285,7 @@ function compileGenericSection(plan: SectionPlan, section: PagePlanSection, ctx:
   }
 
   if (section.type === "faq" && has(ctx, "CollapsibleText")) {
-    const faqItems = plan.faqs?.length ? plan.faqs : defaultItems(section, ctx.brief);
+    const faqItems = plan.faqs?.length ? plan.faqs : defaultItems(section, ctx.pack, ctx.locale, ctx.brief);
     const faqGridId = `${section.id}-faq-list`;
     if (has(ctx, "Grid")) {
       commands.push(gridCommand(faqGridId, rootId, 1));
@@ -1448,20 +1301,12 @@ function compileGenericSection(plan: SectionPlan, section: PagePlanSection, ctx:
   }
 
   if (section.type === "cta") {
-    if (has(ctx, "TextMarquee") && (prefers(plan, "TextMarquee") || isPlayfulTone(ctx.brief))) {
-      commands.push(
-        textMarqueeCommand(
-          `${section.id}-marquee`,
-          rootId,
-          isVietnamese(ctx.brief)
-            ? "Đặt lịch hôm nay • Tư vấn nhanh • Bé được chăm sóc như ở nhà"
-            : "Book today • Friendly guidance • Care that feels personal",
-          ctx,
-        ),
-      );
+    const ctaMarquee = packMarquee(ctx.pack, ctx.locale, "cta");
+    if (ctaMarquee && has(ctx, "TextMarquee") && (prefers(plan, "TextMarquee") || isPlayfulTone(ctx.brief))) {
+      commands.push(textMarqueeCommand(`${section.id}-marquee`, rootId, ctaMarquee, ctx));
     }
     if (has(ctx, "Image")) {
-      const image = mediaItemsFor(plan, section, ctx.brief, { min: 1, max: 1 })[0]!;
+      const image = mediaItemsFor(plan, section, ctx, { min: 1, max: 1 })[0]!;
       commands.push(imageCommand(`${section.id}-image`, rootId, image.src, image.alt || plan.mediaPrompt || plan.heading, { width: "100%", maxWidth: "720px", height: "240px", borderRadius: c.radius, marginTop: "12px" }));
     }
     return validateCompiledCommands(commands, ctx.availableTypes, new Set([section.id]), ctx.contractsByType);
@@ -1482,7 +1327,7 @@ function compileGenericSection(plan: SectionPlan, section: PagePlanSection, ctx:
     commands.push(gridCommand(gridId, rootId, columns));
     const cardImages =
       section.type === "services" || section.type === "testimonials"
-        ? mediaItemsFor(plan, section, ctx.brief, { min: list.length, max: 6 })
+        ? mediaItemsFor(plan, section, ctx, { min: list.length, max: 6 })
         : undefined;
     list.slice(0, 6).forEach((item, index) => {
       const imageSrc = cardImages?.[index]?.src;
@@ -1634,7 +1479,7 @@ function hasValidEnumProps(componentType: string, props: unknown): boolean {
 
 export function compileFallbackSection(section: PagePlanSection, pagePlan: PagePlan, request: GeneratePageRequest): AICommandSuggestion[] {
   const ctx = buildCompileContext(pagePlan, request);
-  return compileSectionPlan(buildFallbackSectionPlan(section, pagePlan.brief, pagePlan), section, ctx);
+  return compileSectionPlan(buildFallbackSectionPlan(section, pagePlan.brief, pagePlan, ctx.pack, ctx.locale), section, ctx);
 }
 
 export function compileSection(sectionPlan: SectionPlan, section: PagePlanSection, pagePlan: PagePlan, request: GeneratePageRequest): AICommandSuggestion[] {
@@ -1663,6 +1508,8 @@ function buildCompileContext(pagePlan: PagePlan, request: GeneratePageRequest): 
     brief: pagePlan.brief,
     contractsByType: buildContractsByType(request.availableComponents),
     pagePlan,
+    pack: matchContentPack(pagePlan.brief),
+    locale: resolveLocale(request, pagePlan.brief),
   };
 }
 

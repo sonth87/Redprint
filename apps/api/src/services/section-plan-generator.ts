@@ -5,7 +5,8 @@
  * deterministic compiler after this schema validates.
  */
 import { z } from "zod";
-import { callLLM } from "./llm-client.js";
+import { callLLMWithUsage } from "./llm-client.js";
+import type { JobAccountant } from "./llm-accounting.js";
 import {
   buildComponentCapabilityManifest,
   filterPreferredComponents,
@@ -17,6 +18,7 @@ import {
   resolveComponentContracts,
 } from "./component-contract-resolver.js";
 import { extractJSON, formatZodError } from "./json-utils.js";
+import { resolveLocale, localeLabel } from "./section-plan-compiler.js";
 import type { GeneratePageRequest, PagePlan, PagePlanSection, SectionPlan } from "../types/ai.types.js";
 
 const OptionalStringSchema = z.preprocess((value) => (value === null ? undefined : value), z.string().optional());
@@ -170,6 +172,7 @@ Rules:
 - Return component intent and content only; never return builder commands or raw component props.
 - If media is needed but no real image is available, include useful alt/caption and describe media intent; the compiler may use safe fallback images.
 - Write real, specific content. No lorem ipsum, no "your headline here".
+- All heading/body/eyebrow/ctaLabel/items/faqs/testimonials content MUST be written in ${localeLabel(resolveLocale(request, pagePlan.brief))}. Keep structural values (component types, roles) in English.
 - Respect the selected tone and palette intent.
 - For services/features/pricing/process/trust sections, provide 3-4 items.
 - For FAQ, provide 3-5 faqs.
@@ -183,6 +186,7 @@ async function askSectionPlanner(
   section: PagePlanSection,
   request: GeneratePageRequest,
   repairHint?: string,
+  accountant?: JobAccountant,
 ): Promise<unknown> {
   const messages = [
     { role: "system" as const, content: buildSystemPrompt(pagePlan, section, request) },
@@ -191,8 +195,9 @@ async function askSectionPlanner(
       content: `${repairHint ? `Previous section plan failed validation: ${repairHint}\n\n` : ""}Generate the section plan now.`,
     },
   ];
-  const rawText = await callLLM(messages, true);
-  return extractJSON(rawText);
+  const result = await callLLMWithUsage(messages, { jsonMode: true, stage: "section" });
+  accountant?.record(result, "section");
+  return extractJSON(result.text);
 }
 
 export async function generateSectionPlan(
@@ -200,8 +205,9 @@ export async function generateSectionPlan(
   section: PagePlanSection,
   request: GeneratePageRequest,
   repairHint?: string,
+  accountant?: JobAccountant,
 ): Promise<SectionPlan> {
-  const parsed = await askSectionPlanner(pagePlan, section, request, repairHint);
+  const parsed = await askSectionPlanner(pagePlan, section, request, repairHint, accountant);
   const result = SectionPlanSchema.safeParse(parsed);
   if (!result.success) {
     throw new Error(formatZodError(result.error));

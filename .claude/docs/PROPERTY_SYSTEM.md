@@ -1,5 +1,7 @@
 # Property System
 
+> Audience: AI agents & maintainers. User-facing overview: [/docs/user-guide/03-property-panel.md](../../docs/user-guide/03-property-panel.md), [05-styling-va-hieu-ung](../../docs/user-guide/05-styling-va-hieu-ung.md)
+
 Unified property editing system that guarantees the ContextualToolbar and PropertyPanel always
 dispatch identical commands for the same style/prop change.
 

@@ -13,6 +13,7 @@
     "test": "turbo test",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
+    "docs:check": "node scripts/check-docs.mjs",
     "format": "prettier --write \"**/*.{ts,tsx,json,md,css}\" --ignore-path .gitignore",
     "clean": "turbo clean && rm -rf node_modules"
   },

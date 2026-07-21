@@ -26,6 +26,15 @@ import { COLOR_PALETTES, TONE_STYLES } from "../ai-prompt-templates";
 
 // ── Section type → icon label map ─────────────────────────────────────────
 
+// Language options for generated content. "auto" infers from the prompt / editor
+// language on the backend (roadmap 02/03). RTL locales are intentionally omitted
+// until the builder supports RTL layout.
+const LOCALE_OPTIONS: Array<{ value: string; labelKey: string; fallback: string }> = [
+  { value: "auto", labelKey: "ai.languageAuto", fallback: "Auto" },
+  { value: "vi", labelKey: "ai.languageVi", fallback: "Tiếng Việt" },
+  { value: "en", labelKey: "ai.languageEn", fallback: "English" },
+];
+
 const SECTION_TYPE_LABELS: Record<string, string> = {
   hero: "🦸 Hero",
   header: "🧭 Header",
@@ -116,11 +125,13 @@ export function PageGeneratorModal({
   config,
   context,
 }: PageGeneratorModalProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [prompt, setPrompt] = useState("");
   const [fullPageMode, setFullPageMode] = useState(false);
   const [selectedColorPalette, setSelectedColorPalette] = useState(COLOR_PALETTES[0]?.name ?? "");
   const [selectedTone, setSelectedTone] = useState(TONE_STYLES[0]?.id ?? "");
+  // Locale for generated content. "auto" lets the backend infer from prompt / editor language.
+  const [selectedLocale, setSelectedLocale] = useState("auto");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { state, generate, cancel, reset } = usePageGenerator(config, context);
 
@@ -136,6 +147,7 @@ export function PageGeneratorModal({
     if (!open) {
       reset();
       setPrompt("");
+      setSelectedLocale("auto");
     }
   }, [open, reset]);
 
@@ -159,6 +171,9 @@ export function PageGeneratorModal({
     if (!prompt.trim() || isBusy) return;
     const palette = COLOR_PALETTES.find((p) => p.name === selectedColorPalette);
     const tone = TONE_STYLES.find((item) => item.id === selectedTone);
+    // "auto" → hint the backend with the editor's current UI language; the
+    // backend still overrides with prompt-script detection when useful.
+    const locale = selectedLocale === "auto" ? i18n.language?.split("-")[0] || "auto" : selectedLocale;
     await generate(prompt.trim(), {
       fullPageMode,
       generationOptions: {
@@ -167,9 +182,10 @@ export function PageGeneratorModal({
           : undefined,
         tone: tone ? { id: tone.id, label: tone.label, description: tone.description } : undefined,
         complexity: "standard",
+        locale,
       },
     });
-  }, [prompt, isBusy, generate, fullPageMode, selectedColorPalette, selectedTone]);
+  }, [prompt, isBusy, generate, fullPageMode, selectedColorPalette, selectedTone, selectedLocale, i18n.language]);
 
   const handleCancel = useCallback(() => {
     if (isBusy) {
@@ -276,6 +292,24 @@ export function PageGeneratorModal({
                       </button>
                     ))}
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ai-locale" className="text-xs text-muted-foreground">
+                    {t("ai.language")}
+                  </Label>
+                  <select
+                    id="ai-locale"
+                    value={selectedLocale}
+                    onChange={(e) => setSelectedLocale(e.target.value)}
+                    disabled={isBusy}
+                    className="w-full rounded-md border border-border bg-background px-2.5 py-2 text-xs font-medium transition-all hover:border-primary/50 focus:border-primary focus:outline-none"
+                  >
+                    {LOCALE_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {t(opt.labelKey, opt.fallback)}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               {/* Full page mode checkbox */}

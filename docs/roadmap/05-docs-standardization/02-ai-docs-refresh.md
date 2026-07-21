@@ -4,7 +4,7 @@
 > Ưu tiên: P2
 > Ước lượng: 1 ngày
 > Phụ thuộc: Làm sau [00-bugfixes](../00-bugfixes/) để không đặc tả lại hành vi lỗi
-> Trạng thái: Chưa bắt đầu
+> Trạng thái: Hoàn thành — `AI_ASSISTANT.md` viết lại toàn bộ (backend providers thật, system prompt owner, whitelist 12 lệnh + contract test, chat conversation thread, repair loop, validation gate, perimeter security, popup awareness thật, ai-tools/ai-section). `POPUPS.md` mới (data model, content ownership, rules/campaign gating, open/close sequence kèm mermaid, A/B variants, analytics, commands, editor surfaces, migration V2→V6, known gaps). `RUNTIME.md` bổ sung mục Interactions đầy đủ (khớp [01/01](../01-interactions-events/01-runtime-dead-actions.md)/[01/02](../01-interactions-events/02-lifecycle-triggers.md)); `DATA_MODEL.md` đã đúng từ trước, chỉ trỏ sang POPUPS.md. Toàn bộ 15 file `.claude/docs` có header audience nhất quán. README gốc: thêm POPUPS.md vào bảng docs + env AI_API_KEY/AI_RATE_LIMIT_*. File đề xuất `architecture-md-proposals.md` đã tạo cho maintainer (xoá note "P2 deferred" tự mâu thuẫn). Toàn bộ link nội bộ đã kiểm tra tự động, 0 gãy.
 
 ## 1. Mục đích
 

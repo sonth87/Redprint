@@ -21,7 +21,23 @@
 
 - Spec files may link to user-guide pages for overview context; specs describe **current** behavior, roadmap describes **planned** work — never mix the two.
 - When code behavior/APIs change, update the matching spec file (and the user-guide page if user-visible) **in the same task**.
-- Do not edit `.claude/ARCHITECTURE.md` directly — write proposals to `docs/roadmap/05-docs-standardization/architecture-md-proposals.md` for the maintainer.
+- Do not edit `.claude/ARCHITECTURE.md` or `.claude/RULES.md` directly — write proposals to `docs/roadmap/05-docs-standardization/architecture-md-proposals.md` for the maintainer.
+- Prefer pointing at code (file path) over copying interfaces/values into docs — the doc shouldn't need an edit every time a field changes.
+
+### What-changed → what-docs matrix
+
+| Code change | Docs to update in the same PR |
+| ----------- | ------------------------------ |
+| API/route/env in `apps/api` | `.claude/docs/AI_ASSISTANT.md` + the env table in `README.md` |
+| New AI command / whitelist change | `apps/api/src/services/command-reference.ts` + `packages/builder-editor/src/ai/allowedCommands.ts` + `.claude/docs/AI_ASSISTANT.md` — three-way sync, enforced by `command-reference.test.ts` / `allowedCommands.test.ts` |
+| Document schema change (node/popup/interaction) | `.claude/docs/DATA_MODEL.md` (+ `POPUPS.md` for popup fields) + a schema migration + `CHANGELOG.md` |
+| New component / `propSchema` change | `docs/user-guide/04-components-va-preset.md` + `aiHints` on the component definition |
+| Any user-visible feature | the matching `docs/user-guide/*.md` page |
+| Completed a `docs/roadmap/*` item | update its `> Trạng thái:` header + note the PR link at the bottom of the file |
+
+Run `pnpm docs:check` before committing docs changes — it verifies internal links resolve and every
+roadmap item still has a status header (also runs in CI on PRs touching docs; see
+`.github/workflows/docs-check.yml`).
 
 ## Project Context
 

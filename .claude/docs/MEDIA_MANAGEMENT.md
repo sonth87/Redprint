@@ -1,5 +1,7 @@
 # Media Management System
 
+> Audience: AI agents & maintainers. User-facing overview: [/docs/user-guide/06-media-tai-nguyen.md](../../docs/user-guide/06-media-tai-nguyen.md)
+
 **Location:** 
 - Editor UI: `packages/builder-editor/src/panels/MediaManager.tsx`
 - Core types: `packages/builder-core/src/document/assets.ts`

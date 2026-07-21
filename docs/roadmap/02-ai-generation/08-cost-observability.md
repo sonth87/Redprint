@@ -4,7 +4,16 @@
 > Ưu tiên: P4
 > Ước lượng: 1 ngày
 > Phụ thuộc: Không
-> Trạng thái: Chưa bắt đầu
+> Trạng thái: Hoàn thành — 2026-07-20. Gộp thêm **fix model compatibility** (ngoài phạm vi gốc): default
+> Claude đổi `claude-sonnet-4-5` → `claude-sonnet-5`; `temperature` chỉ gửi cho model chấp nhận
+> (`claudeAcceptsSampling` — model mới 400 nếu gửi sampling param); `max_tokens` nâng 8192 → 16384.
+> `callLLMWithUsage`/`callLLMStreamWithUsage` trả `usage`; `callLLM`/`callLLMStream` cũ giữ nguyên chữ ký
+> string (wrapper) + nhận thêm overload `LLMCallOptions`. `llm-pricing.ts` (bảng giá thủ công) +
+> `llm-accounting.ts` (`JobAccountant`) gom usage per job vào log `complete` + SSE `complete` (sau flag
+> `AI_EXPOSE_COST`). Env per-stage: `LLM_MODEL/_PLANNER/_SECTION/_CHAT/_REPAIR`, `LLM_TEMPERATURE_*`,
+> `LLM_MAX_TOKENS_*`. Test: `llm-pricing.test.ts` (4), `llm-accounting.test.ts` (4),
+> `llm-client.test.ts` (7 — verify temperature bị bỏ cho model mới, giữ cho model cũ, parse usage).
+> Docs: README env + `AI_ASSISTANT.md` cập nhật cùng task.
 
 ## 1. Mục đích
 

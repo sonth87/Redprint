@@ -1,5 +1,7 @@
 # Runtime & Content Loading
 
+> Audience: AI agents & maintainers. User-facing overview: [/docs/user-guide/11-runtime-va-tich-hop.md](../../docs/user-guide/11-runtime-va-tich-hop.md)
+
 Reference for rendering pipeline, dynamic component loading, asset management, and import/export.
 
 ---
@@ -223,6 +225,45 @@ present. A `popup_locale_resolved` analytics event carries the resolved locale t
 | `locale` | `string` | `navigator.language` | BCP-47 tag for locale resolution |
 | `getFrequencyCount` | `(key) => { count, storedAt } \| undefined` | localStorage | Override frequency storage read |
 | `setFrequencyCount` | `(key, count, expiresAt?) => void` | localStorage | Override frequency storage write |
+
+### Interactions
+
+**Contract:** `packages/builder-core/src/document/interactions.ts` — `InteractionConfig { id, trigger,
+conditions?, actions, stopPropagation?, preventDefault?, once? }`. `once` applies only to
+`trigger: "intersect"` (fire the first viewport-entry only, mirrors `_animationPlayOnce`).
+
+**Binder:** `packages/builder-renderer/src/pipeline/InteractionBinder.ts` — a framework-light class
+(no React, no real DOM access except where explicitly SSR-guarded). `bindAll(interactions, variables,
+dispatch)` groups interactions by their target React event prop (`TRIGGER_TO_REACT_EVENT`) and runs
+**every** interaction bound to that prop, in declaration order, when the event fires — multiple
+interactions sharing a trigger do not silently overwrite each other.
+`runInteraction(interaction, variables, dispatch)` is the shared condition-eval + action-dispatch
+primitive, reused by both `bindAll` (DOM events) and `RuntimeNode`'s lifecycle handling below (mount/
+unmount/intersect are not DOM events, so `TRIGGER_TO_REACT_EVENT` has no entry for them).
+
+| Trigger | Binding |
+|---------|---------|
+| `click`, `dblclick`, `hover`/`mouseenter`, `mouseleave`, `focus`, `blur`, `submit`, `change`, `keydown`, `keyup`, `scroll` | React event prop via `bindAll` |
+| `mount`, `unmount` | `useEffect` in `RuntimeNode` — fires once per node instance; cleanup runs unmount interactions. Does not run during SSR. |
+| `intersect` | Dedicated `IntersectionObserver` in `RuntimeNode`, sharing the same `elementRef` callback ref used by the `_animation` display-animation observer (two independent observers on one element is safe) |
+
+**Actions** (`InteractionAction` union) and where each is handled:
+
+| Action | Handled in | Notes |
+|--------|-----------|-------|
+| `navigate` | `InteractionBinder` directly | `_self` → `window.location.assign`; `_blank` → `window.open(url, "_blank", "noopener,noreferrer")` |
+| `scrollTo` | `InteractionBinder` directly | `document.getElementById(targetId)` first (real DOM id — Section/Anchor `anchorId`), falls back to `[data-node-id="…"]` (only populated when `RendererConfig.attachNodeIds` is on); SSR-guarded, no-ops with a console warning if nothing matches |
+| `triggerApi` | `InteractionBinder` directly | Fire-and-forget `fetch`, `credentials: "omit"`, no retry. Gated by `isSafeFetchEndpoint()` (`packages/shared/src/urlGuard.ts`) — allows `https://` to a public host or `http://localhost`/`127.0.0.1`; rejects everything else (private/loopback/link-local IPs, `javascript:`, `data:`, plain `http://` to a real host) |
+| `setState` | dispatched `SET_VARIABLE` → `RuntimeRenderer`'s `variables` state | |
+| `toggleVisibility` | dispatched `TOGGLE_VISIBILITY` → `RuntimeRenderer`'s `hiddenNodeIds: Set<string>` | Runtime-only — never mutates the document, resets on reload. `RuntimeNode` early-exits (`return null`) when its id is in the set. |
+| `addClass` / `removeClass` | dispatched `ADD_CLASS`/`REMOVE_CLASS` → `RuntimeRenderer`'s `nodeClassOverrides: Map<string, Set<string>>` | Merged onto the rendered element's `className` at `cloneElement` time. Only applies when the component's root element is a plain DOM tag (`typeof rendered.type === "string"`) — a Fragment or nested-component root is skipped with a one-time-per-node console warning, since it can't safely receive a `className` prop. |
+| `showModal` / `hideModal` | dispatched `SHOW_MODAL`/`HIDE_MODAL` → `RuntimeRenderer`'s `openPopup`/`closePopup` | See [POPUPS.md](./POPUPS.md) |
+| `emit` | dispatched `EMIT_EVENT` → `RendererConfig.onCustomEvent(event, payload)` | No listener attached → console warning, not a throw. Standard bridge for page content to notify a host app (CMS/website) of a named event. |
+| `custom` | dispatched `CUSTOM_ACTION` → `RendererConfig.customActionHandlers[handler](params)` | Same no-listener-is-a-warning behavior as `emit` |
+
+All of the above is SSR-safe: every DOM/`window`/`fetch` access in `InteractionBinder` is guarded by a
+`typeof document/fetch === "undefined"` check, and the lifecycle hooks (`useEffect`,
+`IntersectionObserver`) never execute during server-side rendering by construction.
 
 ### Performance Optimization
 
