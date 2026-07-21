@@ -91,6 +91,8 @@ selects a provider or model — the backend does, via environment variables:
 | `AI_QG_DISABLE` | Comma-separated quality-check codes to disable (e.g. `low_contrast,wrong_language`) | — |
 | `AI_PRESET_FIRST` | Reuse designer presets for leaf slots during compile (`false` = adapters only) | `true` (on) |
 | `AI_LAYOUT_VARIETY` | Layout variants for hero/services/cta (`off` = always default variant) | on |
+| `UNSPLASH_ACCESS_KEY` | Enable context-aware image search (unset = content-pack pool only) | — |
+| `IMAGE_TIMEOUT_MS` / `IMAGE_RATE_LIMIT` | Image search timeout (ms) / requests per hour | `3000` / `45` |
 
 Default models per provider (when `LLM_MODEL` is unset): `gpt-4o` (openai), `gemini-2.0-flash`
 (gemini), `claude-sonnet-5` (claude). Claude requests mark the (large, stable) system prompt
@@ -296,6 +298,19 @@ row when the plan has stats. The section prompt lists the type's variant enum wi
 `AI_LAYOUT_VARIETY=off` forces every section to its default (first) variant = the previous behavior.
 `compileSectionWithMeta` reports `variantUsed` (logged on `section_ready`). Fallback-pack sections run
 through the same variants. features/testimonials/pricing/faq variants are a later phase.
+
+**Media pipeline (roadmap 02/06):** `image-provider.ts` fetches context-aware images per section instead
+of only cycling the content-pack pool. `fetchSectionImages(plan, section, brief)` runs in the route
+after the SectionPlan (needs `mediaPrompt`) and before compile; the query is `mediaPrompt` (the LLM is
+asked to write it in English) or `"{industry} {sectionType}"`, count bounded per section type. Results
+are threaded into `compileSectionWithMeta(..., providerImages)`; `mediaItemsFor`/`normalizeMediaItem` use
+the priority **valid LLM `src` → provider result → content-pack pool**, and attach Unsplash credit as the
+image caption. The v1 provider is Unsplash (`UNSPLASH_ACCESS_KEY`); with no key the provider is `none` and
+behavior is identical to before. It is best-effort — no key, timeout (`IMAGE_TIMEOUT_MS`, default 3s),
+rate-limit (`IMAGE_RATE_LIMIT`/h token bucket), or any error → empty result → pool, never blocking a
+section. An in-memory 1h cache keys by query so a job's same-industry sections share fetches, and every
+provider URL passes `safeMediaUrl` (SSRF-safe). Logged as `imageProvider`/`imageCount` on `section_ready`.
+Chat-path image search and self-hosting fetched images are out of scope for v1.
 
 ### Compiler Strategy
 

@@ -236,6 +236,11 @@ Hero, services, and CTA sections have multiple **layout variants** (e.g. hero sp
 full-bleed) so the same prompt can produce visually different pages — the LLM may pick one, or the
 compiler picks deterministically per job. Disable with `AI_LAYOUT_VARIETY=off`.
 
+Set `UNSPLASH_ACCESS_KEY` to fetch **context-aware images** per section (from each section's
+`mediaPrompt`) instead of the fixed fallback pool. It is best-effort — no key, a timeout, or a rate limit
+silently falls back to the pool and never blocks generation. Fetched images are hotlinked from the
+provider (not stored) and passes an SSRF-safe URL check.
+
 A deterministic **quality gate** (`AI_QUALITY_GATE`, default `block`) runs after compile: it blocks
 placeholder text and empty sections (retried with a hint, then falls back), and warns on low contrast,
 non-responsive giant headings, duplicate/overlong headings, and wrong-language headings. Set to `warn`

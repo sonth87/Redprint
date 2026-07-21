@@ -35,6 +35,7 @@ import {
   type PresetIndex,
 } from "./preset-catalog.js";
 import { hasVariants, isLayoutVarietyEnabled, resolveVariant } from "./layout-variants.js";
+import type { ImageResult } from "./image-provider.js";
 
 interface CompileContext {
   availableTypes: Set<string>;
@@ -57,6 +58,8 @@ interface CompileContext {
   presetUsed: Set<string>;
   /** Resolved layout variant for the current section (roadmap 02/05). */
   variant: string;
+  /** Provider-fetched images for this section (roadmap 02/06); [] = use pool. */
+  providerImages: ImageResult[];
 }
 
 const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1601758125946-6ec2ef64daf8?w=1200&q=80";
@@ -213,14 +216,20 @@ function normalizeMediaItem(
   plan: SectionPlan,
   index: number,
   pool: string[],
+  providerImages: ImageResult[],
 ): Required<Pick<SectionPlanMediaItem, "src" | "alt">> & Pick<SectionPlanMediaItem, "caption" | "link"> {
-  const fallback = pool[index % pool.length] ?? DEFAULT_IMAGE;
+  // Priority: valid LLM-supplied src → provider result → content-pack pool
+  // (roadmap 02/06). Provider urls are already `safeMediaUrl`-checked upstream.
+  const providerImage = providerImages[index];
+  const fallback = providerImage?.url ?? pool[index % pool.length] ?? DEFAULT_IMAGE;
   const src = safeMediaUrl(item?.src) ?? fallback;
-  const alt = item?.alt?.trim() || fallbackAlt(section, plan, index);
+  const usingProvider = src === providerImage?.url && !item?.src;
+  const alt = item?.alt?.trim() || (usingProvider ? providerImage?.alt : undefined) || fallbackAlt(section, plan, index);
+  const credit = usingProvider && providerImage?.credit ? `Photo: ${providerImage.credit.name} / Unsplash` : undefined;
   return {
     src,
     alt,
-    caption: item?.caption?.trim() || undefined,
+    caption: item?.caption?.trim() || credit || undefined,
     link: safeLinkUrl(item?.link) ?? undefined,
   };
 }
@@ -232,14 +241,15 @@ function mediaItemsFor(
   options: { min: number; max: number },
 ) {
   const pool = fallbackImagePool(ctx.pack);
+  const provider = ctx.providerImages;
   const source = plan.mediaItems ?? [];
   const items = source
     .slice(0, options.max)
-    .map((item, index) => normalizeMediaItem(item, section, plan, index, pool));
+    .map((item, index) => normalizeMediaItem(item, section, plan, index, pool, provider));
 
   while (items.length < options.min) {
     const index = items.length;
-    items.push(normalizeMediaItem(undefined, section, plan, index, pool));
+    items.push(normalizeMediaItem(undefined, section, plan, index, pool, provider));
   }
 
   return items.slice(0, options.max);
@@ -1743,8 +1753,11 @@ export function compileSectionWithMeta(
   section: PagePlanSection,
   pagePlan: PagePlan,
   request: GeneratePageRequest,
+  /** Provider-fetched images for this section (roadmap 02/06). */
+  providerImages: ImageResult[] = [],
 ): CompileSectionResult {
   const ctx = buildCompileContext(pagePlan, request);
+  ctx.providerImages = providerImages;
   const commands = compileSectionPlan(normalizeComponentIntentPreferences(sectionPlan), section, ctx);
   return { commands, presetUsed: [...ctx.presetUsed], variantUsed: ctx.variant };
 }
@@ -1778,6 +1791,7 @@ function buildCompileContext(pagePlan: PagePlan, request: GeneratePageRequest): 
     presetSeed: 0,
     presetUsed: new Set<string>(),
     variant: "",
+    providerImages: [],
   };
 }
 

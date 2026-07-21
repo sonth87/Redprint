@@ -113,6 +113,9 @@ export const logger = {
       presetUsed?: string[];
       // Layout variety (roadmap 02/05).
       variantUsed?: string;
+      // Media pipeline (roadmap 02/06).
+      imageProvider?: string;
+      imageCount?: number;
     },
   ) => {
     if (!DEBUG) return;

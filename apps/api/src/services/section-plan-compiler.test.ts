@@ -495,3 +495,47 @@ describe("layout variants", () => {
     expect(ids).toContain(`${hero.id}-cta-closing`);
   });
 });
+
+// ── Media pipeline (roadmap 02/06) ─────────────────────────────────────────
+
+describe("media source priority", () => {
+  function imageSrcs(commands: ReturnType<typeof compileSection>): string[] {
+    return commands
+      .filter((c) => c.type === "ADD_NODE" && c.payload.componentType === "Image")
+      .map((c) => String((c.payload.props as { src?: string }).src ?? ""));
+  }
+  function heroPlanMedia(mediaItems?: SectionPlan["mediaItems"]): SectionPlan {
+    return { sectionId: "sec-hero", type: "hero", heading: "Welcome", body: "b", ctaLabel: "Go", items: [], preferredComponents: [], layoutVariant: "split-media-right", mediaItems } as SectionPlan;
+  }
+
+  it("uses provider images over the content-pack pool", () => {
+    const request = makeRequest();
+    const plan = buildDeterministicPagePlan(request, "job-m1");
+    const hero = plan.sections.find((s) => s.type === "hero")!;
+    const provider = [{ url: "https://images.example.com/provider.jpg", alt: "provider shot" }];
+    const { commands } = compileSectionWithMeta(heroPlanMedia(), hero, plan, request, provider);
+    expect(imageSrcs(commands)).toContain("https://images.example.com/provider.jpg");
+  });
+
+  it("prefers a valid LLM-supplied src over the provider image", () => {
+    const request = makeRequest();
+    const plan = buildDeterministicPagePlan(request, "job-m2");
+    const hero = plan.sections.find((s) => s.type === "hero")!;
+    const provider = [{ url: "https://images.example.com/provider.jpg", alt: "p" }];
+    const llmMedia = [{ src: "https://images.example.com/llm-chosen.jpg", alt: "llm" }];
+    const { commands } = compileSectionWithMeta(heroPlanMedia(llmMedia), hero, plan, request, provider);
+    const srcs = imageSrcs(commands);
+    expect(srcs).toContain("https://images.example.com/llm-chosen.jpg");
+    expect(srcs).not.toContain("https://images.example.com/provider.jpg");
+  });
+
+  it("falls back to the pool when no provider images are supplied", () => {
+    const request = makeRequest();
+    const plan = buildDeterministicPagePlan(request, "job-m3");
+    const hero = plan.sections.find((s) => s.type === "hero")!;
+    const { commands } = compileSectionWithMeta(heroPlanMedia(), hero, plan, request); // no provider
+    // pool urls are unsplash.com; provider example host must not appear
+    expect(imageSrcs(commands).every((s) => !s.includes("images.example.com"))).toBe(true);
+    expect(imageSrcs(commands).length).toBeGreaterThan(0);
+  });
+});

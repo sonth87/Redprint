@@ -26,6 +26,7 @@ import {
   resolveGateMode,
 } from "../services/quality-gate.js";
 import { resolveLocale } from "../services/section-plan-compiler.js";
+import { fetchSectionImages } from "../services/image-provider.js";
 import { initSSE, sendSSE } from "../services/sse.js";
 import { COMMAND_REFERENCE } from "../services/command-reference.js";
 import { logger } from "../services/logger.js";
@@ -176,7 +177,17 @@ aiRouter.post("/generate-page", async (req: Request, res: Response) => {
             attempt > 1 ? lastError : undefined,
             accountant,
           );
-          const { commands, presetUsed, variantUsed } = compileSectionWithMeta(sectionPlan, section, pagePlan, body);
+          // Fetch context-aware images (roadmap 02/06) — best-effort, falls back
+          // to the content-pack pool on any failure. Runs after the SectionPlan
+          // (needs mediaPrompt) but before compile.
+          const sectionImages = await fetchSectionImages(sectionPlan, section, pagePlan.brief);
+          const { commands, presetUsed, variantUsed } = compileSectionWithMeta(
+            sectionPlan,
+            section,
+            pagePlan,
+            body,
+            sectionImages.results,
+          );
           if (commands.length === 0) {
             throw new Error("Compiler produced no valid commands");
           }
@@ -219,6 +230,8 @@ aiRouter.post("/generate-page", async (req: Request, res: Response) => {
             qualityWarnings: warnings.length || undefined,
             presetUsed: presetUsed.length > 0 ? presetUsed : undefined,
             variantUsed: variantUsed || undefined,
+            imageProvider: sectionImages.results.length > 0 ? sectionImages.provider : undefined,
+            imageCount: sectionImages.results.length || undefined,
           });
           sendSSE(res, "section_ready", {
             jobId,

@@ -4,7 +4,24 @@
 > Ưu tiên: P4
 > Ước lượng: 2–3 ngày
 > Phụ thuộc: [02/02](./02-industry-content-packs.md) (pool theo pack là fallback cuối)
-> Trạng thái: Chưa bắt đầu
+> Trạng thái: Hoàn thành (v1 — Unsplash search) — 2026-07-21. Module mới
+> `apps/api/src/services/image-provider.ts`: `ImageProvider` interface + `UnsplashProvider`
+> (`UNSPLASH_ACCESS_KEY`, `content_filter=high`, map url/alt/credit) + `NoneProvider` (default khi không
+> key → pool y hệt cũ). Cache in-memory TTL 1h theo query, token-bucket rate limit (`IMAGE_RATE_LIMIT`,
+> default 45/h < Unsplash free 50), timeout (`IMAGE_TIMEOUT_MS`, default 3s), `sanitizeImageQuery`
+> (blocklist + cap 100). `fetchSectionImages(plan, section, brief)` — query = `mediaPrompt` (LLM được yêu
+> cầu viết tiếng Anh) ?? `"{industry} {type}"`, count theo section type, orientation landscape cho
+> hero/cta. Route gọi async sau `generateSectionPlan` trước compile; kết quả truyền vào
+> `compileSectionWithMeta(..., providerImages)`. `mediaItemsFor`/`normalizeMediaItem` ưu tiên
+> **LLM src hợp lệ → provider → pool**; credit Unsplash gắn vào caption. Mọi failure → [] → pool, không
+> chặn section. Mọi URL provider qua `safeMediaUrl` (chống SSRF). Log `imageProvider`/`imageCount` trên
+> `section_ready`. Section prompt: rule mediaPrompt tiếng Anh + subject cụ thể. Test:
+> `image-provider.test.ts` (10: sanitize, none, mediaPrompt/industry query, throw→[], Unsplash map+cache
+> không-fetch-lần-2, non-ok→[], timeout→[], drop URL private-host) + 3 test compiler (provider > pool,
+> LLM src > provider, không provider → pool). apps/api **141 test pass**. Docs: AI_ASSISTANT (media section
+> + 3 env row) + README + roadmap.
+> **Chưa làm (ngoài phạm vi v1):** Pexels/image-generation provider; chat-path `search_image` tool;
+> self-host/tải ảnh về media manager (chi phí storage + license).
 
 ## 1. Mục đích
 

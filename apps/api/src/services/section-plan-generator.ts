@@ -187,7 +187,7 @@ Return ONLY JSON:
   "faqs": [{ "title": "question", "body": "answer" }],
   "stats": [{ "title": "metric", "body": "meaning" }],
   "testimonials": [{ "title": "quote summary", "body": "quote", "meta": "name" }],
-  "mediaPrompt": "optional image description"
+  "mediaPrompt": "optional image search description — ALWAYS in English, concrete subject (e.g. 'happy dog in a bright pet grooming salon')"
 }
 
 Available component capability manifest:
@@ -215,6 +215,7 @@ Rules:
 - Optionally set presetRefs to reuse a designed preset for a slot — use ONLY ids from the preset list above; omit presetRefs if none fit. Never invent a preset id.
 - Return component intent and content only; never return builder commands or raw component props.
 - If media is needed but no real image is available, include useful alt/caption and describe media intent; the compiler may use safe fallback images.
+- Write mediaPrompt in English with a concrete visual subject — it is used to search stock photos for this section.
 - Write real, specific content. No lorem ipsum, no "your headline here".
 - All heading/body/eyebrow/ctaLabel/items/faqs/testimonials content MUST be written in ${localeLabel(resolveLocale(request, pagePlan.brief))}. Keep structural values (component types, roles) in English.
 - Respect the selected tone and palette intent.
