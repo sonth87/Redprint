@@ -116,6 +116,8 @@ export const logger = {
       // Media pipeline (roadmap 02/06).
       imageProvider?: string;
       imageCount?: number;
+      // Generic adapter (roadmap 03/02) — per componentIntent compile strategy.
+      intentAdapterUsed?: string[];
     },
   ) => {
     if (!DEBUG) return;

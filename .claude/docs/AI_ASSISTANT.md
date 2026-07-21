@@ -91,6 +91,7 @@ selects a provider or model — the backend does, via environment variables:
 | `AI_QG_DISABLE` | Comma-separated quality-check codes to disable (e.g. `low_contrast,wrong_language`) | — |
 | `AI_PRESET_FIRST` | Reuse designer presets for leaf slots during compile (`false` = adapters only) | `true` (on) |
 | `AI_LAYOUT_VARIETY` | Layout variants for hero/services/cta (`off` = always default variant) | on |
+| `AI_GENERIC_ADAPTER` | Compile unknown components via `aiHints.contentSlots` (`false` = intents outside hand-written adapters are ignored) | on |
 | `UNSPLASH_ACCESS_KEY` | Enable context-aware image search (unset = content-pack pool only) | — |
 | `IMAGE_TIMEOUT_MS` / `IMAGE_RATE_LIMIT` | Image search timeout (ms) / requests per hour | `3000` / `45` |
 
@@ -371,6 +372,29 @@ payload before commands are streamed:
 Every Section skeleton also gets a stable `props.anchorId` (derived from section type, e.g.
 `"services"`) so header/footer `NavigationMenu` anchor targets always resolve to a real element —
 see `sectionAnchor()` in `section-plan-compiler.ts`.
+
+### Generic Adapter (roadmap 03/02)
+
+Before this, a component only rendered real AI content if the compiler had a hand-written adapter
+function for its exact type (~12 of them: `navMenuCommand`, `galleryProCommand`, `textMaskCommand`, …).
+`componentIntents` the LLM chose were otherwise silently ignored, and a brand-new/third-party component
+always fell back to a generic card. `generic-adapter.ts`'s `compileGenericComponent` fixes this by
+mapping section content onto **any** component's props via its own `aiHints.contentSlots`
+(`ComponentContract.contentSlots`, populated in `resolveComponentContracts`), then validating through
+the existing `validatePropsAgainstContract` (which also fills defaults/repairs). It's intentionally
+minimal — it maps content, not layout/style; visual polish comes from a matched preset (roadmap 02/01)
+or the component's own `defaultProps`/`defaultStyle`.
+
+For each `componentIntent` a specialized section branch hasn't already consumed (`compileGenericSection`'s
+generic fallthrough — features/trust/process/stats/pricing/testimonials/custom), `tryComponentIntents`
+tries, in order: **(1) matched preset** for that exact type, **(2) generic adapter** via contentSlots,
+**(3) the component's own `fallbackTo` chain** (recursively, same priority), else the intent is dropped
+(never a "close enough" broken node). Capped at 3 intents/section (required > preferred > optional) to
+bound cost against a spammy LLM response. Logged per-instantiation as `intentAdapterUsed` on
+`section_ready` (`"componentType:preset|generic|fallback"`). Disable with `AI_GENERIC_ADAPTER=false`
+(falls back to the pre-03/02 behavior — intents ignored outside the hand-written adapters/section table
+above). Container components needing children (e.g. Tabs) are out of scope for v1 — `contentSlots`
+only describes props, not child trees; see [03/05](../../docs/roadmap/03-component-platform/05-wave2-components.md).
 
 ---
 

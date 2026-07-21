@@ -241,6 +241,11 @@ Set `UNSPLASH_ACCESS_KEY` to fetch **context-aware images** per section (from ea
 silently falls back to the pool and never blocks generation. Fetched images are hotlinked from the
 provider (not stored) and passes an SSRF-safe URL check.
 
+Components the compiler has no hand-written adapter for can still render real AI content: the compiler
+maps section content onto any component's props using the content-slot mapping the component itself
+declares (`aiHints.contentSlots`), falling back through preset → generic mapping → the component's own
+declared fallback chain. Disable with `AI_GENERIC_ADAPTER=false`.
+
 A deterministic **quality gate** (`AI_QUALITY_GATE`, default `block`) runs after compile: it blocks
 placeholder text and empty sections (retried with a hint, then falls back), and warns on low contrast,
 non-responsive giant headings, duplicate/overlong headings, and wrong-language headings. Set to `warn`

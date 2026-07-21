@@ -33,7 +33,7 @@ flowchart LR
 | # | File | Nội dung | Phase | Trạng thái |
 |---|------|----------|-------|-----------|
 | 01 | [01-ai-hints.md](./01-ai-hints.md) | `aiHints` trong ComponentDefinition — nguồn sự thật duy nhất | P4 | ✅ Hoàn thành |
-| 02 | [02-generic-adapter.md](./02-generic-adapter.md) | Generic adapter thay adapter hardcode per-component | P4 | Chưa bắt đầu |
+| 02 | [02-generic-adapter.md](./02-generic-adapter.md) | Generic adapter thay adapter hardcode per-component | P4 | ✅ Hoàn thành (v1) |
 | 03 | [03-component-retrieval.md](./03-component-retrieval.md) | Chọn top-k component cho prompt khi catalog lớn | P4 | Chưa bắt đầu |
 | 04 | [04-form-primitives.md](./04-form-primitives.md) | Form, Input, Textarea, Select, Checkbox + submit pipeline | P5 | Chưa bắt đầu |
 | 05 | [05-wave2-components.md](./05-wave2-components.md) | Video/Embed, Icon, Tabs, Accordion, Countdown, Map, LogoStrip | P5 | Chưa bắt đầu |
@@ -42,5 +42,5 @@ flowchart LR
 Thứ tự bắt buộc: 01 → 02 → 03 (nền), rồi 04 → 06 → 05 (04 là ưu tiên cao nhất trong nhóm mới vì
 landing không thu lead là landing hỏng).
 
-**01 hoàn thành 2026-07-21** (3 PR độc lập — chi tiết trong [01-ai-hints.md](./01-ai-hints.md)). Nền đã
-sẵn sàng cho 02 (generic adapter dùng `aiHints.contentSlots`) và 03 (retrieval dùng `sectionAffinity`).
+**01 và 02 hoàn thành 2026-07-21** (chi tiết trong từng file). 02 dùng đúng `aiHints.contentSlots` từ 01.
+Nền đã sẵn sàng cho 03 (retrieval dùng `sectionAffinity`).

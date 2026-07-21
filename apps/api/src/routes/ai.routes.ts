@@ -181,7 +181,7 @@ aiRouter.post("/generate-page", async (req: Request, res: Response) => {
           // to the content-pack pool on any failure. Runs after the SectionPlan
           // (needs mediaPrompt) but before compile.
           const sectionImages = await fetchSectionImages(sectionPlan, section, pagePlan.brief);
-          const { commands, presetUsed, variantUsed } = compileSectionWithMeta(
+          const { commands, presetUsed, variantUsed, intentAdapterLog } = compileSectionWithMeta(
             sectionPlan,
             section,
             pagePlan,
@@ -232,6 +232,7 @@ aiRouter.post("/generate-page", async (req: Request, res: Response) => {
             variantUsed: variantUsed || undefined,
             imageProvider: sectionImages.results.length > 0 ? sectionImages.provider : undefined,
             imageCount: sectionImages.results.length || undefined,
+            intentAdapterUsed: intentAdapterLog.length > 0 ? intentAdapterLog.map((e) => `${e.componentType}:${e.strategy}`) : undefined,
           });
           sendSSE(res, "section_ready", {
             jobId,

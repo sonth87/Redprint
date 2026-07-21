@@ -543,3 +543,103 @@ describe("media source priority", () => {
     expect(imageSrcs(commands).length).toBeGreaterThan(0);
   });
 });
+
+// ── Generic adapter (roadmap 03/02) ─────────────────────────────────────────
+
+describe("generic adapter — componentIntent compiles an unknown component", () => {
+  const TESTIMONIAL_COMPONENT = {
+    type: "Testimonial",
+    name: "Testimonial",
+    category: "content",
+    capabilities: [], // leaf
+    propSchema: [
+      { key: "quote", label: "Quote", type: "string" as const, required: true },
+      { key: "author", label: "Author", type: "string" as const, required: true },
+      { key: "avatarUrl", label: "Avatar", type: "image" as const },
+    ],
+    defaultProps: {},
+    aiHints: {
+      purpose: "A single customer testimonial card.",
+      bestFor: ["testimonials"],
+      sectionAffinity: ["testimonials"],
+      contentSlots: { heading: "quote", body: "author", mediaSrc: "avatarUrl" },
+      fallbackTo: ["Text"],
+    },
+  };
+
+  function testimonialRequest(): GeneratePageRequest {
+    return { ...makeRequest(), availableComponents: [...availableComponents, TESTIMONIAL_COMPONENT] };
+  }
+
+  function testimonialsPlan(): SectionPlan {
+    return {
+      sectionId: "sec-testi",
+      type: "testimonials",
+      heading: "What customers say",
+      body: "Real feedback",
+      items: [],
+      preferredComponents: [],
+      testimonials: [
+        { title: "Loved it!", body: "Jane Doe" },
+        { title: "Great service", body: "John Smith" },
+      ],
+      componentIntents: [{ role: "testimonial_card", componentType: "Testimonial", priority: "required" }],
+    } as SectionPlan;
+  }
+
+  it("compiles the unknown Testimonial component via the generic adapter using componentIntents", () => {
+    const request = testimonialRequest();
+    const plan = buildDeterministicPagePlan(request, "job-generic1");
+    const section = plan.sections.find((s) => s.type === "testimonials") ?? plan.sections[0];
+    const { commands, intentAdapterLog } = compileSectionWithMeta(testimonialsPlan(), section, plan, request);
+
+    const testimonialCmd = commands.find((c) => c.type === "ADD_NODE" && c.payload.componentType === "Testimonial");
+    expect(testimonialCmd).toBeTruthy();
+    // heading/body from the section plan mapped onto quote/author via contentSlots.
+    expect((testimonialCmd!.payload.props as Record<string, unknown>).quote).toBe("What customers say");
+    expect((testimonialCmd!.payload.props as Record<string, unknown>).author).toBe("Real feedback");
+    expect(intentAdapterLog.some((e) => e.componentType === "Testimonial" && e.strategy === "generic")).toBe(true);
+  });
+
+  it("AI_GENERIC_ADAPTER=false disables the generic path entirely", () => {
+    process.env.AI_GENERIC_ADAPTER = "false";
+    try {
+      const request = testimonialRequest();
+      const plan = buildDeterministicPagePlan(request, "job-generic2");
+      const section = plan.sections.find((s) => s.type === "testimonials") ?? plan.sections[0];
+      const { commands, intentAdapterLog } = compileSectionWithMeta(testimonialsPlan(), section, plan, request);
+      expect(commands.some((c) => c.payload.componentType === "Testimonial")).toBe(false);
+      expect(intentAdapterLog).toHaveLength(0);
+    } finally {
+      delete process.env.AI_GENERIC_ADAPTER;
+    }
+  });
+
+  it("falls back to fallbackTo chain when the intent component's contract can't be satisfied", () => {
+    // BrokenWidget requires a prop with no content-slot mapping and no default
+    // → generic adapter for BrokenWidget itself fails → falls back to Text.
+    const brokenRequest: GeneratePageRequest = {
+      ...makeRequest(),
+      availableComponents: [
+        ...availableComponents,
+        {
+          type: "BrokenWidget",
+          name: "Broken Widget",
+          category: "content",
+          capabilities: [],
+          propSchema: [{ key: "requiredButUnmapped", label: "X", type: "string" as const, required: true }],
+          defaultProps: {},
+          aiHints: { purpose: "test", bestFor: [], sectionAffinity: ["testimonials"], contentSlots: { heading: "notAProp" }, fallbackTo: ["Text"] },
+        },
+      ],
+    };
+    const plan = buildDeterministicPagePlan(brokenRequest, "job-generic3");
+    const section = plan.sections.find((s) => s.type === "testimonials") ?? plan.sections[0];
+    const brokenPlan = {
+      ...testimonialsPlan(),
+      componentIntents: [{ role: "x", componentType: "BrokenWidget", priority: "required" }],
+    } as SectionPlan;
+    const { intentAdapterLog } = compileSectionWithMeta(brokenPlan, section, plan, brokenRequest);
+    expect(intentAdapterLog.some((e) => e.componentType === "Text" && e.strategy === "fallback")).toBe(true);
+  });
+});

@@ -2,7 +2,7 @@ import {
   buildComponentCapabilityManifest,
   type ComponentCapability,
 } from "./component-capability-manifest.js";
-import type { AIPropSchemaEntry, GeneratePageRequest } from "../types/ai.types.js";
+import type { AIComponentHints, AIPropSchemaEntry, GeneratePageRequest } from "../types/ai.types.js";
 
 type AvailableComponent = GeneratePageRequest["availableComponents"][number];
 
@@ -33,6 +33,8 @@ export interface ComponentContract {
   fallbackTo: string[];
   examples: string[];
   contractSource: "propSchema" | "curated" | "merged" | "aiHints";
+  /** Content-intent → prop mapping, from aiHints (roadmap 03/01/03/02). */
+  contentSlots?: AIComponentHints["contentSlots"];
 }
 
 function flattenPropSchema(schema: AIPropSchemaEntry[] | undefined): AIPropSchemaEntry[] {
@@ -127,6 +129,7 @@ export function resolveComponentContracts(
       fallbackTo: capability.fallbackTo,
       examples: examplesFor(type, component),
       contractSource: capability.contractSource ?? "propSchema",
+      contentSlots: component.aiHints?.contentSlots,
     });
   }
 

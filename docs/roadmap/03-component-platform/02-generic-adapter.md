@@ -4,7 +4,31 @@
 > Ưu tiên: P4
 > Ước lượng: 2–3 ngày
 > Phụ thuộc: [03/01](./01-ai-hints.md) (contentSlots), [02/01](../02-ai-generation/01-preset-first-compiler.md) (preset là chiến lược ưu tiên)
-> Trạng thái: Chưa bắt đầu
+> Trạng thái: Hoàn thành (v1 — props-only, chưa dọn adapter tay cũ) — 2026-07-21. Module mới
+> `apps/api/src/services/generic-adapter.ts`: `compileGenericComponent` (map content→props qua
+> `contentSlots`, validate qua `validatePropsAgainstContract` có sẵn — trả `null` thay vì node đoán mò
+> khi contract vẫn fail sau repair) + `mapContentToProps` (export dùng chung, xử lý `heading/body/
+> ctaLabel/href/mediaSrc/mediaAlt` + `items` cả 2 shape `array-of-objects`/`indexed-props` với `itemKeys`
+> + cap `maxItems`) + `genericAdapterEnabled` (`AI_GENERIC_ADAPTER`, default on).
+> `ComponentContract` (component-contract-resolver.ts) thêm field `contentSlots?` (từ `aiHints.contentSlots`
+> — nối liền với 03/01). Compiler: `tryComponentIntents` + `compileIntentComponent` (đệ quy theo
+> `fallbackTo` chain) thử **preset → generic adapter → fallbackTo** theo thứ tự cho mỗi `componentIntent`
+> chưa được nhánh section đặc thù xử lý (gallery/services/faq/cta đã return sớm — generic chạy cho
+> features/trust/process/stats/pricing/testimonials/custom). Cap 3 intent/section theo priority
+> required>preferred>optional. Log `intentAdapterLog` (`{componentType, strategy}`) → route log
+> `section_ready.intentAdapterUsed`.
+>
+> **Test:** fixture `Testimonial` giả (roadmap mục 5, props quote/author/avatarUrl + contentSlots) —
+> `generic-adapter.test.ts` (10 unit: map content, skip field không có slot, 2 shape items, contract fail
+> → null, default bù required prop, flag off) + 3 test tích hợp compiler (`Testimonial` compile đúng qua
+> generic từ `componentIntents`, flag `AI_GENERIC_ADAPTER=false` tắt hẳn nhánh, `BrokenWidget` fail →
+> fallbackTo Text). **apps/api 167 test pass** (154→167). Typecheck sạch, docs:check pass. Docs:
+> AI_ASSISTANT (mục "Generic Adapter" + env row) + README + roadmap.
+>
+> **Chưa làm (v1 giới hạn theo đúng mục 6):** dọn adapter tay TextMask/TextMarquee/Shape/Divider sang
+> generic (mục 4 — cần snapshot output trước khi xoá, để lại vì rủi ro/lợi ích thấp ở v1, hành vi cũ vẫn
+> đúng); container component cần children (Tabs/Accordion) — `contentSlots` chỉ mô tả props, không mô
+> tả cây con, để [03/05](./05-wave2-components.md) thiết kế props-driven riêng.
 
 ## 1. Mục đích
 

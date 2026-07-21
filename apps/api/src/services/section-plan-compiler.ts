@@ -36,6 +36,7 @@ import {
 } from "./preset-catalog.js";
 import { hasVariants, isLayoutVarietyEnabled, resolveVariant } from "./layout-variants.js";
 import type { ImageResult } from "./image-provider.js";
+import { compileGenericComponent, genericAdapterEnabled, mapContentToProps, type GenericAdapterContent } from "./generic-adapter.js";
 
 interface CompileContext {
   availableTypes: Set<string>;
@@ -60,6 +61,8 @@ interface CompileContext {
   variant: string;
   /** Provider-fetched images for this section (roadmap 02/06); [] = use pool. */
   providerImages: ImageResult[];
+  /** Sink: `{componentType, strategy}` for each componentIntent instantiation (roadmap 03/02 — logged as adapterUsed). */
+  intentAdapterLog: Array<{ componentType: string; strategy: "preset" | "generic" | "fallback" }>;
 }
 
 const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1601758125946-6ec2ef64daf8?w=1200&q=80";
@@ -1427,6 +1430,112 @@ function compileFooterSection(plan: SectionPlan, section: PagePlanSection, ctx: 
   return validateCompiledCommands(commands, ctx.availableTypes, new Set([section.id]), ctx.contractsByType);
 }
 
+/** Build the shared per-section content object the generic adapter maps onto props. */
+function sectionContentFor(plan: SectionPlan, section: PagePlanSection, ctx: CompileContext): GenericAdapterContent {
+  const items =
+    section.type === "faq" && plan.faqs?.length
+      ? plan.faqs
+      : section.type === "testimonials" && plan.testimonials?.length
+      ? plan.testimonials
+      : section.type === "stats" && plan.stats?.length
+      ? plan.stats
+      : plan.items;
+  const media = has(ctx, "Image") ? mediaItemsFor(plan, section, ctx, { min: 1, max: 6 }) : [];
+  return {
+    heading: plan.heading,
+    body: plan.body,
+    ctaLabel: plan.ctaLabel,
+    items,
+    media: media.map((m) => ({ src: m.src, alt: m.alt })),
+  };
+}
+
+/**
+ * Compile one componentIntent by strategy, in priority order (roadmap 03/02):
+ *   1. Matched preset (roadmap 02/01) — if a preset resolves for this exact
+ *      componentType, prefer it (design > generic mapping).
+ *   2. Generic adapter — map section content onto the component's own
+ *      `contentSlots`, then validate through its real contract.
+ *   3. `fallbackTo` chain from the component's aiHints — retry the same
+ *      content against each fallback type in order.
+ * Returns `null` if nothing in the chain produces a valid command (caller
+ * drops the intent — never emits a broken/guessed node).
+ */
+function compileIntentComponent(
+  ctx: CompileContext,
+  nodeId: string,
+  parentId: string,
+  componentType: string,
+  content: GenericAdapterContent,
+  visited: Set<string> = new Set(),
+): AICommandSuggestion | null {
+  if (visited.has(componentType) || !has(ctx, componentType)) return null;
+  visited.add(componentType);
+
+  const contract = ctx.contractsByType.get(componentType);
+  if (!contract) return null;
+
+  // 1. Preset match for this exact type (patch mapped content onto it).
+  const mappedProps = mapContentToProps(contract.contentSlots, content);
+  const preset = tryPresetLeaf(ctx, `intent_${componentType}`, componentType, [], mappedProps, nodeId, parentId);
+  if (preset) {
+    ctx.intentAdapterLog.push({ componentType, strategy: "preset" });
+    return preset;
+  }
+
+  // 2. Generic adapter — content mapped via this component's own contentSlots.
+  const generic = compileGenericComponent({
+    id: nodeId,
+    parentId,
+    componentType,
+    contract,
+    contentSlots: contract.contentSlots,
+    content,
+    tokens: ctx.designTokens,
+  });
+  if (generic) {
+    ctx.intentAdapterLog.push({ componentType, strategy: "generic" });
+    return generic;
+  }
+
+  // 3. Fall back to the next type in this component's own fallback chain.
+  for (const fallbackType of contract.fallbackTo) {
+    const fallback = compileIntentComponent(ctx, nodeId, parentId, fallbackType, content, visited);
+    if (fallback) {
+      ctx.intentAdapterLog.push({ componentType: fallbackType, strategy: "fallback" });
+      return fallback;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Try each of a section's LLM-chosen `componentIntents` that a special-cased
+ * section branch hasn't already handled (roadmap 03/02). Capped at 3 intents
+ * per section (required > preferred > optional) to bound compile cost against
+ * a spammy LLM response. Returns the commands produced; empty if none of the
+ * intents resolved (caller keeps its own default rendering as the fallback).
+ */
+function tryComponentIntents(plan: SectionPlan, section: PagePlanSection, ctx: CompileContext): AICommandSuggestion[] {
+  const intents = plan.componentIntents ?? [];
+  if (intents.length === 0) return [];
+
+  const priorityRank: Record<string, number> = { required: 0, preferred: 1, optional: 2 };
+  const ordered = [...intents]
+    .sort((a, b) => (priorityRank[a.priority ?? "optional"] ?? 2) - (priorityRank[b.priority ?? "optional"] ?? 2))
+    .slice(0, 3);
+
+  const content = sectionContentFor(plan, section, ctx);
+  const commands: AICommandSuggestion[] = [];
+  ordered.forEach((intent, index) => {
+    const nodeId = `${section.id}-intent-${index}`;
+    const cmd = compileIntentComponent(ctx, nodeId, `${section.id}-content`, intent.componentType, content);
+    if (cmd) commands.push(cmd);
+  });
+  return commands;
+}
+
 function compileGenericSection(plan: SectionPlan, section: PagePlanSection, ctx: CompileContext): AICommandSuggestion[] {
   const c = colors(ctx.designTokens);
   const commands: AICommandSuggestion[] = [];
@@ -1510,6 +1619,19 @@ function compileGenericSection(plan: SectionPlan, section: PagePlanSection, ctx:
     }
     applyVisualEmphasis(commands, section, rootId, plan, ctx);
     return validateCompiledCommands(commands, ctx.availableTypes, new Set([section.id]), ctx.contractsByType);
+  }
+
+  // Generic adapter (roadmap 03/02): give the LLM's own componentIntents a
+  // chance before falling back to the generic card grid below. Only runs for
+  // section types that reach this far (gallery/services/faq/cta already
+  // returned above with their own specialized rendering).
+  if (genericAdapterEnabled()) {
+    const intentCommands = tryComponentIntents(plan, section, ctx);
+    if (intentCommands.length > 0) {
+      commands.push(...intentCommands);
+      applyVisualEmphasis(commands, section, rootId, plan, ctx);
+      return validateCompiledCommands(commands, ctx.availableTypes, new Set([section.id]), ctx.contractsByType);
+    }
   }
 
   const list =
@@ -1697,6 +1819,8 @@ export interface CompileSectionResult {
   presetUsed: string[];
   /** Layout variant actually used (roadmap 02/05 — logged as variantUsed). */
   variantUsed: string;
+  /** Per componentIntent compile strategy (roadmap 03/02 — logged as adapterUsed). */
+  intentAdapterLog: Array<{ componentType: string; strategy: "preset" | "generic" | "fallback" }>;
 }
 
 /** Like {@link compileSection} but also reports compile metadata (presets, variant). */
@@ -1711,7 +1835,7 @@ export function compileSectionWithMeta(
   const ctx = buildCompileContext(pagePlan, request);
   ctx.providerImages = providerImages;
   const commands = compileSectionPlan(normalizeComponentIntentPreferences(sectionPlan), section, ctx);
-  return { commands, presetUsed: [...ctx.presetUsed], variantUsed: ctx.variant };
+  return { commands, presetUsed: [...ctx.presetUsed], variantUsed: ctx.variant, intentAdapterLog: ctx.intentAdapterLog };
 }
 
 /**
@@ -1744,6 +1868,7 @@ function buildCompileContext(pagePlan: PagePlan, request: GeneratePageRequest): 
     presetUsed: new Set<string>(),
     variant: "",
     providerImages: [],
+    intentAdapterLog: [],
   };
 }
 
