@@ -4,7 +4,53 @@
 > Ưu tiên: P5 (cao nhất trong nhóm component mới)
 > Ước lượng: 4–5 ngày
 > Phụ thuộc: [03/01](./01-ai-hints.md)+[03/02](./02-generic-adapter.md) nên có trước để form components sinh ra đã "AI-ready"; [01/01](../01-interactions-events/01-runtime-dead-actions.md) (triggerApi/submit)
-> Trạng thái: Chưa bắt đầu
+> Trạng thái: Hoàn thành (cả 2 PR) — 2026-07-22. **PR1 (component set, packages/builder-components)**:
+> 5 component mới `Form`/`Input`/`Textarea`/`SelectField`/`Checkbox` (đăng ký cuối `BASE_COMPONENTS`) +
+> `Button.buttonType: "button"|"submit"` (default `"button"`, không phá Button hiện có). `Form` là container
+> (`layoutType: "flow"`, `containerConfig.disallowedChildTypes: ["Form"]` — HTML tự thân cấm `<form>` lồng
+> nhau, đây cũng là lần đầu tiên field này được component nào dùng thật trong codebase). `aiHints` đầy đủ
+> cho cả 5 (`sectionAffinity: ["form","cta","footer"]`). A11y: `htmlFor`/`aria-required`/`aria-invalid` +
+> focus-ring — quy ước mới, chưa component nào trước đây dùng (ACCESSIBILITY.md cập nhật theo). `SelectField`
+> dùng `options` kiểu `"json"` + `hidden: true` (không có UI panel riêng — theo đúng tiền lệ
+> `GalleryPro.items` ở [03/01](./01-ai-hints.md)).
+>
+> **PR2 (runtime pipeline, builder-renderer + builder-core)**: `RendererConfig.onFormSubmit` mới (theo mẫu
+> `onCustomEvent` có sẵn) → xuyên qua `ComponentRenderer` (builder-core, field `onFormSubmit` — generic,
+> không riêng cho Form) → `RuntimeRenderer` context → `Form.runtimeRenderer`. Pipeline tách làm 2 lớp để test
+> không cần jsdom (monorepo không có): `dispatchFormSubmit` (thuần, nhận `FetchLike` inject được) xử lý
+> `submitAction: webhook|emit|none` + state machine `idle→submitting→success|error`; `runFormSubmitPipeline`
+> (chạm DOM thật) làm `preventDefault→reportValidity()→FormData→honeypot check→dispatchFormSubmit→reset`.
+> Webhook POST dùng lại `isSafeFetchEndpoint` (SSRF guard có sẵn từ
+> [01/01](../01-interactions-events/01-runtime-dead-actions.md)). Double-submit corner case (mục 6): guard
+> bằng `useRef` trong `FormShell`, chặn re-entrant submit trong lúc đang `submitting`, reset khi pipeline
+> kết thúc (kể cả lỗi, cho phép thử lại) — không cần context/API chia sẻ trạng thái với Button.
+>
+> **Phát hiện kiến trúc quan trọng**: `RuntimeRenderer.tsx`'s `cloneElement(rendered, extraProps)` **ghi đè**
+> (không compose) prop handler cùng tên — nếu không sửa, interaction `submit`-trigger inject vào node sẽ
+> âm thầm thay thế `onSubmit` riêng của Form (chạy pipeline). Sửa tổng quát (không riêng Form): compose 2
+> handler cùng tên thành 1 (handler gốc chạy trước, interaction handler chạy sau — đúng thứ tự mục 3.2 yêu
+> cầu). Verify lại `InteractionBinder.test.ts` (16/16) không hồi quy.
+>
+> `hideAfterSubmit`: phát hiện field này **đã tồn tại trong schema `PopupRules` nhưng chưa có hành vi runtime
+> nào** (khác mô tả gốc "nối rule sẵn có" — thực ra phải viết mới). Thêm `shouldHideAfterSubmit` (hàm thuần,
+> test riêng không cần DOM) + gọi `onClose("submit")` qua `queueMicrotask` (đợi Form tự render xong
+> success message trước khi popup biến mất) trong `PopupSurface`'s goal-tracking effect, khi `goal.type ===
+> "submit"` và `rules?.hideAfterSubmit === true`. `closeReason` union (`popups.ts`) thêm `"submit"`.
+>
+> `DocumentValidator.validateFormFieldNames` (builder-core): cảnh báo field trùng `name` trong cùng phạm vi
+> Form (duyệt cây con, dừng ở Form lồng — mỗi Form là 1 scope riêng). **Lưu ý**: đây là API thuần
+> (`validateDocument`/`DocumentValidator` vốn chưa được gọi ở đâu trong builder-editor — dead API có sẵn từ
+> trước) — chưa nối UI cảnh báo khi save vì builder-editor chưa có save-flow hook nào để móc vào; nằm ngoài
+> phạm vi PR này (chỉ "thêm hàm validate", không "thêm UI flow mới").
+>
+> **Chưa làm / để lại cho item khác**: section type `form` mới (→ [03/06](./06-new-section-types.md)), popup
+> template "Lead capture" mới trong `defaultPopupTemplates`/`popup-templates.json`, và E2E playground test
+> thật (monorepo không có browser/jsdom E2E harness — chỉ có unit test cho pipeline/validator/renderer logic).
+>
+> **Test**: builder-core 264/265 (1 fail popup undo maxWidth — pre-existing, không liên quan, xác nhận qua
+> `git stash`), builder-components 17/17 mới (`formSubmitPipeline.test.ts` 15 + `Form.tsx` re-entrancy phủ
+> qua cùng bộ test pipeline), builder-renderer 20/20 (`RuntimeRenderer.test.ts` 4 mới cho
+> `shouldHideAfterSubmit` + `InteractionBinder.test.ts` 16 không hồi quy).
 
 ## 1. Mục đích
 

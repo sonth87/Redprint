@@ -135,9 +135,20 @@ export const ButtonComponent: ComponentDefinition = {
       default: "md",
     },
     { key: "disabled", label: "Disabled", type: "boolean", default: false },
+    {
+      key: "buttonType",
+      label: "Button Type",
+      type: "select",
+      options: [
+        { value: "button", label: "Button (default)" },
+        { value: "submit", label: "Submit (inside a Form)" },
+      ],
+      default: "button",
+      description: "Set to \"Submit\" for a Button placed inside a Form (roadmap 03/04) — it submits the form instead of just being clickable.",
+    },
     { key: "hoverStyle", label: "Hover Style (JSON)", type: "json" },
   ],
-  defaultProps: { label: "<p>Click me</p>", variant: "primary", iconPosition: "start", size: "md", disabled: false, hoverStyle: {} },
+  defaultProps: { label: "<p>Click me</p>", variant: "primary", iconPosition: "start", size: "md", disabled: false, buttonType: "button", hoverStyle: {} },
   defaultStyle: {
     display: "inline-flex",
     alignItems: "center",
@@ -175,9 +186,13 @@ export const ButtonComponent: ComponentDefinition = {
     const labelHtml = String(node.props.label ?? "<p>Button</p>");
     const iconName = typeof node.props.icon === "string" ? node.props.icon : undefined;
     const iconPosition = node.props.iconPosition === "end" ? "end" : "start";
+    // buttonType (roadmap 03/04): "submit" lets a Button inside a Form trigger
+    // its onSubmit pipeline; editor mode always stays type="button" (see above)
+    // so nothing submits while authoring on the canvas.
+    const buttonType = node.props.buttonType === "submit" ? "submit" : "button";
     return (
       <button
-        type="button"
+        type={buttonType}
         style={{ appearance: "none", WebkitAppearance: "none", ...(style as React.CSSProperties), ...(hovered ? hs : {}) }}
         disabled={Boolean(node.props.disabled)}
         className="transition-all"

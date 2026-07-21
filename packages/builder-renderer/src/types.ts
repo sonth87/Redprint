@@ -140,4 +140,14 @@ export interface RendererConfig {
    * matching entry is a dev-only no-op warning, never a thrown error.
    */
   customActionHandlers?: Record<string, (params?: unknown) => void>;
+
+  // ── Form submit pipeline (roadmap 03/04) ──────────────────────────────────
+  /**
+   * Called when a `Form` node with `submitAction: "emit"` submits successfully
+   * (after HTML5 validation passes). `formName` is the Form node's `name` prop
+   * (or its node id if unset); `fields` is `{ name: value }` collected from the
+   * form's inputs. This is the escape hatch for host apps (CMS/website) that
+   * want to handle form data themselves instead of a webhook POST.
+   */
+  onFormSubmit?: (formName: string, fields: Record<string, unknown>) => void;
 }

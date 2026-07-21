@@ -237,6 +237,14 @@ export type ComponentRenderer = (props: {
   style: StyleConfig;
   interactions: InteractionConfig[];
   breakpoint: Breakpoint;
+  /**
+   * Host callback for `Form.submitAction: "emit"` (roadmap 03/04) — threaded
+   * from `RendererConfig.onFormSubmit` down to every node's renderer call, the
+   * same way `interactions`/`breakpoint` already are. Optional and unused by
+   * every component except Form; kept generic (not Form-specific) in case a
+   * future component needs the same host-callback pattern.
+   */
+  onFormSubmit?: (formName: string, fields: Record<string, unknown>) => void;
 }) => unknown;
 
 // ── ComponentDefinition ───────────────────────────────────────────────────

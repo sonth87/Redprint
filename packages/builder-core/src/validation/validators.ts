@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { BuilderDocument } from "../document/types";
+import type { BuilderDocument, BuilderNode } from "../document/types";
 
 // ── Document Validator schemas ────────────────────────────────────────────
 
@@ -260,11 +260,74 @@ export function validatePropSchema(
   }
 }
 
+/** Component types whose `name` prop is a form-data key (roadmap 03/04). */
+const FORM_FIELD_TYPES = new Set(["Input", "Textarea", "SelectField", "Checkbox"]);
+
+export interface DuplicateFieldNameWarning {
+  formNodeId: string;
+  name: string;
+  nodeIds: string[];
+}
+
+/**
+ * Warn (not block — this is an editor-save-time hint, not a document schema
+ * rule) when two form field descendants of the same `Form` node share a
+ * `name` prop. Duplicate names silently collide in `FormData` at submit time
+ * (roadmap 03/04) — the editor should surface this before it becomes a
+ * runtime surprise. Descent stops at a nested `Form` boundary so each Form's
+ * fields are checked in their own scope (nested Forms are disallowed anyway
+ * via `containerConfig.disallowedChildTypes`, but this stays correct even if
+ * that guard is ever bypassed).
+ */
+export function validateFormFieldNames(document: BuilderDocument): DuplicateFieldNameWarning[] {
+  const warnings: DuplicateFieldNameWarning[] = [];
+  const childrenOf = new Map<string, BuilderNode[]>();
+  for (const node of Object.values(document.nodes)) {
+    if (node.parentId === null) continue;
+    const list = childrenOf.get(node.parentId);
+    if (list) list.push(node);
+    else childrenOf.set(node.parentId, [node]);
+  }
+
+  for (const node of Object.values(document.nodes)) {
+    if (node.type !== "Form") continue;
+
+    const byName = new Map<string, string[]>();
+    const stack = [...(childrenOf.get(node.id) ?? [])];
+    while (stack.length > 0) {
+      const current = stack.pop()!;
+      if (current.type === "Form") continue; // nested Form — its own scope
+      if (FORM_FIELD_TYPES.has(current.type)) {
+        const name = typeof current.props.name === "string" ? current.props.name : "";
+        if (name) {
+          const ids = byName.get(name);
+          if (ids) ids.push(current.id);
+          else byName.set(name, [current.id]);
+        }
+      }
+      stack.push(...(childrenOf.get(current.id) ?? []));
+    }
+
+    for (const [name, nodeIds] of byName) {
+      if (nodeIds.length > 1) {
+        warnings.push({ formNodeId: node.id, name, nodeIds });
+      }
+    }
+  }
+
+  return warnings;
+}
+
 /**
  * DocumentValidator class — wraps the validation functions with instance API.
  */
 export class DocumentValidator {
   validate(document: unknown) {
     return validateDocument(document);
+  }
+
+  /** See {@link validateFormFieldNames}. */
+  validateFormFieldNames(document: BuilderDocument): DuplicateFieldNameWarning[] {
+    return validateFormFieldNames(document);
   }
 }

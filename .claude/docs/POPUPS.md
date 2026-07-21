@@ -148,7 +148,8 @@ closing → closed` — with pure transitions in `packages/builder-core/src/popu
 `onPopupClose`).
 
 `closePopup(popupId, reason)` accepts `reason: "button" | "escape" | "backdrop" | "action" |
-"routeChange" | "programmatic"` — recorded on the `popup_close` analytics event.
+"routeChange" | "programmatic" | "submit"` (`"submit"` added in roadmap 03/04, fired by
+`rules.hideAfterSubmit`) — recorded on the `popup_close` analytics event.
 
 ---
 
@@ -178,10 +179,17 @@ variant once a test concludes, bypassing the RNG. `seededRng(seed)` makes assign
 when a seed is supplied (useful for SSR/hydration consistency).
 
 **Goals** (`PopupGoal`, V4): `type: "click" | "submit" | "close" | "customEvent" | "urlVisit"`,
-optionally scoped to `targetNodeId` (click/submit) or `eventName`/`urlPattern`. Goal completion is not
-auto-detected by the runtime for every type — click/submit goals require the host to wire node
-interactions or form submission to emit the corresponding analytics event; see
-[RUNTIME.md](./RUNTIME.md) for the interaction action set.
+optionally scoped to `targetNodeId` (click/submit) or `eventName`/`urlPattern`. A `submit` goal targeting a
+real `Form` node (roadmap 03/04) fires `popup_submit`/`popup_conversion` automatically — a capture-phase
+`submit` listener on the popup surface matches `[data-node-id="<targetNodeId>"]`, no host wiring needed.
+`click` goals likewise fire from a node's own click interactions. `customEvent`/`urlVisit` goals still
+require the host to emit the corresponding analytics event or navigation; see [RUNTIME.md](./RUNTIME.md)
+for the interaction action set.
+
+**`rules.hideAfterSubmit`** (roadmap 03/04): when `true`, the popup closes itself
+(`onClose("submit")` → `closeReason: "submit"`) the moment a `submit`-type goal on this popup fires —
+deferred one microtask so the `Form`'s own success message renders first. Has no effect if the popup has
+no `submit` goal configured.
 
 ---
 

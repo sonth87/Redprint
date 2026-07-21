@@ -56,6 +56,16 @@ function findScrollContainer(el: Element): Element | null {
   return null;
 }
 
+/**
+ * Pure decision for the `hideAfterSubmit` popup rule (roadmap 03/04): true only
+ * when the goal that just fired was a `submit` goal AND the popup's rules opt
+ * into auto-close. Extracted as a standalone function so this decision is
+ * unit-testable without a real DOM/jsdom (this monorepo has neither).
+ */
+export function shouldHideAfterSubmit(goalType: "click" | "submit", hideAfterSubmit: boolean | undefined): boolean {
+  return goalType === "submit" && hideAfterSubmit === true;
+}
+
 // ── Runtime Context ───────────────────────────────────────────────────────
 
 interface RuntimeContextValue {
@@ -79,6 +89,8 @@ interface RuntimeContextValue {
   onCustomEvent?: (event: string, payload?: unknown) => void;
   /** Bridge for the `custom` interaction action (RendererConfig.customActionHandlers). */
   customActionHandlers?: Record<string, (params?: unknown) => void>;
+  /** Bridge for Form.submitAction "emit" (RendererConfig.onFormSubmit, roadmap 03/04). */
+  onFormSubmit?: (formName: string, fields: Record<string, unknown>) => void;
   toggleNodeVisibility: (targetId: string) => void;
   addNodeClass: (targetId: string, className: string) => void;
   removeNodeClass: (targetId: string, className: string) => void;
@@ -346,6 +358,7 @@ const RuntimeNode = memo(function RuntimeNode({ nodeId }: { nodeId: string }) {
       style: resolvedStyle,
       interactions: node.interactions,
       breakpoint: ctx.breakpoint,
+      onFormSubmit: ctx.onFormSubmit,
     });
 
     const shouldInject =
@@ -357,6 +370,25 @@ const RuntimeNode = memo(function RuntimeNode({ nodeId }: { nodeId: string }) {
       hasClassOverride;
 
     if (React.isValidElement(rendered) && shouldInject) {
+      // Compose (don't overwrite) event handler props the renderer already set
+      // for the same trigger — e.g. Form.runtimeRenderer's own `onSubmit` (which
+      // runs the submit pipeline: preventDefault, FormData, webhook/emit) must
+      // still run before a node's `submit`-trigger interaction handler injected
+      // here, matching the documented order (pipeline internal, then
+      // interactions — roadmap 03/04). Without this, cloneElement's shallow
+      // prop merge would silently replace the renderer's own handler.
+      if (Object.keys(interactionHandlers).length > 0) {
+        const renderedProps = rendered.props as Record<string, unknown>;
+        for (const [propName, interactionHandler] of Object.entries(interactionHandlers)) {
+          const ownHandler = renderedProps[propName] as ((event: unknown) => void) | undefined;
+          if (typeof ownHandler === "function") {
+            extraProps[propName] = (event: unknown) => {
+              ownHandler(event);
+              interactionHandler(event as Event);
+            };
+          }
+        }
+      }
       if (hasStyleOverride) {
         // Merge: renderer's own style → animation override → hover override (hover wins)
         const renderedStyle =
@@ -439,6 +471,7 @@ export function RuntimeRenderer({ document, registry, config = {} }: RuntimeRend
     setFrequencyCount,
     onCustomEvent,
     customActionHandlers,
+    onFormSubmit,
   } = config;
   const hasSectionVisibleTrigger = Object.values(document.popups ?? {}).some(
     (popup) => popup.autoTrigger.type === "sectionVisible",
@@ -894,6 +927,7 @@ export function RuntimeRenderer({ document, registry, config = {} }: RuntimeRend
       nodeClassOverrides,
       onCustomEvent,
       customActionHandlers,
+      onFormSubmit,
       toggleNodeVisibility,
       addNodeClass,
       removeNodeClass,
@@ -912,6 +946,7 @@ export function RuntimeRenderer({ document, registry, config = {} }: RuntimeRend
       nodeClassOverrides,
       onCustomEvent,
       customActionHandlers,
+      onFormSubmit,
       toggleNodeVisibility,
       addNodeClass,
       removeNodeClass,
@@ -1173,6 +1208,15 @@ function PopupSurface({
             goalId: goal.id,
             nodeId: goal.targetNodeId,
           });
+          // hideAfterSubmit (roadmap 03/04): close the popup once a `submit`
+          // goal fires. No prior runtime behavior consumed this rule — it was
+          // only validated in the schema before this. Deferred to the next
+          // microtask so the Form's own submit pipeline (success message,
+          // reset) finishes rendering first, rather than yanking the popup
+          // away mid-submit.
+          if (shouldHideAfterSubmit(type, basePopup.rules?.hideAfterSubmit)) {
+            queueMicrotask(() => onClose("submit"));
+          }
         }
       }
     };
@@ -1184,7 +1228,7 @@ function PopupSurface({
       surface.removeEventListener("click", onClick);
       surface.removeEventListener("submit", onSubmit, true);
     };
-  }, [basePopup, popupId, variantId, emitPopupEvent]);
+  }, [basePopup, popupId, variantId, emitPopupEvent, onClose]);
 
   // Runtime-only drag/resize state. NEVER written back to the document.
   const modalConfig = popup?.kindConfig.kind === "modal" ? popup.kindConfig : undefined;

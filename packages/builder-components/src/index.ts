@@ -19,6 +19,11 @@ export { NavigationMenuComponent } from "./components/NavigationMenu";
 export { RepeaterComponent } from "./components/Repeater";
 export { AnchorComponent } from "./components/Anchor";
 export { PopupContentComponent } from "./components/PopupContent";
+export { FormComponent } from "./components/Form";
+export { InputComponent } from "./components/Input";
+export { TextareaComponent } from "./components/Textarea";
+export { SelectFieldComponent } from "./components/SelectField";
+export { CheckboxComponent } from "./components/Checkbox";
 
 // Utility
 export { extendComponent } from "./utils/extendComponent";
@@ -50,6 +55,11 @@ import { NavigationMenuComponent } from "./components/NavigationMenu";
 import { RepeaterComponent } from "./components/Repeater";
 import { AnchorComponent } from "./components/Anchor";
 import { PopupContentComponent } from "./components/PopupContent";
+import { FormComponent } from "./components/Form";
+import { InputComponent } from "./components/Input";
+import { TextareaComponent } from "./components/Textarea";
+import { SelectFieldComponent } from "./components/SelectField";
+import { CheckboxComponent } from "./components/Checkbox";
 import { extendComponent } from "./utils/extendComponent";
 import { DEFAULT_GALLERY_ITEMS } from "@ui-builder/shared";
 
@@ -194,4 +204,10 @@ export const BASE_COMPONENTS: ComponentDefinition[] = [
   RepeaterComponent,
   AnchorComponent,
   PopupContentComponent,
+  // Form primitives (roadmap 03/04)
+  FormComponent,
+  InputComponent,
+  TextareaComponent,
+  SelectFieldComponent,
+  CheckboxComponent,
 ];

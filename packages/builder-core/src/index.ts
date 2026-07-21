@@ -323,7 +323,8 @@ export { PopupTemplateRegistry } from "./popups/PopupTemplateRegistry";
 
 // ── Validation ─────────────────────────────────────────────────────────────
 export { DocumentValidator } from "./validation/DocumentValidator";
-export { validateDocument, validatePropSchema } from "./validation/validators";
+export { validateDocument, validatePropSchema, validateFormFieldNames } from "./validation/validators";
+export type { DuplicateFieldNameWarning } from "./validation/validators";
 export type { DropValidationResult, DropValidator } from "./validation/types";
 
 // ── Migration ──────────────────────────────────────────────────────────────

@@ -206,7 +206,22 @@ interface BuilderDocument {
   canvasConfig: CanvasConfig;
   metadata: DocumentMetadata;
 }
+```
 
+### Semantic Validation
+
+`DocumentValidator` (`packages/builder-core/src/validation/validators.ts`, exported from the package root)
+covers cross-node business rules that zod schema validation (`validateDocument`) can't express. Currently:
+
+- `validateFormFieldNames(document)` (roadmap 03/04) — warns when two form-field descendants
+  (`Input`/`Textarea`/`SelectField`/`Checkbox`) of the same `Form` node share a `name` (the form-data key
+  would collide on submit). Each `Form` is its own scope — a nested `Form` (normally disallowed by
+  `containerConfig.disallowedChildTypes`, see above) is not descended into.
+
+This is a pure, callable function — it is not currently wired into any builder-editor save-flow UI (no
+save-time validation hook exists yet to attach a warning banner to).
+
+```ts
 interface VariableDefinition {
   key: string;
   type: "string" | "number" | "boolean" | "object" | "array";
@@ -685,7 +700,13 @@ interface ContainerConfig {
   dropZoneConfig?: DropZoneConfig;
   emptyStateConfig?: EmptyStateConfig;
 }
+```
 
+`disallowedChildTypes` is consumed by drag/drop resolution (`DropTargetResolver`, `useDragHandlers`,
+`useCanvasActions`, `useMoveGesture` in `builder-editor`). `Form` (roadmap 03/04) is the first component to
+set it (`disallowedChildTypes: ["Form"]` — HTML itself disallows nested `<form>` elements).
+
+```ts
 interface SlotConfig {
   name: string;
   label: string;

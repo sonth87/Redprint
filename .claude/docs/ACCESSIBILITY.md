@@ -39,6 +39,31 @@ Runtime renderer applies ARIA attributes from:
 </button>
 ```
 
+### Form Field Components
+
+`Input`, `Textarea`, `SelectField`, `Checkbox` (`packages/builder-components`, roadmap 03/04) establish the
+form-field a11y convention — the first components in the codebase to use it:
+
+- Every field renders a `<label htmlFor={fieldId}>` paired to its control via a generated id (not just
+  visual proximity).
+- `required` fields set `aria-required="true"`; a field in `error` state sets `aria-invalid="true"`.
+- Focus is visually indicated with a focus-ring (border/outline color change on focus, cleared on blur) —
+  the same "never remove focus outlines without replacement" rule as the rest of the editor applies here.
+- Editor mode renders fields inert (`readOnly`, `tabIndex={-1}`) — same pattern as `Form` itself (see below)
+  and consistent with the Editor Interaction Shield's intent, applied at the component level here because
+  a real `<input>`/`<textarea>` needs `readOnly` to stop accepting keystrokes even under the shield.
+
+### Form Submission
+
+`Form` (roadmap 03/04) is the first container with real submit behavior:
+
+- Runtime mode: submits via `reportValidity()` (native HTML5 validation UI) before any pipeline logic runs
+  — required/pattern errors surface exactly as the browser normally shows them.
+- Success/error state renders as `role="status"` / `role="alert"` respectively, so screen readers announce
+  the outcome without requiring focus to move.
+- Editor mode never submits (`preventDefault` unconditionally) — matches the `NavigationMenu`
+  editor-vs-runtime split (see `NavigationMenu`/`NavigationMenuRuntime` for the template this follows).
+
 ---
 
 ## Editor Accessibility

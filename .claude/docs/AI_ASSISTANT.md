@@ -233,10 +233,20 @@ component can't declare itself a container if it technically isn't one.
 
 Known rich components (`NavigationMenu`, `GalleryPro`, `GalleryGrid`, `GallerySlider`,
 `CollapsibleText`, `TextMarquee`, `TextMask`, `Shape`, `Row`, `Column`, `Repeater`, plus the rest of the
-20 built-ins) now declare their own `aiHints` directly in `packages/builder-components/src/components/*.tsx`
-— `CURATED_COMPONENT_CAPABILITIES` is retained only as the fallback path. Unknown or custom registered
-components without `aiHints` still receive propSchema-driven summaries, so they can appear in AI context
-without code changes (just with weaker `purpose`/`bestFor` text until they add hints).
+`BASE_COMPONENTS` — 27 as of roadmap 03/04) now declare their own `aiHints` directly in
+`packages/builder-components/src/components/*.tsx` — `CURATED_COMPONENT_CAPABILITIES` is retained only as
+the fallback path. Unknown or custom registered components without `aiHints` still receive
+propSchema-driven summaries, so they can appear in AI context without code changes (just with weaker
+`purpose`/`bestFor` text until they add hints).
+
+**Form primitives** (`Form`, `Input`, `Textarea`, `SelectField`, `Checkbox` — roadmap 03/04) all declare
+`aiHints.sectionAffinity: ["form", "cta", "footer"]`, so the retrieval/section-affinity path in
+[03-component-retrieval.md](../../docs/roadmap/03-component-platform/03-component-retrieval.md) self-nominates
+them for any `form`/`cta`/`footer` section without a server edit — same mechanism as any other component.
+`Form` is a container (`aiHints.contentSlots` not applicable — its children are compiled individually, not
+via a single content-slot mapping), so the generic adapter ([02-generic-adapter.md](../../docs/roadmap/03-component-platform/02-generic-adapter.md))
+does not drive `Form`'s children composition; a hand-written adapter for a `form`-type section is tracked
+separately in [06-new-section-types.md](../../docs/roadmap/03-component-platform/06-new-section-types.md).
 
 ### On-Demand Component Contracts
 

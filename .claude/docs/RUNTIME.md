@@ -265,6 +265,33 @@ All of the above is SSR-safe: every DOM/`window`/`fetch` access in `InteractionB
 `typeof document/fetch === "undefined"` check, and the lifecycle hooks (`useEffect`,
 `IntersectionObserver`) never execute during server-side rendering by construction.
 
+### Form Submit Pipeline (roadmap 03/04)
+
+`Form`'s own `onSubmit` is a separate pipeline from the interaction system above, not another
+`InteractionAction` — it runs `packages/builder-components/src/utils/formSubmitPipeline.ts`:
+`preventDefault` → `form.reportValidity()` (native HTML5 validation) → `new FormData(form)` → honeypot
+check (`_hp` field) → collect `{name: value}` → dispatch per `node.props.submitAction`:
+
+| `submitAction` | Behavior |
+|----------------|----------|
+| `"webhook"` | `fetch(webhookUrl, { method, credentials: "omit", body: JSON.stringify({ fields, meta }) })`. Gated by the same `isSafeFetchEndpoint()` guard as `triggerApi` above. |
+| `"emit"` | Calls `RendererConfig.onFormSubmit?.(formName, fields)` — the host-app escape hatch, same shape as `onCustomEvent`. |
+| `"none"` | No network call; only the node's own `submit`-trigger interactions (if any) run. |
+
+State machine `idle → submitting → success | error` drives the success/error message shown inside the
+`Form` component. A `useRef` re-entrancy guard in `FormShell` blocks a second submit while one is already
+`submitting` (prevents duplicate webhook POSTs from a double Enter-key/click).
+
+Ordering with the interaction system: `RuntimeRenderer`'s `cloneElement` step composes (does not overwrite)
+same-named event handler props, so `Form`'s own `onSubmit` (the pipeline above) always runs before a
+node's `submit`-trigger interaction handler, if one is also configured on the same `Form` node.
+
+If the `Form` is inside a popup and its goal is `{ type: "submit", targetNodeId: <form's node id> }`, the
+popup's `popup_submit`/`popup_conversion` analytics fire automatically (existing goal-tracking mechanism,
+see [POPUPS.md](./POPUPS.md)) — no Form-specific code needed for that part. Separately,
+`PopupRules.hideAfterSubmit: true` closes the popup (`onClose("submit")`, deferred one microtask so the
+success message renders first).
+
 ### Performance Optimization
 
 - Memoize component renders by node id + props hash

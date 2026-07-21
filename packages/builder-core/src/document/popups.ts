@@ -331,7 +331,7 @@ export interface PopupAnalyticsEvent {
   popupName?: string;
   variantId?: string;
   triggerType?: string;
-  closeReason?: "button" | "escape" | "backdrop" | "action" | "routeChange" | "programmatic";
+  closeReason?: "button" | "escape" | "backdrop" | "action" | "routeChange" | "programmatic" | "submit";
   goalId?: string;
   nodeId?: string;
   timestamp: number;
