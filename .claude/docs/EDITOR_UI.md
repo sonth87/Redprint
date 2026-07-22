@@ -438,6 +438,20 @@ Displays properties of selected node(s):
 
 Tab system is extensible via `PropertyPanelTab` interface.
 
+Design's "Dynamic controls generated from PropSchema" loop (`DesignTab.tsx`) is generic but not
+unconditional — a component whose entire `propSchema` is non-visual (e.g. `Form`'s submit
+behavior: `submitAction`, `webhookUrl`, `method`, success/error copy, `resetOnSuccess`,
+`honeypot`) is excluded from the loop entirely rather than showing those fields under Design. That
+component instead gets a dedicated panel on the `ContextualToolbar` — a toolbar button (shown only
+when a matching node is selected) that opens a `FloatingPanel` with its own purpose-built UI. This
+mirrors two pre-existing examples: `NavigationMenu`'s "Manage Menu"/"Menu Layout" buttons
+(`packages/builder-editor/src/toolbar/menu/MenuToolbarPanels.tsx`) and `GalleryPro`'s "Manage
+Media" dialog. `Form`'s "Submit Settings" button follows the same pattern
+(`packages/builder-editor/src/toolbar/form/FormSubmitPanel.tsx`), reusing `PropControl` per field
+so it stays visually consistent with Design's generic controls without living in that tab. There
+is no declarative way to register this from `ComponentDefinition` — it's a hardcoded
+`selectedNode.type === "..."` branch in `ContextualToolbar.tsx`, same as the two prior examples.
+
 ### Popup Layer
 
 Popups are edited in a document-level overlay layer. The editor has two active

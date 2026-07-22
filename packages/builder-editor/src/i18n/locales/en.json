@@ -127,6 +127,14 @@
       "columnAlignment": "Column alignment"
     }
   },
+  "formToolbar": {
+    "submit": {
+      "title": "Submit Settings",
+      "action": "Submit Action",
+      "afterSubmit": "After Submit",
+      "security": "Security"
+    }
+  },
   "panels": {
     "components": "Components",
     "presets": "Presets",

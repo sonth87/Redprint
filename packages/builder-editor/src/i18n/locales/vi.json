@@ -127,6 +127,14 @@
       "columnAlignment": "Căn cột"
     }
   },
+  "formToolbar": {
+    "submit": {
+      "title": "Cài đặt gửi biểu mẫu",
+      "action": "Hành động khi gửi",
+      "afterSubmit": "Sau khi gửi",
+      "security": "Bảo mật"
+    }
+  },
   "panels": {
     "components": "Thành phần",
     "presets": "Mẫu có sẵn",

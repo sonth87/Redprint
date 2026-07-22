@@ -1,7 +1,7 @@
 import React, { useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { Check, Copy, Trash2, ArrowUp, ArrowDown, GripVertical, CornerLeftUp, ImageIcon, Link2, Paintbrush, Frame, Images, Settings2, Maximize2, ListTree, LayoutPanelTop, Unlink } from "lucide-react";
+import { Check, Copy, Trash2, ArrowUp, ArrowDown, GripVertical, CornerLeftUp, ImageIcon, Link2, Paintbrush, Frame, Images, Settings2, Maximize2, ListTree, LayoutPanelTop, Unlink, Send } from "lucide-react";
 import { useDocument, useBuilder } from "@ui-builder/builder-react";
 import { Button, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@ui-builder/ui";
 import { TOOLTIP_DELAY_MS, normalizeCarouselConfig } from "@ui-builder/shared";
@@ -13,6 +13,7 @@ import { ImageFramePanel } from "../panels/ImageFramePanel";
 import { FloatingPanel } from "../panels/FloatingPanel";
 import { GalleryUnifiedSettingsPanel } from "../panels/gallery";
 import { MenuLayoutPanel, MenuManagerPanel, MenuStretchPopover } from "./menu/MenuToolbarPanels";
+import { FormSubmitPanel } from "./form/FormSubmitPanel";
 
 
 function getClampedPanelPos(
@@ -172,6 +173,7 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
   const [menuStretchOpen, setMenuStretchOpen] = React.useState(false);
   const [menuManagerOpen, setMenuManagerOpen] = React.useState(false);
   const [menuLayoutOpen, setMenuLayoutOpen] = React.useState(false);
+  const [formSubmitOpen, setFormSubmitOpen] = React.useState(false);
   const [filterPos, setFilterPos] = React.useState({ x: 0, y: 0 });
   const [framePos, setFramePos] = React.useState({ x: 0, y: 0 });
   const [linkPos, setLinkPos] = React.useState({ x: 0, y: 0 });
@@ -179,6 +181,7 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
   const [menuStretchPos, setMenuStretchPos] = React.useState({ x: 0, y: 0 });
   const [menuManagerPos, setMenuManagerPos] = React.useState({ x: 0, y: 0 });
   const [menuLayoutPos, setMenuLayoutPos] = React.useState({ x: 0, y: 0 });
+  const [formSubmitPos, setFormSubmitPos] = React.useState({ x: 0, y: 0 });
 
   // Close floating panels when the selected node changes
   React.useEffect(() => {
@@ -189,6 +192,7 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
     setMenuStretchOpen(false);
     setMenuManagerOpen(false);
     setMenuLayoutOpen(false);
+    setFormSubmitOpen(false);
   }, [nodeId]);
   const filterBtnRef = useRef<HTMLButtonElement>(null);
   const frameBtnRef = useRef<HTMLButtonElement>(null);
@@ -197,6 +201,7 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
   const menuStretchBtnRef = useRef<HTMLButtonElement>(null);
   const menuManagerBtnRef = useRef<HTMLButtonElement>(null);
   const menuLayoutBtnRef = useRef<HTMLButtonElement>(null);
+  const formSubmitBtnRef = useRef<HTMLButtonElement>(null);
   const { document: builderDoc } = useDocument();
   const { builder, dispatch } = useBuilder();
   const { t } = useTranslation();
@@ -215,6 +220,7 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
   const isSection = node?.type === "Section";
   const isGalleryNode = node ? GALLERY_TYPES.has(node.type) : false;
   const isMenuNode = node?.type === "NavigationMenu";
+  const isFormNode = node?.type === "Form";
   const currentChildIds = isSection
     ? Object.values(builderDoc.nodes)
         .filter((n) => n.parentId === nodeId)
@@ -472,6 +478,52 @@ export const ContextualToolbar: React.FC<ContextualToolbarProps> = ({ nodeId, re
                 onClose={() => setMenuLayoutOpen(false)}
               >
                 <MenuLayoutPanel node={node} dispatch={dispatch} />
+              </FloatingPanel>,
+              document.body,
+            )}
+          </>
+        )}
+
+        {/* Form-specific quick action: submit behavior lives here, not in the
+            Design tab's generic propSchema loop — DesignTab.tsx excludes
+            Form's props section entirely (every field is submit behavior,
+            not design). See FormSubmitPanel.tsx for the field list. */}
+        {isFormNode && (
+          <>
+            <div className="w-px h-4 bg-border mx-0.5" />
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  ref={formSubmitBtnRef}
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={t("formToolbar.submit.title", "Submit Settings")}
+                  className="h-6 w-6"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (formSubmitBtnRef.current) {
+                      const r = formSubmitBtnRef.current.getBoundingClientRect();
+                      setFormSubmitPos(getClampedPanelPos(r, 320, 420));
+                    }
+                    setFormSubmitOpen((v) => !v);
+                  }}
+                >
+                  <Send className="h-3 w-3" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">{t("formToolbar.submit.title", "Submit Settings")}</TooltipContent>
+            </Tooltip>
+
+            {formSubmitOpen && node && createPortal(
+              <FloatingPanel
+                title={t("formToolbar.submit.title", "Submit Settings")}
+                defaultPosition={{ x: formSubmitPos.x, y: formSubmitPos.y }}
+                width={320}
+                scrollable
+                onClose={() => setFormSubmitOpen(false)}
+              >
+                <FormSubmitPanel node={node} dispatch={dispatch} />
               </FloatingPanel>,
               document.body,
             )}

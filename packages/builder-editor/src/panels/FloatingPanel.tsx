@@ -20,6 +20,26 @@ function writeDockedToStorage(panelId: string | undefined, value: boolean): void
   } catch { /* ignore */ }
 }
 
+const DOCKED_WIDTH_MIN = 280;
+const DOCKED_WIDTH_MAX = 600;
+
+function readDockedWidthFromStorage(panelId: string | undefined, fallback: number): number {
+  if (!panelId) return fallback;
+  try {
+    const raw = localStorage.getItem(`floating-panel-docked-width:${panelId}`);
+    const parsed = raw !== null ? Number(raw) : NaN;
+    if (!Number.isNaN(parsed) && parsed >= DOCKED_WIDTH_MIN && parsed <= DOCKED_WIDTH_MAX) return parsed;
+  } catch { /* ignore */ }
+  return fallback;
+}
+
+function writeDockedWidthToStorage(panelId: string | undefined, value: number): void {
+  if (!panelId) return;
+  try {
+    localStorage.setItem(`floating-panel-docked-width:${panelId}`, String(value));
+  } catch { /* ignore */ }
+}
+
 // Module-level counter — increments each time a panel is focused/dragged so
 // the most-recently-interacted panel always renders on top.
 let zCounter = 50;
@@ -81,14 +101,27 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
   const [isDocked, setIsDocked] = useState(() => readDockedFromStorage(id, defaultDocked));
   const [isDragging, setIsDragging] = useState(false);
   const [zIndex, setZIndex] = useState(() => bumpZ());
+  // Docked width is independent of the floating `width` prop — resizable only
+  // while docked, persisted across reloads, and discarded (back to `width`)
+  // the moment the panel is un-docked so floating mode always looks the same.
+  const [dockedWidth, setDockedWidth] = useState(() => readDockedWidthFromStorage(id, width));
+  const dockedWidthRef = useRef(dockedWidth);
+  const [isResizing, setIsResizing] = useState(false);
 
   const handleDockToggle = useCallback(() => {
     setIsDocked((current) => {
       const next = !current;
       writeDockedToStorage(id, next);
+      if (!next) {
+        // Leaving dock mode: snap back to the panel's normal floating width —
+        // a resized-while-docked width should never leak into float mode.
+        dockedWidthRef.current = width;
+        setDockedWidth(width);
+        writeDockedWidthToStorage(id, width);
+      }
       return next;
     });
-  }, [id]);
+  }, [id, width]);
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
@@ -131,6 +164,42 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
     [isDocked, width],
   );
 
+  // Drag the left edge while docked — right edge stays pinned (dockRight),
+  // so growing the panel expands it leftward over the canvas.
+  const handleResizePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      e.currentTarget.setPointerCapture(e.pointerId);
+
+      const startX = e.clientX;
+      const initialWidth = dockedWidthRef.current;
+      setIsResizing(true);
+
+      const onMove = (ev: PointerEvent) => {
+        const delta = startX - ev.clientX;
+        const newWidth = Math.max(DOCKED_WIDTH_MIN, Math.min(DOCKED_WIDTH_MAX, initialWidth + delta));
+        if (panelRef.current) {
+          panelRef.current.style.width = `${newWidth}px`;
+        }
+        dockedWidthRef.current = newWidth;
+      };
+
+      const onUp = () => {
+        setIsResizing(false);
+        setDockedWidth(dockedWidthRef.current);
+        writeDockedWidthToStorage(id, dockedWidthRef.current);
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onUp);
+      };
+
+      window.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup", onUp);
+    },
+    [id],
+  );
+
   const handlePanelPointerDown = useCallback(() => {
     setZIndex((current) => {
       if (current === zCounter) return current;
@@ -145,10 +214,10 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
       data-floating-panel
       className={cn(
         "fixed flex flex-col overflow-hidden select-none",
-        isDragging ? GLASS_PANEL.dragging : GLASS_PANEL.normal,
+        isDragging || isResizing ? GLASS_PANEL.dragging : GLASS_PANEL.normal,
       )}
       style={{
-        width,
+        width: isDocked ? dockedWidth : width,
         left: isDocked ? undefined : position.x,
         top: isDocked ? dockTop : position.y,
         right: isDocked ? dockRight : undefined,
@@ -158,6 +227,15 @@ export const FloatingPanel: React.FC<FloatingPanelProps> = ({
       }}
       data-docked={isDocked ? "true" : undefined}
     >
+      {/* Resize handle — left edge only, docked mode only. Right edge stays
+          pinned to dockRight so growing the panel expands it over the canvas. */}
+      {isDocked && isExpanded && (
+        <div
+          className="absolute left-0 top-0 h-full w-1.5 -translate-x-1/2 cursor-ew-resize z-10 hover:bg-primary/40"
+          onPointerDown={handleResizePointerDown}
+        />
+      )}
+
       {/* Header - Drag Handle */}
       <div
         className={cn(

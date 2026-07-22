@@ -187,8 +187,12 @@ These are complementary, not competing:
 | Breakpoint-aware | No | Yes |
 | Generates dispatch | No | Yes |
 
-`PropSchema` drives dynamic control rendering in `PropertyPanel`. `PropertyDescriptor` drives
-shared controls that appear in multiple contexts (toolbar + panel).
+`PropSchema` drives dynamic control rendering in `PropertyPanel`'s Design tab — with one exception:
+a component whose entire `propSchema` is non-visual (e.g. `Form`'s submit behavior) is excluded
+from that auto-render loop and instead gets its own `ContextualToolbar` panel that still renders
+each field via the same `PropControl` component, just outside `PropertyPanel`. See
+[EDITOR_UI.md](./EDITOR_UI.md) "Right Panel — Property Panel" for the full explanation.
+`PropertyDescriptor` drives shared controls that appear in multiple contexts (toolbar + panel).
 
 ---
 

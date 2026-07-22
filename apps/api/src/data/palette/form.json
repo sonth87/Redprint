@@ -1,0 +1,297 @@
+{
+  "id": "form",
+  "label": "Form",
+  "icon": "list-checks",
+  "order": 11,
+  "i18n": {
+    "en": "Form",
+    "vi": "Biểu mẫu"
+  },
+  "types": [
+    {
+      "id": "contact",
+      "label": "Contact Form",
+      "order": 0,
+      "layout": "preview",
+      "columns": 1,
+      "i18n": {
+        "en": "Contact Form",
+        "vi": "Form liên hệ"
+      },
+      "items": [
+        {
+          "id": "form-contact-modern",
+          "componentType": "Form",
+          "name": "Contact — Modern",
+          "props": { "submitAction": "none", "successMessage": "Thanks! We'll get back to you soon.", "successBehavior": "message" },
+          "style": { "display": "flex", "flexDirection": "column", "gap": "16px", "width": "100%", "maxWidth": "480px", "padding": "32px", "backgroundColor": "#ffffff", "borderRadius": "16px", "boxShadow": "0 4px 24px rgba(15, 23, 42, 0.08)" },
+          "children": [
+            {
+              "componentType": "Input",
+              "props": { "name": "name", "inputType": "text", "label": "Full Name", "placeholder": "Jane Doe", "required": true },
+              "style": { "padding": "10px 14px", "fontSize": "14px", "borderRadius": "10px", "border": "1px solid #bfdbfe" }
+            },
+            {
+              "componentType": "Input",
+              "props": { "name": "email", "inputType": "email", "label": "Email", "placeholder": "you@example.com", "required": true },
+              "style": { "padding": "10px 14px", "fontSize": "14px", "borderRadius": "10px", "border": "1px solid #bfdbfe" }
+            },
+            {
+              "componentType": "Textarea",
+              "props": { "name": "message", "label": "Message", "placeholder": "How can we help?", "required": true, "rows": 4 },
+              "style": { "padding": "10px 14px", "fontSize": "14px", "borderRadius": "10px", "border": "1px solid #bfdbfe" }
+            },
+            {
+              "componentType": "Button",
+              "props": { "label": "<p>Send Message</p>", "variant": "primary", "size": "md", "buttonType": "submit" },
+              "style": { "backgroundColor": "#2563eb", "color": "#ffffff", "borderRadius": "10px", "padding": "12px 20px", "fontSize": "14px", "fontWeight": "600" }
+            }
+          ]
+        },
+        {
+          "id": "form-contact-minimal",
+          "componentType": "Form",
+          "name": "Contact — Minimal",
+          "props": { "submitAction": "none", "successMessage": "Thanks! We'll get back to you soon.", "successBehavior": "message" },
+          "style": { "display": "flex", "flexDirection": "column", "gap": "12px", "width": "100%", "maxWidth": "480px", "padding": "24px", "backgroundColor": "#ffffff", "border": "1px solid #111827", "borderRadius": "0px" },
+          "children": [
+            {
+              "componentType": "Input",
+              "props": { "name": "name", "inputType": "text", "label": "Full Name", "placeholder": "Jane Doe", "required": true },
+              "style": { "padding": "10px 0", "fontSize": "14px", "borderRadius": "0px", "border": "none", "borderBottom": "1px solid #111827" }
+            },
+            {
+              "componentType": "Input",
+              "props": { "name": "email", "inputType": "email", "label": "Email", "placeholder": "you@example.com", "required": true },
+              "style": { "padding": "10px 0", "fontSize": "14px", "borderRadius": "0px", "border": "none", "borderBottom": "1px solid #111827" }
+            },
+            {
+              "componentType": "Textarea",
+              "props": { "name": "message", "label": "Message", "placeholder": "How can we help?", "required": true, "rows": 4 },
+              "style": { "padding": "10px 0", "fontSize": "14px", "borderRadius": "0px", "border": "none", "borderBottom": "1px solid #111827" }
+            },
+            {
+              "componentType": "Button",
+              "props": { "label": "<p>SEND</p>", "variant": "primary", "size": "md", "buttonType": "submit" },
+              "style": { "backgroundColor": "#111827", "color": "#ffffff", "borderRadius": "0px", "padding": "12px 20px", "fontSize": "13px", "fontWeight": "700", "letterSpacing": "0.08em" }
+            }
+          ]
+        },
+        {
+          "id": "form-contact-playful",
+          "componentType": "Form",
+          "name": "Contact — Playful",
+          "props": { "submitAction": "none", "successMessage": "Yay! Thanks for reaching out 🎉", "successBehavior": "message" },
+          "style": { "display": "flex", "flexDirection": "column", "gap": "16px", "width": "100%", "maxWidth": "480px", "padding": "32px", "backgroundColor": "#fdf2f8", "borderRadius": "28px", "border": "2px solid #fbcfe8" },
+          "children": [
+            {
+              "componentType": "Input",
+              "props": { "name": "name", "inputType": "text", "label": "Your Name 🐾", "placeholder": "Jane Doe", "required": true },
+              "style": { "padding": "12px 16px", "fontSize": "14px", "borderRadius": "999px", "border": "2px solid #f9a8d4", "backgroundColor": "#ffffff" }
+            },
+            {
+              "componentType": "Input",
+              "props": { "name": "email", "inputType": "email", "label": "Email", "placeholder": "you@example.com", "required": true },
+              "style": { "padding": "12px 16px", "fontSize": "14px", "borderRadius": "999px", "border": "2px solid #f9a8d4", "backgroundColor": "#ffffff" }
+            },
+            {
+              "componentType": "Textarea",
+              "props": { "name": "message", "label": "Message", "placeholder": "Tell us everything!", "required": true, "rows": 4 },
+              "style": { "padding": "12px 16px", "fontSize": "14px", "borderRadius": "20px", "border": "2px solid #f9a8d4", "backgroundColor": "#ffffff" }
+            },
+            {
+              "componentType": "Button",
+              "props": { "label": "<p>Send it! 💌</p>", "variant": "primary", "size": "md", "buttonType": "submit" },
+              "style": { "backgroundColor": "#ec4899", "color": "#ffffff", "borderRadius": "999px", "padding": "12px 24px", "fontSize": "14px", "fontWeight": "600" }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "newsletter",
+      "label": "Newsletter Signup",
+      "order": 1,
+      "layout": "preview",
+      "columns": 1,
+      "i18n": {
+        "en": "Newsletter Signup",
+        "vi": "Đăng ký nhận tin"
+      },
+      "items": [
+        {
+          "id": "form-newsletter-modern",
+          "componentType": "Form",
+          "name": "Newsletter — Modern",
+          "props": { "submitAction": "none", "successMessage": "You're subscribed!", "successBehavior": "message" },
+          "style": { "display": "flex", "flexDirection": "row", "gap": "12px", "width": "100%", "maxWidth": "480px", "padding": "8px", "backgroundColor": "#eff6ff", "borderRadius": "999px" },
+          "children": [
+            {
+              "componentType": "Input",
+              "props": { "name": "email", "inputType": "email", "label": "", "placeholder": "you@example.com", "required": true },
+              "style": { "padding": "12px 16px", "fontSize": "14px", "borderRadius": "999px", "border": "1px solid #bfdbfe", "backgroundColor": "#ffffff" }
+            },
+            {
+              "componentType": "Button",
+              "props": { "label": "<p>Subscribe</p>", "variant": "primary", "size": "md", "buttonType": "submit" },
+              "style": { "backgroundColor": "#2563eb", "color": "#ffffff", "borderRadius": "999px", "padding": "12px 20px", "fontSize": "14px", "fontWeight": "600" }
+            }
+          ]
+        },
+        {
+          "id": "form-newsletter-minimal",
+          "componentType": "Form",
+          "name": "Newsletter — Minimal",
+          "props": { "submitAction": "none", "successMessage": "You're subscribed!", "successBehavior": "message" },
+          "style": { "display": "flex", "flexDirection": "row", "gap": "0px", "width": "100%", "maxWidth": "480px", "padding": "0px", "borderBottom": "2px solid #111827" },
+          "children": [
+            {
+              "componentType": "Input",
+              "props": { "name": "email", "inputType": "email", "label": "", "placeholder": "you@example.com", "required": true },
+              "style": { "padding": "12px 4px", "fontSize": "14px", "borderRadius": "0px", "border": "none" }
+            },
+            {
+              "componentType": "Button",
+              "props": { "label": "<p>SUBSCRIBE</p>", "variant": "primary", "size": "md", "buttonType": "submit" },
+              "style": { "backgroundColor": "transparent", "color": "#111827", "borderRadius": "0px", "padding": "12px 8px", "fontSize": "13px", "fontWeight": "700", "letterSpacing": "0.05em" }
+            }
+          ]
+        },
+        {
+          "id": "form-newsletter-playful",
+          "componentType": "Form",
+          "name": "Newsletter — Playful",
+          "props": { "submitAction": "none", "successMessage": "Woohoo, you're in! 🎉", "successBehavior": "message" },
+          "style": { "display": "flex", "flexDirection": "row", "gap": "8px", "width": "100%", "maxWidth": "480px", "padding": "8px", "backgroundColor": "#fefce8", "borderRadius": "999px", "border": "2px solid #fde047" },
+          "children": [
+            {
+              "componentType": "Input",
+              "props": { "name": "email", "inputType": "email", "label": "", "placeholder": "you@example.com 🐶", "required": true },
+              "style": { "padding": "12px 16px", "fontSize": "14px", "borderRadius": "999px", "border": "2px solid #fde047", "backgroundColor": "#ffffff" }
+            },
+            {
+              "componentType": "Button",
+              "props": { "label": "<p>Join! 🐾</p>", "variant": "primary", "size": "md", "buttonType": "submit" },
+              "style": { "backgroundColor": "#eab308", "color": "#111827", "borderRadius": "999px", "padding": "12px 20px", "fontSize": "14px", "fontWeight": "700" }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lead-cta",
+      "label": "Lead Capture CTA",
+      "order": 2,
+      "layout": "preview",
+      "columns": 1,
+      "i18n": {
+        "en": "Lead Capture CTA",
+        "vi": "CTA thu lead"
+      },
+      "items": [
+        {
+          "id": "form-lead-cta-modern",
+          "componentType": "Form",
+          "name": "Lead CTA — Modern",
+          "props": { "submitAction": "none", "successMessage": "Thanks! We'll be in touch.", "successBehavior": "replace" },
+          "style": { "display": "flex", "flexDirection": "column", "gap": "16px", "width": "100%", "maxWidth": "480px", "padding": "32px", "backgroundColor": "#0f172a", "borderRadius": "16px" },
+          "children": [
+            {
+              "componentType": "Input",
+              "props": { "name": "email", "inputType": "email", "label": "Work Email", "placeholder": "you@company.com", "required": true },
+              "style": { "padding": "10px 14px", "fontSize": "14px", "borderRadius": "10px", "border": "1px solid #334155", "backgroundColor": "#1e293b", "color": "#ffffff" }
+            },
+            {
+              "componentType": "SelectField",
+              "props": {
+                "name": "interest",
+                "label": "What are you looking for?",
+                "placeholder": "Select an option",
+                "required": true,
+                "options": [
+                  { "value": "demo", "label": "Book a demo" },
+                  { "value": "pricing", "label": "Pricing info" },
+                  { "value": "other", "label": "Something else" }
+                ]
+              },
+              "style": { "padding": "10px 14px", "fontSize": "14px", "borderRadius": "10px", "border": "1px solid #334155", "backgroundColor": "#1e293b", "color": "#ffffff" }
+            },
+            {
+              "componentType": "Button",
+              "props": { "label": "<p>Get Started</p>", "variant": "primary", "size": "md", "buttonType": "submit" },
+              "style": { "backgroundColor": "#38bdf8", "color": "#0f172a", "borderRadius": "10px", "padding": "12px 20px", "fontSize": "14px", "fontWeight": "700" }
+            }
+          ]
+        },
+        {
+          "id": "form-lead-cta-minimal",
+          "componentType": "Form",
+          "name": "Lead CTA — Minimal",
+          "props": { "submitAction": "none", "successMessage": "Thanks! We'll be in touch.", "successBehavior": "replace" },
+          "style": { "display": "flex", "flexDirection": "column", "gap": "12px", "width": "100%", "maxWidth": "480px", "padding": "24px", "border": "1px solid #111827" },
+          "children": [
+            {
+              "componentType": "Input",
+              "props": { "name": "email", "inputType": "email", "label": "Work Email", "placeholder": "you@company.com", "required": true },
+              "style": { "padding": "10px 0", "fontSize": "14px", "borderRadius": "0px", "border": "none", "borderBottom": "1px solid #111827" }
+            },
+            {
+              "componentType": "SelectField",
+              "props": {
+                "name": "interest",
+                "label": "What are you looking for?",
+                "placeholder": "Select an option",
+                "required": true,
+                "options": [
+                  { "value": "demo", "label": "Book a demo" },
+                  { "value": "pricing", "label": "Pricing info" },
+                  { "value": "other", "label": "Something else" }
+                ]
+              },
+              "style": { "padding": "10px 0", "fontSize": "14px", "borderRadius": "0px", "border": "none", "borderBottom": "1px solid #111827" }
+            },
+            {
+              "componentType": "Button",
+              "props": { "label": "<p>GET STARTED</p>", "variant": "primary", "size": "md", "buttonType": "submit" },
+              "style": { "backgroundColor": "#111827", "color": "#ffffff", "borderRadius": "0px", "padding": "12px 20px", "fontSize": "13px", "fontWeight": "700", "letterSpacing": "0.08em" }
+            }
+          ]
+        },
+        {
+          "id": "form-lead-cta-playful",
+          "componentType": "Form",
+          "name": "Lead CTA — Playful",
+          "props": { "submitAction": "none", "successMessage": "You're all set! 🎉", "successBehavior": "replace" },
+          "style": { "display": "flex", "flexDirection": "column", "gap": "16px", "width": "100%", "maxWidth": "480px", "padding": "32px", "backgroundColor": "#fdf4ff", "borderRadius": "28px", "border": "2px solid #f0abfc" },
+          "children": [
+            {
+              "componentType": "Input",
+              "props": { "name": "email", "inputType": "email", "label": "Your Email 💌", "placeholder": "you@company.com", "required": true },
+              "style": { "padding": "12px 16px", "fontSize": "14px", "borderRadius": "999px", "border": "2px solid #f0abfc", "backgroundColor": "#ffffff" }
+            },
+            {
+              "componentType": "SelectField",
+              "props": {
+                "name": "interest",
+                "label": "What brings you here?",
+                "placeholder": "Pick one",
+                "required": true,
+                "options": [
+                  { "value": "demo", "label": "Book a demo" },
+                  { "value": "pricing", "label": "Pricing info" },
+                  { "value": "other", "label": "Something else" }
+                ]
+              },
+              "style": { "padding": "12px 16px", "fontSize": "14px", "borderRadius": "999px", "border": "2px solid #f0abfc", "backgroundColor": "#ffffff" }
+            },
+            {
+              "componentType": "Button",
+              "props": { "label": "<p>Count me in! 🐱</p>", "variant": "primary", "size": "md", "buttonType": "submit" },
+              "style": { "backgroundColor": "#d946ef", "color": "#ffffff", "borderRadius": "999px", "padding": "12px 24px", "fontSize": "14px", "fontWeight": "600" }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

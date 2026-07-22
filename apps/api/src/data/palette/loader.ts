@@ -68,6 +68,7 @@ export async function loadPalette(): Promise<Palette> {
     "decorative",
     "menu",
     "card",
+    "form",
     "designed_section",
   ];
 
@@ -101,6 +102,7 @@ export function loadPaletteSync(): Palette {
     "decorative",
     "menu",
     "card",
+    "form",
     "designed_section",
   ];
 

@@ -130,8 +130,10 @@ export function DesignTab({
 
   return (
     <ScrollArea className="h-full">
-      {/* Component props */}
-      {definition.propSchema.length > 0 && !isSectionNode && (
+      {/* Component props — Form is excluded entirely: every one of its
+          propSchema fields is submit behavior, now on the toolbar's Submit
+          Settings panel instead (see isFormSubmitField above). */}
+      {definition.propSchema.length > 0 && !isSectionNode && selectedNode.type !== "Form" && (
         <CollapsibleSection title={t("propertyPanel.properties")}>
           {/* Grid gets a custom template editor instead of raw columnTemplate/customTemplate controls */}
           {selectedNode.type === "Grid" && (

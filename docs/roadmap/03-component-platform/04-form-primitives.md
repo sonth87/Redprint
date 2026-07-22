@@ -51,6 +51,36 @@
 > `git stash`), builder-components 17/17 mới (`formSubmitPipeline.test.ts` 15 + `Form.tsx` re-entrancy phủ
 > qua cùng bộ test pipeline), builder-renderer 20/20 (`RuntimeRenderer.test.ts` 4 mới cho
 > `shouldHideAfterSubmit` + `InteractionBinder.test.ts` 16 không hồi quy).
+>
+> **Follow-up 2026-07-22 (style + palette + property panel)**: sau khi merge, phát hiện 3 vấn đề UX cần sửa
+> thêm, ngoài phạm vi gốc của item này nhưng cùng nhóm "form primitives usable end-to-end":
+> 1. **Style Input/Textarea/SelectField bị hardcode** — `style` prop nhận từ panel/`defaultStyle` chỉ áp vào
+>    `div` bọc ngoài, không áp vào `<input>`/`<textarea>`/`<select>` thật, nên chỉnh font/màu/padding qua
+>    panel không có tác dụng. Sửa: `style` áp thẳng vào control thật (div ngoài chỉ còn layout), focus-ring
+>    đổi từ ghi đè `borderColor`/`boxShadow` sang `outline` riêng (không đụng border do panel set), giá trị
+>    mặc định chuyển vào `defaultStyle`. `Checkbox` không bị lỗi này (root là div bọc cả hàng, không có 2 lớp
+>    wrapper/control).
+> 2. **Chưa có preset palette cho Form** — 5 component form mới chỉ đăng ký `ComponentDefinition`, chưa có
+>    item nào trong hệ thống palette JSON (`apps/api/src/data/palette/*.json`), nên kéo-thả từng Input/Select
+>    rời rạc vô nghĩa (form chỉ có ý nghĩa khi là 1 cụm hoàn chỉnh). Thêm `apps/api/src/data/palette/form.json`
+>    — 3 loại form (Contact/Newsletter/Lead-CTA) × 3 theme (Modern/Minimal/Playful) = 9 preset, mỗi preset là
+>    cây `Form`+children thật (chỉnh sửa/thêm-bớt field tự do sau khi kéo vào, không khóa cứng). Đăng ký group
+>    `"form"` vào `loader.ts` (2 hàm load) + `index.json`; regenerate `palette.combined.json` (file fallback
+>    dùng khi `apps/api` không chạy — playground mặc định `useRemotePalette: true` luôn cố gọi API trước).
+> 3. **8 field submit (`submitAction`/`webhookUrl`/`method`/...) nằm lẫn trong tab Design** — phát hiện
+>    `DesignTab.tsx` đổ toàn bộ `propSchema` vào 1 vòng lặp generic không phân biệt design vs logic/hành vi
+>    (giới hạn có sẵn của toàn hệ thống, không riêng Form — nhưng lộ rõ nhất ở Form vì 0/8 field nào là design
+>    thật). Sửa theo pattern có sẵn (`NavigationMenu`'s "Manage Menu", `GalleryPro`'s "Manage Media"): thêm
+>    nút "Submit Settings" trên `ContextualToolbar` khi chọn node Form, mở `FloatingPanel` riêng
+>    (`packages/builder-editor/src/toolbar/form/FormSubmitPanel.tsx`, tái dùng `PropControl` cho từng field,
+>    nhóm theo vòng đời submit: Submit Action / After Submit / Security) — không có cơ chế khai báo qua
+>    `ComponentDefinition` cho việc này, phải hardcode `selectedNode.type === "Form"` giống 2 tiền lệ trên.
+>    `DesignTab.tsx` giờ loại hẳn Form khỏi vòng lặp props (không chỉ ẩn từng field — cả `CollapsibleSection`
+>    "Properties" biến mất vì không còn field design nào để hiện). Cập nhật `.claude/docs/EDITOR_UI.md` (bảng
+>    tab Design) + `.claude/docs/PROPERTY_SYSTEM.md` (bảng PropSchema vs PropertyDescriptor) ghi rõ ngoại lệ.
+>
+> Test lại sau follow-up: builder-components typecheck+test sạch, builder-editor typecheck sạch + 44/44 test
+> pass, apps/api 177/177 test pass (chỉ thêm data JSON, không sửa logic). `pnpm docs:check` pass.
 
 ## 1. Mục đích
 
