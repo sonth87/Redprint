@@ -103,6 +103,15 @@ export type { SupportedLocale } from "./i18n";
 // AI Assistant
 export { AIAssistant } from "./ai/AIAssistant";
 export type { AIAssistantProps } from "./ai/AIAssistant";
+export { AIDiffPreviewModal } from "./ai/AIDiffPreviewModal";
+export type { AIDiffPreviewModalProps } from "./ai/AIDiffPreviewModal";
+export {
+  createStagingDocument,
+  groupCommandsByTarget,
+  applyCommandsToStaging,
+  applySelectedGroupsToStaging,
+  type AIChangeGroup,
+} from "./ai/stagingDocument";
 export { PageGeneratorModal, usePageGenerator } from "./ai/page-generator";
 export { AIConfigPanel } from "./ai/AIConfig";
 export type { AIConfigPanelProps } from "./ai/AIConfig";

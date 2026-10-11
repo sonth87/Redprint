@@ -149,4 +149,94 @@ describe("dispatchFormSubmit — submitAction=webhook", () => {
     expect(fetchMock).not.toHaveBeenCalled();
     expect(states).toEqual([{ phase: "error" }]);
   });
+
+  it("triggers onOpenPopup when successPopupId is specified on webhook success", async () => {
+    const fetchMock = vi.fn<FetchLike>(async () => ({ ok: true, status: 200 }) as Response);
+    const onOpenPopup = vi.fn();
+    const states: FormSubmitState[] = [];
+    await dispatchFormSubmit(
+      { email: "a@b.com" },
+      { id: "n1", props: { submitAction: "webhook", webhookUrl: "https://example.com/hook", successPopupId: "popup-thanks" } },
+      (s) => states.push(s),
+      { onOpenPopup },
+      fetchMock,
+    );
+    expect(onOpenPopup).toHaveBeenCalledWith("popup-thanks");
+    expect(states.map((s) => s.phase)).toEqual(["submitting", "success"]);
+  });
 });
+
+describe("dispatchFormSubmit — submitAction=redirect", () => {
+  it("succeeds when redirectUrl is provided", async () => {
+    const states: FormSubmitState[] = [];
+    await dispatchFormSubmit(
+      { name: "John" },
+      { id: "n1", props: { submitAction: "redirect", redirectUrl: "https://example.com/thank-you" } },
+      (s) => states.push(s),
+    );
+    expect(states).toEqual([{ phase: "success" }]);
+  });
+
+  it("errors when redirectUrl is missing", async () => {
+    const states: FormSubmitState[] = [];
+    await dispatchFormSubmit(
+      { name: "John" },
+      { id: "n1", props: { submitAction: "redirect" } },
+      (s) => states.push(s),
+    );
+    expect(states).toEqual([{ phase: "error" }]);
+  });
+});
+
+describe("dispatchFormSubmit — submitAction=openPopup", () => {
+  it("calls onOpenPopup and succeeds when successPopupId is provided", async () => {
+    const onOpenPopup = vi.fn();
+    const states: FormSubmitState[] = [];
+    await dispatchFormSubmit(
+      { name: "John" },
+      { id: "n1", props: { submitAction: "openPopup", successPopupId: "thank-you-popup" } },
+      (s) => states.push(s),
+      { onOpenPopup },
+    );
+    expect(onOpenPopup).toHaveBeenCalledWith("thank-you-popup");
+    expect(states).toEqual([{ phase: "success" }]);
+  });
+
+  it("errors when successPopupId is missing", async () => {
+    const states: FormSubmitState[] = [];
+    await dispatchFormSubmit(
+      { name: "John" },
+      { id: "n1", props: { submitAction: "openPopup" } },
+      (s) => states.push(s),
+    );
+    expect(states).toEqual([{ phase: "error" }]);
+  });
+});
+
+describe("dispatchFormSubmit — validationRules", () => {
+  it("aborts submit and sets errors when field validation fails", async () => {
+    const fetchMock = vi.fn();
+    const states: FormSubmitState[] = [];
+    await dispatchFormSubmit(
+      { email: "invalid-email" },
+      {
+        id: "n1",
+        props: {
+          submitAction: "webhook",
+          webhookUrl: "https://example.com/hook",
+          validationRules: {
+            email: [{ type: "email", message: "Invalid email" }],
+          },
+        },
+      },
+      (s) => states.push(s),
+      {},
+      fetchMock,
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(states).toEqual([
+      { phase: "error", errors: { email: "Invalid email" } },
+    ]);
+  });
+});
+

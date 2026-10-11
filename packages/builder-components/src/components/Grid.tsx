@@ -69,7 +69,7 @@ export const GridComponent: ComponentDefinition = {
       : tpl === "sidebar-right" ? "2fr 1fr"
       : `repeat(${columns}, 1fr)`;
 
-    const resolvedStyle = style as React.CSSProperties;
+    const resolvedStyle = (style ?? {}) as React.CSSProperties;
     const gridStyle: React.CSSProperties = {
       // Padding comes from style.padding (Spacing panel); legacy props.padding is
       // normalized into style on load (see normalizeLegacyPadding).
@@ -129,7 +129,7 @@ export const GridComponent: ComponentDefinition = {
       : tpl === "sidebar-right" ? "2fr 1fr"
       : `repeat(${columns}, 1fr)`;
 
-    const runtimeStyle = style as React.CSSProperties;
+    const runtimeStyle = (style ?? {}) as React.CSSProperties;
     return (
       <div
         style={{

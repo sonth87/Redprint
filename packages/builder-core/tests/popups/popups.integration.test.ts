@@ -149,7 +149,7 @@ describe("popup commands", () => {
     expect(builder.undo().success).toBe(true);
     expect(builder.getState().document.popups?.["popup-1"]?.kindConfig).toMatchObject({
       kind: "modal",
-      maxWidth: "640px",
+      maxWidth: "100%",
       maxHeight: "90vh",
     });
   });

@@ -21,7 +21,7 @@ import {
 } from "@ui-builder/ui";
 import { Sparkles, Zap, Loader2 } from "lucide-react";
 import { useBuilder } from "@ui-builder/builder-react";
-import type { AIConfig, AIMessage, AIBuilderContext, AIResponse, DesignTokens } from "./types";
+import type { AIConfig, AIMessage, AIBuilderContext, AIResponse, DesignTokens, AICommandSuggestion } from "./types";
 import { sendAIMessage, streamAIMessage, parseAIResponse } from "./AIService";
 import { normalizeAICommands } from "./normalizeAICommands";
 import { applyAICommandsProgressive } from "./applyAICommandsProgressive";
@@ -29,6 +29,8 @@ import { usePageGenerator } from "./page-generator";
 import { useTranslation } from "react-i18next";
 import { PROMPT_TEMPLATES, COLOR_PALETTES, TONE_STYLES, TEMPLATE_CATEGORIES } from "./ai-prompt-templates";
 import { ALLOWED_AI_COMMANDS } from "./allowedCommands";
+import { AIDiffPreviewModal } from "./AIDiffPreviewModal";
+import { groupCommandsByTarget, type AIChangeGroup } from "./stagingDocument";
 
 // ── Props ───────────────────────────────────────────────────────────────
 
@@ -48,7 +50,7 @@ const MAX_CHAT_TURNS = 6;
 
 export function AIAssistant({ open, onOpenChange, config, context }: AIAssistantProps) {
   const { t, i18n } = useTranslation();
-  const { dispatch } = useBuilder();
+  const { state, dispatch } = useBuilder();
   const pageGenerator = usePageGenerator(config, context);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef(false);
@@ -66,10 +68,40 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
   // Conversation thread for the (non-full-page) chat path. Full-page generation is a
   // one-shot SSE pipeline (usePageGenerator) and intentionally does not use this thread.
   const [messages, setMessages] = useState<AIMessage[]>([]);
+  const [stagedGroups, setStagedGroups] = useState<AIChangeGroup[] | null>(null);
+  const [diffModalOpen, setDiffModalOpen] = useState(false);
 
   const clearThread = useCallback(() => {
     setMessages([]);
     setError(null);
+  }, []);
+
+  const handleAcceptDiff = useCallback(
+    async (selectedGroups: AIChangeGroup[]) => {
+      const commandsToApply: AICommandSuggestion[] = selectedGroups.flatMap((g) =>
+        g.commands.map((cmd) => ({
+          type: cmd.type,
+          payload: (cmd.payload ?? {}) as Record<string, unknown>,
+          description: (cmd as unknown as AICommandSuggestion).description || `${cmd.type} on ${g.title}`,
+        })),
+      );
+      if (commandsToApply.length > 0) {
+        await applyAICommandsProgressive(
+          commandsToApply,
+          (cmd) => dispatch(cmd as never),
+          (cmd) => ALLOWED_AI_COMMANDS.has(cmd.type),
+          { groupId: `ai-chat-${crypto.randomUUID().slice(0, 8)}` },
+        );
+        toast.success(t("ai.appliedChangesCount", { count: commandsToApply.length }));
+      }
+      setStagedGroups(null);
+    },
+    [dispatch, t],
+  );
+
+  const handleDiscardDiff = useCallback(() => {
+    toast.info("AI suggested changes discarded. Canvas was not modified.");
+    setStagedGroups(null);
   }, []);
 
   // Reset transient (per-open) state when dialog closes. The conversation thread is
@@ -92,6 +124,7 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
     if (prevRootNodeIdRef.current !== rootNodeId) {
       prevRootNodeIdRef.current = rootNodeId;
       setMessages([]);
+      setStagedGroups(null);
     }
   }, [rootNodeId]);
 
@@ -117,12 +150,10 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
   }, [streamingText]);
 
   /**
-   * Apply AI-suggested commands to the canvas.
+   * Stage and preview AI-suggested commands before committing to canvas.
    *
-   * `closeDialog: true` is used only by the full-page generation path (a one-shot SSE
-   * pipeline that has no conversation thread — see docs/roadmap/00-bugfixes/04-chat-history.md).
-   * The regular chat path passes `closeDialog: false` and instead appends an assistant
-   * message to the thread, keeping the dialog open for follow-up turns.
+   * Commands are grouped by target and rendered in AIDiffPreviewModal.
+   * Only once user approves in the modal are commands dispatched to the live canvas.
    */
   const applyResponse = useCallback(
     async (response: AIResponse, options: { closeDialog: boolean }) => {
@@ -130,17 +161,16 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
 
       if (response.suggestions && response.suggestions.length > 0) {
         const commands = normalizeAICommands(response.suggestions, context.document.rootNodeId);
-        // fullPageMode: backend prepends REMOVE_NODE commands for all children before AI commands,
-        // so we just apply in order. Progressive apply: containers first, leaves next frame.
-        // Group the whole turn's commands for one atomic undo (roadmap 02/07).
-        await applyAICommandsProgressive(
-          commands,
-          (cmd) => dispatch(cmd as never),
-          (cmd) => ALLOWED_AI_COMMANDS.has(cmd.type),
-          { groupId: `ai-chat-${crypto.randomUUID().slice(0, 8)}` },
-        );
+        const validCommands = commands.filter((cmd) => ALLOWED_AI_COMMANDS.has(cmd.type));
+        if (validCommands.length > 0) {
+          const groups = groupCommandsByTarget(validCommands, state.document);
+          if (groups.length > 0) {
+            setStagedGroups(groups);
+            setDiffModalOpen(true);
+          }
+        }
       }
-      // Surface validation-gate rejections loudly (non-blocking) — valid commands still applied.
+      // Surface validation-gate rejections loudly (non-blocking) — valid commands still staged.
       if (response.droppedCommands && response.droppedCommands.length > 0) {
         toast.warning(t("ai.commandsSkipped", { count: response.droppedCommands.length }));
       }
@@ -157,13 +187,13 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
         content:
           response.message ||
           (appliedCount > 0
-            ? t("ai.appliedChangesCount", { count: appliedCount })
+            ? `✨ ${appliedCount} AI changes staged. Review or apply them in the preview dialog.`
             : t("ai.noChanges")),
         timestamp: Date.now(),
       };
       setMessages((prev) => [...prev, assistantMessage]);
     },
-    [dispatch, onOpenChange, context.document.rootNodeId, t],
+    [onOpenChange, state.document, context.document.rootNodeId, t],
   );
 
   const handleGenerate = useCallback(async () => {
@@ -352,7 +382,8 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!isLoading) onOpenChange(v); }}>
+    <>
+      <Dialog open={open} onOpenChange={(v) => { if (!isLoading) onOpenChange(v); }}>
       <DialogContent className="sm:max-w-[700px] flex flex-col p-0 gap-0 max-h-[95vh]">
         {/* Header */}
         <DialogHeader className="px-6 py-4 border-b bg-gradient-to-r from-primary/5 to-transparent shrink-0">
@@ -405,6 +436,41 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
                         {msg.content}
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Staged Changes Notification Banner */}
+              {stagedGroups && stagedGroups.length > 0 && (
+                <div className="flex items-center justify-between p-3 rounded-lg border border-primary/40 bg-primary/5 text-xs">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-primary shrink-0" />
+                    <div>
+                      <span className="font-semibold text-foreground">
+                        Pending Review:
+                      </span>{" "}
+                      <span className="text-muted-foreground">
+                        {stagedGroups.length} change groups waiting
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs text-destructive hover:bg-destructive/10"
+                      onClick={handleDiscardDiff}
+                    >
+                      Discard
+                    </Button>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="h-7 text-xs gap-1"
+                      onClick={() => setDiffModalOpen(true)}
+                    >
+                      Review Changes
+                    </Button>
                   </div>
                 </div>
               )}
@@ -598,5 +664,17 @@ export function AIAssistant({ open, onOpenChange, config, context }: AIAssistant
         </div>
       </DialogContent>
     </Dialog>
+
+    {stagedGroups && (
+      <AIDiffPreviewModal
+        open={diffModalOpen}
+        onOpenChange={setDiffModalOpen}
+        baseDocument={state.document}
+        changeGroups={stagedGroups}
+        onAccept={handleAcceptDiff}
+        onDiscard={handleDiscardDiff}
+      />
+    )}
+  </>
   );
 }

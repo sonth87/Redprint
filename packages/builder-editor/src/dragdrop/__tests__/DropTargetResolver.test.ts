@@ -275,4 +275,55 @@ describe("resolveDropTarget", () => {
     const result = resolveDropTarget(50, 50, "drag1", "Box", "parent1", frameEl, nodes, getCfg);
     expect(result).toBeNull();
   });
+
+  it("prefers deepest valid nested container when multiple containers are under cursor", () => {
+    // Outer section (depth 1, 800x600) and inner column (depth 2, 200x200) both hit by cursor
+    const outerEl = makeContainerEl(makeRect(0, 0, 800, 600), "section1");
+    const innerEl = makeContainerEl(makeRect(50, 50, 200, 200), "column1");
+    restoreDoc = patchElementsFromPoint([innerEl as unknown as Element, outerEl as unknown as Element]);
+    restoreGCS = patchGetComputedStyle(innerEl, { flexDirection: "column" });
+
+    const frameEl = {
+      querySelector: (sel: string) => (sel === '[data-node-id="column1"]' ? innerEl : null),
+    } as unknown as HTMLElement;
+
+    const nodes: Record<string, BuilderNode> = {
+      section1: makeNode({ id: "section1", type: "Section", parentId: "root" }),
+      column1: makeNode({ id: "column1", type: "Column", parentId: "section1" }),
+    };
+    const getCfg: ContainerConfigResolver = () => ({ layoutType: "flex" });
+
+    const result = resolveDropTarget(60, 60, "drag1", "Box", null, frameEl, nodes, getCfg);
+    expect(result).not.toBeNull();
+    // Inner column should win over outer section
+    expect(result!.parentId).toBe("column1");
+  });
+
+  it("retains current parent when pointer is within hysteresis buffer", () => {
+    // Inner column is current parent (bounds 50..250). Cursor at 254px (within 8px buffer).
+    // An outer section is also hit. Inner column hysteresis should prevent outer section from hijacking.
+    const outerEl = makeContainerEl(makeRect(0, 0, 800, 600), "section1");
+    const innerEl = makeContainerEl(makeRect(50, 50, 200, 200), "column1");
+    restoreDoc = patchElementsFromPoint([outerEl as unknown as Element]);
+
+    // Mock document.querySelector for current parent lookup
+    const prevDoc = globalThis.document;
+    (globalThis as unknown as Record<string, unknown>).document = {
+      ...prevDoc,
+      querySelector: (sel: string) => (sel === '[data-node-id="column1"]' ? innerEl : null),
+      elementsFromPoint: () => [outerEl as unknown as Element],
+    };
+
+    const frameEl = { querySelector: () => null } as unknown as HTMLElement;
+    const nodes: Record<string, BuilderNode> = {
+      section1: makeNode({ id: "section1", type: "Section", parentId: "root" }),
+      column1: makeNode({ id: "column1", type: "Column", parentId: "section1" }),
+      drag1: makeNode({ id: "drag1", type: "Box", parentId: "column1" }),
+    };
+    const getCfg: ContainerConfigResolver = () => ({ layoutType: "flex" });
+
+    // ClientX at 254px: outer section is hit, but pointer is within column1 buffer (250 + 8 = 258).
+    const result = resolveDropTarget(254, 60, "drag1", "Box", "column1", frameEl, nodes, getCfg);
+    expect(result).toBeNull(); // Still inside currentParent buffer, no reparent
+  });
 });

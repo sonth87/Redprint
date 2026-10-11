@@ -1,5 +1,6 @@
 import React from "react";
-import type { ComponentDefinition } from "@ui-builder/builder-core";
+import type { ComponentDefinition, FieldValidationRule } from "@ui-builder/builder-core";
+import { useFormRuntimeContext } from "../utils/FormRuntimeContext";
 
 type InputFieldType = "text" | "email" | "tel" | "number" | "date" | "url";
 
@@ -17,6 +18,33 @@ function InputField({ node, style, mode }: InputFieldProps) {
   const required = Boolean(node.props.required);
   const pattern = typeof node.props.pattern === "string" && node.props.pattern ? node.props.pattern : undefined;
   const fieldId = `${node.id}-field`;
+
+  const formContext = useFormRuntimeContext();
+  const errorMessageProp = node.props.errorMessage ? String(node.props.errorMessage) : undefined;
+  const fieldError = formContext?.errors?.[name] || errorMessageProp;
+
+  React.useEffect(() => {
+    if (mode !== "runtime" || !formContext?.registerField) return undefined;
+    const rules: FieldValidationRule[] = [];
+    if (required) {
+      rules.push({ type: "required", message: errorMessageProp || `${label || name} is required` });
+    }
+    if (inputType === "email") {
+      rules.push({ type: "email", message: errorMessageProp || "Please enter a valid email address" });
+    }
+    if (pattern) {
+      rules.push({ type: "regex", value: pattern, message: errorMessageProp || "Please match the requested format" });
+    }
+    const customRules = Array.isArray(node.props.validationRules)
+      ? (node.props.validationRules as FieldValidationRule[])
+      : [];
+    rules.push(...customRules);
+
+    if (rules.length > 0) {
+      return formContext.registerField(name, rules);
+    }
+    return undefined;
+  }, [mode, formContext, name, required, inputType, pattern, label, errorMessageProp, node.props.validationRules]);
 
   return (
     <div data-node-id={mode === "editor" ? node.id : undefined} style={{ display: "flex", flexDirection: "column", gap: "6px", width: "100%" }}>
@@ -37,22 +65,38 @@ function InputField({ node, style, mode }: InputFieldProps) {
         readOnly={mode === "editor"}
         tabIndex={mode === "editor" ? -1 : undefined}
         aria-required={required || undefined}
+        aria-invalid={fieldError ? "true" : undefined}
+        onChange={() => {
+          if (formContext?.clearError) formContext.clearError(name);
+        }}
         // `style` (from the panel/defaultStyle, same StyleConfig pipeline every
         // other component uses) applies straight to the real control, not to
         // the wrapper div — so font/color/padding/border edits actually affect
         // the visible input, not an invisible layout box around it.
-        style={{ width: "100%", outline: "none", fontFamily: "inherit", boxSizing: "border-box", ...style }}
+        style={{
+          width: "100%",
+          outline: "none",
+          fontFamily: "inherit",
+          boxSizing: "border-box",
+          borderColor: fieldError ? "#dc2626" : undefined,
+          ...style,
+        }}
         // Focus ring is an outline (not a borderColor override) so it never
         // fights with whatever border color/width the style panel sets —
         // clearing it on blur always restores the panel's own border exactly.
         onFocus={(e) => {
-          e.currentTarget.style.outline = "2px solid #2563eb";
+          e.currentTarget.style.outline = fieldError ? "2px solid #dc2626" : "2px solid #2563eb";
           e.currentTarget.style.outlineOffset = "1px";
         }}
         onBlur={(e) => {
           e.currentTarget.style.outline = "none";
         }}
       />
+      {fieldError ? (
+        <span role="alert" style={{ fontSize: "12px", color: "#dc2626", marginTop: "2px" }}>
+          {fieldError}
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -102,8 +146,9 @@ export const InputComponent: ComponentDefinition = {
     { key: "placeholder", label: "Placeholder", type: "string", default: "" },
     { key: "required", label: "Required", type: "boolean", default: false },
     { key: "pattern", label: "Validation Pattern (regex, optional)", type: "string", default: "" },
+    { key: "errorMessage", label: "Error Message", type: "string", default: "", description: "Custom error message displayed when validation fails." },
   ],
-  defaultProps: { name: "field", inputType: "text", label: "Label", placeholder: "", required: false, pattern: "" },
+  defaultProps: { name: "field", inputType: "text", label: "Label", placeholder: "", required: false, pattern: "", errorMessage: "" },
   defaultStyle: {
     width: "100%",
     padding: "10px 12px",

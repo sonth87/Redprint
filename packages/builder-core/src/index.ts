@@ -384,3 +384,14 @@ export {
   presetToDocument,
   documentToPreset,
 } from "./presets/document-adapter";
+
+// ── Form Validation ─────────────────────────────────────────────────────────
+export {
+  validateField,
+  validateFormFields,
+} from "./validation/formValidator";
+export type {
+  ValidationRuleType,
+  FieldValidationRule,
+} from "./validation/formValidator";
+

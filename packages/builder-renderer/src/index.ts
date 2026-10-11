@@ -64,3 +64,12 @@ export { ComponentResolver, createPlaceholderDefinition } from "./loader/Dynamic
 export { StylePipeline } from "./pipeline/StylePipeline";
 export { InteractionBinder, TRIGGER_TO_REACT_EVENT } from "./pipeline/InteractionBinder";
 export type { BoundInteractions } from "./pipeline/InteractionBinder";
+
+// Static HTML/CSS Compiler
+export {
+  exportDocumentToStaticHtml,
+  compileDocumentStyles,
+  compileNodeToHtml,
+  type StaticExportOptions,
+  type StaticExportResult,
+} from "./compiler";

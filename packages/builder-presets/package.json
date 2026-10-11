@@ -9,9 +9,9 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.cjs"
     }
   },
   "scripts": {
@@ -36,7 +36,8 @@
     "@ui-builder/builder-react": "workspace:*",
     "@ui-builder/builder-renderer": "workspace:*",
     "@ui-builder/ui": "workspace:*",
-    "lucide-react": "^1.7.0"
+    "lucide-react": "^1.7.0",
+    "uuid": "^11.0.0"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
@@ -45,6 +46,7 @@
   "devDependencies": {
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@types/uuid": "^10.0.0",
     "@ui-builder/config": "workspace:*",
     "tsup": "^8.3.0",
     "typescript": "^5.7.0"

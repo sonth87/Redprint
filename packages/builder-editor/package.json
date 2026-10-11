@@ -9,9 +9,9 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.cjs"
     },
     "./styles": "./dist/index.css"
   },
@@ -35,6 +35,7 @@
     "@tiptap/starter-kit": "^3.22.2",
     "@ui-builder/builder-core": "workspace:*",
     "@ui-builder/builder-react": "workspace:*",
+    "@ui-builder/builder-renderer": "workspace:*",
     "@ui-builder/shared": "workspace:*",
     "@ui-builder/ui": "workspace:*",
     "@uiw/react-color": "^2.10.1",

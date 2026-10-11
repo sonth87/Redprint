@@ -1,26 +1,20 @@
 /**
- * Form submit pipeline (roadmap 03/04) — runs when a runtime `<form>` fires its
- * native submit event. Order matters: this pipeline (validation, data
- * collection, webhook/emit) runs first; a node's `submit`-trigger interactions
- * run after (composed in `RuntimeRenderer.tsx`'s handler-merge step, not here —
- * this module has no dependency on builder-renderer/InteractionBinder to keep
- * builder-components independent of the renderer pipeline).
- *
- * Split into a DOM-facing entry point (`runFormSubmitPipeline`) and a pure
- * dispatch function (`dispatchFormSubmit`) so the webhook/emit/none branching
- * and state transitions are unit-testable without a real `HTMLFormElement`/
- * jsdom (this monorepo has neither — see `.claude` project memory).
+ * Form submit pipeline (roadmap 03/04/06) — runs when a runtime `<form>` fires its
+ * native submit event.
  */
 import { isSafeFetchEndpoint } from "@ui-builder/shared";
+import { validateFormFields, type FieldValidationRule } from "@ui-builder/builder-core";
 
 export type FormSubmitPhase = "idle" | "submitting" | "success" | "error";
 
 export interface FormSubmitState {
   phase: FormSubmitPhase;
+  errors?: Record<string, string>;
 }
 
 export interface FormSubmitCallbacks {
   onFormSubmit?: (formName: string, fields: Record<string, unknown>) => void;
+  onOpenPopup?: (popupId: string) => void;
 }
 
 /** Minimal fetch signature so tests can inject a mock without touching the global. */
@@ -34,8 +28,6 @@ export type FetchLike = typeof fetch;
  */
 export function collectFormFields(data: FormData): Record<string, unknown> {
   const fields: Record<string, unknown> = {};
-  // .forEach (not .entries()/for-of) — avoids requiring the "DOM.Iterable" lib
-  // on top of this package's plain "DOM" lib.
   data.forEach((value, key) => {
     if (key === "_hp") return; // honeypot — never included in submitted payload
     const v = typeof value === "string" ? value : value.name;
@@ -72,14 +64,54 @@ export async function dispatchFormSubmit(
   const submitAction = String(node.props.submitAction ?? "none");
   const formName = String(node.props.name ?? node.id);
 
+  // Validate custom schema rules if configured on the Form node
+  const validationRules = (node.props.validationRules as Record<string, FieldValidationRule[]>) ?? {};
+  if (validationRules && Object.keys(validationRules).length > 0) {
+    const fieldErrors = validateFormFields(fields, validationRules);
+    if (Object.keys(fieldErrors).length > 0) {
+      setState({ phase: "error", errors: fieldErrors });
+      return;
+    }
+  }
+
   if (submitAction === "none") {
     setState({ phase: "success" });
+    return;
+  }
+
+  if (submitAction === "redirect") {
+    const redirectUrl = String(node.props.redirectUrl ?? "");
+    if (redirectUrl) {
+      if (typeof window !== "undefined") {
+        window.location.href = redirectUrl;
+      }
+      setState({ phase: "success" });
+    } else {
+      setState({ phase: "error" });
+    }
+    return;
+  }
+
+  if (submitAction === "openPopup") {
+    const popupId = String(node.props.successPopupId ?? "");
+    if (popupId) {
+      callbacks.onOpenPopup?.(popupId);
+      setState({ phase: "success" });
+    } else {
+      setState({ phase: "error" });
+    }
     return;
   }
 
   if (submitAction === "emit") {
     try {
       callbacks.onFormSubmit?.(formName, fields);
+      if (node.props.successPopupId && callbacks.onOpenPopup) {
+        callbacks.onOpenPopup(String(node.props.successPopupId));
+      }
+      if (node.props.redirectUrl && typeof window !== "undefined") {
+        window.location.href = String(node.props.redirectUrl);
+      }
       setState({ phase: "success" });
     } catch (err) {
       console.warn("[form] onFormSubmit callback threw:", err);
@@ -102,10 +134,23 @@ export async function dispatchFormSubmit(
     const res = await fetchImpl(webhookUrl, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fields, meta: { pageUrl: typeof window !== "undefined" ? window.location.href : "", timestamp: Date.now() } }),
+      body: JSON.stringify({
+        fields,
+        meta: {
+          pageUrl: typeof window !== "undefined" ? window.location.href : "",
+          timestamp: Date.now(),
+        },
+      }),
       credentials: "omit",
     });
     if (!res.ok) throw new Error(`Webhook responded with ${res.status}`);
+
+    if (node.props.successPopupId && callbacks.onOpenPopup) {
+      callbacks.onOpenPopup(String(node.props.successPopupId));
+    }
+    if (node.props.redirectUrl && typeof window !== "undefined") {
+      window.location.href = String(node.props.redirectUrl);
+    }
     setState({ phase: "success" });
   } catch (err) {
     console.warn("[form] webhook submit failed:", err);
@@ -127,24 +172,33 @@ export async function runFormSubmitPipeline(
   event.preventDefault();
   const form = event.currentTarget;
 
-  if (!form.reportValidity()) {
+  const hasValidationRules =
+    Boolean(node.props.validationRules && Object.keys(node.props.validationRules).length > 0);
+
+  if (!hasValidationRules && typeof form.reportValidity === "function" && !form.reportValidity()) {
     return; // browser shows native validation UI; nothing else to do
   }
 
   const data = new FormData(form);
 
   if (isHoneypotTripped(data)) {
-    // Silently "succeed" for the bot (don't reveal the trap) without sending
-    // any data anywhere.
+    // Silently "succeed" for the bot (don't reveal the trap) without sending data
     setState({ phase: "success" });
     return;
   }
 
   const fields = collectFormFields(data);
   const lastState: FormSubmitState = { phase: "idle" };
-  await dispatchFormSubmit(fields, node, (state) => {
-    lastState.phase = state.phase;
-    setState(state);
-  }, callbacks);
-  if (lastState.phase === "success" && node.props.resetOnSuccess !== false) form.reset();
+  await dispatchFormSubmit(
+    fields,
+    node,
+    (state) => {
+      lastState.phase = state.phase;
+      setState(state);
+    },
+    callbacks,
+  );
+  if (lastState.phase === "success" && node.props.resetOnSuccess !== false) {
+    form.reset();
+  }
 }

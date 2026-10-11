@@ -1,5 +1,6 @@
 import React from "react";
-import type { ComponentDefinition } from "@ui-builder/builder-core";
+import type { ComponentDefinition, FieldValidationRule } from "@ui-builder/builder-core";
+import { useFormRuntimeContext } from "../utils/FormRuntimeContext";
 
 interface SelectFieldOption {
   value: string;
@@ -28,6 +29,27 @@ function SelectFieldField({ node, style, mode }: SelectFieldFieldProps) {
   const options = normalizeOptions(node.props.options);
   const fieldId = `${node.id}-field`;
 
+  const formContext = useFormRuntimeContext();
+  const errorMessageProp = node.props.errorMessage ? String(node.props.errorMessage) : undefined;
+  const fieldError = formContext?.errors?.[name] || errorMessageProp;
+
+  React.useEffect(() => {
+    if (mode !== "runtime" || !formContext?.registerField) return undefined;
+    const rules: FieldValidationRule[] = [];
+    if (required) {
+      rules.push({ type: "required", message: errorMessageProp || `${label || name} is required` });
+    }
+    const customRules = Array.isArray(node.props.validationRules)
+      ? (node.props.validationRules as FieldValidationRule[])
+      : [];
+    rules.push(...customRules);
+
+    if (rules.length > 0) {
+      return formContext.registerField(name, rules);
+    }
+    return undefined;
+  }, [mode, formContext, name, required, label, errorMessageProp, node.props.validationRules]);
+
   return (
     <div data-node-id={mode === "editor" ? node.id : undefined} style={{ display: "flex", flexDirection: "column", gap: "6px", width: "100%" }}>
       {label ? (
@@ -43,10 +65,21 @@ function SelectFieldField({ node, style, mode }: SelectFieldFieldProps) {
         defaultValue=""
         disabled={mode === "editor"}
         aria-required={required || undefined}
+        aria-invalid={fieldError ? "true" : undefined}
+        onChange={() => {
+          if (formContext?.clearError) formContext.clearError(name);
+        }}
         // See Input.tsx for why `style` applies to the control itself, not the wrapper.
-        style={{ width: "100%", outline: "none", fontFamily: "inherit", boxSizing: "border-box", ...style }}
+        style={{
+          width: "100%",
+          outline: "none",
+          fontFamily: "inherit",
+          boxSizing: "border-box",
+          borderColor: fieldError ? "#dc2626" : undefined,
+          ...style,
+        }}
         onFocus={(e) => {
-          e.currentTarget.style.outline = "2px solid #2563eb";
+          e.currentTarget.style.outline = fieldError ? "2px solid #dc2626" : "2px solid #2563eb";
           e.currentTarget.style.outlineOffset = "1px";
         }}
         onBlur={(e) => {
@@ -60,6 +93,11 @@ function SelectFieldField({ node, style, mode }: SelectFieldFieldProps) {
           </option>
         ))}
       </select>
+      {fieldError ? (
+        <span role="alert" style={{ fontSize: "12px", color: "#dc2626", marginTop: "2px" }}>
+          {fieldError}
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -99,6 +137,7 @@ export const SelectFieldComponent: ComponentDefinition = {
     { key: "label", label: "Label", type: "string", default: "" },
     { key: "placeholder", label: "Placeholder", type: "string", default: "Select an option" },
     { key: "required", label: "Required", type: "boolean", default: false },
+    { key: "errorMessage", label: "Error Message", type: "string", default: "", description: "Custom error message displayed when validation fails." },
     // hidden: no dedicated panel control for "json" exists yet (same limitation
     // as GalleryPro.items, roadmap 03/01) — options ship via defaultProps and
     // AI-authored content; a real options editor UI is a follow-up.
@@ -109,6 +148,7 @@ export const SelectFieldComponent: ComponentDefinition = {
     label: "Choose an option",
     placeholder: "Select an option",
     required: false,
+    errorMessage: "",
     options: [
       { value: "option-1", label: "Option 1" },
       { value: "option-2", label: "Option 2" },

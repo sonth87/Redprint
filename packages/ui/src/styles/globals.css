@@ -5,25 +5,25 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
-  --color-card: hsl(var(--card));
-  --color-card-foreground: hsl(var(--card-foreground));
-  --color-popover: hsl(var(--popover));
-  --color-popover-foreground: hsl(var(--popover-foreground));
-  --color-primary: hsl(var(--primary));
-  --color-primary-foreground: hsl(var(--primary-foreground));
-  --color-secondary: hsl(var(--secondary));
-  --color-secondary-foreground: hsl(var(--secondary-foreground));
-  --color-muted: hsl(var(--muted));
-  --color-muted-foreground: hsl(var(--muted-foreground));
-  --color-accent: hsl(var(--accent));
-  --color-accent-foreground: hsl(var(--accent-foreground));
-  --color-destructive: hsl(var(--destructive));
-  --color-destructive-foreground: hsl(var(--destructive-foreground));
-  --color-border: hsl(var(--border));
-  --color-input: hsl(var(--input));
-  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--ub-background, var(--background)));
+  --color-foreground: hsl(var(--ub-foreground, var(--foreground)));
+  --color-card: hsl(var(--ub-card, var(--card)));
+  --color-card-foreground: hsl(var(--ub-card-foreground, var(--card-foreground)));
+  --color-popover: hsl(var(--ub-popover, var(--popover)));
+  --color-popover-foreground: hsl(var(--ub-popover-foreground, var(--popover-foreground)));
+  --color-primary: hsl(var(--ub-primary, var(--primary)));
+  --color-primary-foreground: hsl(var(--ub-primary-foreground, var(--primary-foreground)));
+  --color-secondary: hsl(var(--ub-secondary, var(--secondary)));
+  --color-secondary-foreground: hsl(var(--ub-secondary-foreground, var(--secondary-foreground)));
+  --color-muted: hsl(var(--ub-muted, var(--muted)));
+  --color-muted-foreground: hsl(var(--ub-muted-foreground, var(--muted-foreground)));
+  --color-accent: hsl(var(--ub-accent, var(--accent)));
+  --color-accent-foreground: hsl(var(--ub-accent-foreground, var(--accent-foreground)));
+  --color-destructive: hsl(var(--ub-destructive, var(--destructive)));
+  --color-destructive-foreground: hsl(var(--ub-destructive-foreground, var(--destructive-foreground)));
+  --color-border: hsl(var(--ub-border, var(--border)));
+  --color-input: hsl(var(--ub-input, var(--input)));
+  --color-ring: hsl(var(--ub-ring, var(--ring)));
   --color-canvas-bg: hsl(var(--canvas-bg));
   --color-panel-bg: hsl(var(--panel-bg));
   --color-panel-border: hsl(var(--panel-border));
@@ -35,27 +35,49 @@
 }
 
 @layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 224 71.4% 4.1%;
-    --card: 0 0% 100%;
-    --card-foreground: 224 71.4% 4.1%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 224 71.4% 4.1%;
-    --primary: 220.9 39.3% 11%;
-    --primary-foreground: 210 20% 98%;
-    --secondary: 220 14.3% 95.9%;
-    --secondary-foreground: 220.9 39.3% 11%;
-    --muted: 220 14.3% 95.9%;
-    --muted-foreground: 220 8.9% 46.1%;
-    --accent: 220 14.3% 95.9%;
-    --accent-foreground: 220.9 39.3% 11%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 224 71.4% 4.1%;
+  :root,
+  .ui-builder-scope,
+  [data-ui-builder-theme] {
+    --ub-background: 0 0% 100%;
+    --ub-foreground: 224 71.4% 4.1%;
+    --ub-card: 0 0% 100%;
+    --ub-card-foreground: 224 71.4% 4.1%;
+    --ub-popover: 0 0% 100%;
+    --ub-popover-foreground: 224 71.4% 4.1%;
+    --ub-primary: 220.9 39.3% 11%;
+    --ub-primary-foreground: 210 20% 98%;
+    --ub-secondary: 220 14.3% 95.9%;
+    --ub-secondary-foreground: 220.9 39.3% 11%;
+    --ub-muted: 220 14.3% 95.9%;
+    --ub-muted-foreground: 220 8.9% 46.1%;
+    --ub-accent: 220 14.3% 95.9%;
+    --ub-accent-foreground: 220.9 39.3% 11%;
+    --ub-destructive: 0 84.2% 60.2%;
+    --ub-destructive-foreground: 210 20% 98%;
+    --ub-border: 220 13% 91%;
+    --ub-input: 220 13% 91%;
+    --ub-ring: 224 71.4% 4.1%;
     --radius: 0.5rem;
+
+    --background: var(--ub-background);
+    --foreground: var(--ub-foreground);
+    --card: var(--ub-card);
+    --card-foreground: var(--ub-card-foreground);
+    --popover: var(--ub-popover);
+    --popover-foreground: var(--ub-popover-foreground);
+    --primary: var(--ub-primary);
+    --primary-foreground: var(--ub-primary-foreground);
+    --secondary: var(--ub-secondary);
+    --secondary-foreground: var(--ub-secondary-foreground);
+    --muted: var(--ub-muted);
+    --muted-foreground: var(--ub-muted-foreground);
+    --accent: var(--ub-accent);
+    --accent-foreground: var(--ub-accent-foreground);
+    --destructive: var(--ub-destructive);
+    --destructive-foreground: var(--ub-destructive-foreground);
+    --border: var(--ub-border);
+    --input: var(--ub-input);
+    --ring: var(--ub-ring);
 
     /* Editor-specific tokens */
     --canvas-bg: 220 13% 96%;
@@ -69,26 +91,49 @@
     --drop-indicator-color: 221.2 83.2% 53.3%;
   }
 
-  .dark {
-    --background: 224 71.4% 4.1%;
-    --foreground: 210 20% 98%;
-    --card: 224 71.4% 4.1%;
-    --card-foreground: 210 20% 98%;
-    --popover: 224 71.4% 4.1%;
-    --popover-foreground: 210 20% 98%;
-    --primary: 210 20% 98%;
-    --primary-foreground: 220.9 39.3% 11%;
-    --secondary: 215 27.9% 16.9%;
-    --secondary-foreground: 210 20% 98%;
-    --muted: 215 27.9% 16.9%;
-    --muted-foreground: 217.9 10.6% 64.9%;
-    --accent: 215 27.9% 16.9%;
-    --accent-foreground: 210 20% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 215 27.9% 16.9%;
-    --input: 215 27.9% 16.9%;
-    --ring: 216 12.2% 83.9%;
+  .dark,
+  .ui-builder-scope.dark,
+  .dark .ui-builder-scope,
+  [data-ui-builder-theme="dark"] {
+    --ub-background: 224 71.4% 4.1%;
+    --ub-foreground: 210 20% 98%;
+    --ub-card: 224 71.4% 4.1%;
+    --ub-card-foreground: 210 20% 98%;
+    --ub-popover: 224 71.4% 4.1%;
+    --ub-popover-foreground: 210 20% 98%;
+    --ub-primary: 210 20% 98%;
+    --ub-primary-foreground: 220.9 39.3% 11%;
+    --ub-secondary: 215 27.9% 16.9%;
+    --ub-secondary-foreground: 210 20% 98%;
+    --ub-muted: 215 27.9% 16.9%;
+    --ub-muted-foreground: 217.9 10.6% 64.9%;
+    --ub-accent: 215 27.9% 16.9%;
+    --ub-accent-foreground: 210 20% 98%;
+    --ub-destructive: 0 62.8% 30.6%;
+    --ub-destructive-foreground: 210 20% 98%;
+    --ub-border: 215 27.9% 16.9%;
+    --ub-input: 215 27.9% 16.9%;
+    --ub-ring: 216 12.2% 83.9%;
+
+    --background: var(--ub-background);
+    --foreground: var(--ub-foreground);
+    --card: var(--ub-card);
+    --card-foreground: var(--ub-card-foreground);
+    --popover: var(--ub-popover);
+    --popover-foreground: var(--ub-popover-foreground);
+    --primary: var(--ub-primary);
+    --primary-foreground: var(--ub-primary-foreground);
+    --secondary: var(--ub-secondary);
+    --secondary-foreground: var(--ub-secondary-foreground);
+    --muted: var(--ub-muted);
+    --muted-foreground: var(--ub-muted-foreground);
+    --accent: var(--ub-accent);
+    --accent-foreground: var(--ub-accent-foreground);
+    --destructive: var(--ub-destructive);
+    --destructive-foreground: var(--ub-destructive-foreground);
+    --border: var(--ub-border);
+    --input: var(--ub-input);
+    --ring: var(--ub-ring);
 
     --canvas-bg: 220 13% 10%;
     --panel-bg: 224 71.4% 6%;

@@ -1,5 +1,6 @@
 import React from "react";
-import type { ComponentDefinition } from "@ui-builder/builder-core";
+import type { ComponentDefinition, FieldValidationRule } from "@ui-builder/builder-core";
+import { useFormRuntimeContext } from "../utils/FormRuntimeContext";
 
 interface TextareaFieldProps {
   node: { id: string; props: Record<string, unknown> };
@@ -14,6 +15,27 @@ function TextareaField({ node, style, mode }: TextareaFieldProps) {
   const required = Boolean(node.props.required);
   const rows = Number(node.props.rows ?? 4);
   const fieldId = `${node.id}-field`;
+
+  const formContext = useFormRuntimeContext();
+  const errorMessageProp = node.props.errorMessage ? String(node.props.errorMessage) : undefined;
+  const fieldError = formContext?.errors?.[name] || errorMessageProp;
+
+  React.useEffect(() => {
+    if (mode !== "runtime" || !formContext?.registerField) return undefined;
+    const rules: FieldValidationRule[] = [];
+    if (required) {
+      rules.push({ type: "required", message: errorMessageProp || `${label || name} is required` });
+    }
+    const customRules = Array.isArray(node.props.validationRules)
+      ? (node.props.validationRules as FieldValidationRule[])
+      : [];
+    rules.push(...customRules);
+
+    if (rules.length > 0) {
+      return formContext.registerField(name, rules);
+    }
+    return undefined;
+  }, [mode, formContext, name, required, label, errorMessageProp, node.props.validationRules]);
 
   return (
     <div data-node-id={mode === "editor" ? node.id : undefined} style={{ display: "flex", flexDirection: "column", gap: "6px", width: "100%" }}>
@@ -32,16 +54,33 @@ function TextareaField({ node, style, mode }: TextareaFieldProps) {
         readOnly={mode === "editor"}
         tabIndex={mode === "editor" ? -1 : undefined}
         aria-required={required || undefined}
+        aria-invalid={fieldError ? "true" : undefined}
+        onChange={() => {
+          if (formContext?.clearError) formContext.clearError(name);
+        }}
         // See Input.tsx for why `style` applies to the control itself, not the wrapper.
-        style={{ width: "100%", outline: "none", fontFamily: "inherit", resize: "vertical", boxSizing: "border-box", ...style }}
+        style={{
+          width: "100%",
+          outline: "none",
+          fontFamily: "inherit",
+          resize: "vertical",
+          boxSizing: "border-box",
+          borderColor: fieldError ? "#dc2626" : undefined,
+          ...style,
+        }}
         onFocus={(e) => {
-          e.currentTarget.style.outline = "2px solid #2563eb";
+          e.currentTarget.style.outline = fieldError ? "2px solid #dc2626" : "2px solid #2563eb";
           e.currentTarget.style.outlineOffset = "1px";
         }}
         onBlur={(e) => {
           e.currentTarget.style.outline = "none";
         }}
       />
+      {fieldError ? (
+        <span role="alert" style={{ fontSize: "12px", color: "#dc2626", marginTop: "2px" }}>
+          {fieldError}
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -77,8 +116,9 @@ export const TextareaComponent: ComponentDefinition = {
     { key: "placeholder", label: "Placeholder", type: "string", default: "" },
     { key: "required", label: "Required", type: "boolean", default: false },
     { key: "rows", label: "Rows", type: "number", default: 4, min: 2, max: 20, step: 1 },
+    { key: "errorMessage", label: "Error Message", type: "string", default: "", description: "Custom error message displayed when validation fails." },
   ],
-  defaultProps: { name: "message", label: "Message", placeholder: "", required: false, rows: 4 },
+  defaultProps: { name: "message", label: "Message", placeholder: "", required: false, rows: 4, errorMessage: "" },
   defaultStyle: {
     width: "100%",
     padding: "10px 12px",

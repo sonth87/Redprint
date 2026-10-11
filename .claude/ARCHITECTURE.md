@@ -125,28 +125,28 @@ These principles govern all architectural decisions in the project:
 ### Package Dependency Rules
 
 ```
-builder-core           ← no dependencies (framework-agnostic)
-builder-components     ← depends on builder-core only (NO React/DOM in runtime)
-builder-react          ← depends on builder-core
-builder-presets        ← depends on builder-core, builder-react, builder-components, builder-renderer, packages/ui
-builder-editor         ← depends on builder-core, builder-react, builder-components, packages/ui
-builder-renderer       ← depends on builder-core, builder-react
+builder-core           ← pure headless logic (zod, uuid) — NO React, NO DOM, NO browser APIs
+builder-react          ← React adapter (context, hooks, wire) — depends on builder-core + React peer dep
+builder-components     ← Official React component implementations (17+ built-ins) — depends on builder-core + React peer dep
+builder-presets        ← Preset catalog UI — depends on builder-core, builder-react, builder-components, builder-renderer, packages/ui
+builder-editor         ← Visual editor — canvas, panels, drag-drop, toolbar — depends on builder-core, builder-react, builder-components, packages/ui
+builder-renderer       ← Production runtime renderer — depends on builder-core, builder-react
 ```
 
 | Package                | Role                                                        | Output           | Peer deps   |
 | ---------------------- | ----------------------------------------------------------- | ---------------- | ----------- |
-| `builder-core`         | Central engine — framework-agnostic                         | ESM + CJS        | none        |
-| `builder-components`   | 17 built-in ComponentDefinitions + `extendComponent()`      | ESM + CJS        | React ≥18   |
-| `builder-react`        | React adapter layer                                         | ESM only         | React ≥18   |
+| `builder-core`         | Central engine — pure headless logic (zod, uuid)            | ESM + CJS        | none        |
+| `builder-components`   | Official React Component Suite (17+ built-ins + `extendComponent()`) | ESM + CJS | React ≥18   |
+| `builder-react`        | React adapter layer (Context, hooks, NodeRenderer)          | ESM + CJS        | React ≥18   |
 | `builder-presets`      | Preset catalog UI — catalog browser, preset editor, prop controls | ESM + CJS | React ≥18   |
 | `builder-editor`       | Visual editor — canvas, panels, drag-drop, toolbar          | ESM + CSS bundle | React ≥18   |
-| `builder-renderer`     | Runtime renderer — production, no editor code               | ESM              | React ≥18   |
-| `packages/ui`          | shadcn-based design system for editor UI components         | ESM              | React ≥18   |
+| `builder-renderer`     | Runtime renderer — production, no editor code               | ESM + CJS        | React ≥18   |
+| `packages/ui`          | shadcn-based design system for editor UI components         | ESM + CJS        | React ≥18   |
 
 **Hard constraints:**
-- `builder-core` MUST NOT have any runtime dependency on React, DOM, or browser APIs
-- `builder-components` depends ONLY on `builder-core` — no DOM or browser APIs in component logic
-- All DOM interaction must go through adapters in `builder-react` or `builder-editor`
+- `builder-core` MUST NOT have any runtime dependency on React, DOM, or browser APIs (enforced via ESLint rules `no-restricted-imports` and `no-restricted-globals`)
+- `builder-components` provides the official React implementations for built-in components and declares `react` as a peer dependency
+- All DOM interaction must go through adapters in `builder-react`, `builder-editor`, or `builder-renderer`
 - `builder-renderer` must be independently installable — no editor code in its bundle
 
 ### Data Flow

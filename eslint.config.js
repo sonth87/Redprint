@@ -25,6 +25,37 @@ export default tseslint.config(
     },
   },
   {
+    files: ["packages/builder-core/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "react",
+              message: "builder-core is framework-agnostic and must not depend on React.",
+            },
+            {
+              name: "react-dom",
+              message: "builder-core is framework-agnostic and must not depend on ReactDOM.",
+            },
+          ],
+        },
+      ],
+      "no-restricted-globals": [
+        "error",
+        {
+          name: "window",
+          message: "builder-core is headless and must not access browser window directly.",
+        },
+        {
+          name: "document",
+          message: "builder-core is headless and must not access browser DOM document directly.",
+        },
+      ],
+    },
+  },
+  {
     ignores: ["dist/**", ".next/**", "node_modules/**", "*.tsbuildinfo", "coverage/**"],
   },
 );

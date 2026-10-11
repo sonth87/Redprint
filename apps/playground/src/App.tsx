@@ -3,7 +3,8 @@ import { BuilderEditor, i18n } from "@ui-builder/builder-editor";
 import { RuntimeRenderer } from "@ui-builder/builder-renderer";
 import { ComponentRegistry } from "@ui-builder/builder-core";
 import { Button } from "@ui-builder/ui";
-import { Pen, Eye, Code, Github, Languages } from "lucide-react";
+import { Pen, Eye, Code, Github, Languages, Download } from "lucide-react";
+import { exportDocumentToStaticHtml } from "@ui-builder/builder-renderer";
 import { useBuilderSetup } from "./hooks/useBuilderSetup";
 import { BASE_COMPONENTS } from "@ui-builder/builder-components";
 import { CUSTOM_COMPONENTS } from "./components/sample-components";
@@ -34,6 +35,23 @@ export function App() {
       "en";
     i18n.changeLanguage(next === "ko-flat" ? "ko" : next);
     setLocale(next);
+  };
+
+  const handleExportHtml = () => {
+    const currentDoc = builder.getState().document;
+    const result = exportDocumentToStaticHtml({
+      document: currentDoc,
+      title: "UI Builder Export",
+    });
+    const blob = new Blob([result.combinedHtml], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "index.html";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const i18nResources = React.useMemo(
@@ -100,7 +118,15 @@ export function App() {
           ))}
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleExportHtml}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium border border-border bg-background hover:bg-muted transition-colors text-foreground"
+            title="Export standalone static HTML file"
+          >
+            <Download className="h-3.5 w-3.5" />
+            <span>Export HTML</span>
+          </button>
           <button
             onClick={toggleLocale}
             className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium border border-border bg-background hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
@@ -121,7 +147,7 @@ export function App() {
             href="https://github.com/sonth87/Redprint"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-muted-foreground hover:text-foreground transition-colors"
+            className="text-muted-foreground hover:text-foreground transition-colors ml-2"
             aria-label="GitHub"
           >
             <Github className="h-4 w-4" />

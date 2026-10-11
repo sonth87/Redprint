@@ -115,24 +115,29 @@ These principles govern all architectural decisions in the project:
 ### Package Dependency Rules
 
 ```
-builder-core          ← no dependencies (framework-agnostic)
-builder-react         ← depends on builder-core
-builder-editor        ← depends on builder-core, builder-react, packages/ui
-builder-renderer      ← depends on builder-core, builder-react
+builder-core          ← thuần headless logic (zod, uuid) — KHÔNG React, KHÔNG DOM, KHÔNG browser API
+builder-react         ← React adapter (context, hooks, wire) — phụ thuộc builder-core + peer dep React
+builder-components    ← Bộ triển khai React components chính thức (17+ built-ins) — phụ thuộc builder-core + peer dep React
+builder-presets       ← Preset catalog UI — phụ thuộc builder-core, builder-react, builder-components, builder-renderer, packages/ui
+builder-editor        ← Visual editor — canvas, panels, drag-drop, toolbar — phụ thuộc builder-core, builder-react, builder-components, packages/ui
+builder-renderer      ← Production runtime renderer — phụ thuộc builder-core, builder-react
 ```
 
 | Package              | Role                                                  | Output           | Peer deps   |
 | -------------------- | ----------------------------------------------------- | ---------------- | ----------- |
-| `builder-core`       | Central engine — framework-agnostic                   | ESM + CJS        | none        |
-| `builder-react`      | React adapter layer                                   | ESM only         | React ≥18   |
+| `builder-core`       | Central engine — thuần headless logic (zod, uuid)     | ESM + CJS        | none        |
+| `builder-components` | Bộ React Component chính thức (17+ built-ins)         | ESM + CJS        | React ≥18   |
+| `builder-react`      | React adapter layer (Context, hooks, NodeRenderer)    | ESM + CJS        | React ≥18   |
+| `builder-presets`    | Preset catalog UI — catalog browser, preset editor    | ESM + CJS        | React ≥18   |
 | `builder-editor`     | Visual editor — canvas, panels, drag-drop, toolbar    | ESM + CSS bundle | React ≥18   |
-| `builder-renderer`   | Runtime renderer — production, no editor code         | ESM              | React ≥18   |
-| `packages/ui`        | shadcn-based design system for editor UI components   | ESM              | React ≥18   |
+| `builder-renderer`   | Runtime renderer — production, no editor code         | ESM + CJS        | React ≥18   |
+| `packages/ui`        | shadcn-based design system for editor UI components   | ESM + CJS        | React ≥18   |
 
 **Hard constraints:**
-- `builder-core` MUST NOT have any runtime dependency on React, DOM, or browser APIs
-- All DOM interaction must go through adapters in `builder-react` or `builder-editor`
-- `builder-renderer` must be independently installable — no editor code in its bundle
+- `builder-core` TUYỆT ĐỐI KHÔNG có bất kỳ runtime dependency nào vào React, DOM, hoặc browser APIs (ràng buộc bằng ESLint `no-restricted-imports` và `no-restricted-globals`)
+- `builder-components` là bộ hiện thực giao diện React chính thức cho các components và khai báo `react` là peer dependency
+- Mọi tương tác DOM phải đi qua adapters trong `builder-react`, `builder-editor`, hoặc `builder-renderer`
+- `builder-renderer` có thể cài đặt độc lập — không chứa mã nguồn editor trong bundle runtime
 
 ### Data Flow
 

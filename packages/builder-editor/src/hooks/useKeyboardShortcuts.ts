@@ -72,14 +72,21 @@ export function useKeyboardShortcuts({
   useEffect(() => {
     const handleUndoRedo = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
-      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) return;
+      if (
+        editingNodeId !== null ||
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable ||
+        target.closest?.(".tiptap") ||
+        target.closest?.(".ProseMirror")
+      ) return;
       const ctrl = e.ctrlKey || e.metaKey;
       if (ctrl && e.key === "z" && !e.shiftKey) { e.preventDefault(); undo(); return; }
       if (ctrl && (e.key === "y" || (e.key === "z" && e.shiftKey))) { e.preventDefault(); redo(); return; }
     };
     window.addEventListener("keydown", handleUndoRedo);
     return () => window.removeEventListener("keydown", handleUndoRedo);
-  }, [undo, redo]);
+  }, [undo, redo, editingNodeId]);
 
   useEffect(() => {
     const container = canvasContainerRef.current;
@@ -88,9 +95,12 @@ export function useKeyboardShortcuts({
     const handleKeyDown = (e: KeyboardEvent) => {
       const activeEl = globalThis.document?.activeElement;
       const isTyping =
+        editingNodeId !== null ||
         activeEl?.tagName === "INPUT" ||
         activeEl?.tagName === "TEXTAREA" ||
-        (activeEl as HTMLElement)?.contentEditable === "true";
+        (activeEl as HTMLElement)?.contentEditable === "true" ||
+        !!activeEl?.closest?.(".tiptap") ||
+        !!activeEl?.closest?.(".ProseMirror");
 
       const ctrl = e.ctrlKey || e.metaKey;
       if (ctrl && (e.key === "z" || e.key === "y")) return;

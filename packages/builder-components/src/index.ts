@@ -25,6 +25,9 @@ export { TextareaComponent } from "./components/Textarea";
 export { SelectFieldComponent } from "./components/SelectField";
 export { CheckboxComponent } from "./components/Checkbox";
 
+// Form context
+export { FormRuntimeContext, useFormRuntimeContext } from "./utils/FormRuntimeContext";
+
 // Utility
 export { extendComponent } from "./utils/extendComponent";
 export { normalizeLegacyPadding } from "./utils/normalizeLegacyPadding";

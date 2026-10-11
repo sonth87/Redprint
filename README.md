@@ -33,16 +33,18 @@ export default function App() {
 
 ## 🏗️ Architecture
 
-**Four-layer modular design:**
+**Modular Monorepo Architecture:**
 
-| Package            | Purpose                                     | Exports          |
-| ------------------ | ------------------------------------------- | ---------------- |
-| `builder-core`     | Framework-agnostic engine (no React, no DOM) | API, types, commands |
-| `builder-react`    | React adapter + hooks                       | Provider, hooks  |
-| `builder-editor`   | Visual editor (canvas, panels, toolbar)     | Editor component |
-| `builder-renderer` | Production runtime renderer                 | Runtime component |
+| Package              | Purpose                                                      | Exports              |
+| -------------------- | ------------------------------------------------------------ | -------------------- |
+| `builder-core`       | Framework-agnostic engine (pure logic, no React, no DOM)     | API, types, commands |
+| `builder-react`      | React adapter + hooks                                        | Provider, hooks      |
+| `builder-components` | Official React component suite (17+ built-ins)               | Components, extend   |
+| `builder-presets`    | Component catalog & preset templates                         | Presets, catalog     |
+| `builder-editor`     | Visual editor (canvas, panels, toolbar)                      | Editor component     |
+| `builder-renderer`   | Production runtime renderer                                  | Runtime component    |
 
-**Key Constraint:** `builder-core` has zero runtime dependencies. All DOM interaction flows through `builder-react` or `builder-editor`.
+**Key Constraint:** `builder-core` has zero DOM or browser API dependencies (depends only on pure headless utilities: `zod` for schemas and `uuid` for IDs). All DOM interaction flows through `builder-react`, `builder-editor`, or `builder-renderer`.
 
 ---
 
@@ -484,7 +486,7 @@ const LargeButton = extendComponent(Button, {
 - ComponentRegistry, GroupRegistry
 - Command system with undo/redo
 - PropSchema validation
-- Zero external dependencies ✨
+- Zero DOM & browser dependencies (pure headless logic with `zod` & `uuid`) ✨
 
 **Use:** Core state management for any framework/platform
 

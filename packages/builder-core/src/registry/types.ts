@@ -245,6 +245,10 @@ export type ComponentRenderer = (props: {
    * future component needs the same host-callback pattern.
    */
   onFormSubmit?: (formName: string, fields: Record<string, unknown>) => void;
+  /**
+   * Host / runtime callback to trigger a popup opening by ID (e.g. for Form submitAction: "openPopup").
+   */
+  onOpenPopup?: (popupId: string) => void;
 }) => unknown;
 
 // ── ComponentDefinition ───────────────────────────────────────────────────

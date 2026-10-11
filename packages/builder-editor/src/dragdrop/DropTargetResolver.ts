@@ -255,6 +255,16 @@ export function computeFlowInsertIndex(
  * Returns null when no valid flow container is found.
  * Migrated verbatim from useMoveGesture.ts:111–177.
  */
+function getNodeDepth(nodeId: string, nodes: Record<string, BuilderNode>): number {
+  let depth = 0;
+  let curr = nodes[nodeId]?.parentId;
+  while (curr) {
+    depth++;
+    curr = nodes[curr]?.parentId;
+  }
+  return depth;
+}
+
 export function findHoveredFlowContainer(
   clientX: number,
   clientY: number,
@@ -268,14 +278,20 @@ export function findHoveredFlowContainer(
     ? (globalThis.document.querySelector(`[data-node-id="${currentParentId}"]`) as HTMLElement | null)
     : null;
   const currentParentRect = currentParentEl?.getBoundingClientRect();
+
+  // Magnetic hysteresis buffer: prevent candidate parent from flickering when pointer is near edge
+  const bufferX = currentParentRect ? Math.min(8, currentParentRect.width * 0.1) : 0;
+  const bufferY = currentParentRect ? Math.min(8, currentParentRect.height * 0.1) : 0;
   const isWithinCurrentParent =
     !!currentParentRect &&
-    clientX >= currentParentRect.left &&
-    clientX <= currentParentRect.right &&
-    clientY >= currentParentRect.top &&
-    clientY <= currentParentRect.bottom;
+    clientX >= currentParentRect.left - bufferX &&
+    clientX <= currentParentRect.right + bufferX &&
+    clientY >= currentParentRect.top - bufferY &&
+    clientY <= currentParentRect.bottom + bufferY;
 
   const elements = globalThis.document.elementsFromPoint(clientX, clientY);
+  const candidates: Array<{ id: string; depth: number; area: number }> = [];
+
   for (const el of elements) {
     const id = (el as HTMLElement).getAttribute?.("data-node-id");
     if (!id) continue;
@@ -302,9 +318,7 @@ export function findHoveredFlowContainer(
     if (isDescendant) continue;
 
     // When dragging inside a nested flow container, keep the current parent as
-    // the target until the pointer actually leaves its bounds. Otherwise a
-    // grid/flex ancestor (for example a Repeater/Grid item wrapper) hijacks
-    // the drop and the node jumps out of its local stack.
+    // the target until the pointer actually leaves its bounds + hysteresis buffer.
     if (isWithinCurrentParent && currentParentId) {
       let parentCursor: string | null | undefined = currentParentId;
       let isAncestorOfCurrentParent = false;
@@ -318,9 +332,21 @@ export function findHoveredFlowContainer(
       if (isAncestorOfCurrentParent) continue;
     }
 
-    return id;
+    const rect = (el as HTMLElement).getBoundingClientRect?.();
+    const area = rect ? rect.width * rect.height : Infinity;
+    const depth = getNodeDepth(id, nodes);
+    candidates.push({ id, depth, area });
   }
-  return null;
+
+  if (candidates.length === 0) return null;
+
+  // Rank by depth (deepest valid nested container first), then by smaller area
+  candidates.sort((a, b) => {
+    if (b.depth !== a.depth) return b.depth - a.depth;
+    return a.area - b.area;
+  });
+
+  return candidates[0]!.id;
 }
 
 // ── Main entry point ──────────────────────────────────────────────────────

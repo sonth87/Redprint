@@ -16,11 +16,12 @@ import type { StyleConfig, BuilderNode } from "../document/types";
  */
 export function resolveStyle(
   baseStyle: StyleConfig,
-  responsiveStyle: Partial<Record<Breakpoint, Partial<StyleConfig>>>,
+  responsiveStyle: Partial<Record<Breakpoint, Partial<StyleConfig>>> | undefined,
   breakpoint: Breakpoint,
 ): StyleConfig {
+  if (!responsiveStyle) return baseStyle ?? {};
   const override = responsiveStyle[breakpoint];
-  if (!override) return baseStyle;
+  if (!override) return baseStyle ?? {};
   return { ...baseStyle, ...override } as StyleConfig;
 }
 
